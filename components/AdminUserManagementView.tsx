@@ -99,19 +99,19 @@ export default function AdminUserManagementView() {
     }
   };
 
-  const handleToggleStatus = (id: string, currentActive: boolean, name: string) => {
-    if (id === currentProfile.id) {
+  const handleToggleStatus = (employeeNo: string, currentActive: boolean, name: string) => {
+    if (employeeNo === currentProfile.employee_no || employeeNo === currentProfile.id) {
       alert('Amaran: Anda tidak boleh menyahaktifkan akaun anda sendiri yang sedang digunakan.');
       return;
     }
     const confirmed = window.confirm(`Adakah anda pasti mahu ${currentActive ? 'menyahaktifkan' : 'mengaktifkan semula'} akaun kakitangan: ${name}?`);
     if (!confirmed) return;
 
-    toggleProfileActive(id);
+    toggleProfileActive(employeeNo);
     refreshData();
     setStatusMessage({
       type: 'success',
-      text: `Status akaun kakitangan "${name}" telah dikemaskini kepada: ${currentActive ? 'TIDAK AKTIF' : 'AKTIF'}.`
+      text: `Status akaun kakitangan "${name}" telah dikemaskini kepada: ${currentActive ? 'UNACTIVE' : 'ACTIVE'}.`
     });
   };
 
@@ -437,30 +437,32 @@ export default function AdminUserManagementView() {
 
             {/* Table Container */}
             <div className="rounded-xl border border-slate-800 overflow-x-auto bg-slate-900/40">
-              <table className="w-full text-left text-xs font-mono min-w-[550px]">
+              <table className="w-full text-left text-xs font-mono min-w-[620px]">
                 <thead className="bg-[#090d16] border-b border-slate-800 text-slate-400 text-[11px]">
                   <tr>
-                    <th className="py-2.5 px-3.5">ID Pekerja</th>
-                    <th className="py-2.5 px-3.5 font-sans font-semibold">Nama Kakitangan</th>
-                    <th className="py-2.5 px-3.5">Peranan</th>
-                    <th className="py-2.5 px-3.5">Status Akaun</th>
+                    <th className="py-2.5 px-3.5">ID Pekerja (employee_no)</th>
+                    <th className="py-2.5 px-3.5 font-sans font-semibold">Nama Kakitangan (full_name)</th>
+                    <th className="py-2.5 px-3.5">Peranan (role)</th>
+                    <th className="py-2.5 px-3.5">Status (status)</th>
+                    <th className="py-2.5 px-3.5">Tarikh Dicipta (created_at)</th>
                     <th className="py-2.5 px-3.5 text-right">Tindakan Admin</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/60">
                   {filteredProfiles.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="py-6 text-center text-slate-500">
+                      <td colSpan={6} className="py-6 text-center text-slate-500">
                         Tiada kakitangan dijumpai mengikut carian.
                       </td>
                     </tr>
                   ) : (
                     filteredProfiles.map((p) => {
                       const badge = roleStyles[p.role] || roleStyles.operator;
-                      const isCurrent = p.id === currentProfile.id;
+                      const isCurrent = p.employee_no === currentProfile.employee_no || p.id === currentProfile.id;
+                      const isActive = p.status === 'active' || (p.status !== 'unactive' && p.active !== false);
 
                       return (
-                        <tr key={p.id} className="hover:bg-slate-800/40 transition-colors">
+                        <tr key={p.employee_no || p.id} className="hover:bg-slate-800/40 transition-colors">
                           <td className="py-2.5 px-3.5 font-bold text-cyan-400">
                             {p.employee_no}
                           </td>
@@ -480,33 +482,40 @@ export default function AdminUserManagementView() {
                             </span>
                           </td>
                           <td className="py-2.5 px-3.5">
-                            {p.active ? (
-                              <span className="inline-flex items-center gap-1 text-emerald-400 text-[10px]">
+                            {isActive ? (
+                              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-950/60 border border-emerald-800/40 text-emerald-400 text-[10px] font-semibold">
                                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                                Aktif
+                                active
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 text-rose-400 text-[10px]">
+                              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-rose-950/60 border border-rose-800/40 text-rose-400 text-[10px] font-semibold">
                                 <span className="h-1.5 w-1.5 rounded-full bg-rose-400"></span>
-                                Dinyahaktif
+                                unactive
                               </span>
                             )}
+                          </td>
+                          <td className="py-2.5 px-3.5 text-slate-400 text-[11px]">
+                            {p.created_at ? new Date(p.created_at).toLocaleDateString('ms-MY', {
+                              day: '2-digit',
+                              month: 'short',
+                              year: 'numeric'
+                            }) : '-'}
                           </td>
                           <td className="py-2.5 px-3.5 text-right">
                             {isAdmin ? (
                               <button
-                                onClick={() => handleToggleStatus(p.id, p.active, p.full_name)}
+                                onClick={() => handleToggleStatus(p.employee_no, isActive, p.full_name)}
                                 disabled={isCurrent}
                                 className={`text-[10px] px-2 py-1 rounded transition-colors font-semibold ${
                                   isCurrent
                                     ? 'opacity-30 cursor-not-allowed text-slate-500'
-                                    : p.active
-                                      ? 'text-rose-400 hover:bg-rose-950/60 hover:text-rose-200 border border-rose-800/40'
-                                      : 'text-emerald-400 hover:bg-emerald-950/60 hover:text-emerald-200 border border-emerald-800/40'
+                                    : isActive
+                                      ? 'text-rose-400 hover:bg-rose-950/60 hover:text-rose-200 border border-rose-800/40 cursor-pointer'
+                                      : 'text-emerald-400 hover:bg-emerald-950/60 hover:text-emerald-200 border border-emerald-800/40 cursor-pointer'
                                 }`}
                                 title={isCurrent ? 'Tidak boleh menyahaktifkan diri sendiri' : undefined}
                               >
-                                {p.active ? 'Nyahaktif' : 'Aktifkan Semula'}
+                                {isActive ? 'Set Unactive' : 'Set Active'}
                               </button>
                             ) : (
                               <span className="text-[10px] text-slate-600">Admin Only</span>

@@ -141,7 +141,7 @@ export function loginUser(identifier: string, password?: string): { success: boo
     };
   }
 
-  if (found.active === false) {
+  if (found.status === 'unactive' || found.active === false) {
     return {
       success: false,
       error: `Akaun (${found.employee_no} - ${found.full_name}) telah dinyahaktifkan oleh Pentadbir Loji. Sila hubungi Pentadbiran Loji.`
@@ -188,15 +188,15 @@ export function getProfiles(): Profile[] {
 }
 
 export function addProfile(data: { full_name: string; role: UserRole; employee_no?: string; password?: string }): Profile {
-  const employee_no = data.employee_no?.trim() || generateNextEmployeeId(data.role);
+  const employee_no = (data.employee_no?.trim() || generateNextEmployeeId(data.role)).toUpperCase();
   const current = getProfiles();
 
   const newProfile: Profile = {
-    id: `prof-${Date.now()}`,
-    employee_no: employee_no.toUpperCase(),
+    id: employee_no,
+    employee_no: employee_no,
     full_name: data.full_name.trim(),
     role: data.role,
-    plant_id: INITIAL_PLANT.id,
+    status: 'active',
     active: true,
     password: data.password?.trim() || 'password123',
     created_at: new Date().toISOString()
@@ -213,8 +213,8 @@ export function addProfile(data: { full_name: string; role: UserRole; employee_n
         employee_no: newProfile.employee_no,
         full_name: newProfile.full_name,
         role: newProfile.role,
-        plant_id: newProfile.plant_id,
-        active: true
+        status: newProfile.status,
+        created_at: newProfile.created_at
       }])
     ).then(() => {
       // synced
@@ -224,23 +224,25 @@ export function addProfile(data: { full_name: string; role: UserRole; employee_n
   return newProfile;
 }
 
-export function toggleProfileActive(id: string): boolean {
+export function toggleProfileActive(identifier: string): boolean {
   const current = getProfiles();
-  const idx = current.findIndex(p => p.id === id);
+  const idx = current.findIndex(p => p.employee_no === identifier || p.id === identifier);
   if (idx === -1) return false;
 
   const target = current[idx];
-  target.active = !target.active;
+  const newStatus = (target.status === 'unactive' || target.active === false) ? 'active' : 'unactive';
+  target.status = newStatus;
+  target.active = newStatus === 'active';
   memoryProfiles = [...current];
   setStored(STORAGE_KEYS.PROFILES, memoryProfiles);
 
   if (isSupabaseConfigured && supabase) {
     Promise.resolve(
-      supabase.from('profiles').update({ active: target.active }).eq('id', id)
+      supabase.from('profiles').update({ status: target.status }).eq('employee_no', target.employee_no)
     ).catch(console.error);
   }
 
-  addAuditLog('profiles', id, 'update', { active: !target.active }, { active: target.active });
+  addAuditLog('profiles', target.employee_no, 'update', { status: newStatus === 'active' ? 'unactive' : 'active' }, { status: newStatus });
   return true;
 }
 

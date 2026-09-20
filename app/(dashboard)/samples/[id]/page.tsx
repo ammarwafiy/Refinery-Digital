@@ -117,7 +117,8 @@ export default function SampleDetailPage({ params }: { params: Promise<{ id: str
     setSaving(true)
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      const { data: profile } = await supabase.from('profiles').select('full_name').eq('id', user?.id).single()
+      const empNo = user?.user_metadata?.employee_no || user?.email?.split('@')[0] || ''
+      const { data: profile } = await supabase.from('profiles').select('full_name').eq('employee_no', empNo).maybeSingle()
 
       const failedParams = results
         .filter(r => r.in_spec === false)

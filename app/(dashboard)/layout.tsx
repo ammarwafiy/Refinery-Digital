@@ -14,19 +14,20 @@ export default async function DashboardLayout({
     redirect('/login')
   }
 
+  const empNo = user.user_metadata?.employee_no || user.email?.split('@')[0] || ''
   const { data: profile } = await supabase
     .from('profiles')
     .select('*')
-    .eq('id', user.id)
-    .single()
+    .eq('employee_no', empNo)
+    .maybeSingle()
 
   // Fallback profile if profiles table isn't set up yet or user doesn't have a profile row
   const userProfile = profile || {
     id: user.id,
-    employee_no: 'N/A',
+    employee_no: empNo || 'N/A',
     full_name: user.email || 'Unknown User',
-    role: 'viewer',
-    plant_id: null,
+    role: 'viewer' as const,
+    status: 'active' as const,
     active: true,
     created_at: new Date().toISOString(),
   }

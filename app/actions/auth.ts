@@ -40,8 +40,8 @@ export async function getCurrentUser() {
   const { data: profile } = await supabase
     .from('profiles')
     .select('*')
-    .eq('id', user.id)
-    .single()
+    .eq('employee_no', user.user_metadata?.employee_no || user.email?.split('@')[0] || '')
+    .maybeSingle()
 
   return profile
 }

@@ -44,15 +44,19 @@ export interface Plant {
   active: boolean;
 }
 
+export type UserStatus = 'active' | 'unactive';
+
 export interface Profile {
-  id: string;
   employee_no: string;
   full_name: string;
   role: UserRole;
-  plant_id?: string;
-  active: boolean;
-  password?: string;
+  status: UserStatus;
   created_at: string;
+  // Primary key alias (matches employee_no)
+  id: string;
+  active?: boolean;
+  plant_id?: string;
+  password?: string;
 }
 
 export interface Product {

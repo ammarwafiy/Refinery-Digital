@@ -31,12 +31,13 @@ import {
 type UserRole = 'operator' | 'supervisor' | 'qc_analyst' | 'qc_manager' | 'admin' | 'viewer'
 
 interface Profile {
-  id: string
   employee_no: string
   full_name: string
   role: UserRole
+  status?: 'active' | 'unactive'
+  active?: boolean
+  id?: string
   plant_id?: string | null
-  active: boolean
 }
 
 interface NavItem {

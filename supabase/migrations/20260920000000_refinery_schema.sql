@@ -23,12 +23,10 @@ create table if not exists plants (
 );
 
 create table if not exists profiles (
-  id uuid primary key default gen_random_uuid(),
-  employee_no text unique not null,
+  employee_no text primary key,
   full_name text not null,
   role user_role not null default 'operator',
-  plant_id uuid references plants(id),
-  active boolean not null default true,
+  status text not null default 'active' check (status in ('active', 'unactive')),
   created_at timestamptz not null default now()
 );
 
@@ -102,9 +100,9 @@ create table if not exists process_sheets (
   stripping_steam_pct numeric(5,2) not null default 1.5,
   set_steam_supply_bar numeric(6,2) not null default 3.0,
   status sheet_status not null default 'open',
-  opened_by uuid references profiles(id),
+  opened_by text references profiles(employee_no),
   opened_at timestamptz not null default now(),
-  verified_by uuid references profiles(id),
+  verified_by text references profiles(employee_no),
   verified_at timestamptz,
   unique (plant_id, shift_date)
 );
@@ -148,9 +146,9 @@ create table if not exists process_entries (
   remarks text,
   no_production_reason text,              -- set when the hour is intentionally blank
   has_deviation boolean not null default false,
-  recorded_by uuid references profiles(id),
+  recorded_by text references profiles(employee_no),
   recorded_at timestamptz not null default now(),
-  amended_by uuid references profiles(id),
+  amended_by text references profiles(employee_no),
   amended_at timestamptz,
   amend_reason text,
   client_uuid uuid unique,                -- offline idempotency key
@@ -164,7 +162,7 @@ create table if not exists deviations (
   observed numeric not null,
   soft_min numeric, 
   soft_max numeric,
-  acknowledged_by uuid references profiles(id),
+  acknowledged_by text references profiles(employee_no),
   acknowledged_at timestamptz,
   action_taken text,
   created_at timestamptz not null default now()
@@ -185,14 +183,14 @@ create table if not exists sample_reports (
   crystallizer_no text,
   batch_no text,
   sampling_point_id uuid references sampling_points(id),
-  submitted_by uuid references profiles(id),
+  submitted_by text references profiles(employee_no),
   submitted_by_name text,
   remark_flushing boolean not null default false,
   remark_cooling  boolean not null default false,
   remark_pushover boolean not null default false,
   remarks text,
   status report_status not null default 'draft',
-  created_by uuid references profiles(id),
+  created_by text references profiles(employee_no),
   created_at timestamptz not null default now(),
   check (product_id is not null or product_other is not null)
 );
@@ -206,7 +204,7 @@ create table if not exists sample_results (
   value_numeric numeric,
   value_text text,                        -- odour, or categorical
   in_spec boolean,                        -- computed against product_specs
-  entered_by uuid references profiles(id),
+  entered_by text references profiles(employee_no),
   entered_at timestamptz,
   unique (report_id, parameter_id, series_key)
 );
@@ -226,7 +224,7 @@ create table if not exists qc_decisions (
   reason_detail text,
   failed_parameters text[],
   disposition disposition,
-  decided_by uuid references profiles(id),
+  decided_by text references profiles(employee_no),
   decided_at timestamptz not null default now(),
   supersedes_id uuid references qc_decisions(id),
   overturn_reason text,
@@ -241,7 +239,7 @@ create table if not exists attachments (
   storage_path text not null,
   file_name text not null, 
   byte_size int not null,
-  uploaded_by uuid references profiles(id),
+  uploaded_by text references profiles(employee_no),
   uploaded_at timestamptz not null default now()
 );
 
@@ -251,7 +249,7 @@ create table if not exists audit_log (
   table_name text not null,
   record_id uuid not null,
   action text not null,                   -- insert | update | void
-  actor uuid references profiles(id),
+  actor text references profiles(employee_no),
   old_row jsonb, 
   new_row jsonb,
   occurred_at timestamptz not null default now()

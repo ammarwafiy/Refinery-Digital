@@ -7,11 +7,12 @@ export default async function DashboardRoot() {
 
   if (!user) redirect('/login')
 
+  const empNo = user.user_metadata?.employee_no || user.email?.split('@')[0] || ''
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')
-    .eq('id', user.id)
-    .single()
+    .eq('employee_no', empNo)
+    .maybeSingle()
 
   const role = profile?.role || 'viewer'
 
