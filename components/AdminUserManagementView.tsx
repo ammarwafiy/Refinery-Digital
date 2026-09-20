@@ -82,6 +82,7 @@ export default function AdminUserManagementView() {
         full_name: fullName.trim(),
         role: selectedRole,
         employee_no: autoId,
+        password: customPassword.trim() || 'password123',
       });
 
       refreshData();

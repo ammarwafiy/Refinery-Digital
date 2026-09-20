@@ -148,6 +148,15 @@ export function loginUser(identifier: string, password?: string): { success: boo
     };
   }
 
+  // Strict Password Verification
+  const expectedPassword = found.password || 'password123';
+  if (!password || password.trim() !== expectedPassword) {
+    return {
+      success: false,
+      error: 'Kata laluan yang dimasukkan adalah salah. Sila pastikan kata laluan tepat untuk ID ini.'
+    };
+  }
+
   setAuthUser(found);
   return { success: true, profile: found };
 }
@@ -178,7 +187,7 @@ export function getProfiles(): Profile[] {
   return getStored<Profile[]>(STORAGE_KEYS.PROFILES, memoryProfiles);
 }
 
-export function addProfile(data: { full_name: string; role: UserRole; employee_no?: string }): Profile {
+export function addProfile(data: { full_name: string; role: UserRole; employee_no?: string; password?: string }): Profile {
   const employee_no = data.employee_no?.trim() || generateNextEmployeeId(data.role);
   const current = getProfiles();
 
@@ -189,6 +198,7 @@ export function addProfile(data: { full_name: string; role: UserRole; employee_n
     role: data.role,
     plant_id: INITIAL_PLANT.id,
     active: true,
+    password: data.password?.trim() || 'password123',
     created_at: new Date().toISOString()
   };
 

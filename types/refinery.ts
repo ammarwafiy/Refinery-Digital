@@ -51,6 +51,7 @@ export interface Profile {
   role: UserRole;
   plant_id?: string;
   active: boolean;
+  password?: string;
   created_at: string;
 }
 

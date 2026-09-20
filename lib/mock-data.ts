@@ -35,6 +35,7 @@ export const INITIAL_PROFILES: Profile[] = [
     role: 'operator',
     plant_id: INITIAL_PLANT.id,
     active: true,
+    password: 'password123',
     created_at: '2026-01-10T00:00:00Z',
   },
   {
@@ -44,6 +45,7 @@ export const INITIAL_PROFILES: Profile[] = [
     role: 'supervisor',
     plant_id: INITIAL_PLANT.id,
     active: true,
+    password: 'password123',
     created_at: '2026-01-10T00:00:00Z',
   },
   {
@@ -53,6 +55,7 @@ export const INITIAL_PROFILES: Profile[] = [
     role: 'qc_analyst',
     plant_id: INITIAL_PLANT.id,
     active: true,
+    password: 'password123',
     created_at: '2026-01-10T00:00:00Z',
   },
   {
@@ -62,6 +65,7 @@ export const INITIAL_PROFILES: Profile[] = [
     role: 'qc_manager',
     plant_id: INITIAL_PLANT.id,
     active: true,
+    password: 'password123',
     created_at: '2026-01-10T00:00:00Z',
   },
   {
@@ -71,6 +75,7 @@ export const INITIAL_PROFILES: Profile[] = [
     role: 'admin',
     plant_id: INITIAL_PLANT.id,
     active: true,
+    password: 'password123',
     created_at: '2026-01-10T00:00:00Z',
   },
   {
@@ -80,6 +85,7 @@ export const INITIAL_PROFILES: Profile[] = [
     role: 'viewer',
     plant_id: INITIAL_PLANT.id,
     active: true,
+    password: 'password123',
     created_at: '2026-01-10T00:00:00Z',
   },
 ];
