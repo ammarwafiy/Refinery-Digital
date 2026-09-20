@@ -10,9 +10,7 @@ import {
   ArrowRight, 
   AlertCircle, 
   Eye, 
-  EyeOff,
-  Info,
-  CheckCircle2
+  EyeOff
 } from 'lucide-react';
 import { Profile } from '@/types/refinery';
 import { loginUser } from '@/lib/data-service';
@@ -27,7 +25,6 @@ export default function LoginView({ onLogin }: LoginViewProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [showDirectoryHelp, setShowDirectoryHelp] = useState(false);
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,15 +41,6 @@ export default function LoginView({ onLogin }: LoginViewProps) {
       }
     }, 450);
   };
-
-  const sampleStaff = [
-    { role: 'Lead Operator', id: 'OP-1042', name: 'Ahmad Razak', target: 'RF-FR-004 Log 24 Jam' },
-    { role: 'Shift Supervisor', id: 'SV-2014', name: 'Chong Wei Lun', target: 'Papan Pemantauan Langsung' },
-    { role: 'QC Lab Analyst', id: 'QC-3201', name: 'Siti Nurhaliza', target: 'RF-FR-001 Makmal QC' },
-    { role: 'QC Manager', id: 'QM-4502', name: 'Dr. Tan Keng Boon', target: 'Keputusan QC & Disposisi' },
-    { role: 'Plant Admin', id: 'AD-5010', name: 'Haris Iskandar', target: 'Pentadbiran Loji & Spesifikasi' },
-    { role: 'ISO Auditor', id: 'AU-9901', name: 'Auditor (Viewer)', target: 'Borang Rasmi & Audit Trail' },
-  ];
 
   return (
     <div className="min-h-screen w-full flex flex-col justify-between bg-[#070a12] text-slate-100 selection:bg-cyan-500/30 selection:text-cyan-200">
@@ -153,17 +141,8 @@ export default function LoginView({ onLogin }: LoginViewProps) {
                   defaultChecked
                   className="h-3.5 w-3.5 rounded border-slate-700 bg-slate-900 text-cyan-500"
                 />
-                <span>Ingat sesi di peranti ini</span>
+                <span>Ingat sesi log masuk di peranti ini</span>
               </label>
-
-              <button
-                type="button"
-                onClick={() => setShowDirectoryHelp(!showDirectoryHelp)}
-                className="text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer"
-              >
-                <Info className="h-3 w-3" />
-                <span>ID Bertugas?</span>
-              </button>
             </div>
 
             <button
@@ -182,45 +161,8 @@ export default function LoginView({ onLogin }: LoginViewProps) {
             </button>
           </form>
 
-          {/* Directory Reference Popover */}
-          {showDirectoryHelp && (
-            <div className="mt-5 p-3.5 rounded-xl bg-slate-900/90 border border-slate-700/80 text-xs font-mono">
-              <div className="flex items-center justify-between text-[11px] font-bold text-cyan-400 mb-2 border-b border-slate-800 pb-1.5">
-                <span>PANDUAN ID PEKERJA LOJI:</span>
-                <span className="text-[10px] text-slate-500">Klik ID untuk auto-isi</span>
-              </div>
-              <div className="space-y-1.5">
-                {sampleStaff.map((s) => (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => {
-                      setIdentifier(s.id);
-                      setPassword('password123');
-                      setShowDirectoryHelp(false);
-                    }}
-                    className="w-full flex items-center justify-between p-1.5 rounded hover:bg-slate-800 text-left transition-colors text-[11px]"
-                  >
-                    <div>
-                      <span className="text-white font-semibold">{s.name}</span>
-                      <span className="text-slate-500 block text-[10px]">{s.role}</span>
-                    </div>
-                    <span className="bg-slate-800 text-cyan-400 px-2 py-0.5 rounded border border-cyan-500/20 font-bold">
-                      {s.id}
-                    </span>
-                  </button>
-                ))}
-              </div>
-
-              <div className="mt-3 p-2 rounded-lg bg-slate-800/60 border border-slate-700/60 text-[10px] text-slate-400">
-                <span className="text-amber-400 font-bold block mb-0.5">KAWALAN KESELAMATAN LOJI:</span>
-                Pendaftaran akaun kakitangan baharu dikawal ketat dan hanya boleh didaftarkan oleh <b>Pentadbir Loji (Admin · AD-5010)</b> di panel dalam sistem.
-              </div>
-            </div>
-          )}
-
           {/* Security Notice Footer on Login Card */}
-          <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono text-slate-500">
+          <div className="mt-5 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono text-slate-500">
             <span>Akses Terhad Kakitangan Loji</span>
             <span className="text-slate-400">PRD-REF-001</span>
           </div>
