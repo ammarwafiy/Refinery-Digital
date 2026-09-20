@@ -437,13 +437,14 @@ export default function AdminUserManagementView() {
 
             {/* Table Container */}
             <div className="rounded-xl border border-slate-800 overflow-x-auto bg-slate-900/40">
-              <table className="w-full text-left text-xs font-mono min-w-[620px]">
+              <table className="w-full text-left text-xs font-mono min-w-[700px]">
                 <thead className="bg-[#090d16] border-b border-slate-800 text-slate-400 text-[11px]">
                   <tr>
                     <th className="py-2.5 px-3.5">ID Pekerja (employee_no)</th>
                     <th className="py-2.5 px-3.5 font-sans font-semibold">Nama Kakitangan (full_name)</th>
                     <th className="py-2.5 px-3.5">Peranan (role)</th>
                     <th className="py-2.5 px-3.5">Status (status)</th>
+                    <th className="py-2.5 px-3.5">Kata Laluan (password)</th>
                     <th className="py-2.5 px-3.5">Tarikh Dicipta (created_at)</th>
                     <th className="py-2.5 px-3.5 text-right">Tindakan Admin</th>
                   </tr>
@@ -451,7 +452,7 @@ export default function AdminUserManagementView() {
                 <tbody className="divide-y divide-slate-800/60">
                   {filteredProfiles.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-6 text-center text-slate-500">
+                      <td colSpan={7} className="py-6 text-center text-slate-500">
                         Tiada kakitangan dijumpai mengikut carian.
                       </td>
                     </tr>
@@ -493,6 +494,11 @@ export default function AdminUserManagementView() {
                                 unactive
                               </span>
                             )}
+                          </td>
+                          <td className="py-2.5 px-3.5">
+                            <span className="inline-block px-2 py-0.5 rounded bg-[#0b111e] border border-slate-700/60 text-slate-300 text-[11px] font-mono">
+                              {p.password || 'password123'}
+                            </span>
                           </td>
                           <td className="py-2.5 px-3.5 text-slate-400 text-[11px]">
                             {p.created_at ? new Date(p.created_at).toLocaleDateString('ms-MY', {

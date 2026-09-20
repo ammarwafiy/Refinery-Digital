@@ -27,6 +27,7 @@ create table if not exists profiles (
   full_name text not null,
   role user_role not null default 'operator',
   status text not null default 'active' check (status in ('active', 'unactive')),
+  password text not null default 'password123',
   created_at timestamptz not null default now()
 );
 

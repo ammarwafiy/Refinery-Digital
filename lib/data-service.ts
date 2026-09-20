@@ -214,6 +214,7 @@ export function addProfile(data: { full_name: string; role: UserRole; employee_n
         full_name: newProfile.full_name,
         role: newProfile.role,
         status: newProfile.status,
+        password: newProfile.password,
         created_at: newProfile.created_at
       }])
     ).then(() => {
