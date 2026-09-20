@@ -90,6 +90,25 @@ export const ROLE_ID_SERIES: Record<UserRole, { prefix: string; label: string; s
   viewer:     { prefix: 'AU', label: 'Juruaudit Kualiti (ISO/HACCP)', start: 9901, example: 'AU-9902' },
 };
 
+// Role-Based Views & Navigation Rules (RBAC)
+export const ROLE_ALLOWED_TABS: Record<UserRole, string[]> = {
+  operator: ['process'],
+  supervisor: ['supervisor'],
+  qc_analyst: ['qc'],
+  qc_manager: ['qc'],
+  admin: ['admin', 'supervisor', 'process', 'qc', 'analytics', 'export'],
+  viewer: ['export'],
+};
+
+export const ROLE_DEFAULT_TAB: Record<UserRole, string> = {
+  operator: 'process',
+  supervisor: 'supervisor',
+  qc_analyst: 'qc',
+  qc_manager: 'qc',
+  admin: 'admin',
+  viewer: 'export',
+};
+
 export function generateNextEmployeeId(role: UserRole): string {
   const meta = ROLE_ID_SERIES[role] || { prefix: 'ST', start: 1000 };
   const all = getProfiles();

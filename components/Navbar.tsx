@@ -16,7 +16,15 @@ import {
   Users
 } from 'lucide-react';
 import { UserRole, Profile } from '@/types/refinery';
-import { getCurrentRole, setCurrentRole, getCurrentProfile, getProfiles, setAuthUser } from '@/lib/data-service';
+import { 
+  getCurrentRole, 
+  setCurrentRole, 
+  getCurrentProfile, 
+  getProfiles, 
+  setAuthUser,
+  ROLE_ALLOWED_TABS,
+  ROLE_DEFAULT_TAB
+} from '@/lib/data-service';
 
 interface NavbarProps {
   activeTab: string;
@@ -29,7 +37,6 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onLogout 
   const [role, setRole] = useState<UserRole>(currentUser?.role || 'operator');
   const [profile, setProfile] = useState<Profile>(currentUser || getCurrentProfile());
   const [timeString, setTimeString] = useState<string>('');
-  const [pendingSync, setPendingSync] = useState<number>(0);
 
   useEffect(() => {
     if (currentUser) {
@@ -69,9 +76,7 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onLogout 
     } else {
       setProfile(getCurrentProfile());
     }
-    if (newRole === 'admin') {
-      setActiveTab('admin');
-    }
+    setActiveTab(ROLE_DEFAULT_TAB[newRole] || 'process');
   };
 
   const navItems = [
@@ -82,6 +87,10 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onLogout 
     { id: 'export', label: 'Official Forms & Audit', icon: FileText, badge: 'ISO' },
     { id: 'admin', label: 'Admin & Users', icon: Users, badge: 'Pentadbiran' },
   ];
+
+  // RBAC Filter: Only show allowed navigation tabs for current role
+  const allowedTabs = ROLE_ALLOWED_TABS[role] || ['process'];
+  const visibleNavItems = navItems.filter((item) => allowedTabs.includes(item.id));
 
   const roleColors: Record<UserRole, { bg: string; text: string; border: string }> = {
     operator: { bg: 'bg-emerald-950/60', text: 'text-emerald-400', border: 'border-emerald-600/40' },
@@ -134,16 +143,16 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onLogout 
 
       {/* Main Navigation & Role Bar */}
       <div className="flex flex-col lg:flex-row items-center justify-between gap-3 px-4 py-2.5">
-        {/* Navigation Tabs */}
-        <nav className="flex items-center gap-1 overflow-x-auto w-full lg:w-auto pb-1 lg:pb-0 scrollbar-none">
-          {navItems.map((item) => {
+        {/* Navigation Tabs - Filtered by current role */}
+        <nav className="flex items-center gap-1.5 overflow-x-auto w-full lg:w-auto pb-1 lg:pb-0 scrollbar-none">
+          {visibleNavItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
             return (
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`group flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap border ${
+                className={`group flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap border cursor-pointer ${
                   isActive
                     ? 'bg-slate-800/90 text-white border-cyan-500/50 shadow-lg shadow-cyan-950/40'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border-transparent'
@@ -163,64 +172,85 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onLogout 
           })}
         </nav>
 
-        {/* FYP Role Switcher Bar */}
-        <div className="flex items-center gap-2 self-end lg:self-auto bg-slate-900/90 p-1 rounded-xl border border-slate-800">
-          <div className="flex items-center gap-1.5 pl-2 pr-1 text-slate-400 text-xs">
-            <UserCheck className="h-3.5 w-3.5 text-cyan-400" />
-            <span className="hidden xl:inline text-[11px] font-mono uppercase text-slate-400">Current Role:</span>
-          </div>
+        {/* User Info & Role Bar */}
+        <div className="flex items-center gap-2 self-end lg:self-auto bg-slate-900/90 p-1.5 rounded-xl border border-slate-800 shadow-md">
+          {role === 'admin' ? (
+            /* Role Switcher for Admin Only */
+            <>
+              <div className="flex items-center gap-1.5 pl-2 pr-1 text-slate-400 text-xs">
+                <UserCheck className="h-3.5 w-3.5 text-cyan-400" />
+                <span className="hidden xl:inline text-[11px] font-mono uppercase text-slate-400">Admin Switcher:</span>
+              </div>
 
-          <div className="flex items-center gap-1">
-            {(['operator', 'supervisor', 'qc_analyst', 'qc_manager', 'admin'] as UserRole[]).map((r) => {
-              const isSelected = role === r;
-              const formatLabel: Record<UserRole, string> = {
-                operator: 'Operator',
-                supervisor: 'Supervisor',
-                qc_analyst: 'QC Analyst',
-                qc_manager: 'QC Manager',
-                admin: 'Admin',
-                viewer: 'Viewer',
-              };
+              <div className="flex items-center gap-1">
+                {(['operator', 'supervisor', 'qc_analyst', 'qc_manager', 'admin'] as UserRole[]).map((r) => {
+                  const isSelected = role === r;
+                  const formatLabel: Record<UserRole, string> = {
+                    operator: 'Operator',
+                    supervisor: 'Supervisor',
+                    qc_analyst: 'QC Analyst',
+                    qc_manager: 'QC Manager',
+                    admin: 'Admin',
+                    viewer: 'Viewer',
+                  };
 
-              return (
-                <button
-                  key={r}
-                  onClick={() => handleRoleChange(r)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-medium font-mono transition-all border ${
-                    isSelected 
-                      ? `${roleColors[r].bg} ${roleColors[r].text} ${roleColors[r].border} shadow-sm font-semibold` 
-                      : 'text-slate-500 hover:text-slate-300 border-transparent hover:bg-slate-800/60'
-                  }`}
-                  title={`Switch to ${formatLabel[r]}`}
-                >
-                  {formatLabel[r]}
-                </button>
-              );
-            })}
-          </div>
+                  return (
+                    <button
+                      key={r}
+                      onClick={() => handleRoleChange(r)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium font-mono transition-all border cursor-pointer ${
+                        isSelected 
+                          ? `${roleColors[r].bg} ${roleColors[r].text} ${roleColors[r].border} shadow-sm font-semibold` 
+                          : 'text-slate-500 hover:text-slate-300 border-transparent hover:bg-slate-800/60'
+                      }`}
+                      title={`Simulasi Peranan ${formatLabel[r]}`}
+                    >
+                      {formatLabel[r]}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          ) : (
+            /* Dedicated Role Mode Badge for Non-Admin */
+            <div className="flex items-center gap-2 px-2 py-0.5">
+              <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className={`px-2.5 py-1 rounded-lg text-[11px] font-mono font-bold uppercase border ${roleColors[role].bg} ${roleColors[role].text} ${roleColors[role].border}`}>
+                {role === 'operator' && 'MOD OPERATOR · LOG PROSES'}
+                {role === 'supervisor' && 'MOD PENYELIA · PAPAN LIVE'}
+                {(role === 'qc_analyst' || role === 'qc_manager') && 'MOD KUALITI · MAKMAL QC'}
+                {role === 'viewer' && 'MOD JURUAUDIT · REKOD ISO'}
+              </span>
+            </div>
+          )}
 
-          <div className="border-l border-slate-800 pl-2 pr-1 text-right hidden sm:block">
+          {/* User Profile Badge */}
+          <div className="border-l border-slate-800 pl-2.5 pr-2 text-right">
             <div className="text-[11px] font-semibold text-slate-200 leading-tight">
               {profile.full_name}
             </div>
-            <div className="text-[10px] font-mono text-slate-500">
+            <div className="text-[10px] font-mono text-cyan-400">
               {profile.employee_no}
             </div>
           </div>
 
-          <button
-            onClick={() => setActiveTab('admin')}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all ml-1 cursor-pointer border ${
-              activeTab === 'admin'
-                ? 'bg-blue-900/70 text-blue-200 border-blue-500/60 shadow-sm'
-                : 'text-cyan-300 bg-cyan-950/50 border border-cyan-800/60 hover:bg-cyan-900/60 hover:text-cyan-100'
-            }`}
-            title="Panel Pentadbiran & Pengurusan Pengguna Loji"
-          >
-            <Users className="h-3.5 w-3.5 text-cyan-400" />
-            <span className="hidden md:inline">Admin / Kakitangan</span>
-          </button>
+          {/* Admin Management Button - Admin Only */}
+          {role === 'admin' && (
+            <button
+              onClick={() => setActiveTab('admin')}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all ml-1 cursor-pointer border ${
+                activeTab === 'admin'
+                  ? 'bg-blue-900/70 text-blue-200 border-blue-500/60 shadow-sm'
+                  : 'text-cyan-300 bg-cyan-950/50 border border-cyan-800/60 hover:bg-cyan-900/60 hover:text-cyan-100'
+              }`}
+              title="Panel Pentadbiran & Pengurusan Pengguna Loji"
+            >
+              <Users className="h-3.5 w-3.5 text-cyan-400" />
+              <span className="hidden md:inline">Admin & Users</span>
+            </button>
+          )}
 
+          {/* Logout Button */}
           {onLogout && (
             <button
               onClick={onLogout}

@@ -10,7 +10,13 @@ import OfficialFormsExportView from '@/components/OfficialFormsExportView';
 import AdminUserManagementView from '@/components/AdminUserManagementView';
 import LoginView from '@/components/LoginView';
 import { Profile } from '@/types/refinery';
-import { getAuthUser, setAuthUser, logoutUser } from '@/lib/data-service';
+import { 
+  getAuthUser, 
+  setAuthUser, 
+  logoutUser, 
+  ROLE_ALLOWED_TABS, 
+  ROLE_DEFAULT_TAB 
+} from '@/lib/data-service';
 import { 
   Flame, 
   Cpu, 
@@ -26,23 +32,16 @@ export default function Home() {
     const savedUser = getAuthUser();
     if (savedUser) {
       setAuthUserState(savedUser);
-      if (savedUser.role === 'supervisor') setActiveTab('supervisor');
-      else if (savedUser.role === 'qc_analyst' || savedUser.role === 'qc_manager') setActiveTab('qc');
-      else if (savedUser.role === 'viewer') setActiveTab('export');
-      else if (savedUser.role === 'admin') setActiveTab('admin');
+      const defaultTab = ROLE_DEFAULT_TAB[savedUser.role] || 'process';
+      setActiveTab(defaultTab);
     }
   }, []);
 
   const handleLogin = (profile: Profile) => {
     setAuthUser(profile);
     setAuthUserState(profile);
-    // Direct user to most relevant tab for their role
-    if (profile.role === 'operator') setActiveTab('process');
-    else if (profile.role === 'supervisor') setActiveTab('supervisor');
-    else if (profile.role === 'qc_analyst' || profile.role === 'qc_manager') setActiveTab('qc');
-    else if (profile.role === 'viewer') setActiveTab('export');
-    else if (profile.role === 'admin') setActiveTab('admin');
-    else setActiveTab('process');
+    const targetTab = ROLE_DEFAULT_TAB[profile.role] || 'process';
+    setActiveTab(targetTab);
   };
 
   const handleLogout = () => {
@@ -55,24 +54,28 @@ export default function Home() {
     return <LoginView onLogin={handleLogin} />;
   }
 
+  // Calculate allowed tabs for logged-in role
+  const allowedTabs = ROLE_ALLOWED_TABS[authUser.role] || ['process'];
+  const currentTab = allowedTabs.includes(activeTab) ? activeTab : (ROLE_DEFAULT_TAB[authUser.role] || allowedTabs[0]);
+
   return (
     <div className="min-h-screen flex flex-col bg-[#090d16] text-slate-100">
       {/* Top SCADA Navigation & Role Switcher */}
       <Navbar 
-        activeTab={activeTab} 
+        activeTab={currentTab} 
         setActiveTab={setActiveTab} 
         currentUser={authUser}
         onLogout={handleLogout}
       />
 
-      {/* Main Work Area */}
+      {/* Main Work Area - Strictly renders only the view allowed for current role */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
-        {activeTab === 'process' && <ProcessLogView />}
-        {activeTab === 'supervisor' && <SupervisorBoardView />}
-        {activeTab === 'qc' && <SampleLabView />}
-        {activeTab === 'analytics' && <AnalyticsTrendsView />}
-        {activeTab === 'export' && <OfficialFormsExportView />}
-        {activeTab === 'admin' && <AdminUserManagementView />}
+        {currentTab === 'process' && allowedTabs.includes('process') && <ProcessLogView />}
+        {currentTab === 'supervisor' && allowedTabs.includes('supervisor') && <SupervisorBoardView />}
+        {currentTab === 'qc' && allowedTabs.includes('qc') && <SampleLabView />}
+        {currentTab === 'analytics' && allowedTabs.includes('analytics') && <AnalyticsTrendsView />}
+        {currentTab === 'export' && allowedTabs.includes('export') && <OfficialFormsExportView />}
+        {currentTab === 'admin' && allowedTabs.includes('admin') && <AdminUserManagementView />}
       </main>
 
       {/* Industrial Plant Footer */}
