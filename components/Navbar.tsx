@@ -12,10 +12,12 @@ import {
   UserCheck, 
   Wifi, 
   Layers,
-  LogOut
+  LogOut,
+  Users
 } from 'lucide-react';
 import { UserRole, Profile } from '@/types/refinery';
 import { getCurrentRole, setCurrentRole, getCurrentProfile, getProfiles, setAuthUser } from '@/lib/data-service';
+import StaffManagementModal from '@/components/StaffManagementModal';
 
 interface NavbarProps {
   activeTab: string;
@@ -29,6 +31,7 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onLogout 
   const [profile, setProfile] = useState<Profile>(currentUser || getCurrentProfile());
   const [timeString, setTimeString] = useState<string>('');
   const [pendingSync, setPendingSync] = useState<number>(0);
+  const [isStaffModalOpen, setIsStaffModalOpen] = useState(false);
 
   useEffect(() => {
     if (currentUser) {
@@ -203,6 +206,15 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onLogout 
             </div>
           </div>
 
+          <button
+            onClick={() => setIsStaffModalOpen(true)}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium text-cyan-300 bg-cyan-950/50 border border-cyan-800/60 hover:bg-cyan-900/60 hover:text-cyan-100 transition-all ml-1 cursor-pointer"
+            title="Direktori & Pendaftaran Kakitangan Loji"
+          >
+            <Users className="h-3.5 w-3.5 text-cyan-400" />
+            <span className="hidden md:inline">Kakitangan</span>
+          </button>
+
           {onLogout && (
             <button
               onClick={onLogout}
@@ -215,6 +227,11 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onLogout 
           )}
         </div>
       </div>
+
+      <StaffManagementModal
+        isOpen={isStaffModalOpen}
+        onClose={() => setIsStaffModalOpen(false)}
+      />
     </header>
   );
 }

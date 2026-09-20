@@ -12,10 +12,12 @@ import {
   Eye, 
   EyeOff,
   Info,
-  CheckCircle2
+  CheckCircle2,
+  Users
 } from 'lucide-react';
 import { Profile } from '@/types/refinery';
 import { loginUser } from '@/lib/data-service';
+import StaffManagementModal from '@/components/StaffManagementModal';
 
 interface LoginViewProps {
   onLogin: (profile: Profile) => void;
@@ -28,6 +30,7 @@ export default function LoginView({ onLogin }: LoginViewProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showDirectoryHelp, setShowDirectoryHelp] = useState(false);
+  const [isStaffModalOpen, setIsStaffModalOpen] = useState(false);
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,10 +50,10 @@ export default function LoginView({ onLogin }: LoginViewProps) {
 
   const sampleStaff = [
     { role: 'Lead Operator', id: 'OP-1042', name: 'Ahmad Razak', target: 'RF-FR-004 Log 24 Jam' },
-    { role: 'Shift Supervisor', id: 'SV-0814', name: 'Chong Wei Lun', target: 'Papan Pemantauan Langsung' },
-    { role: 'QC Lab Analyst', id: 'QC-2201', name: 'Siti Nurhaliza', target: 'RF-FR-001 Makmal QC' },
-    { role: 'QC Manager', id: 'QM-0502', name: 'Dr. Tan Keng Boon', target: 'Keputusan QC & Disposisi' },
-    { role: 'Plant Admin', id: 'AD-0010', name: 'Haris Iskandar', target: 'Pentadbiran Loji & Spesifikasi' },
+    { role: 'Shift Supervisor', id: 'SV-2014', name: 'Chong Wei Lun', target: 'Papan Pemantauan Langsung' },
+    { role: 'QC Lab Analyst', id: 'QC-3201', name: 'Siti Nurhaliza', target: 'RF-FR-001 Makmal QC' },
+    { role: 'QC Manager', id: 'QM-4502', name: 'Dr. Tan Keng Boon', target: 'Keputusan QC & Disposisi' },
+    { role: 'Plant Admin', id: 'AD-5010', name: 'Haris Iskandar', target: 'Pentadbiran Loji & Spesifikasi' },
     { role: 'ISO Auditor', id: 'AU-9901', name: 'Auditor (Viewer)', target: 'Borang Rasmi & Audit Trail' },
   ];
 
@@ -113,7 +116,7 @@ export default function LoginView({ onLogin }: LoginViewProps) {
                 <input
                   type="text"
                   required
-                  placeholder="Contoh: OP-1042, SV-0814, QC-2201"
+                  placeholder="Contoh: OP-1042, SV-2014, QC-3201"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
                   className="w-full bg-[#090d16] border border-slate-700 rounded-xl pl-10 pr-3 py-2.5 text-sm font-mono text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
@@ -159,7 +162,7 @@ export default function LoginView({ onLogin }: LoginViewProps) {
               <button
                 type="button"
                 onClick={() => setShowDirectoryHelp(!showDirectoryHelp)}
-                className="text-cyan-400 hover:underline flex items-center gap-1"
+                className="text-cyan-400 hover:underline flex items-center gap-1 cursor-pointer"
               >
                 <Info className="h-3 w-3" />
                 <span>ID Bertugas?</span>
@@ -211,10 +214,45 @@ export default function LoginView({ onLogin }: LoginViewProps) {
                   </button>
                 ))}
               </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDirectoryHelp(false);
+                  setIsStaffModalOpen(true);
+                }}
+                className="w-full mt-3 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg border border-cyan-500/40 bg-cyan-950/40 hover:bg-cyan-900/60 text-cyan-300 text-[11px] font-mono transition-colors cursor-pointer"
+              >
+                <Users className="h-3.5 w-3.5 text-cyan-400" />
+                <span>+ Daftar Kakitangan Baharu (Auto ID)</span>
+              </button>
             </div>
           )}
+
+          {/* Button to open Staff Directory Modal directly */}
+          <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs font-mono text-slate-400">
+            <span>Perlu tambah staf baharu?</span>
+            <button
+              type="button"
+              onClick={() => setIsStaffModalOpen(true)}
+              className="text-cyan-400 hover:text-cyan-300 hover:underline flex items-center gap-1 cursor-pointer font-semibold"
+            >
+              <Users className="h-3.5 w-3.5" />
+              <span>Daftar Kakitangan</span>
+            </button>
+          </div>
         </div>
       </div>
+
+      <StaffManagementModal
+        isOpen={isStaffModalOpen}
+        onClose={() => setIsStaffModalOpen(false)}
+        onStaffAdded={(newProf) => {
+          setIdentifier(newProf.employee_no);
+          setPassword('password123');
+          setIsStaffModalOpen(false);
+        }}
+      />
 
       {/* Industrial Footer */}
       <div className="w-full border-t border-slate-800/80 bg-[#070a10] py-4 px-6 text-center text-xs text-slate-500 font-mono">

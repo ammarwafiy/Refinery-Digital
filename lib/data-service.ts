@@ -43,6 +43,7 @@ import { supabase, isSupabaseConfigured } from './supabase';
 const STORAGE_KEYS = {
   AUTH_USER: 'refinery_auth_user',
   CURRENT_ROLE: 'refinery_current_role',
+  PROFILES: 'refinery_staff_profiles',
   SHEET: 'refinery_active_sheet',
   REPORTS: 'refinery_sample_reports',
   DEVIATIONS: 'refinery_deviations',
@@ -52,6 +53,7 @@ const STORAGE_KEYS = {
 // In-Memory fallback store
 let memoryAuthUser: Profile | null = null;
 let memoryRole: UserRole = 'operator';
+let memoryProfiles: Profile[] = JSON.parse(JSON.stringify(INITIAL_PROFILES));
 let memorySheet: ProcessSheet = JSON.parse(JSON.stringify(INITIAL_SHEET));
 let memoryReports: SampleReport[] = JSON.parse(JSON.stringify(INITIAL_REPORTS));
 let memoryDeviations: Deviation[] = JSON.parse(JSON.stringify(INITIAL_DEVIATIONS));
@@ -77,6 +79,36 @@ function setStored<T>(key: string, val: T): void {
   }
 }
 
+// Consistent Industrial Employee ID Configuration
+// Format: 2-Letter Department Code + 4-Digit Number
+export const ROLE_ID_SERIES: Record<UserRole, { prefix: string; label: string; start: number; example: string }> = {
+  operator:   { prefix: 'OP', label: 'Operator Loji (0700-0600)', start: 1042, example: 'OP-1043' },
+  supervisor: { prefix: 'SV', label: 'Penyelia Syif (Supervisor)', start: 2014, example: 'SV-2015' },
+  qc_analyst: { prefix: 'QC', label: 'Juruanalisis Makmal QC', start: 3201, example: 'QC-3202' },
+  qc_manager: { prefix: 'QM', label: 'Pengurus Kawalan Kualiti', start: 4502, example: 'QM-4503' },
+  admin:      { prefix: 'AD', label: 'Pentadbir Loji / Kejuruteraan', start: 5010, example: 'AD-5011' },
+  viewer:     { prefix: 'AU', label: 'Juruaudit Kualiti (ISO/HACCP)', start: 9901, example: 'AU-9902' },
+};
+
+export function generateNextEmployeeId(role: UserRole): string {
+  const meta = ROLE_ID_SERIES[role] || { prefix: 'ST', start: 1000 };
+  const all = getProfiles();
+  const existingNums = all
+    .filter(p => p.employee_no.toUpperCase().startsWith(`${meta.prefix}-`))
+    .map(p => {
+      const parts = p.employee_no.split('-');
+      return parseInt(parts[1], 10);
+    })
+    .filter(n => !isNaN(n));
+
+  if (existingNums.length === 0) {
+    return `${meta.prefix}-${meta.start}`;
+  }
+
+  const maxNum = Math.max(...existingNums, meta.start);
+  return `${meta.prefix}-${maxNum + 1}`;
+}
+
 // 1. Authentication & Session Management
 export function getAuthUser(): Profile | null {
   return getStored<Profile | null>(STORAGE_KEYS.AUTH_USER, memoryAuthUser);
@@ -92,22 +124,20 @@ export function setAuthUser(profile: Profile | null): void {
 
 export function loginUser(identifier: string, password?: string): { success: boolean; profile?: Profile; error?: string } {
   const cleanId = identifier.trim().toLowerCase();
-  // Match by employee_no, full_name, or role
-  const found = INITIAL_PROFILES.find(p => 
+  const allProfiles = getProfiles();
+
+  // Match by employee_no (exact or lowercase), full_name, or role
+  const found = allProfiles.find(p => 
     p.employee_no.toLowerCase() === cleanId ||
+    p.full_name.toLowerCase() === cleanId ||
     p.full_name.toLowerCase().includes(cleanId) ||
-    p.role.toLowerCase() === cleanId ||
-    (cleanId.includes('ahmad') && p.role === 'operator') ||
-    (cleanId.includes('chong') && p.role === 'supervisor') ||
-    (cleanId.includes('siti') && p.role === 'qc_analyst') ||
-    (cleanId.includes('tan') && p.role === 'qc_manager') ||
-    (cleanId.includes('haris') && p.role === 'admin')
+    p.role.toLowerCase() === cleanId
   );
 
   if (!found) {
     return { 
       success: false, 
-      error: `Employee ID or account "${identifier}" not found in plant directory. Try OP-1042, SV-0814, QC-2201, or use Quick Role Access.` 
+      error: `ID Pekerja "${identifier}" tidak ditemui dalam direktori loji. Sila semak semula ID anda (contoh: OP-1042, SV-2014, QC-3201).` 
     };
   }
 
@@ -133,11 +163,48 @@ export function getCurrentProfile(): Profile {
   const user = getAuthUser();
   if (user) return user;
   const role = getCurrentRole();
-  return INITIAL_PROFILES.find(p => p.role === role) || INITIAL_PROFILES[0];
+  const all = getProfiles();
+  return all.find(p => p.role === role) || all[0];
 }
 
 export function getProfiles(): Profile[] {
-  return INITIAL_PROFILES;
+  return getStored<Profile[]>(STORAGE_KEYS.PROFILES, memoryProfiles);
+}
+
+export function addProfile(data: { full_name: string; role: UserRole; employee_no?: string }): Profile {
+  const employee_no = data.employee_no?.trim() || generateNextEmployeeId(data.role);
+  const current = getProfiles();
+
+  const newProfile: Profile = {
+    id: `prof-${Date.now()}`,
+    employee_no: employee_no.toUpperCase(),
+    full_name: data.full_name.trim(),
+    role: data.role,
+    plant_id: INITIAL_PLANT.id,
+    active: true,
+    created_at: new Date().toISOString()
+  };
+
+  const updated = [...current, newProfile];
+  memoryProfiles = updated;
+  setStored(STORAGE_KEYS.PROFILES, updated);
+
+  // Sync to Supabase in background if available
+  if (isSupabaseConfigured && supabase) {
+    Promise.resolve(
+      supabase.from('profiles').insert([{
+        employee_no: newProfile.employee_no,
+        full_name: newProfile.full_name,
+        role: newProfile.role,
+        plant_id: newProfile.plant_id,
+        active: true
+      }])
+    ).then(() => {
+      // synced
+    }).catch(console.error);
+  }
+
+  return newProfile;
 }
 
 export function getProducts(): Product[] {

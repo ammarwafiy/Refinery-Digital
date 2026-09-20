@@ -39,7 +39,7 @@ export const INITIAL_PROFILES: Profile[] = [
   },
   {
     id: 'p-sup-01',
-    employee_no: 'SV-0814',
+    employee_no: 'SV-2014',
     full_name: 'Chong Wei Lun (Shift Supervisor)',
     role: 'supervisor',
     plant_id: INITIAL_PLANT.id,
@@ -48,7 +48,7 @@ export const INITIAL_PROFILES: Profile[] = [
   },
   {
     id: 'p-qc-01',
-    employee_no: 'QC-2201',
+    employee_no: 'QC-3201',
     full_name: 'Siti Nurhaliza (QC Lab Analyst)',
     role: 'qc_analyst',
     plant_id: INITIAL_PLANT.id,
@@ -57,7 +57,7 @@ export const INITIAL_PROFILES: Profile[] = [
   },
   {
     id: 'p-qcm-01',
-    employee_no: 'QM-0012',
+    employee_no: 'QM-4502',
     full_name: 'Dr. Tan Keng Boon (QC Manager)',
     role: 'qc_manager',
     plant_id: INITIAL_PLANT.id,
@@ -66,7 +66,7 @@ export const INITIAL_PROFILES: Profile[] = [
   },
   {
     id: 'p-adm-01',
-    employee_no: 'AD-0001',
+    employee_no: 'AD-5010',
     full_name: 'Haris Iskandar (Plant Administrator)',
     role: 'admin',
     plant_id: INITIAL_PLANT.id,
