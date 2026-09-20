@@ -12,12 +12,10 @@ import {
   Eye, 
   EyeOff,
   Info,
-  CheckCircle2,
-  Users
+  CheckCircle2
 } from 'lucide-react';
 import { Profile } from '@/types/refinery';
 import { loginUser } from '@/lib/data-service';
-import StaffManagementModal from '@/components/StaffManagementModal';
 
 interface LoginViewProps {
   onLogin: (profile: Profile) => void;
@@ -30,7 +28,6 @@ export default function LoginView({ onLogin }: LoginViewProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showDirectoryHelp, setShowDirectoryHelp] = useState(false);
-  const [isStaffModalOpen, setIsStaffModalOpen] = useState(false);
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -215,44 +212,20 @@ export default function LoginView({ onLogin }: LoginViewProps) {
                 ))}
               </div>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setShowDirectoryHelp(false);
-                  setIsStaffModalOpen(true);
-                }}
-                className="w-full mt-3 flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg border border-cyan-500/40 bg-cyan-950/40 hover:bg-cyan-900/60 text-cyan-300 text-[11px] font-mono transition-colors cursor-pointer"
-              >
-                <Users className="h-3.5 w-3.5 text-cyan-400" />
-                <span>+ Daftar Kakitangan Baharu (Auto ID)</span>
-              </button>
+              <div className="mt-3 p-2 rounded-lg bg-slate-800/60 border border-slate-700/60 text-[10px] text-slate-400">
+                <span className="text-amber-400 font-bold block mb-0.5">KAWALAN KESELAMATAN LOJI:</span>
+                Pendaftaran akaun kakitangan baharu dikawal ketat dan hanya boleh didaftarkan oleh <b>Pentadbir Loji (Admin · AD-5010)</b> di panel dalam sistem.
+              </div>
             </div>
           )}
 
-          {/* Button to open Staff Directory Modal directly */}
-          <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs font-mono text-slate-400">
-            <span>Perlu tambah staf baharu?</span>
-            <button
-              type="button"
-              onClick={() => setIsStaffModalOpen(true)}
-              className="text-cyan-400 hover:text-cyan-300 hover:underline flex items-center gap-1 cursor-pointer font-semibold"
-            >
-              <Users className="h-3.5 w-3.5" />
-              <span>Daftar Kakitangan</span>
-            </button>
+          {/* Security Notice Footer on Login Card */}
+          <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono text-slate-500">
+            <span>Akses Terhad Kakitangan Loji</span>
+            <span className="text-slate-400">PRD-REF-001</span>
           </div>
         </div>
       </div>
-
-      <StaffManagementModal
-        isOpen={isStaffModalOpen}
-        onClose={() => setIsStaffModalOpen(false)}
-        onStaffAdded={(newProf) => {
-          setIdentifier(newProf.employee_no);
-          setPassword('password123');
-          setIsStaffModalOpen(false);
-        }}
-      />
 
       {/* Industrial Footer */}
       <div className="w-full border-t border-slate-800/80 bg-[#070a10] py-4 px-6 text-center text-xs text-slate-500 font-mono">

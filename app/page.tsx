@@ -7,6 +7,7 @@ import SupervisorBoardView from '@/components/SupervisorBoardView';
 import SampleLabView from '@/components/SampleLabView';
 import AnalyticsTrendsView from '@/components/AnalyticsTrendsView';
 import OfficialFormsExportView from '@/components/OfficialFormsExportView';
+import AdminUserManagementView from '@/components/AdminUserManagementView';
 import LoginView from '@/components/LoginView';
 import { Profile } from '@/types/refinery';
 import { getAuthUser, setAuthUser, logoutUser } from '@/lib/data-service';
@@ -28,6 +29,7 @@ export default function Home() {
       if (savedUser.role === 'supervisor') setActiveTab('supervisor');
       else if (savedUser.role === 'qc_analyst' || savedUser.role === 'qc_manager') setActiveTab('qc');
       else if (savedUser.role === 'viewer') setActiveTab('export');
+      else if (savedUser.role === 'admin') setActiveTab('admin');
     }
   }, []);
 
@@ -39,6 +41,7 @@ export default function Home() {
     else if (profile.role === 'supervisor') setActiveTab('supervisor');
     else if (profile.role === 'qc_analyst' || profile.role === 'qc_manager') setActiveTab('qc');
     else if (profile.role === 'viewer') setActiveTab('export');
+    else if (profile.role === 'admin') setActiveTab('admin');
     else setActiveTab('process');
   };
 
@@ -69,6 +72,7 @@ export default function Home() {
         {activeTab === 'qc' && <SampleLabView />}
         {activeTab === 'analytics' && <AnalyticsTrendsView />}
         {activeTab === 'export' && <OfficialFormsExportView />}
+        {activeTab === 'admin' && <AdminUserManagementView />}
       </main>
 
       {/* Industrial Plant Footer */}

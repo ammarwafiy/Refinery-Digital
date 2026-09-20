@@ -141,6 +141,13 @@ export function loginUser(identifier: string, password?: string): { success: boo
     };
   }
 
+  if (found.active === false) {
+    return {
+      success: false,
+      error: `Akaun (${found.employee_no} - ${found.full_name}) telah dinyahaktifkan oleh Pentadbir Loji. Sila hubungi Pentadbiran Loji.`
+    };
+  }
+
   setAuthUser(found);
   return { success: true, profile: found };
 }
@@ -205,6 +212,26 @@ export function addProfile(data: { full_name: string; role: UserRole; employee_n
   }
 
   return newProfile;
+}
+
+export function toggleProfileActive(id: string): boolean {
+  const current = getProfiles();
+  const idx = current.findIndex(p => p.id === id);
+  if (idx === -1) return false;
+
+  const target = current[idx];
+  target.active = !target.active;
+  memoryProfiles = [...current];
+  setStored(STORAGE_KEYS.PROFILES, memoryProfiles);
+
+  if (isSupabaseConfigured && supabase) {
+    Promise.resolve(
+      supabase.from('profiles').update({ active: target.active }).eq('id', id)
+    ).catch(console.error);
+  }
+
+  addAuditLog('profiles', id, 'update', { active: !target.active }, { active: target.active });
+  return true;
 }
 
 export function getProducts(): Product[] {

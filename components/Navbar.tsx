@@ -17,7 +17,6 @@ import {
 } from 'lucide-react';
 import { UserRole, Profile } from '@/types/refinery';
 import { getCurrentRole, setCurrentRole, getCurrentProfile, getProfiles, setAuthUser } from '@/lib/data-service';
-import StaffManagementModal from '@/components/StaffManagementModal';
 
 interface NavbarProps {
   activeTab: string;
@@ -31,7 +30,6 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onLogout 
   const [profile, setProfile] = useState<Profile>(currentUser || getCurrentProfile());
   const [timeString, setTimeString] = useState<string>('');
   const [pendingSync, setPendingSync] = useState<number>(0);
-  const [isStaffModalOpen, setIsStaffModalOpen] = useState(false);
 
   useEffect(() => {
     if (currentUser) {
@@ -71,6 +69,9 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onLogout 
     } else {
       setProfile(getCurrentProfile());
     }
+    if (newRole === 'admin') {
+      setActiveTab('admin');
+    }
   };
 
   const navItems = [
@@ -79,6 +80,7 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onLogout 
     { id: 'qc', label: 'RF-FR-001 QC Lab', icon: FlaskConical, badge: 'Quality' },
     { id: 'analytics', label: 'Process Trends & Pareto', icon: BarChart3, badge: 'Analytics' },
     { id: 'export', label: 'Official Forms & Audit', icon: FileText, badge: 'ISO' },
+    { id: 'admin', label: 'Admin & Users', icon: Users, badge: 'Pentadbiran' },
   ];
 
   const roleColors: Record<UserRole, { bg: string; text: string; border: string }> = {
@@ -169,7 +171,7 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onLogout 
           </div>
 
           <div className="flex items-center gap-1">
-            {(['operator', 'supervisor', 'qc_analyst', 'qc_manager'] as UserRole[]).map((r) => {
+            {(['operator', 'supervisor', 'qc_analyst', 'qc_manager', 'admin'] as UserRole[]).map((r) => {
               const isSelected = role === r;
               const formatLabel: Record<UserRole, string> = {
                 operator: 'Operator',
@@ -207,12 +209,16 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onLogout 
           </div>
 
           <button
-            onClick={() => setIsStaffModalOpen(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium text-cyan-300 bg-cyan-950/50 border border-cyan-800/60 hover:bg-cyan-900/60 hover:text-cyan-100 transition-all ml-1 cursor-pointer"
-            title="Direktori & Pendaftaran Kakitangan Loji"
+            onClick={() => setActiveTab('admin')}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all ml-1 cursor-pointer border ${
+              activeTab === 'admin'
+                ? 'bg-blue-900/70 text-blue-200 border-blue-500/60 shadow-sm'
+                : 'text-cyan-300 bg-cyan-950/50 border border-cyan-800/60 hover:bg-cyan-900/60 hover:text-cyan-100'
+            }`}
+            title="Panel Pentadbiran & Pengurusan Pengguna Loji"
           >
             <Users className="h-3.5 w-3.5 text-cyan-400" />
-            <span className="hidden md:inline">Kakitangan</span>
+            <span className="hidden md:inline">Admin / Kakitangan</span>
           </button>
 
           {onLogout && (
@@ -227,11 +233,6 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onLogout 
           )}
         </div>
       </div>
-
-      <StaffManagementModal
-        isOpen={isStaffModalOpen}
-        onClose={() => setIsStaffModalOpen(false)}
-      />
     </header>
   );
 }
