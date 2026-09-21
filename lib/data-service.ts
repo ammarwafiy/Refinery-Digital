@@ -302,6 +302,14 @@ export function getActiveProcessSheet(): ProcessSheet {
 
 export function saveProcessEntry(updatedEntry: Partial<ProcessEntry> & { slot_index: number }): { success: boolean; entry: ProcessEntry; error?: string } {
   const currentSheet = getActiveProcessSheet();
+  if (currentSheet.status === 'verified') {
+    return {
+      success: false,
+      entry: {} as ProcessEntry,
+      error: 'Lembaran ini telah disahkan dan dikunci. Hanya Pentadbir (Admin) yang boleh membuka semula kunci lembaran untuk penyuntingan.'
+    };
+  }
+
   const profile = getCurrentProfile();
   const limits = getParameterLimits();
 
@@ -415,6 +423,9 @@ export function copyPreviousHour(slotIndex: number): { success: boolean; data?: 
     return { success: false, error: 'Cannot copy for the 0700 first hour of the shift.' };
   }
   const sheet = getActiveProcessSheet();
+  if (sheet.status === 'verified') {
+    return { success: false, error: 'Lembaran ini telah disahkan dan dikunci. Tidak boleh menyalin atau mengubah bacaan.' };
+  }
   const prevEntry = sheet.entries?.find(e => e.slot_index === slotIndex - 1);
   if (!prevEntry) {
     return { success: false, error: 'Hour immediately prior has no recorded readings to copy.' };
@@ -451,10 +462,20 @@ export function copyPreviousHour(slotIndex: number): { success: boolean; data?: 
 // Supervisor Verification with Electronic Signature
 export function verifySheet(sheetId: string, passwordConfirm: string): { success: boolean; error?: string } {
   if (!passwordConfirm || passwordConfirm.length < 4) {
-    return { success: false, error: 'Electronic signature password required (min 4 chars).' };
+    return { success: false, error: 'Kata laluan e-tandatangan diperlukan (minimum 4 aksara).' };
   }
   const sheet = getActiveProcessSheet();
   const profile = getCurrentProfile();
+  const role = getCurrentRole();
+
+  if (role !== 'supervisor' && role !== 'admin') {
+    return { success: false, error: 'Hanya Penyelia (Supervisor) atau Pentadbir (Admin) yang boleh mengesahkan lembaran ini.' };
+  }
+
+  const expectedPassword = profile.password || 'password123';
+  if (passwordConfirm.trim() !== expectedPassword) {
+    return { success: false, error: 'Kata laluan pengesahan e-tandatangan tidak tepat.' };
+  }
 
   sheet.status = 'verified';
   sheet.verified_by = profile.id;
@@ -465,6 +486,63 @@ export function verifySheet(sheetId: string, passwordConfirm: string): { success
   memorySheet = sheet;
 
   addAuditLog('process_sheets', sheetId, 'update', { status: 'open' }, { status: 'verified', verified_by: profile.full_name });
+  return { success: true };
+}
+
+// Admin Unlock Sheet with Mandatory Justification & Electronic Signature
+export function unlockSheet(sheetId: string, reason: string, passwordConfirm: string): { success: boolean; error?: string } {
+  const profile = getCurrentProfile();
+  const role = getCurrentRole();
+
+  if (role !== 'admin' && profile.role !== 'admin') {
+    return { 
+      success: false, 
+      error: 'Hanya peranan Pentadbir (Admin) yang mempunyai kuasa untuk membuka semula kunci lembaran proses.' 
+    };
+  }
+
+  if (!reason || reason.trim().length < 5) {
+    return { 
+      success: false, 
+      error: 'Sila masukkan sebab / justifikasi pembetulan untuk rekod audit trail (minimum 5 aksara).' 
+    };
+  }
+
+  const expectedPassword = profile.password || 'password123';
+  if (!passwordConfirm || passwordConfirm.trim() !== expectedPassword) {
+    return { 
+      success: false, 
+      error: 'Kata laluan e-tandatangan Admin adalah salah. Sila sahkan kata laluan anda.' 
+    };
+  }
+
+  const sheet = getActiveProcessSheet();
+  const previousStatus = sheet.status;
+  const previousVerifiedBy = sheet.verified_by_name;
+
+  sheet.status = 'open';
+  sheet.verified_by = null;
+  sheet.verified_by_name = null;
+  sheet.verified_at = null;
+
+  setStored(STORAGE_KEYS.SHEET, sheet);
+  memorySheet = sheet;
+
+  addAuditLog(
+    'process_sheets', 
+    sheetId, 
+    'update', 
+    { status: previousStatus, verified_by: previousVerifiedBy }, 
+    { 
+      status: 'open', 
+      action: 'admin_unlocked',
+      unlocked_by: profile.full_name, 
+      employee_no: profile.employee_no,
+      reason: reason.trim(),
+      timestamp: new Date().toISOString()
+    }
+  );
+
   return { success: true };
 }
 

@@ -12,6 +12,7 @@ import {
   saveProcessEntry, 
   copyPreviousHour, 
   verifySheet, 
+  unlockSheet,
   getProducts, 
   getParameterLimits, 
   getCurrentRole 
@@ -22,6 +23,7 @@ import {
   Copy, 
   Save, 
   Lock, 
+  Unlock,
   Clock, 
   Info, 
   Gauge, 
@@ -50,6 +52,12 @@ export default function ProcessLogView() {
   const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false);
   const [signaturePassword, setSignaturePassword] = useState('');
   const [verifyError, setVerifyError] = useState<string | null>(null);
+
+  // Admin Unlock modal state
+  const [isUnlockModalOpen, setIsUnlockModalOpen] = useState(false);
+  const [unlockReason, setUnlockReason] = useState('');
+  const [unlockPassword, setUnlockPassword] = useState('');
+  const [unlockError, setUnlockError] = useState<string | null>(null);
 
   const limits = getParameterLimits();
 
@@ -152,6 +160,23 @@ export default function ProcessLogView() {
     refreshSheet();
   };
 
+  const handleUnlockSheet = (e: React.FormEvent) => {
+    e.preventDefault();
+    setUnlockError(null);
+
+    const res = unlockSheet(sheet.id, unlockReason, unlockPassword);
+    if (!res.success) {
+      setUnlockError(res.error || 'Gagal membuka semula kunci lembaran.');
+      return;
+    }
+
+    setIsUnlockModalOpen(false);
+    setUnlockReason('');
+    setUnlockPassword('');
+    setSuccessMessage('Kunci lembaran berjaya dibuka semula oleh Admin! Anda kini boleh menyunting semula bacaan jam.');
+    refreshSheet();
+  };
+
   // Helper to determine soft/hard limit status for styling
   const checkLimit = (fieldKey: string, val?: number | null) => {
     if (val === undefined || val === null || isNaN(val)) return 'normal';
@@ -196,6 +221,11 @@ export default function ProcessLogView() {
             </div>
             <p className="mt-1 text-xs text-slate-400">
               Nisshin Deodorizer Plant · Shift runs 07:00 (Today) to 06:00 (Tomorrow)
+              {sheet.status === 'verified' && sheet.verified_by_name && (
+                <span className="ml-2 text-emerald-400 font-mono">
+                  · Disahkan oleh: {sheet.verified_by_name}
+                </span>
+              )}
             </p>
           </div>
 
@@ -222,6 +252,23 @@ export default function ProcessLogView() {
               >
                 <FileCheck2 className="h-4 w-4" />
                 <span>Verify & Lock Sheet</span>
+              </button>
+            )}
+
+            {/* Admin Unlock Action Button */}
+            {role === 'admin' && sheet.status === 'verified' && (
+              <button
+                onClick={() => {
+                  setIsUnlockModalOpen(true);
+                  setUnlockError(null);
+                  setUnlockReason('');
+                  setUnlockPassword('');
+                }}
+                className="flex items-center gap-2 bg-amber-600 hover:bg-amber-500 text-white font-medium px-3.5 py-2 rounded-lg text-xs transition-colors shadow-lg shadow-amber-950/50"
+                title="Buka semula kunci lembaran proses untuk pembetulan bacaan oleh Admin"
+              >
+                <Unlock className="h-4 w-4" />
+                <span>Admin Unlock / Buka Kunci</span>
               </button>
             )}
           </div>
@@ -334,6 +381,40 @@ export default function ProcessLogView() {
           <div className="mb-5 flex items-center gap-2 rounded-xl bg-emerald-950/60 p-3.5 text-xs text-emerald-300 border border-emerald-800/60">
             <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
             <span>{successMessage}</span>
+          </div>
+        )}
+
+        {/* Informative Locked Sheet Banner */}
+        {sheet.status === 'verified' && (
+          <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl bg-emerald-950/30 p-4 text-xs text-emerald-300 border border-emerald-800/60">
+            <div className="flex items-start sm:items-center gap-2.5">
+              <Lock className="h-4 w-4 shrink-0 text-emerald-400 mt-0.5 sm:mt-0" />
+              <div>
+                <span className="font-semibold text-emerald-200">Lembaran Syif Telah Disahkan & Dikunci (Locked for Audit Integrity)</span>
+                <p className="text-[11px] text-emerald-400/80 mt-0.5">
+                  Semua medan input jam telah dikunci daripada sebarang suntingan. 
+                  {sheet.verified_by_name ? ` Disahkan oleh ${sheet.verified_by_name}.` : ''} 
+                  {role === 'admin' 
+                    ? ' Sebagai Admin, anda mempunyai kuasa penuh untuk membuka semula kunci sekiranya terdapat keperluan pembetulan.'
+                    : ' Hanya Pentadbir Loji (Admin) yang mempunyai autoriti untuk membuka semula kunci lembaran ini.'}
+                </p>
+              </div>
+            </div>
+            {role === 'admin' && (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsUnlockModalOpen(true);
+                  setUnlockError(null);
+                  setUnlockReason('');
+                  setUnlockPassword('');
+                }}
+                className="shrink-0 flex items-center gap-1.5 bg-amber-600/90 hover:bg-amber-500 text-white font-medium px-3.5 py-1.5 rounded-lg text-xs transition-colors border border-amber-500/40 shadow-sm"
+              >
+                <Unlock className="h-3.5 w-3.5" />
+                <span>Buka Semula Kunci (Admin)</span>
+              </button>
+            )}
           </div>
         )}
 
@@ -740,6 +821,84 @@ export default function ProcessLogView() {
                   className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-5 py-2 rounded-lg text-xs transition-colors"
                 >
                   Confirm & Sign Lock
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Admin Unlock Modal */}
+      {isUnlockModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-2xl border border-amber-600/50 bg-slate-900 p-6 shadow-2xl">
+            <div className="flex items-center gap-3 text-amber-400 mb-4">
+              <div className="rounded-lg bg-amber-950/80 p-2 border border-amber-600/30">
+                <Unlock className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-white">
+                  Admin Unlock: Buka Kunci Lembaran
+                </h3>
+                <span className="text-[11px] font-mono text-amber-400/90">
+                  Kuasa Khas Pentadbir Loji · RF-FR-004
+                </span>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-300 mb-4 leading-relaxed bg-slate-950/60 p-3 rounded-lg border border-slate-800">
+              Membuka semula kunci lembaran ini akan membolehkan Operator / Penyelia menyunting semula bacaan jam bagi syif ini. Setiap tindakan pembukaan kunci akan direkodkan ke dalam <strong className="text-amber-300 font-mono">Audit Trail</strong> kekal bersama alasan anda.
+            </p>
+
+            {unlockError && (
+              <div className="mb-4 rounded-lg bg-rose-950/60 p-3 text-xs text-rose-300 border border-rose-800/60">
+                {unlockError}
+              </div>
+            )}
+
+            <form onSubmit={handleUnlockSheet} className="space-y-4">
+              <div>
+                <label className="block text-xs font-mono text-slate-300 mb-1">
+                  Sebab Pembukaan Kunci / Justifikasi Pembetulan (Wajib):
+                </label>
+                <textarea
+                  required
+                  rows={2}
+                  placeholder="Contoh: Pembetulan bacaan suhu Tray 3 disebabkan salah input semasa syif..."
+                  value={unlockReason}
+                  onChange={e => setUnlockReason(e.target.value)}
+                  className="w-full bg-[#090d16] border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500 resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-mono text-slate-300 mb-1">
+                  Kata Laluan Pengesahan Admin (E-Signature):
+                </label>
+                <input
+                  type="password"
+                  required
+                  placeholder="Masukkan kata laluan Admin..."
+                  value={unlockPassword}
+                  onChange={e => setUnlockPassword(e.target.value)}
+                  className="w-full bg-[#090d16] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsUnlockModalOpen(false)}
+                  className="px-4 py-2 rounded-lg text-xs font-medium text-slate-400 hover:text-white"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="bg-amber-600 hover:bg-amber-500 text-white font-medium px-5 py-2 rounded-lg text-xs transition-colors flex items-center gap-1.5 shadow-lg shadow-amber-950/50"
+                >
+                  <Unlock className="h-4 w-4" />
+                  <span>Sahkan & Buka Kunci</span>
                 </button>
               </div>
             </form>

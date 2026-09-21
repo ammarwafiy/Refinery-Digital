@@ -1,26 +1,26 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Flame, 
-  Activity, 
-  Clock, 
-  ShieldCheck, 
-  FlaskConical, 
-  BarChart3, 
-  FileText, 
-  UserCheck, 
-  Wifi, 
+import {
+  Flame,
+  Activity,
+  Clock,
+  ShieldCheck,
+  FlaskConical,
+  BarChart3,
+  FileText,
+  UserCheck,
+  Wifi,
   Layers,
   LogOut,
   Users
 } from 'lucide-react';
 import { UserRole, Profile } from '@/types/refinery';
-import { 
-  getCurrentRole, 
-  setCurrentRole, 
-  getCurrentProfile, 
-  getProfiles, 
+import {
+  getCurrentRole,
+  setCurrentRole,
+  getCurrentProfile,
+  getProfiles,
   setAuthUser,
   ROLE_ALLOWED_TABS,
   ROLE_DEFAULT_TAB
@@ -152,18 +152,16 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onLogout 
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`group flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap border cursor-pointer ${
-                  isActive
+                className={`group flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all whitespace-nowrap border cursor-pointer ${isActive
                     ? 'bg-slate-800/90 text-white border-cyan-500/50 shadow-lg shadow-cyan-950/40'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border-transparent'
-                }`}
+                  }`}
               >
                 <Icon className={`h-4 w-4 ${isActive ? 'text-cyan-400' : 'text-slate-500 group-hover:text-slate-300'}`} />
                 <span>{item.label}</span>
                 {item.badge && (
-                  <span className={`text-[10px] px-1.5 py-0.2 rounded font-mono ${
-                    isActive ? 'bg-cyan-950 text-cyan-300 border border-cyan-500/30' : 'bg-slate-800 text-slate-500'
-                  }`}>
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded font-mono ${isActive ? 'bg-cyan-950 text-cyan-300 border border-cyan-500/30' : 'bg-slate-800 text-slate-500'
+                    }`}>
                     {item.badge}
                   </span>
                 )}
@@ -198,11 +196,10 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onLogout 
                     <button
                       key={r}
                       onClick={() => handleRoleChange(r)}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-medium font-mono transition-all border cursor-pointer ${
-                        isSelected 
-                          ? `${roleColors[r].bg} ${roleColors[r].text} ${roleColors[r].border} shadow-sm font-semibold` 
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium font-mono transition-all border cursor-pointer ${isSelected
+                          ? `${roleColors[r].bg} ${roleColors[r].text} ${roleColors[r].border} shadow-sm font-semibold`
                           : 'text-slate-500 hover:text-slate-300 border-transparent hover:bg-slate-800/60'
-                      }`}
+                        }`}
                       title={`Simulasi Peranan ${formatLabel[r]}`}
                     >
                       {formatLabel[r]}
@@ -238,11 +235,10 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onLogout 
           {role === 'admin' && (
             <button
               onClick={() => setActiveTab('admin')}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all ml-1 cursor-pointer border ${
-                activeTab === 'admin'
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all ml-1 cursor-pointer border ${activeTab === 'admin'
                   ? 'bg-blue-900/70 text-blue-200 border-blue-500/60 shadow-sm'
                   : 'text-cyan-300 bg-cyan-950/50 border border-cyan-800/60 hover:bg-cyan-900/60 hover:text-cyan-100'
-              }`}
+                }`}
               title="Panel Pentadbiran & Pengurusan Pengguna Loji"
             >
               <Users className="h-3.5 w-3.5 text-cyan-400" />
