@@ -93,7 +93,7 @@ export const ROLE_ID_SERIES: Record<UserRole, { prefix: string; label: string; s
 // Role-Based Views & Navigation Rules (RBAC)
 export const ROLE_ALLOWED_TABS: Record<UserRole, string[]> = {
   operator: ['process', 'supervisor'],
-  supervisor: ['supervisor', 'process', 'report'],
+  supervisor: ['supervisor', 'process', 'report', 'export'],
   qc_analyst: ['qc', 'report'],
   qc_manager: ['qc', 'report', 'analytics'],
   admin: ['admin', 'supervisor', 'process', 'report', 'qc', 'analytics', 'export'],
