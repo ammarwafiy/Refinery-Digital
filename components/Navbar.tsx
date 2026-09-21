@@ -30,10 +30,11 @@ interface NavbarProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   currentUser?: Profile | null;
+  onRoleChange?: (profile: Profile) => void;
   onLogout?: () => void;
 }
 
-export default function Navbar({ activeTab, setActiveTab, currentUser, onLogout }: NavbarProps) {
+export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleChange, onLogout }: NavbarProps) {
   const [role, setRole] = useState<UserRole>(currentUser?.role || 'operator');
   const [profile, setProfile] = useState<Profile>(currentUser || getCurrentProfile());
   const [timeString, setTimeString] = useState<string>('');
@@ -73,8 +74,11 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onLogout 
     if (matched) {
       setAuthUser(matched);
       setProfile(matched);
+      onRoleChange?.(matched);
     } else {
-      setProfile(getCurrentProfile());
+      const p = getCurrentProfile();
+      setProfile(p);
+      onRoleChange?.(p);
     }
     setActiveTab(ROLE_DEFAULT_TAB[newRole] || 'process');
   };

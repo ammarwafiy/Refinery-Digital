@@ -5,7 +5,8 @@ import {
   ProcessSheet, 
   ProcessEntry, 
   Product, 
-  UserRole 
+  UserRole,
+  Profile 
 } from '@/types/refinery';
 import { 
   getActiveProcessSheet, 
@@ -35,11 +36,16 @@ import {
   AlertCircle
 } from 'lucide-react';
 
-export default function ProcessLogView() {
+interface ProcessLogViewProps {
+  currentRole?: UserRole;
+  currentUser?: Profile | null;
+}
+
+export default function ProcessLogView({ currentRole, currentUser }: ProcessLogViewProps = {}) {
   const [sheet, setSheet] = useState<ProcessSheet>(getActiveProcessSheet());
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedSlotIndex, setSelectedSlotIndex] = useState<number>(2); // Default to 0900 (has sample data)
-  const [role, setRole] = useState<UserRole>('operator');
+  const [role, setRole] = useState<UserRole>(currentRole || currentUser?.role || getCurrentRole());
 
   // Active entry form state
   const [formData, setFormData] = useState<Partial<ProcessEntry>>({});
@@ -63,9 +69,9 @@ export default function ProcessLogView() {
 
   useEffect(() => {
     setProducts(getProducts());
-    setRole(getCurrentRole());
+    setRole(currentRole || currentUser?.role || getCurrentRole());
     refreshSheet();
-  }, []);
+  }, [currentRole, currentUser]);
 
   const refreshSheet = () => {
     const s = getActiveProcessSheet();
@@ -210,9 +216,26 @@ export default function ProcessLogView() {
                 Hourly Deodorizer Process Control Log
               </h1>
               {sheet.status === 'verified' ? (
-                <span className="flex items-center gap-1 text-xs font-mono px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-400 border border-emerald-500/40">
-                  <CheckCircle2 className="h-3 w-3" /> VERIFIED & LOCKED
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="flex items-center gap-1 text-xs font-mono px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-400 border border-emerald-500/40">
+                    <CheckCircle2 className="h-3 w-3" /> VERIFIED & LOCKED
+                  </span>
+                  {role === 'admin' && (
+                    <button
+                      onClick={() => {
+                        setIsUnlockModalOpen(true);
+                        setUnlockError(null);
+                        setUnlockReason('');
+                        setUnlockPassword('');
+                      }}
+                      className="flex items-center gap-1 text-xs font-mono px-2.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/50 hover:bg-amber-500/30 transition-colors shadow-sm cursor-pointer"
+                      title="Buka semula kunci lembaran proses ini"
+                    >
+                      <Unlock className="h-3 w-3 text-amber-400" />
+                      <span>Buka Kunci</span>
+                    </button>
+                  )}
+                </div>
               ) : (
                 <span className="flex items-center gap-1 text-xs font-mono px-2 py-0.5 rounded bg-amber-950/80 text-amber-400 border border-amber-500/40">
                   <Clock className="h-3 w-3" /> ACTIVE / OPEN

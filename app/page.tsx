@@ -65,12 +65,15 @@ export default function Home() {
         activeTab={currentTab} 
         setActiveTab={setActiveTab} 
         currentUser={authUser}
+        onRoleChange={setAuthUserState}
         onLogout={handleLogout}
       />
 
       {/* Main Work Area - Strictly renders only the view allowed for current role */}
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
-        {currentTab === 'process' && allowedTabs.includes('process') && <ProcessLogView />}
+        {currentTab === 'process' && allowedTabs.includes('process') && (
+          <ProcessLogView currentRole={authUser.role} currentUser={authUser} />
+        )}
         {currentTab === 'supervisor' && allowedTabs.includes('supervisor') && <SupervisorBoardView />}
         {currentTab === 'qc' && allowedTabs.includes('qc') && <SampleLabView />}
         {currentTab === 'analytics' && allowedTabs.includes('analytics') && <AnalyticsTrendsView />}
