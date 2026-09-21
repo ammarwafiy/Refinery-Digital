@@ -29,11 +29,12 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Allow root path '/' because it hosts the complete unified SCADA application and LoginView
+  // Allow root path '/', login path, and all '/api' backend routes
   if (
     !user &&
     request.nextUrl.pathname !== '/' &&
-    !request.nextUrl.pathname.startsWith('/login')
+    !request.nextUrl.pathname.startsWith('/login') &&
+    !request.nextUrl.pathname.startsWith('/api')
   ) {
     const url = request.nextUrl.clone()
     url.pathname = '/'

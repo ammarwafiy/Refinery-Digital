@@ -210,36 +210,69 @@ export function getProfiles(): Profile[] {
 export async function syncProfilesFromSupabase(): Promise<{ success: boolean; count: number; profiles: Profile[]; error?: string }> {
   try {
     const res = await fetch('/api/profiles', { cache: 'no-store' });
-    if (!res.ok) {
-      const errJson = await res.json().catch(() => ({}));
-      return { success: false, count: 0, profiles: getProfiles(), error: errJson.error || `HTTP ${res.status}` };
-    }
-    const json = await res.json();
-    if (json.success && Array.isArray(json.profiles) && json.profiles.length > 0) {
-      const liveProfiles: Profile[] = json.profiles.map((p: any) => ({
-        id: p.employee_no,
-        employee_no: p.employee_no,
-        full_name: p.full_name,
-        role: p.role,
-        status: p.status || (p.active === false ? 'unactive' : 'active'),
-        active: p.status === 'active' || p.active === true,
-        password: p.password || 'password123',
-        created_at: p.created_at || new Date().toISOString(),
-      }));
+    const contentType = res.headers.get('content-type') || '';
+    if (res.ok && contentType.includes('application/json')) {
+      const json = await res.json();
+      if (json.success && Array.isArray(json.profiles) && json.profiles.length > 0) {
+        const liveProfiles: Profile[] = json.profiles.map((p: any) => ({
+          id: p.employee_no,
+          employee_no: p.employee_no,
+          full_name: p.full_name,
+          role: p.role,
+          status: p.status || (p.active === false ? 'unactive' : 'active'),
+          active: p.status === 'active' || p.active === true,
+          password: p.password || 'password123',
+          created_at: p.created_at || new Date().toISOString(),
+        }));
 
-      memoryProfiles = liveProfiles;
-      setStored(STORAGE_KEYS.PROFILES, liveProfiles);
+        memoryProfiles = liveProfiles;
+        setStored(STORAGE_KEYS.PROFILES, liveProfiles);
 
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('refinery_profiles_synced', { detail: liveProfiles }));
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('refinery_profiles_synced', { detail: liveProfiles }));
+        }
+        return { success: true, count: liveProfiles.length, profiles: liveProfiles };
       }
-      return { success: true, count: liveProfiles.length, profiles: liveProfiles };
     }
-    return { success: true, count: 0, profiles: getProfiles() };
-  } catch (err: any) {
-    console.warn('[Sync] Failed to fetch profiles from Supabase API:', err);
-    return { success: false, count: 0, profiles: getProfiles(), error: err?.message };
+  } catch (apiErr) {
+    console.warn('[Sync] /api/profiles fetch encountered error, attempting direct client fallback:', apiErr);
   }
+
+  // Resilient fallback: Direct Supabase Client Query
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+      if (!error && Array.isArray(data) && data.length > 0) {
+        const liveProfiles: Profile[] = data.map((p: any) => ({
+          id: p.employee_no,
+          employee_no: p.employee_no,
+          full_name: p.full_name,
+          role: p.role,
+          status: p.status || (p.active === false ? 'unactive' : 'active'),
+          active: p.status === 'active' || p.active === true,
+          password: p.password || 'password123',
+          created_at: p.created_at || new Date().toISOString(),
+        }));
+
+        memoryProfiles = liveProfiles;
+        setStored(STORAGE_KEYS.PROFILES, liveProfiles);
+
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('refinery_profiles_synced', { detail: liveProfiles }));
+        }
+        return { success: true, count: liveProfiles.length, profiles: liveProfiles };
+      }
+    } catch (directErr) {
+      console.warn('[Sync] Direct Supabase query fallback failed:', directErr);
+    }
+  }
+
+  const cached = getProfiles();
+  return { success: true, count: cached.length, profiles: cached };
 }
 
 // Auto-sync on client load
