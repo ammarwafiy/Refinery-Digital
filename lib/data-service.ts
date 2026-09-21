@@ -329,15 +329,15 @@ export function saveProcessEntry(updatedEntry: Partial<ProcessEntry> & { slot_in
   const profile = getCurrentProfile();
   const role = getCurrentRole();
 
-  // Real-time window enforcement: Operators can only record/edit during the active hour
+  // Real-time window enforcement: Readings can only be recorded during the active live window slot
   const currentSlot = getRealtimeSlotIndex();
-  if ((profile.role === 'operator' || role === 'operator') && updatedEntry.slot_index !== currentSlot) {
+  if (updatedEntry.slot_index !== currentSlot) {
     const slotLabel = String(((updatedEntry.slot_index + 7) % 24) * 100).padStart(4, '0');
     const curLabel = String(((currentSlot + 7) % 24) * 100).padStart(4, '0');
     return {
       success: false,
       entry: {} as ProcessEntry,
-      error: `Access Denied: Recording time window for slot ${slotLabel} has closed or not arrived yet. Operators are only permitted to record readings during the active hour slot (${curLabel}).`
+      error: `Access Denied: Recording time window for slot ${slotLabel} is closed (Read-Only). Hourly readings can only be saved during the active live window slot (${curLabel}).`
     };
   }
 
@@ -461,10 +461,9 @@ export function copyPreviousHour(slotIndex: number): { success: boolean; data?: 
   if (sheet.status === 'verified') {
     return { success: false, error: 'This sheet has been verified and locked. Readings cannot be copied or modified.' };
   }
-  const role = getCurrentRole();
   const currentSlot = getRealtimeSlotIndex();
-  if (role === 'operator' && slotIndex !== currentSlot) {
-    return { success: false, error: 'Access Denied: Operators can only copy readings during the active hour slot.' };
+  if (slotIndex !== currentSlot) {
+    return { success: false, error: 'Access Denied: Readings can only be copied into the active live window slot.' };
   }
 
   // Find closest previous recorded entry (check slotIndex - 1, then search backwards for any earlier slot)

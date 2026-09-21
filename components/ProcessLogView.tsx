@@ -167,6 +167,10 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
 
   const handleSaveEntry = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSlotDisabled) {
+      setValidationError(`Hour ${selectedSlotLabel} is locked (Read-Only). Readings can only be saved during the active live window (${String(((currentSlotIndex + 7) % 24) * 100).padStart(4, '0')}).`);
+      return;
+    }
     setValidationError(null);
     setIsSaving(true);
 
@@ -248,9 +252,10 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
   const isPastSlot = selectedSlotIndex < currentSlotIndex;
   const isFutureSlot = selectedSlotIndex > currentSlotIndex;
 
-  // Strict operator lock rule:
-  // Sheet is locked if verified, OR if logged in as operator and selecting a past/future slot
-  const isSlotDisabled = sheet.status === 'verified' || (role === 'operator' && !isLiveSlot);
+  // Strict realtime lock rule:
+  // Only the active live window slot is editable and savable.
+  // Past and future timeline slots are locked in read-only mode to maintain plant operational audit integrity.
+  const isSlotDisabled = sheet.status === 'verified' || !isLiveSlot;
 
   return (
     <div className="space-y-6">
@@ -527,8 +532,8 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
           </div>
         )}
 
-        {/* Realtime Window Feedback Banner for Operators */}
-        {role === 'operator' && isPastSlot && (
+        {/* Realtime Window Feedback Banner */}
+        {isPastSlot && sheet.status !== 'verified' && (
           <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl bg-amber-950/40 p-4 text-xs text-amber-200 border border-amber-800/60 shadow-lg">
             <div className="flex items-start gap-3">
               <div className="rounded-lg bg-amber-950 p-2 border border-amber-600/40 text-amber-400 shrink-0">
@@ -540,7 +545,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                 </span>
                 <p className="text-[11px] text-amber-300/80 mt-1 leading-relaxed">
                   According to refinery realtime operating procedures, slot <strong>{currentSlotTimeStr} – {nextSlotTimeStr}</strong> was closed and locked from further data entry at {nextSlotTimeStr}. 
-                  Operators have read-only access to preserve operational audit integrity.
+                  This timeline is now locked in read-only mode to preserve operational audit integrity.
                 </p>
               </div>
             </div>
@@ -555,7 +560,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
           </div>
         )}
 
-        {role === 'operator' && isFutureSlot && (
+        {isFutureSlot && sheet.status !== 'verified' && (
           <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl bg-slate-900/90 p-4 text-xs text-slate-300 border border-slate-700/60 shadow-lg">
             <div className="flex items-start gap-3">
               <div className="rounded-lg bg-slate-950 p-2 border border-slate-700 text-cyan-400 shrink-0">
@@ -581,7 +586,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
           </div>
         )}
 
-        {role === 'operator' && isLiveSlot && sheet.status !== 'verified' && (
+        {isLiveSlot && sheet.status !== 'verified' && (
           <div className="mb-5 flex items-start sm:items-center justify-between gap-3 rounded-xl bg-cyan-950/40 p-4 text-xs text-cyan-300 border border-cyan-700/60 shadow-lg">
             <div className="flex items-center gap-3">
               <div className="rounded-lg bg-cyan-900/50 p-2 border border-cyan-500/40 text-cyan-400 shrink-0">
@@ -1023,11 +1028,11 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     <span>
                       {sheet.status === 'verified'
                         ? 'Shift Sheet Locked (Verified)'
-                        : role === 'operator' && isPastSlot
+                        : isPastSlot
                         ? `Expired: Hour ${selectedSlotLabel} Closed (Read-Only)`
-                        : role === 'operator' && isFutureSlot
+                        : isFutureSlot
                         ? `Awaiting: Hour ${selectedSlotLabel} Not Started`
-                        : `Hour ${selectedSlotLabel} Locked`}
+                        : `Hour ${selectedSlotLabel} Locked (Read-Only)`}
                     </span>
                   </>
                 ) : (
