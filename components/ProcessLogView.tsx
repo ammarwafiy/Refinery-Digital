@@ -187,7 +187,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
 
     setIsSaving(false);
     setIsJustSaved(true);
-    setSuccessMessage(`✓ Hour ${res.entry.slot_label} readings successfully recorded & saved to plant audit trail!`);
+    setSuccessMessage(`✓ Hour ${res.entry.slot_label} readings recorded! Product sample (${res.entry.product_name}) auto-dispatched to RF-FR-001 QC Lab queue.`);
     refreshSheet(true);
 
     setTimeout(() => {

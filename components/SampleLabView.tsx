@@ -98,6 +98,17 @@ export default function SampleLabView() {
     setParameters(getParameters());
     setReasons(getRejectionReasons());
     refreshReports();
+
+    const handleUpdate = () => {
+      refreshReports();
+    };
+
+    window.addEventListener('refinery_reports_updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener('refinery_reports_updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
   }, []);
 
   const refreshReports = () => {
@@ -567,8 +578,13 @@ export default function SampleLabView() {
                       <div className="font-mono font-bold text-sm text-white flex items-center gap-1.5">
                         <span>{rep.lot_no}</span>
                       </div>
-                      <div className="text-xs text-slate-300 mt-0.5 font-medium">
-                        {rep.product_name}
+                      <div className="text-xs text-slate-300 mt-0.5 font-medium flex items-center gap-1.5">
+                        <span>{rep.product_name}</span>
+                        {rep.remarks?.includes('Process Log') && (
+                          <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-cyan-950/80 text-cyan-400 border border-cyan-800/40">
+                            Auto Log
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -609,13 +625,18 @@ export default function SampleLabView() {
                 {/* Sample Header Summary */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
                   <div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="text-xs font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300">
                         {selectedReport.report_no}
                       </span>
                       <h2 className="text-xl font-bold text-white font-mono">
                         {selectedReport.lot_no}
                       </h2>
+                      {selectedReport.remarks?.includes('Process Log') && (
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950/90 text-cyan-300 border border-cyan-700/50 flex items-center gap-1">
+                          ⚡ Auto-Dispatched from Process Log ({selectedReport.time_check})
+                        </span>
+                      )}
                     </div>
                     <div className="mt-1 text-xs text-slate-400 flex flex-wrap items-center gap-3">
                       <span>Product: <strong className="text-white">{selectedReport.product_name}</strong></span>
