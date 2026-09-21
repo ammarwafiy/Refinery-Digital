@@ -71,7 +71,7 @@ export default function Home() {
       />
 
       {/* Main Work Area - Strictly renders only the view allowed for current role */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6 lg:p-8 pb-24 lg:pb-8">
         {currentTab === 'process' && allowedTabs.includes('process') && (
           <ProcessLogView currentRole={authUser.role} currentUser={authUser} />
         )}
