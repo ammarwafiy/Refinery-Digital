@@ -181,6 +181,8 @@ export interface ProcessEntry {
   amended_at?: string | null;
   amend_reason?: string | null;
   client_uuid?: string;
+  auto_dispatch_qc?: boolean;
+  qc_parameter_ids?: string[];
 }
 
 export interface Deviation {

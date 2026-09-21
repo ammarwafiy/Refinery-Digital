@@ -515,6 +515,35 @@ export function getProductSpecs(productId?: string): ProductSpec[] {
   return INITIAL_SPECS.filter(s => s.product_id === productId);
 }
 
+// Return sensible default lab parameters based on product specs or product oil type
+export function getDefaultParametersForProduct(productId?: string): string[] {
+  const specs = getProductSpecs(productId);
+  if (specs && specs.length > 0) {
+    const fromSpecs = Array.from(new Set(specs.map(s => s.parameter_id)));
+    if (!fromSpecs.includes('param-odour')) fromSpecs.push('param-odour');
+    return fromSpecs;
+  }
+
+  // Industrial default based on product classification
+  const products = getProducts();
+  const prod = products.find(p => p.id === productId);
+  const name = (prod?.name || '').toLowerCase();
+
+  const standard = ['param-ffa', 'param-h2o', 'param-iv', 'param-pv', 'param-col-r', 'param-col-y', 'param-odour'];
+
+  if (name.includes('olein') || name.includes('superolein')) {
+    return [...standard, 'param-cloud'];
+  }
+  if (name.includes('stearin') || name.includes('matsuyama') || name.includes('hard') || name.includes('fat')) {
+    return [...standard, 'param-smp', 'param-cloud', 'param-sfc'];
+  }
+  if (name.includes('pfad') || name.includes('acid')) {
+    return ['param-ffa', 'param-h2o', 'param-iv', 'param-fac'];
+  }
+
+  return standard;
+}
+
 export function getRejectionReasons(): RejectionReason[] {
   return INITIAL_REJECTION_REASONS;
 }
@@ -674,7 +703,7 @@ export function saveProcessEntry(updatedEntry: Partial<ProcessEntry> & { slot_in
   addAuditLog('process_entries', finalEntry.id, existingIdx >= 0 ? 'update' : 'insert', null, finalEntry);
 
   // Auto-dispatch product sample to RF-FR-001 QC Lab Analysis queue
-  if (productName && !finalEntry.no_production_reason) {
+  if (productName && !finalEntry.no_production_reason && updatedEntry.auto_dispatch_qc !== false) {
     try {
       const currentReports = getSampleReports();
       const slotTimeCheck = `${slotLabel.slice(0, 2)}:00`;
@@ -682,35 +711,29 @@ export function saveProcessEntry(updatedEntry: Partial<ProcessEntry> & { slot_in
         r => r.sample_date === currentSheet.shift_date && (r.time_check === slotTimeCheck || r.lot_no?.endsWith(`-${slotLabel}`))
       );
 
-      if (existingReportIdx >= 0) {
-        // If sample exists and is awaiting results, sync with updated product
-        const existing = currentReports[existingReportIdx];
-        if (existing.status === 'awaiting_results' || !existing.decision) {
-          existing.product_id = finalEntry.product_id || prodObj?.id || 'prod-26';
-          existing.product_name = productName;
-          existing.submitted_by = profile.id;
-          existing.submitted_by_name = profile.full_name;
-          setStored(STORAGE_KEYS.REPORTS, currentReports);
-          memoryReports = currentReports;
-        }
+      // Determine requested QC parameter IDs
+      const allParams = getParameters();
+      let targetParamIds: string[] = [];
+
+      if (Array.isArray(updatedEntry.qc_parameter_ids) && updatedEntry.qc_parameter_ids.length > 0) {
+        targetParamIds = updatedEntry.qc_parameter_ids;
       } else {
-        // Auto-create new QC sample report for this hour's product
-        const reportId = `rep-${Date.now()}-${slotLabel}`;
-        const cleanProdCode = (prodObj?.code || productName.split(' ')[0] || 'PL65').replace(/[^a-zA-Z0-9]/g, '');
-        const cleanDateCode = currentSheet.shift_date.replace(/-/g, '').slice(2);
-        const lotNo = `LOT-${cleanProdCode}-${cleanDateCode}-${slotLabel}`;
-        const reportNo = `SAR-2026-${String(Math.floor(100000 + Math.random() * 900000))}`;
+        targetParamIds = getDefaultParametersForProduct(finalEntry.product_id || undefined);
+      }
 
-        const params = getParameters();
-        const results: SampleResult[] = [];
+      finalEntry.auto_dispatch_qc = true;
+      finalEntry.qc_parameter_ids = targetParamIds;
 
-        // Build requested parameter slots for QC test entry
-        params.forEach(param => {
+      const activeParams = allParams.filter(p => targetParamIds.includes(p.id));
+
+      const buildResults = (repId: string): SampleResult[] => {
+        const resultsList: SampleResult[] = [];
+        activeParams.forEach(param => {
           if (param.code === 'SFC' && param.series_values) {
             param.series_values.forEach(temp => {
-              results.push({
+              resultsList.push({
                 id: `res-${Date.now()}-${temp}`,
-                report_id: reportId,
+                report_id: repId,
                 parameter_id: param.id,
                 parameter_code: param.code,
                 parameter_name: `SFC @ ${temp}°C`,
@@ -720,9 +743,9 @@ export function saveProcessEntry(updatedEntry: Partial<ProcessEntry> & { slot_in
               });
             });
           } else {
-            results.push({
+            resultsList.push({
               id: `res-${Date.now()}-${param.code}`,
-              report_id: reportId,
+              report_id: repId,
               parameter_id: param.id,
               parameter_code: param.code,
               parameter_name: param.name,
@@ -731,6 +754,30 @@ export function saveProcessEntry(updatedEntry: Partial<ProcessEntry> & { slot_in
             });
           }
         });
+        return resultsList;
+      };
+
+      if (existingReportIdx >= 0) {
+        // If sample exists and is awaiting results, sync with updated product and parameter ticks
+        const existing = currentReports[existingReportIdx];
+        if (existing.status === 'awaiting_results' || !existing.decision) {
+          existing.product_id = finalEntry.product_id || prodObj?.id || 'prod-26';
+          existing.product_name = productName;
+          existing.submitted_by = profile.id;
+          existing.submitted_by_name = profile.full_name;
+          if (existing.status === 'awaiting_results') {
+            existing.results = buildResults(existing.id);
+          }
+          setStored(STORAGE_KEYS.REPORTS, currentReports);
+          memoryReports = currentReports;
+        }
+      } else {
+        // Auto-create new QC sample report for this hour's product with ONLY requested parameters
+        const reportId = `rep-${Date.now()}-${slotLabel}`;
+        const cleanProdCode = (prodObj?.code || productName.split(' ')[0] || 'PL65').replace(/[^a-zA-Z0-9]/g, '');
+        const cleanDateCode = currentSheet.shift_date.replace(/-/g, '').slice(2);
+        const lotNo = `LOT-${cleanProdCode}-${cleanDateCode}-${slotLabel}`;
+        const reportNo = `SAR-2026-${String(Math.floor(100000 + Math.random() * 900000))}`;
 
         const newQCReport: SampleReport = {
           id: reportId,
@@ -759,7 +806,7 @@ export function saveProcessEntry(updatedEntry: Partial<ProcessEntry> & { slot_in
           status: 'awaiting_results',
           created_by: profile.id,
           created_at: now,
-          results,
+          results: buildResults(reportId),
         };
 
         currentReports.unshift(newQCReport);
@@ -776,6 +823,9 @@ export function saveProcessEntry(updatedEntry: Partial<ProcessEntry> & { slot_in
     } catch (e) {
       console.warn('[Auto-QC] Failed to auto-dispatch QC sample:', e);
     }
+  } else if (updatedEntry.auto_dispatch_qc === false) {
+    finalEntry.auto_dispatch_qc = false;
+    finalEntry.qc_parameter_ids = [];
   }
 
   return { success: true, entry: finalEntry };
@@ -819,6 +869,8 @@ export function copyPreviousHour(slotIndex: number): { success: boolean; data?: 
   const cloned: Partial<ProcessEntry> = {
     product_id: prevEntry.product_id,
     product_name: prevEntry.product_name,
+    auto_dispatch_qc: prevEntry.auto_dispatch_qc !== false,
+    qc_parameter_ids: prevEntry.qc_parameter_ids,
     oil_feed_rate_litre: prevEntry.oil_feed_rate_litre,
     deod_time_set_hr: prevEntry.deod_time_set_hr,
     vacuum_torr: prevEntry.vacuum_torr,

@@ -6,7 +6,8 @@ import {
   ProcessEntry, 
   Product, 
   UserRole,
-  Profile 
+  Profile,
+  Parameter
 } from '@/types/refinery';
 import { 
   getActiveProcessSheet, 
@@ -15,6 +16,8 @@ import {
   verifySheet, 
   unlockSheet,
   getProducts, 
+  getParameters,
+  getDefaultParametersForProduct,
   getParameterLimits, 
   getCurrentRole,
   getRealtimeSlotIndex
@@ -34,7 +37,8 @@ import {
   ChevronRight, 
   Check, 
   FileCheck2, 
-  AlertCircle
+  AlertCircle,
+  FlaskConical
 } from 'lucide-react';
 
 interface ProcessLogViewProps {
@@ -45,6 +49,9 @@ interface ProcessLogViewProps {
 export default function ProcessLogView({ currentRole, currentUser }: ProcessLogViewProps = {}) {
   const [sheet, setSheet] = useState<ProcessSheet>(getActiveProcessSheet());
   const [products, setProducts] = useState<Product[]>([]);
+  const [parameters, setParameters] = useState<Parameter[]>([]);
+  const [autoDispatchQc, setAutoDispatchQc] = useState<boolean>(true);
+  const [qcSelectedParamIds, setQcSelectedParamIds] = useState<string[]>([]);
   const [selectedSlotIndex, setSelectedSlotIndex] = useState<number>(getRealtimeSlotIndex());
   const [currentSlotIndex, setCurrentSlotIndex] = useState<number>(getRealtimeSlotIndex());
   const [currentMinutesRemaining, setCurrentMinutesRemaining] = useState<number>(60);
@@ -96,6 +103,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
 
   useEffect(() => {
     setProducts(getProducts());
+    setParameters(getParameters());
     setRole(currentRole || currentUser?.role || getCurrentRole());
     refreshSheet();
   }, [currentRole, currentUser]);
@@ -125,14 +133,30 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
 
     if (existingEntry) {
       setFormData({ ...existingEntry });
+      setAutoDispatchQc(existingEntry.auto_dispatch_qc !== false);
+      if (existingEntry.qc_parameter_ids && existingEntry.qc_parameter_ids.length > 0) {
+        setQcSelectedParamIds(existingEntry.qc_parameter_ids);
+      } else {
+        setQcSelectedParamIds(getDefaultParametersForProduct(existingEntry.product_id || undefined));
+      }
     } else {
       // Initialize with defaults / carried-over product
+      const defaultProdId = prevEntry?.product_id || products[25]?.id || 'prod-26';
+      const initialDispatch = prevEntry ? prevEntry.auto_dispatch_qc !== false : true;
+      const initialParams = (prevEntry?.qc_parameter_ids && prevEntry.qc_parameter_ids.length > 0)
+        ? prevEntry.qc_parameter_ids
+        : getDefaultParametersForProduct(defaultProdId);
+
       setFormData({
         slot_index: slotIdx,
-        product_id: prevEntry?.product_id || products[25]?.id || 'prod-26', // PL 65 Matsuyama
+        product_id: defaultProdId,
         deod_time_set_hr: 2.0,
         strip_steam_pct_of_oil: activeSheet.stripping_steam_pct,
+        auto_dispatch_qc: initialDispatch,
+        qc_parameter_ids: initialParams,
       });
+      setAutoDispatchQc(initialDispatch);
+      setQcSelectedParamIds(initialParams);
     }
   };
 
@@ -141,6 +165,31 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
       ...prev,
       [field]: value === '' ? null : value,
     }));
+  };
+
+  const handleProductChange = (newProdId: string) => {
+    handleFieldChange('product_id', newProdId);
+    const defaultParams = getDefaultParametersForProduct(newProdId);
+    setQcSelectedParamIds(defaultParams);
+  };
+
+  const toggleQcParam = (paramId: string) => {
+    setQcSelectedParamIds(prev =>
+      prev.includes(paramId) ? prev.filter(id => id !== paramId) : [...prev, paramId]
+    );
+  };
+
+  const handleSelectAllParams = () => {
+    setQcSelectedParamIds(parameters.map(p => p.id));
+  };
+
+  const handleClearAllParams = () => {
+    setQcSelectedParamIds([]);
+  };
+
+  const handleResetToProductSpec = () => {
+    const defaultParams = getDefaultParametersForProduct(formData.product_id || undefined);
+    setQcSelectedParamIds(defaultParams);
   };
 
   const handleCopyPrevious = () => {
@@ -157,7 +206,13 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
         ...prev,
         ...res.data,
       }));
-      setSuccessMessage(`✓ Successfully copied 21 process parameters from Hour ${sourceSlot}! Please review and click 'Save Hour ${selectedSlotLabel} Readings' below.`);
+      if (res.data.auto_dispatch_qc !== undefined) {
+        setAutoDispatchQc(res.data.auto_dispatch_qc !== false);
+      }
+      if (res.data.qc_parameter_ids && res.data.qc_parameter_ids.length > 0) {
+        setQcSelectedParamIds(res.data.qc_parameter_ids);
+      }
+      setSuccessMessage(`✓ Successfully copied 21 process parameters & QC dispatch settings from Hour ${sourceSlot}! Please review and click 'Save Hour ${selectedSlotLabel} Readings' below.`);
       setTimeout(() => setIsCopying(false), 1200);
       setTimeout(() => setCopiedSlotLabel(null), 3500);
     } else {
@@ -177,6 +232,8 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
     const res = saveProcessEntry({
       ...formData,
       slot_index: selectedSlotIndex,
+      auto_dispatch_qc: autoDispatchQc,
+      qc_parameter_ids: qcSelectedParamIds,
     });
 
     if (!res.success) {
@@ -187,7 +244,11 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
 
     setIsSaving(false);
     setIsJustSaved(true);
-    setSuccessMessage(`✓ Hour ${res.entry.slot_label} readings recorded! Product sample (${res.entry.product_name}) auto-dispatched to RF-FR-001 QC Lab queue.`);
+    if (autoDispatchQc && qcSelectedParamIds.length > 0) {
+      setSuccessMessage(`✓ Hour ${res.entry.slot_label} readings recorded! Product sample (${res.entry.product_name}) auto-dispatched to RF-FR-001 QC Lab with ${qcSelectedParamIds.length} requested lab parameters.`);
+    } else {
+      setSuccessMessage(`✓ Hour ${res.entry.slot_label} readings recorded!`);
+    }
     refreshSheet(true);
 
     setTimeout(() => {
@@ -651,7 +712,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-center">
               <select
                 value={formData.product_id || ''}
-                onChange={e => handleFieldChange('product_id', e.target.value)}
+                onChange={e => handleProductChange(e.target.value)}
                 disabled={isSlotDisabled}
                 className="col-span-2 bg-[#090d16] border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-100 font-medium focus:outline-none focus:border-cyan-500 disabled:opacity-50"
               >
@@ -665,6 +726,110 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                 Carries forward automatically from previous hour.
               </div>
             </div>
+          </div>
+
+          {/* Section A.1: Auto-Dispatch to QC Lab (RF-FR-001 Lab Parameters Tick-List) */}
+          <div className="rounded-xl border border-cyan-900/50 bg-[#0b1329]/70 p-4 shadow-lg">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-3 mb-3">
+              <div className="flex items-center gap-3">
+                <div className="rounded-lg bg-cyan-950/90 p-2 text-cyan-400 border border-cyan-700/50 shrink-0">
+                  <FlaskConical className="h-4 w-4" />
+                </div>
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={autoDispatchQc}
+                        onChange={e => setAutoDispatchQc(e.target.checked)}
+                        disabled={isSlotDisabled}
+                        className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-cyan-500 focus:ring-cyan-500 cursor-pointer disabled:opacity-50"
+                      />
+                      <span className="text-xs font-bold uppercase tracking-wider text-cyan-300 font-mono">
+                        Auto-Dispatch to RF-FR-001 QC Lab
+                      </span>
+                    </label>
+                    <span className="rounded bg-cyan-950 px-2 py-0.5 font-mono text-[11px] text-cyan-400 border border-cyan-800/60">
+                      {autoDispatchQc ? `${qcSelectedParamIds.length} / ${parameters.length} Parameters Selected` : 'Dispatch Disabled'}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    Tick which Lab Parameters are required for testing on this product. Only ticked parameters will be sent to the QC Lab sheet.
+                  </p>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              {autoDispatchQc && (
+                <div className="flex flex-wrap items-center gap-1.5 self-start sm:self-auto">
+                  <button
+                    type="button"
+                    onClick={handleResetToProductSpec}
+                    disabled={isSlotDisabled}
+                    className="text-[11px] font-mono px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 transition-colors disabled:opacity-40"
+                    title="Reset to recommended spec parameters for this product"
+                  >
+                    Product Spec
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSelectAllParams}
+                    disabled={isSlotDisabled}
+                    className="text-[11px] font-mono px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors disabled:opacity-40"
+                  >
+                    Select All
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleClearAllParams}
+                    disabled={isSlotDisabled}
+                    className="text-[11px] font-mono px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 border border-slate-700 transition-colors disabled:opacity-40"
+                  >
+                    Clear All
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Parameter Checkbox Grid */}
+            {autoDispatchQc ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 text-xs">
+                {parameters.map(param => {
+                  const isChecked = qcSelectedParamIds.includes(param.id);
+                  return (
+                    <label
+                      key={param.id}
+                      onClick={() => {
+                        if (isSlotDisabled) return;
+                        toggleQcParam(param.id);
+                      }}
+                      className={`flex items-center gap-2 p-2.5 rounded-lg border transition-all select-none ${
+                        isSlotDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
+                      } ${
+                        isChecked
+                          ? 'border-cyan-500/70 bg-cyan-950/40 text-cyan-100 font-medium shadow-sm'
+                          : 'border-slate-800 bg-[#090d16]/70 text-slate-400 hover:border-slate-700 hover:text-slate-300'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        disabled={isSlotDisabled}
+                        readOnly
+                        className="h-3.5 w-3.5 rounded border-slate-700 bg-slate-900 text-cyan-500 focus:ring-cyan-500 pointer-events-none"
+                      />
+                      <span className="truncate" title={param.name}>
+                        {param.name} {param.unit ? `(${param.unit})` : ''}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="rounded-lg border border-dashed border-slate-800 bg-slate-950/40 p-3 text-center text-xs text-slate-500 font-mono">
+                Auto-dispatch for this hour is disabled. No QC sample will be generated for Hour {selectedSlotLabel}.
+              </div>
+            )}
           </div>
 
           {/* Section B: Processing Conditions (Feed Rate, Deod Time, Vacuum) */}
