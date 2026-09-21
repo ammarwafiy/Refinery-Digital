@@ -28,7 +28,8 @@ import {
   Database,
   Calendar,
   Archive,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Zap
 } from 'lucide-react';
 import { UserRole, Profile } from '@/types/refinery';
 import { 
@@ -219,6 +220,78 @@ export default function AdminUserManagementView() {
       setPruneStatusMessage({
         type: 'error',
         text: err?.message || 'Error occurred during database pruning execution.'
+      });
+    } finally {
+      setIsPruning(false);
+    }
+  };
+
+  const handleOneClickAutoPrune = async () => {
+    if (!isAdmin) {
+      alert('Access Denied: Only Plant Administrator can execute data retention.');
+      return;
+    }
+
+    const passwordInput = prompt(
+      '1-CLICK AUTO ARCHIVE & PRUNE (FAST TRACK):\n\n' +
+      'Sistem akan memuat turun sandaran (.json & .csv) ke komputer anda dan membersihkan rekod lama di Supabase serentak.\n\n' +
+      'Masukkan Kata Laluan Administrator untuk mengesahkan:', 
+      'password123'
+    );
+    if (!passwordInput) return;
+
+    setIsPruning(true);
+    setPruneStatusMessage(null);
+
+    try {
+      const cutoff = getEffectiveCutoffDate();
+      const pkg = generateFullArchivePackage(cutoff);
+
+      // 1. Auto-download JSON
+      const blobJson = new Blob([pkg.jsonContent], { type: 'application/json;charset=utf-8;' });
+      const urlJson = URL.createObjectURL(blobJson);
+      const aJson = document.createElement('a');
+      aJson.href = urlJson;
+      aJson.download = `${pkg.filename}.json`;
+      document.body.appendChild(aJson);
+      aJson.click();
+      document.body.removeChild(aJson);
+      URL.revokeObjectURL(urlJson);
+
+      // 2. Auto-download CSV
+      const blobCsv = new Blob([pkg.csvSummaryContent], { type: 'text/csv;charset=utf-8;' });
+      const urlCsv = URL.createObjectURL(blobCsv);
+      const aCsv = document.createElement('a');
+      aCsv.href = urlCsv;
+      aCsv.download = `${pkg.filename}_summary.csv`;
+      document.body.appendChild(aCsv);
+      aCsv.click();
+      document.body.removeChild(aCsv);
+      URL.revokeObjectURL(urlCsv);
+
+      // 3. Execute prune
+      const res = await executePruneRetentionPolicy(cutoff, passwordInput);
+
+      if (res.success) {
+        setPruneStatusMessage({
+          type: 'success',
+          text: `⚡ 1-Click Auto Archive & Prune Selesai! Fail sandaran (${pkg.recordsArchivedCount} rekod) telah dimuat turun dan Supabase telah dibersihkan untuk rekod sebelum ${cutoff}.`
+        });
+        refreshStorage();
+        refreshData();
+
+        // 4. Open Google Drive in new tab
+        window.open('https://drive.google.com', '_blank');
+      } else {
+        setPruneStatusMessage({
+          type: 'error',
+          text: res.error || 'Prune authorization failed. Incorrect administrator password.'
+        });
+      }
+    } catch (err: any) {
+      setPruneStatusMessage({
+        type: 'error',
+        text: err?.message || 'Error during 1-click execution.'
       });
     } finally {
       setIsPruning(false);
@@ -960,6 +1033,38 @@ export default function AdminUserManagementView() {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* 1-Click Fast-Track Auto Banner */}
+          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-emerald-950/90 via-[#0d2218] to-slate-900 border border-emerald-500/50 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 shadow-md shrink-0">
+                <Zap className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-white tracking-wide">
+                    1-Click Auto Archive & Prune (Automatik 2 Langkah Sekaligus)
+                  </h3>
+                  <span className="px-2 py-0.5 text-[9px] font-mono bg-emerald-900/80 text-emerald-300 border border-emerald-500/40 rounded font-bold">
+                    FAST TRACK
+                  </span>
+                </div>
+                <p className="text-xs text-slate-300 font-sans mt-0.5">
+                  Sistem akan menjana & memuat turun sandaran (.json & .csv), terus membersihkan rekod lama di Supabase, dan membuka Google Drive secara automatik.
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              disabled={!isAdmin || isPruning}
+              onClick={handleOneClickAutoPrune}
+              className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold text-xs font-mono transition-all shadow-lg shadow-emerald-950/60 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+            >
+              <Zap className="h-4 w-4" />
+              <span>{isPruning ? 'Memproses...' : '⚡ Jalankan Auto Archive & Prune (1-Click)'}</span>
+            </button>
           </div>
 
           {/* 2-Step Safe Archive & Prune Workflow */}
