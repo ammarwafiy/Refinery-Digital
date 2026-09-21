@@ -275,11 +275,38 @@ export async function syncProfilesFromSupabase(): Promise<{ success: boolean; co
   return { success: true, count: cached.length, profiles: cached };
 }
 
-// Auto-sync on client load
+// Auto-sync on client load and Supabase Realtime channel listener
 if (typeof window !== 'undefined') {
+  // Initial sync upon client mounting
   setTimeout(() => {
     syncProfilesFromSupabase().catch(() => {});
-  }, 300);
+  }, 150);
+
+  // Background auto-sync interval (every 20 seconds)
+  setInterval(() => {
+    syncProfilesFromSupabase().catch(() => {});
+  }, 20000);
+
+  // Live Supabase Realtime PostgreSQL Change listener
+  try {
+    if (supabase) {
+      supabase
+        .channel('refinery_profiles_live')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'profiles' },
+          (payload) => {
+            console.info('[Supabase Realtime] Profile table change detected:', payload.eventType, payload.new || payload.old);
+            syncProfilesFromSupabase().catch(() => {});
+          }
+        )
+        .subscribe((status) => {
+          console.info('[Supabase Realtime] Profile channel status:', status);
+        });
+    }
+  } catch (subErr) {
+    console.warn('[Supabase Realtime] Failed to initialize profiles channel:', subErr);
+  }
 }
 
 export async function addProfile(data: { full_name: string; role: UserRole; employee_no?: string; password?: string }): Promise<Profile> {
@@ -304,6 +331,8 @@ export async function addProfile(data: { full_name: string; role: UserRole; empl
 
   // Sync to Supabase via server API (uses service role key to bypass RLS)
   if (typeof window !== 'undefined') {
+    let savedSuccessfully = false;
+
     try {
       const res = await fetch('/api/profiles', {
         method: 'POST',
@@ -318,19 +347,54 @@ export async function addProfile(data: { full_name: string; role: UserRole; empl
         })
       });
 
-      if (!res.ok) {
-        const errJson = await res.json().catch(() => ({}));
-        console.error('[Supabase Sync Error]', errJson);
-        throw new Error(errJson.error || 'Failed to sync user with Supabase database.');
+      if (res.ok) {
+        savedSuccessfully = true;
+        console.info('[Supabase Sync Success] Profile recorded into Supabase via API:', employee_no);
       } else {
-        console.info('[Supabase Sync Success] Profile recorded into Supabase:', employee_no);
+        const errJson = await res.json().catch(() => ({}));
+        console.warn('[Supabase API Sync Warning]', errJson);
       }
-    } catch (err) {
-      console.error('[Supabase Network Error]', err);
-      // Still preserved in memory & local storage
+    } catch (apiErr) {
+      console.warn('[Supabase API Fetch Warning]', apiErr);
     }
+
+    // Direct Supabase Client fallback if API route failed
+    if (!savedSuccessfully && supabase) {
+      try {
+        const { error: directErr } = await supabase
+          .from('profiles')
+          .upsert([{
+            employee_no: newProfile.employee_no,
+            full_name: newProfile.full_name,
+            role: newProfile.role,
+            status: newProfile.status,
+            password: newProfile.password,
+            created_at: newProfile.created_at
+          }], { onConflict: 'employee_no' });
+
+        if (!directErr) {
+          savedSuccessfully = true;
+          console.info('[Supabase Direct Sync Success] Profile saved directly via client:', employee_no);
+        } else {
+          console.error('[Supabase Direct Client Error]', directErr);
+        }
+      } catch (clientErr) {
+        console.error('[Supabase Direct Exception]', clientErr);
+      }
+    }
+
+    if (!savedSuccessfully) {
+      // Roll back optimistic update if Supabase could not be written
+      memoryProfiles = current;
+      setStored(STORAGE_KEYS.PROFILES, current);
+      throw new Error(`Failed to save user ${employee_no} into Supabase database. Operation rolled back.`);
+    }
+
+    // Immediately re-sync profiles from Supabase to confirm canonical state
+    await syncProfilesFromSupabase();
   }
 
+  addAuditLog('profiles', newProfile.employee_no, 'insert', null, newProfile);
   return newProfile;
 }
 
@@ -347,6 +411,7 @@ export async function toggleProfileActive(identifier: string): Promise<boolean> 
   setStored(STORAGE_KEYS.PROFILES, memoryProfiles);
 
   if (typeof window !== 'undefined') {
+    let patched = false;
     try {
       const res = await fetch('/api/profiles', {
         method: 'PATCH',
@@ -357,14 +422,26 @@ export async function toggleProfileActive(identifier: string): Promise<boolean> 
         })
       });
 
-      if (!res.ok) {
-        console.error('[Supabase Sync Error] Failed to update status in Supabase');
-      } else {
+      if (res.ok) {
+        patched = true;
         console.info('[Supabase Sync Success] Status updated in Supabase:', target.employee_no, newStatus);
       }
     } catch (err) {
-      console.error('[Supabase Network Error]', err);
+      console.warn('[Supabase Network Error]', err);
     }
+
+    if (!patched && supabase) {
+      try {
+        await supabase
+          .from('profiles')
+          .update({ status: newStatus })
+          .eq('employee_no', target.employee_no);
+      } catch (err) {
+        console.error('[Supabase Client Direct Update Error]', err);
+      }
+    }
+
+    await syncProfilesFromSupabase();
   }
 
   addAuditLog('profiles', target.employee_no, 'update', { status: newStatus === 'active' ? 'unactive' : 'active' }, { status: newStatus });
@@ -381,20 +458,32 @@ export async function deleteProfile(identifier: string): Promise<boolean> {
   setStored(STORAGE_KEYS.PROFILES, updated);
 
   if (typeof window !== 'undefined') {
+    let deleted = false;
     try {
       const res = await fetch(`/api/profiles?employee_no=${encodeURIComponent(target.employee_no)}`, {
         method: 'DELETE'
       });
 
-      if (!res.ok) {
-        const errJson = await res.json().catch(() => ({}));
-        console.error('[Supabase Sync Error] Failed to delete profile in Supabase:', errJson);
-      } else {
+      if (res.ok) {
+        deleted = true;
         console.info('[Supabase Sync Success] Profile deleted from Supabase:', target.employee_no);
       }
     } catch (err) {
-      console.error('[Supabase Network Error]', err);
+      console.warn('[Supabase Network Error]', err);
     }
+
+    if (!deleted && supabase) {
+      try {
+        await supabase
+          .from('profiles')
+          .delete()
+          .eq('employee_no', target.employee_no);
+      } catch (err) {
+        console.error('[Supabase Client Direct Delete Error]', err);
+      }
+    }
+
+    await syncProfilesFromSupabase();
   }
 
   addAuditLog('profiles', target.employee_no, 'void', { profile: target }, null);
