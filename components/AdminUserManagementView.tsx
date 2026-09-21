@@ -20,7 +20,8 @@ import {
   UserCheck,
   RefreshCw,
   SlidersHorizontal,
-  ShieldAlert
+  ShieldAlert,
+  Trash2
 } from 'lucide-react';
 import { UserRole, Profile } from '@/types/refinery';
 import { 
@@ -32,6 +33,7 @@ import {
   setCurrentRole,
   setAuthUser,
   toggleProfileActive,
+  deleteProfile,
   syncProfilesFromSupabase,
   ROLE_ID_SERIES 
 } from '@/lib/data-service';
@@ -162,6 +164,26 @@ export default function AdminUserManagementView() {
       type: 'success',
       text: `✓ Staff account status for "${name}" updated to: ${currentActive ? 'UNACTIVE' : 'ACTIVE'} and synced to Supabase.`
     });
+  };
+
+  const handleDeleteUser = async (employeeNo: string, name: string) => {
+    if (employeeNo === currentProfile.employee_no || employeeNo === currentProfile.id) {
+      alert('Warning: You cannot delete your own active administrator account.');
+      return;
+    }
+    const confirmed = window.confirm(`Are you sure you want to permanently delete staff account: "${name}" (${employeeNo}) from the plant system and Supabase database?`);
+    if (!confirmed) return;
+
+    try {
+      await deleteProfile(employeeNo);
+      refreshData();
+      setStatusMessage({
+        type: 'success',
+        text: `✓ Staff account "${name}" (${employeeNo}) permanently deleted from system & Supabase database.`
+      });
+    } catch {
+      setStatusMessage({ type: 'error', text: `Failed to delete staff member ${name}.` });
+    }
   };
 
   const handleSwitchToAdmin = () => {
@@ -569,20 +591,35 @@ export default function AdminUserManagementView() {
                           </td>
                           <td className="py-2.5 px-3.5 text-right">
                             {isAdmin ? (
-                              <button
-                                onClick={() => handleToggleStatus(p.employee_no, isActive, p.full_name)}
-                                disabled={isCurrent}
-                                className={`text-[10px] px-2 py-1 rounded transition-colors font-semibold ${
-                                  isCurrent
-                                    ? 'opacity-30 cursor-not-allowed text-slate-500'
-                                    : isActive
-                                      ? 'text-rose-400 hover:bg-rose-950/60 hover:text-rose-200 border border-rose-800/40 cursor-pointer'
-                                      : 'text-emerald-400 hover:bg-emerald-950/60 hover:text-emerald-200 border border-emerald-800/40 cursor-pointer'
-                                }`}
-                                title={isCurrent ? 'Cannot deactivate your own active account' : undefined}
-                              >
-                                {isActive ? 'Set Unactive' : 'Set Active'}
-                              </button>
+                              <div className="flex items-center justify-end gap-1.5">
+                                <button
+                                  onClick={() => handleToggleStatus(p.employee_no, isActive, p.full_name)}
+                                  disabled={isCurrent}
+                                  className={`text-[10px] px-2 py-1 rounded transition-colors font-semibold ${
+                                    isCurrent
+                                      ? 'opacity-30 cursor-not-allowed text-slate-500'
+                                      : isActive
+                                        ? 'text-rose-400 hover:bg-rose-950/60 hover:text-rose-200 border border-rose-800/40 cursor-pointer'
+                                        : 'text-emerald-400 hover:bg-emerald-950/60 hover:text-emerald-200 border border-emerald-800/40 cursor-pointer'
+                                  }`}
+                                  title={isCurrent ? 'Cannot deactivate your own active account' : undefined}
+                                >
+                                  {isActive ? 'Set Unactive' : 'Set Active'}
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteUser(p.employee_no, p.full_name)}
+                                  disabled={isCurrent}
+                                  className={`text-[10px] px-2 py-1 rounded transition-colors font-semibold flex items-center gap-1 ${
+                                    isCurrent
+                                      ? 'opacity-30 cursor-not-allowed text-slate-500'
+                                      : 'text-red-400 hover:bg-red-950/80 hover:text-red-200 border border-red-900/60 hover:border-red-600/70 cursor-pointer shadow-sm'
+                                  }`}
+                                  title={isCurrent ? 'Cannot delete your own active administrator account' : `Permanently delete ${p.full_name} (${p.employee_no})`}
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                  <span>Delete</span>
+                                </button>
+                              </div>
                             ) : (
                               <span className="text-[10px] text-slate-600">Admin Only</span>
                             )}

@@ -338,6 +338,36 @@ export async function toggleProfileActive(identifier: string): Promise<boolean> 
   return true;
 }
 
+export async function deleteProfile(identifier: string): Promise<boolean> {
+  const current = getProfiles();
+  const target = current.find(p => p.employee_no === identifier || p.id === identifier);
+  if (!target) return false;
+
+  const updated = current.filter(p => p.employee_no !== identifier && p.id !== identifier);
+  memoryProfiles = updated;
+  setStored(STORAGE_KEYS.PROFILES, updated);
+
+  if (typeof window !== 'undefined') {
+    try {
+      const res = await fetch(`/api/profiles?employee_no=${encodeURIComponent(target.employee_no)}`, {
+        method: 'DELETE'
+      });
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        console.error('[Supabase Sync Error] Failed to delete profile in Supabase:', errJson);
+      } else {
+        console.info('[Supabase Sync Success] Profile deleted from Supabase:', target.employee_no);
+      }
+    } catch (err) {
+      console.error('[Supabase Network Error]', err);
+    }
+  }
+
+  addAuditLog('profiles', target.employee_no, 'void', { profile: target }, null);
+  return true;
+}
+
 export function getProducts(): Product[] {
   return INITIAL_PRODUCTS;
 }
