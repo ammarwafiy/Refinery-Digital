@@ -77,7 +77,9 @@ export default function Home() {
         )}
         {currentTab === 'supervisor' && allowedTabs.includes('supervisor') && <SupervisorBoardView />}
         {currentTab === 'report' && allowedTabs.includes('report') && <ReportExportView />}
-        {currentTab === 'qc' && allowedTabs.includes('qc') && <SampleLabView />}
+        {currentTab === 'qc' && allowedTabs.includes('qc') && (
+          <SampleLabView currentRole={authUser.role} currentUser={authUser} />
+        )}
         {currentTab === 'analytics' && allowedTabs.includes('analytics') && <AnalyticsTrendsView />}
         {currentTab === 'export' && allowedTabs.includes('export') && <OfficialFormsExportView />}
         {currentTab === 'admin' && allowedTabs.includes('admin') && <AdminUserManagementView />}

@@ -9,7 +9,8 @@ import {
   Parameter, 
   RejectionReason, 
   UserRole,
-  Disposition 
+  Disposition,
+  Profile 
 } from '@/types/refinery';
 import { 
   getSampleReports, 
@@ -42,14 +43,19 @@ import {
 } from 'lucide-react';
 import { formatNumber } from '@/lib/utils';
 
-export default function SampleLabView() {
+interface SampleLabViewProps {
+  currentRole?: UserRole;
+  currentUser?: Profile | null;
+}
+
+export default function SampleLabView({ currentRole, currentUser }: SampleLabViewProps = {}) {
   const [reports, setReports] = useState<SampleReport[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [tanks, setTanks] = useState<Tank[]>([]);
   const [samplingPoints, setSamplingPoints] = useState<SamplingPoint[]>([]);
   const [parameters, setParameters] = useState<Parameter[]>([]);
   const [reasons, setReasons] = useState<RejectionReason[]>([]);
-  const [role, setRole] = useState<UserRole>('qc_analyst');
+  const [role, setRole] = useState<UserRole>(currentRole || currentUser?.role || getCurrentRole() || 'qc_analyst');
 
   // Active sub-tab: 'list' | 'new' | 'detail'
   const [activeSubTab, setActiveSubTab] = useState<'list' | 'new' | 'detail'>('list');
@@ -93,7 +99,8 @@ export default function SampleLabView() {
   const [decisionError, setDecisionError] = useState<string | null>(null);
 
   useEffect(() => {
-    setRole(getCurrentRole());
+    const activeR = currentRole || currentUser?.role || getCurrentRole();
+    setRole(activeR);
     setProducts(getProducts());
     setTanks(getTanks());
     setSamplingPoints(getSamplingPoints());
@@ -123,11 +130,10 @@ export default function SampleLabView() {
 
   const selectedReport = reports.find(r => r.id === selectedReportId) || reports[0];
 
-  // Merge full catalog parameters for open/awaiting report if any are missing
+  // Merge full catalog parameters so QC can always view and tick/untick any parameter
   const displayResults = useMemo(() => {
     if (!selectedReport) return [];
     const existing = selectedReport.results || [];
-    if (selectedReport.decision) return existing;
 
     const existingParamKeys = new Set(
       existing.map(r => r.series_key ? `${r.parameter_id}-${r.series_key}` : r.parameter_id)
@@ -745,22 +751,39 @@ export default function SampleLabView() {
                   </div>
 
                   {/* QC Decision Action or Badge */}
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
                     {selectedReport.decision ? (
-                      <div className="text-right">
-                        <div className={`text-xs font-mono font-bold px-3 py-1 rounded-lg border inline-block ${
-                          selectedReport.decision.decision === 'reject'
-                            ? 'bg-rose-950/80 text-rose-300 border-rose-500/40'
-                            : selectedReport.decision.decision === 'accept'
-                            ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/40'
-                            : 'bg-amber-950/80 text-amber-300 border-amber-500/40'
-                        }`}>
-                          DECISION: {selectedReport.decision.decision.toUpperCase()}
+                      <>
+                        <div className="text-right">
+                          <div className={`text-xs font-mono font-bold px-3 py-1 rounded-lg border inline-block ${
+                            selectedReport.decision.decision === 'reject'
+                              ? 'bg-rose-950/80 text-rose-300 border-rose-500/40'
+                              : selectedReport.decision.decision === 'accept'
+                              ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/40'
+                              : 'bg-amber-950/80 text-amber-300 border-amber-500/40'
+                          }`}>
+                            DECISION: {selectedReport.decision.decision.toUpperCase()}
+                          </div>
+                          <div className="text-[10px] font-mono text-slate-500 mt-0.5">
+                            By: {selectedReport.decision.decided_by_name}
+                          </div>
                         </div>
-                        <div className="text-[10px] font-mono text-slate-500 mt-0.5">
-                          By: {selectedReport.decision.decided_by_name}
-                        </div>
-                      </div>
+
+                        {(role === 'qc_analyst' || role === 'qc_manager' || role === 'admin') && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDecisionType(selectedReport.decision?.decision || 'accept');
+                              setIsDecisionModalOpen(true);
+                            }}
+                            className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 px-3 py-1.5 rounded-xl text-xs font-mono transition-colors"
+                            title="Update or re-record QC Decision"
+                          >
+                            <ShieldCheck className="h-3.5 w-3.5" />
+                            <span>Update Decision</span>
+                          </button>
+                        )}
+                      </>
                     ) : (
                       (role === 'qc_analyst' || role === 'qc_manager' || role === 'admin') && (
                         <button
@@ -813,7 +836,7 @@ export default function SampleLabView() {
                       </span>
                     </div>
 
-                    {(role === 'qc_analyst' || role === 'qc_manager' || role === 'admin') && !selectedReport.decision && (
+                    {(role === 'qc_analyst' || role === 'qc_manager' || role === 'admin') && (
                       <div className="flex flex-wrap items-center gap-1.5">
                         <button
                           type="button"
@@ -858,8 +881,7 @@ export default function SampleLabView() {
                         {displayResults.map(res => {
                           const inputVal = resultInputs[res.id] || {};
                           const isUnticked = requestedMap[res.id] === false;
-                          const isDecided = Boolean(selectedReport.decision);
-                          const canEdit = (role === 'qc_analyst' || role === 'qc_manager' || role === 'admin') && !isDecided;
+                          const canEdit = (role === 'qc_analyst' || role === 'qc_manager' || role === 'admin');
 
                           return (
                             <tr
