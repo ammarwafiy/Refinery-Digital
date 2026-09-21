@@ -206,7 +206,50 @@ export function getProfiles(): Profile[] {
   return getStored<Profile[]>(STORAGE_KEYS.PROFILES, memoryProfiles);
 }
 
-export function addProfile(data: { full_name: string; role: UserRole; employee_no?: string; password?: string }): Profile {
+// Fetch live profiles from Supabase and synchronize local state
+export async function syncProfilesFromSupabase(): Promise<{ success: boolean; count: number; profiles: Profile[]; error?: string }> {
+  try {
+    const res = await fetch('/api/profiles', { cache: 'no-store' });
+    if (!res.ok) {
+      const errJson = await res.json().catch(() => ({}));
+      return { success: false, count: 0, profiles: getProfiles(), error: errJson.error || `HTTP ${res.status}` };
+    }
+    const json = await res.json();
+    if (json.success && Array.isArray(json.profiles) && json.profiles.length > 0) {
+      const liveProfiles: Profile[] = json.profiles.map((p: any) => ({
+        id: p.employee_no,
+        employee_no: p.employee_no,
+        full_name: p.full_name,
+        role: p.role,
+        status: p.status || (p.active === false ? 'unactive' : 'active'),
+        active: p.status === 'active' || p.active === true,
+        password: p.password || 'password123',
+        created_at: p.created_at || new Date().toISOString(),
+      }));
+
+      memoryProfiles = liveProfiles;
+      setStored(STORAGE_KEYS.PROFILES, liveProfiles);
+
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('refinery_profiles_synced', { detail: liveProfiles }));
+      }
+      return { success: true, count: liveProfiles.length, profiles: liveProfiles };
+    }
+    return { success: true, count: 0, profiles: getProfiles() };
+  } catch (err: any) {
+    console.warn('[Sync] Failed to fetch profiles from Supabase API:', err);
+    return { success: false, count: 0, profiles: getProfiles(), error: err?.message };
+  }
+}
+
+// Auto-sync on client load
+if (typeof window !== 'undefined') {
+  setTimeout(() => {
+    syncProfilesFromSupabase().catch(() => {});
+  }, 300);
+}
+
+export async function addProfile(data: { full_name: string; role: UserRole; employee_no?: string; password?: string }): Promise<Profile> {
   const employee_no = (data.employee_no?.trim() || generateNextEmployeeId(data.role)).toUpperCase();
   const current = getProfiles();
 
@@ -221,30 +264,44 @@ export function addProfile(data: { full_name: string; role: UserRole; employee_n
     created_at: new Date().toISOString()
   };
 
-  const updated = [...current, newProfile];
+  // Immediate optimistic update in local state
+  const updated = [...current.filter(p => p.employee_no !== employee_no), newProfile];
   memoryProfiles = updated;
   setStored(STORAGE_KEYS.PROFILES, updated);
 
-  // Sync to Supabase in background if available
-  if (isSupabaseConfigured && supabase) {
-    Promise.resolve(
-      supabase.from('profiles').insert([{
-        employee_no: newProfile.employee_no,
-        full_name: newProfile.full_name,
-        role: newProfile.role,
-        status: newProfile.status,
-        password: newProfile.password,
-        created_at: newProfile.created_at
-      }])
-    ).then(() => {
-      // synced
-    }).catch(console.error);
+  // Sync to Supabase via server API (uses service role key to bypass RLS)
+  if (typeof window !== 'undefined') {
+    try {
+      const res = await fetch('/api/profiles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          employee_no: newProfile.employee_no,
+          full_name: newProfile.full_name,
+          role: newProfile.role,
+          status: newProfile.status,
+          password: newProfile.password,
+          created_at: newProfile.created_at
+        })
+      });
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        console.error('[Supabase Sync Error]', errJson);
+        throw new Error(errJson.error || 'Failed to sync user with Supabase database.');
+      } else {
+        console.info('[Supabase Sync Success] Profile recorded into Supabase:', employee_no);
+      }
+    } catch (err) {
+      console.error('[Supabase Network Error]', err);
+      // Still preserved in memory & local storage
+    }
   }
 
   return newProfile;
 }
 
-export function toggleProfileActive(identifier: string): boolean {
+export async function toggleProfileActive(identifier: string): Promise<boolean> {
   const current = getProfiles();
   const idx = current.findIndex(p => p.employee_no === identifier || p.id === identifier);
   if (idx === -1) return false;
@@ -256,10 +313,25 @@ export function toggleProfileActive(identifier: string): boolean {
   memoryProfiles = [...current];
   setStored(STORAGE_KEYS.PROFILES, memoryProfiles);
 
-  if (isSupabaseConfigured && supabase) {
-    Promise.resolve(
-      supabase.from('profiles').update({ status: target.status }).eq('employee_no', target.employee_no)
-    ).catch(console.error);
+  if (typeof window !== 'undefined') {
+    try {
+      const res = await fetch('/api/profiles', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          employee_no: target.employee_no,
+          status: newStatus
+        })
+      });
+
+      if (!res.ok) {
+        console.error('[Supabase Sync Error] Failed to update status in Supabase');
+      } else {
+        console.info('[Supabase Sync Success] Status updated in Supabase:', target.employee_no, newStatus);
+      }
+    } catch (err) {
+      console.error('[Supabase Network Error]', err);
+    }
   }
 
   addAuditLog('profiles', target.employee_no, 'update', { status: newStatus === 'active' ? 'unactive' : 'active' }, { status: newStatus });

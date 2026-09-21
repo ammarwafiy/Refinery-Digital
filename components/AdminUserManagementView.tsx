@@ -32,6 +32,7 @@ import {
   setCurrentRole,
   setAuthUser,
   toggleProfileActive,
+  syncProfilesFromSupabase,
   ROLE_ID_SERIES 
 } from '@/lib/data-service';
 
@@ -49,9 +50,31 @@ export default function AdminUserManagementView() {
   const [autoId, setAutoId] = useState('');
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [lastSyncedAt, setLastSyncedAt] = useState<string>('Just now');
 
   useEffect(() => {
     refreshData();
+
+    // Trigger background sync with Supabase
+    setIsSyncing(true);
+    syncProfilesFromSupabase().then(() => {
+      refreshData();
+      setIsSyncing(false);
+      setLastSyncedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+    }).catch(() => {
+      setIsSyncing(false);
+    });
+
+    const handleSyncEvent = () => {
+      refreshData();
+      setLastSyncedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+    };
+
+    window.addEventListener('refinery_profiles_synced', handleSyncEvent);
+    return () => {
+      window.removeEventListener('refinery_profiles_synced', handleSyncEvent);
+    };
   }, []);
 
   const refreshData = () => {
@@ -63,12 +86,37 @@ export default function AdminUserManagementView() {
     setAutoId(generateNextEmployeeId(selectedRole));
   };
 
+  const handleManualSync = async () => {
+    setIsSyncing(true);
+    setStatusMessage(null);
+    try {
+      const res = await syncProfilesFromSupabase();
+      refreshData();
+      setLastSyncedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+      if (res.success) {
+        setStatusMessage({ 
+          type: 'success', 
+          text: `✓ Live Supabase Database Synchronized! Loaded ${res.count} profiles.` 
+        });
+      } else {
+        setStatusMessage({ 
+          type: 'error', 
+          text: `Sync warning: ${res.error || 'Could not reach Supabase API'}. Showing cached profiles.` 
+        });
+      }
+    } catch {
+      setStatusMessage({ type: 'error', text: 'Error syncing with Supabase.' });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const handleRoleSelectChange = (role: UserRole) => {
     setSelectedRole(role);
     setAutoId(generateNextEmployeeId(role));
   };
 
-  const handleAddUserSubmit = (e: React.FormEvent) => {
+  const handleAddUserSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName.trim()) {
       setStatusMessage({ type: 'error', text: 'Please enter the employee full name.' });
@@ -76,9 +124,10 @@ export default function AdminUserManagementView() {
     }
 
     setIsSubmitting(true);
+    setStatusMessage(null);
 
     try {
-      const created = addProfile({
+      const created = await addProfile({
         full_name: fullName.trim(),
         role: selectedRole,
         employee_no: autoId,
@@ -89,17 +138,17 @@ export default function AdminUserManagementView() {
       setFullName('');
       setStatusMessage({ 
         type: 'success', 
-        text: `Staff member ${created.full_name} (${created.employee_no}) registered successfully into the plant system!` 
+        text: `✓ Staff member ${created.full_name} (${created.employee_no}) registered and synced to Supabase database successfully!` 
       });
       setAutoId(generateNextEmployeeId(selectedRole));
-    } catch {
-      setStatusMessage({ type: 'error', text: 'Failed to register staff member. Please try again.' });
+    } catch (err: any) {
+      setStatusMessage({ type: 'error', text: err?.message || 'Failed to register staff member. Please try again.' });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleToggleStatus = (employeeNo: string, currentActive: boolean, name: string) => {
+  const handleToggleStatus = async (employeeNo: string, currentActive: boolean, name: string) => {
     if (employeeNo === currentProfile.employee_no || employeeNo === currentProfile.id) {
       alert('Warning: You cannot deactivate your own active account.');
       return;
@@ -107,11 +156,11 @@ export default function AdminUserManagementView() {
     const confirmed = window.confirm(`Are you sure you want to ${currentActive ? 'deactivate' : 'reactivate'} staff account: ${name}?`);
     if (!confirmed) return;
 
-    toggleProfileActive(employeeNo);
+    await toggleProfileActive(employeeNo);
     refreshData();
     setStatusMessage({
       type: 'success',
-      text: `Staff account status for "${name}" updated to: ${currentActive ? 'UNACTIVE' : 'ACTIVE'}.`
+      text: `✓ Staff account status for "${name}" updated to: ${currentActive ? 'UNACTIVE' : 'ACTIVE'} and synced to Supabase.`
     });
   };
 
@@ -178,8 +227,19 @@ export default function AdminUserManagementView() {
           </div>
         </div>
 
-        {/* Current Admin Badge */}
-        <div className="flex items-center gap-3">
+        {/* Current Admin Badge & Supabase Sync */}
+        <div className="flex items-center gap-3 flex-wrap justify-end">
+          <button
+            type="button"
+            onClick={handleManualSync}
+            disabled={isSyncing}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-950/80 hover:bg-emerald-900/90 text-emerald-300 border border-emerald-500/40 text-xs font-mono transition-all shadow-sm cursor-pointer disabled:opacity-50"
+            title="Fetch and synchronize latest user profiles directly with Supabase"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 text-emerald-400 ${isSyncing ? 'animate-spin' : ''}`} />
+            <span>{isSyncing ? 'Syncing...' : 'Sync Supabase'}</span>
+          </button>
+
           <div className="text-right">
             <span className="text-[10px] font-mono uppercase text-slate-400 block">Current User:</span>
             <span className="text-xs font-semibold text-white font-mono">
