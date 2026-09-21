@@ -57,6 +57,9 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
   const [validationError, setValidationError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isCopying, setIsCopying] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isJustSaved, setIsJustSaved] = useState(false);
+  const [copiedSlotLabel, setCopiedSlotLabel] = useState<string | null>(null);
 
   // Supervisor verification modal state
   const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false);
@@ -97,16 +100,19 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
     refreshSheet();
   }, [currentRole, currentUser]);
 
-  const refreshSheet = () => {
+  const refreshSheet = (preserveSuccess = false) => {
     const s = getActiveProcessSheet();
     setSheet(s);
-    loadSlot(selectedSlotIndex, s);
+    loadSlot(selectedSlotIndex, s, preserveSuccess);
   };
 
-  const loadSlot = (slotIdx: number, activeSheet = sheet) => {
+  const loadSlot = (slotIdx: number, activeSheet = sheet, preserveSuccess = false) => {
     setSelectedSlotIndex(slotIdx);
     setValidationError(null);
-    setSuccessMessage(null);
+    if (!preserveSuccess) {
+      setSuccessMessage(null);
+      setIsJustSaved(false);
+    }
 
     const existingEntry = activeSheet.entries?.find(e => e.slot_index === slotIdx);
     const prevEntry = activeSheet.entries?.find(e => e.slot_index === slotIdx - 1);
@@ -145,12 +151,15 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
     const res = copyPreviousHour(selectedSlotIndex);
     if (res.success && res.data) {
       setIsCopying(true);
+      const sourceSlot = res.prevSlotLabel || String((((selectedSlotIndex - 1 + 24) % 24) + 7) % 24 * 100).padStart(4, '0');
+      setCopiedSlotLabel(sourceSlot);
       setFormData(prev => ({
         ...prev,
         ...res.data,
       }));
-      setSuccessMessage('Copied all measured fields from previous hour! Please review and save.');
-      setTimeout(() => setIsCopying(false), 800);
+      setSuccessMessage(`✓ Successfully copied 21 process parameters from Hour ${sourceSlot}! Please review and click 'Save Hour ${selectedSlotLabel} Readings' below.`);
+      setTimeout(() => setIsCopying(false), 1200);
+      setTimeout(() => setCopiedSlotLabel(null), 3500);
     } else {
       setValidationError(res.error || 'Failed to copy previous hour.');
     }
@@ -159,7 +168,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
   const handleSaveEntry = (e: React.FormEvent) => {
     e.preventDefault();
     setValidationError(null);
-    setSuccessMessage(null);
+    setIsSaving(true);
 
     const res = saveProcessEntry({
       ...formData,
@@ -167,12 +176,19 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
     });
 
     if (!res.success) {
+      setIsSaving(false);
       setValidationError(res.error || 'Failed to save entry.');
       return;
     }
 
-    setSuccessMessage(`Hour ${res.entry.slot_label} successfully saved!`);
-    refreshSheet();
+    setIsSaving(false);
+    setIsJustSaved(true);
+    setSuccessMessage(`✓ Hour ${res.entry.slot_label} readings successfully recorded & saved to plant audit trail!`);
+    refreshSheet(true);
+
+    setTimeout(() => {
+      setIsJustSaved(false);
+    }, 4000);
   };
 
   const handleVerifySheet = (e: React.FormEvent) => {
@@ -372,7 +388,11 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
 
               let slotColor = 'border-slate-800 bg-slate-900/60 text-slate-500 hover:border-slate-700';
               if (isLive) {
-                slotColor = 'border-cyan-400 bg-cyan-950/90 text-cyan-200 font-bold shadow-lg shadow-cyan-950/80 ring-1 ring-cyan-500/50';
+                if (isFilled) {
+                  slotColor = 'border-emerald-400 bg-emerald-950/80 text-emerald-200 font-bold shadow-lg shadow-emerald-950/80 ring-1 ring-emerald-500/50';
+                } else {
+                  slotColor = 'border-cyan-400 bg-cyan-950/90 text-cyan-200 font-bold shadow-lg shadow-cyan-950/80 ring-1 ring-cyan-500/50';
+                }
               } else if (hasDev) {
                 slotColor = 'border-amber-500/60 bg-amber-950/40 text-amber-300 font-semibold';
               } else if (isFilled) {
@@ -397,14 +417,21 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                   className={`flex flex-col items-center justify-center p-1.5 rounded-lg border text-xs font-mono transition-all relative cursor-pointer ${slotColor} ${
                     isShiftBoundary ? 'mr-1 sm:mr-1.5' : ''
                   }`}
-                  title={`Slot ${label} (${label.slice(0, 2)}:00) ${isLive ? '— Current Active Slot (Editable)' : isPast ? '— Expired (Locked)' : '— Upcoming'}`}
+                  title={`Slot ${label} (${label.slice(0, 2)}:00) ${isLive ? (isFilled ? '— Current Active Slot (Recorded & Saved)' : '— Current Active Slot (Editable)') : isPast ? '— Expired (Locked)' : '— Upcoming'}`}
                 >
                   <span className="text-[11px]">{label}</span>
                   <div className="mt-0.5 flex items-center justify-center">
                     {isLive ? (
-                      <span className="text-[7.5px] px-1 py-0.2 rounded bg-cyan-400 text-slate-950 font-bold leading-none animate-pulse">
-                        LIVE
-                      </span>
+                      isFilled ? (
+                        <span className="text-[7.5px] px-1 py-0.2 rounded bg-emerald-400 text-slate-950 font-bold leading-none flex items-center gap-0.5">
+                          <Check className="h-2 w-2 stroke-[3]" />
+                          LIVE
+                        </span>
+                      ) : (
+                        <span className="text-[7.5px] px-1 py-0.2 rounded bg-cyan-400 text-slate-950 font-bold leading-none animate-pulse">
+                          LIVE
+                        </span>
+                      )
                     ) : hasDev ? (
                       <span className="h-1.5 w-1.5 rounded-full bg-amber-400 inline-block animate-ping" />
                     ) : isFilled ? (
@@ -463,11 +490,24 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
               type="button"
               onClick={handleCopyPrevious}
               disabled={selectedSlotIndex === 0 || isSlotDisabled}
-              className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:hover:bg-slate-800 text-slate-200 px-3 py-2 rounded-lg text-xs font-mono transition-all border border-slate-700 cursor-pointer disabled:cursor-not-allowed"
-              title={isSlotDisabled ? "This slot is not active for copying" : "Copy readings from previous hour"}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-mono transition-all border cursor-pointer disabled:cursor-not-allowed ${
+                copiedSlotLabel
+                  ? 'bg-emerald-600 text-white border-emerald-500 shadow-lg shadow-emerald-950/60'
+                  : 'bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:hover:bg-slate-800 text-slate-200 border-slate-700'
+              }`}
+              title={isSlotDisabled ? "This slot is not active for copying" : "Copy readings from previous recorded hour"}
             >
-              <Copy className="h-3.5 w-3.5 text-cyan-400" />
-              <span>Copy Previous Hour ({String((((selectedSlotIndex - 1 + 24) % 24) + 7) % 24 * 100).padStart(4, '0')})</span>
+              {copiedSlotLabel ? (
+                <>
+                  <Check className="h-3.5 w-3.5 text-white" />
+                  <span>Copied From Hour {copiedSlotLabel}!</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="h-3.5 w-3.5 text-cyan-400" />
+                  <span>Copy Previous Hour ({String((((selectedSlotIndex - 1 + 24) % 24) + 7) % 24 * 100).padStart(4, '0')})</span>
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -933,40 +973,71 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
           </div>
 
           {/* Submit Save Button */}
-          <div className="flex items-center justify-between pt-2 border-t border-slate-800">
-            <div className="text-xs text-slate-500 font-mono">
-              Saved entries write to append-only audit trail with operator identity and server timestamp.
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-3 border-t border-slate-800">
+            <div className="text-xs text-slate-400 font-mono">
+              {isJustSaved ? (
+                <span className="flex items-center gap-1.5 text-emerald-400 font-semibold text-xs animate-pulse">
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
+                  Hour {selectedSlotLabel} readings recorded successfully in audit trail!
+                </span>
+              ) : successMessage ? (
+                <span className="flex items-center gap-1.5 text-emerald-400 text-xs">
+                  <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-400" />
+                  {successMessage}
+                </span>
+              ) : validationError ? (
+                <span className="flex items-center gap-1.5 text-rose-400 text-xs">
+                  <AlertCircle className="h-3.5 w-3.5 shrink-0 text-rose-400" />
+                  {validationError}
+                </span>
+              ) : (
+                <span>Saved entries write to append-only audit trail with operator identity and server timestamp.</span>
+              )}
             </div>
 
-            <button
-              type="submit"
-              disabled={isSlotDisabled}
-              className={`flex items-center gap-2 font-medium px-6 py-3 rounded-xl text-sm transition-all shadow-lg font-mono ${
-                isSlotDisabled
-                  ? 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed opacity-60'
-                  : 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-cyan-950/60 cursor-pointer'
-              }`}
-            >
-              {isSlotDisabled ? (
-                <>
-                  <Lock className="h-4 w-4 text-slate-500" />
-                  <span>
-                    {sheet.status === 'verified'
-                      ? 'Shift Sheet Locked (Verified)'
-                      : role === 'operator' && isPastSlot
-                      ? `Expired: Hour ${selectedSlotLabel} Closed (Read-Only)`
-                      : role === 'operator' && isFutureSlot
-                      ? `Awaiting: Hour ${selectedSlotLabel} Not Started`
-                      : `Hour ${selectedSlotLabel} Locked`}
-                  </span>
-                </>
-              ) : (
-                <>
-                  <Save className="h-4 w-4" />
-                  <span>Save Hour {selectedSlotLabel} Readings</span>
-                </>
-              )}
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                type="submit"
+                disabled={isSlotDisabled || isSaving}
+                className={`flex items-center gap-2 font-medium px-6 py-3 rounded-xl text-sm transition-all shadow-lg font-mono ${
+                  isJustSaved
+                    ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-950/60 cursor-pointer ring-2 ring-emerald-400/50'
+                    : isSlotDisabled
+                    ? 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed opacity-60'
+                    : 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-cyan-950/60 cursor-pointer'
+                }`}
+              >
+                {isJustSaved ? (
+                  <>
+                    <Check className="h-4 w-4 text-white" />
+                    <span>Hour {selectedSlotLabel} Readings Saved!</span>
+                  </>
+                ) : isSaving ? (
+                  <>
+                    <Clock className="h-4 w-4 animate-spin text-white" />
+                    <span>Saving Hour {selectedSlotLabel}...</span>
+                  </>
+                ) : isSlotDisabled ? (
+                  <>
+                    <Lock className="h-4 w-4 text-slate-500" />
+                    <span>
+                      {sheet.status === 'verified'
+                        ? 'Shift Sheet Locked (Verified)'
+                        : role === 'operator' && isPastSlot
+                        ? `Expired: Hour ${selectedSlotLabel} Closed (Read-Only)`
+                        : role === 'operator' && isFutureSlot
+                        ? `Awaiting: Hour ${selectedSlotLabel} Not Started`
+                        : `Hour ${selectedSlotLabel} Locked`}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4" />
+                    <span>Save Hour {selectedSlotLabel} Readings</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </form>
       </div>

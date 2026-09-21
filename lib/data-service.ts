@@ -383,11 +383,15 @@ export function saveProcessEntry(updatedEntry: Partial<ProcessEntry> & { slot_in
 
   let finalEntry: ProcessEntry;
 
+  const prodObj = getProducts().find(p => p.id === updatedEntry.product_id);
+  const productName = prodObj?.name || updatedEntry.product_name || 'PL 65 Matsuyama';
+
   if (existingIdx >= 0) {
     const prev = entries[existingIdx];
     finalEntry = {
       ...prev,
       ...updatedEntry,
+      product_name: productName,
       slot_label: slotLabel,
       has_deviation: hasDeviation,
       amended_by: prev.recorded_by ? profile.id : undefined,
@@ -401,6 +405,7 @@ export function saveProcessEntry(updatedEntry: Partial<ProcessEntry> & { slot_in
   } else {
     finalEntry = {
       ...updatedEntry,
+      product_name: productName,
       id: `entry-${Date.now()}-${updatedEntry.slot_index}`,
       sheet_id: currentSheet.id,
       slot_label: slotLabel,
@@ -448,7 +453,7 @@ export function saveProcessEntry(updatedEntry: Partial<ProcessEntry> & { slot_in
 }
 
 // Copy Previous Hour logic
-export function copyPreviousHour(slotIndex: number): { success: boolean; data?: Partial<ProcessEntry>; error?: string } {
+export function copyPreviousHour(slotIndex: number): { success: boolean; data?: Partial<ProcessEntry>; prevSlotLabel?: string; error?: string } {
   if (slotIndex <= 0) {
     return { success: false, error: 'Cannot copy for the 0700 first hour of the shift.' };
   }
@@ -461,14 +466,31 @@ export function copyPreviousHour(slotIndex: number): { success: boolean; data?: 
   if (role === 'operator' && slotIndex !== currentSlot) {
     return { success: false, error: 'Access Denied: Operators can only copy readings during the active hour slot.' };
   }
-  const prevEntry = sheet.entries?.find(e => e.slot_index === slotIndex - 1);
-  if (!prevEntry) {
-    return { success: false, error: 'Hour immediately prior has no recorded readings to copy.' };
+
+  // Find closest previous recorded entry (check slotIndex - 1, then search backwards for any earlier slot)
+  let prevEntry = sheet.entries?.find(e => e.slot_index === slotIndex - 1);
+  if (!prevEntry && sheet.entries && sheet.entries.length > 0) {
+    const priorEntries = sheet.entries
+      .filter(e => e.slot_index < slotIndex)
+      .sort((a, b) => b.slot_index - a.slot_index);
+    if (priorEntries.length > 0) {
+      prevEntry = priorEntries[0];
+    } else {
+      // Fallback to any recorded entry in the sheet
+      prevEntry = [...sheet.entries].sort((a, b) => b.slot_index - a.slot_index)[0];
+    }
   }
+
+  if (!prevEntry) {
+    return { success: false, error: 'No previous recorded readings found in this shift sheet to copy.' };
+  }
+
+  const prevSlotLabel = prevEntry.slot_label || String(((prevEntry.slot_index + 7) % 24) * 100).padStart(4, '0');
 
   // Return non-identifying measurements
   const cloned: Partial<ProcessEntry> = {
     product_id: prevEntry.product_id,
+    product_name: prevEntry.product_name,
     oil_feed_rate_litre: prevEntry.oil_feed_rate_litre,
     deod_time_set_hr: prevEntry.deod_time_set_hr,
     vacuum_torr: prevEntry.vacuum_torr,
@@ -491,7 +513,7 @@ export function copyPreviousHour(slotIndex: number): { success: boolean; data?: 
     fp101b_press_bar: prevEntry.fp101b_press_bar,
   };
 
-  return { success: true, data: cloned };
+  return { success: true, data: cloned, prevSlotLabel };
 }
 
 // Supervisor Verification with Electronic Signature
