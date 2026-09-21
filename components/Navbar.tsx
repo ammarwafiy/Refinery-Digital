@@ -96,7 +96,9 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
 
   // RBAC Filter: Only show allowed navigation tabs for current role
   const allowedTabs = ROLE_ALLOWED_TABS[role] || ['process'];
-  const visibleNavItems = navItems.filter((item) => allowedTabs.includes(item.id));
+  const visibleNavItems = navItems
+    .filter((item) => allowedTabs.includes(item.id))
+    .sort((a, b) => allowedTabs.indexOf(a.id) - allowedTabs.indexOf(b.id));
 
   const roleColors: Record<UserRole, { bg: string; text: string; border: string }> = {
     operator: { bg: 'bg-emerald-950/60', text: 'text-emerald-400', border: 'border-emerald-600/40' },
