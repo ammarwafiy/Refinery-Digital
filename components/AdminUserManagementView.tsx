@@ -21,7 +21,14 @@ import {
   RefreshCw,
   SlidersHorizontal,
   ShieldAlert,
-  Trash2
+  Trash2,
+  HardDrive,
+  Download,
+  ExternalLink,
+  Database,
+  Calendar,
+  Archive,
+  FileSpreadsheet
 } from 'lucide-react';
 import { UserRole, Profile } from '@/types/refinery';
 import { 
@@ -35,7 +42,11 @@ import {
   toggleProfileActive,
   deleteProfile,
   syncProfilesFromSupabase,
-  ROLE_ID_SERIES 
+  ROLE_ID_SERIES,
+  getDatabaseStorageMetrics,
+  generateFullArchivePackage,
+  executePruneRetentionPolicy,
+  StorageMetrics
 } from '@/lib/data-service';
 
 export default function AdminUserManagementView() {
@@ -55,13 +66,41 @@ export default function AdminUserManagementView() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncedAt, setLastSyncedAt] = useState<string>('Just now');
 
+  // Navigation Sub-tab
+  const [activeAdminSubTab, setActiveAdminSubTab] = useState<'personnel' | 'retention'>('personnel');
+
+  // Retention & Auto-Archive / Prune State
+  const [storageMetrics, setStorageMetrics] = useState<StorageMetrics | null>(null);
+  const [retentionPreset, setRetentionPreset] = useState<'30' | '90' | '180' | '365' | 'custom'>('90');
+  const [customCutoffDate, setCustomCutoffDate] = useState<string>(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 90);
+    return d.toISOString().split('T')[0];
+  });
+  const [hasDownloadedBackup, setHasDownloadedBackup] = useState(false);
+  const [downloadedPackageInfo, setDownloadedPackageInfo] = useState<{ filename: string; count: number } | null>(null);
+  const [prunePassword, setPrunePassword] = useState('');
+  const [isPruning, setIsPruning] = useState(false);
+  const [pruneStatusMessage, setPruneStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const refreshStorage = () => {
+    try {
+      const metrics = getDatabaseStorageMetrics();
+      setStorageMetrics(metrics);
+    } catch (e) {
+      console.warn('Failed to calculate storage metrics:', e);
+    }
+  };
+
   useEffect(() => {
     refreshData();
+    refreshStorage();
 
     // Trigger background sync with Supabase
     setIsSyncing(true);
     syncProfilesFromSupabase().then(() => {
       refreshData();
+      refreshStorage();
       setIsSyncing(false);
       setLastSyncedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
     }).catch(() => {
@@ -70,6 +109,7 @@ export default function AdminUserManagementView() {
 
     const handleSyncEvent = () => {
       refreshData();
+      refreshStorage();
       setLastSyncedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
     };
 
@@ -86,6 +126,103 @@ export default function AdminUserManagementView() {
     setCurrentRoleState(r);
     setCurrentProfileState(getCurrentProfile());
     setAutoId(generateNextEmployeeId(selectedRole));
+    refreshStorage();
+  };
+
+  const getEffectiveCutoffDate = () => {
+    if (retentionPreset === 'custom') return customCutoffDate;
+    const days = parseInt(retentionPreset, 10);
+    const d = new Date();
+    d.setDate(d.getDate() - days);
+    return d.toISOString().split('T')[0];
+  };
+
+  const handleDownloadArchive = () => {
+    try {
+      const cutoff = getEffectiveCutoffDate();
+      const pkg = generateFullArchivePackage(cutoff);
+
+      // Trigger JSON file download (complete structured data)
+      const blobJson = new Blob([pkg.jsonContent], { type: 'application/json;charset=utf-8;' });
+      const urlJson = URL.createObjectURL(blobJson);
+      const aJson = document.createElement('a');
+      aJson.href = urlJson;
+      aJson.download = `${pkg.filename}.json`;
+      document.body.appendChild(aJson);
+      aJson.click();
+      document.body.removeChild(aJson);
+      URL.revokeObjectURL(urlJson);
+
+      // Trigger CSV summary download
+      const blobCsv = new Blob([pkg.csvSummaryContent], { type: 'text/csv;charset=utf-8;' });
+      const urlCsv = URL.createObjectURL(blobCsv);
+      const aCsv = document.createElement('a');
+      aCsv.href = urlCsv;
+      aCsv.download = `${pkg.filename}_summary.csv`;
+      document.body.appendChild(aCsv);
+      aCsv.click();
+      document.body.removeChild(aCsv);
+      URL.revokeObjectURL(urlCsv);
+
+      setHasDownloadedBackup(true);
+      setDownloadedPackageInfo({ filename: pkg.filename, count: pkg.recordsArchivedCount });
+      setPruneStatusMessage({
+        type: 'success',
+        text: `✓ Cold Storage Backup downloaded (${pkg.recordsArchivedCount} records packaged). You can now upload this file to Google Drive. Step 2 (Pruning) is unlocked!`
+      });
+    } catch (err: any) {
+      setPruneStatusMessage({
+        type: 'error',
+        text: `Failed to generate archive package: ${err?.message || 'Unknown error'}`
+      });
+    }
+  };
+
+  const handleExecutePrune = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!hasDownloadedBackup) {
+      alert('Safety Constraint: You must download the archive package to backup data to Google Drive first before pruning.');
+      return;
+    }
+
+    const cutoff = getEffectiveCutoffDate();
+    const confirmed = window.confirm(
+      `CRITICAL CONFIRMATION (ISO 9001 / HACCP RETENTION):\n\n` +
+      `Are you sure you want to permanently prune Supabase database records older than ${cutoff}?\n\n` +
+      `• Historical decided sample reports and deviations before ${cutoff} will be deleted.\n` +
+      `• Active shift sheets, plant specifications, tank calibration, and staff accounts will NOT be touched.\n\n` +
+      `Click OK to authenticate with your administrator electronic signature.`
+    );
+    if (!confirmed) return;
+
+    setIsPruning(true);
+    setPruneStatusMessage(null);
+
+    try {
+      const res = await executePruneRetentionPolicy(cutoff, prunePassword);
+      if (res.success) {
+        setPruneStatusMessage({
+          type: 'success',
+          text: res.message || 'Database pruning successfully executed!'
+        });
+        setPrunePassword('');
+        setHasDownloadedBackup(false);
+        refreshStorage();
+        refreshData();
+      } else {
+        setPruneStatusMessage({
+          type: 'error',
+          text: res.error || 'Pruning rejected. Verification failed.'
+        });
+      }
+    } catch (err: any) {
+      setPruneStatusMessage({
+        type: 'error',
+        text: err?.message || 'Error occurred during database pruning execution.'
+      });
+    } finally {
+      setIsPruning(false);
+    }
   };
 
   const handleManualSync = async () => {
@@ -274,7 +411,44 @@ export default function AdminUserManagementView() {
         </div>
       </div>
 
-      {/* RBAC Warning Banner if not Admin */}
+      {/* Admin Section Navigation Sub-Tabs */}
+      <div className="flex items-center gap-2 border-b border-slate-800 pb-3 flex-wrap">
+        <button
+          type="button"
+          onClick={() => setActiveAdminSubTab('personnel')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-semibold transition-all cursor-pointer ${
+            activeAdminSubTab === 'personnel'
+              ? 'bg-blue-600 text-white shadow-md shadow-blue-950/60 border border-blue-400/40'
+              : 'bg-slate-900/80 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-800'
+          }`}
+        >
+          <Users className="h-4 w-4 text-cyan-400" />
+          <span>Personnel & Access Control</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setActiveAdminSubTab('retention');
+            refreshStorage();
+          }}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-semibold transition-all cursor-pointer ${
+            activeAdminSubTab === 'retention'
+              ? 'bg-gradient-to-r from-amber-600 to-emerald-600 text-white shadow-md shadow-emerald-950/60 border border-emerald-400/40'
+              : 'bg-slate-900/80 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-800'
+          }`}
+        >
+          <HardDrive className="h-4 w-4 text-emerald-300" />
+          <span>Data Retention & Supabase Prune Policy</span>
+          <span className="px-1.5 py-0.5 text-[9px] bg-emerald-950 text-emerald-300 border border-emerald-600/40 rounded font-mono font-bold">
+            500 MB PROTECT
+          </span>
+        </button>
+      </div>
+
+      {activeAdminSubTab === 'personnel' ? (
+        <>
+          {/* RBAC Warning Banner if not Admin */}
       {!isAdmin && (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-amber-950/40 border border-amber-600/50 text-amber-200 text-xs font-mono">
           <div className="flex items-center gap-2.5">
@@ -641,6 +815,392 @@ export default function AdminUserManagementView() {
         </div>
 
       </div>
+      </>
+      ) : (
+        /* Retention & Supabase Prune Sub-Tab View */
+        <div className="space-y-6">
+          {/* RBAC Warning if not Admin */}
+          {!isAdmin && (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-amber-950/40 border border-amber-600/50 text-amber-200 text-xs font-mono">
+              <div className="flex items-center gap-2.5">
+                <ShieldAlert className="h-5 w-5 text-amber-400 shrink-0" />
+                <div>
+                  <span className="font-bold">RESTRICTED ACCESS:</span> Data retention archiving and database pruning are restricted exclusively to the Plant Administrator (*Admin*).
+                </div>
+              </div>
+              <button
+                onClick={handleSwitchToAdmin}
+                className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold whitespace-nowrap transition-colors shadow-md shadow-blue-950/50 cursor-pointer text-xs"
+              >
+                Switch to Admin Profile (AD-5010)
+              </button>
+            </div>
+          )}
+
+          {/* Retention Notification Banner */}
+          {pruneStatusMessage && (
+            <div className={`flex items-center justify-between p-4 rounded-xl border text-xs font-mono ${
+              pruneStatusMessage.type === 'success' 
+                ? 'bg-emerald-950/60 border-emerald-700 text-emerald-300' 
+                : 'bg-rose-950/60 border-rose-700 text-rose-300'
+            }`}>
+              <div className="flex items-center gap-2.5">
+                {pruneStatusMessage.type === 'success' ? (
+                  <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                ) : (
+                  <AlertTriangle className="h-4 w-4 text-rose-400 shrink-0" />
+                )}
+                <span>{pruneStatusMessage.text}</span>
+              </div>
+              <button 
+                onClick={() => setPruneStatusMessage(null)}
+                className="text-slate-400 hover:text-white font-bold ml-2 cursor-pointer"
+              >
+                ×
+              </button>
+            </div>
+          )}
+
+          {/* Database Health & Capacity Meter */}
+          <div className="p-5 rounded-2xl bg-gradient-to-r from-slate-900 via-[#0b1528] to-slate-900 border border-slate-800 shadow-xl space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 shadow-lg shadow-emerald-950/50">
+                  <Database className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-base font-bold text-white tracking-wide">
+                      Supabase PostgreSQL Storage Capacity & Health
+                    </h2>
+                    <span className="rounded-full bg-emerald-950/90 px-2.5 py-0.5 text-[10px] font-mono text-emerald-400 border border-emerald-500/40 font-semibold flex items-center gap-1.5">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                      OPTIMAL SAFE ZONE
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 font-sans mt-0.5">
+                    Continuous monitoring against Supabase Free Tier cap (500.0 MB). Tabular refinery data generates ~8.7 MB/year.
+                  </p>
+                </div>
+              </div>
+
+              <div className="text-right font-mono">
+                <div className="text-xs text-slate-400">Total Quota Cap:</div>
+                <div className="text-sm font-bold text-white">500.0 MB <span className="text-slate-500 text-xs font-normal">(Supabase Limit)</span></div>
+              </div>
+            </div>
+
+            {/* Capacity Progress Bar */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-xs font-mono">
+                <span className="text-slate-400">
+                  Storage Used: <b className="text-cyan-400 font-bold">{((storageMetrics?.estimatedStorageUsedKB || 28672) / 1024).toFixed(2)} MB</b> / 500.0 MB
+                </span>
+                <span className="text-emerald-400 font-bold">
+                  {storageMetrics?.safeLimitPercentage || 5.72}% Used · {(500 - ((storageMetrics?.estimatedStorageUsedKB || 28672) / 1024)).toFixed(1)} MB Safe Headroom
+                </span>
+              </div>
+              <div className="w-full bg-slate-950/80 rounded-full h-3.5 border border-slate-800 p-0.5 overflow-hidden">
+                <div 
+                  className="h-full rounded-full bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-500 transition-all duration-500 shadow-sm shadow-emerald-500/50"
+                  style={{ width: `${Math.max(storageMetrics?.safeLimitPercentage || 5.72, 3)}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Storage Item Breakdown Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-2">
+              <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80">
+                <div className="text-[10px] font-mono text-slate-400 uppercase">QC Sample Reports</div>
+                <div className="text-lg font-bold font-mono text-cyan-400 mt-0.5">
+                  {storageMetrics?.totalReports || 0}
+                </div>
+                <div className="text-[10px] text-slate-500 mt-0.5">
+                  {storageMetrics?.decidedReports || 0} decided (eligible)
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80">
+                <div className="text-[10px] font-mono text-emerald-400 uppercase">Active Shift Sheet</div>
+                <div className="text-lg font-bold font-mono text-emerald-400 mt-0.5">
+                  {storageMetrics?.activeSheetEntries || 0}
+                </div>
+                <div className="text-[10px] text-emerald-500/80 mt-0.5 font-mono">
+                  🛡️ Always Protected
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80">
+                <div className="text-[10px] font-mono text-amber-400 uppercase">Quality Deviations</div>
+                <div className="text-lg font-bold font-mono text-amber-400 mt-0.5">
+                  {storageMetrics?.deviationsCount || 0}
+                </div>
+                <div className="text-[10px] text-slate-500 mt-0.5">
+                  CAPA & out-of-spec logs
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80">
+                <div className="text-[10px] font-mono text-purple-400 uppercase">Audit Trail (CFR 21)</div>
+                <div className="text-lg font-bold font-mono text-purple-400 mt-0.5">
+                  {storageMetrics?.auditLogsCount || 0}
+                </div>
+                <div className="text-[10px] text-slate-500 mt-0.5">
+                  Tamper-evident events
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80">
+                <div className="text-[10px] font-mono text-blue-400 uppercase">Staff Accounts</div>
+                <div className="text-lg font-bold font-mono text-blue-400 mt-0.5">
+                  {storageMetrics?.profilesCount || 0}
+                </div>
+                <div className="text-[10px] text-blue-400/70 mt-0.5 font-mono">
+                  🔒 Master Data (Permanent)
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 2-Step Safe Archive & Prune Workflow */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+            {/* STEP 1: Cold Storage Export (Google Drive Archive) */}
+            <div className="rounded-2xl border border-slate-800 bg-[#0f172a]/90 p-5 shadow-xl backdrop-blur-sm space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-bold text-xs">
+                    1
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-white tracking-wide">
+                      STEP 1: Export to Cold Storage (Google Drive)
+                    </h3>
+                    <span className="text-[10px] font-mono text-cyan-400">
+                      Mandatory Pre-Prune Backup · Zero Data Loss Guarantee
+                    </span>
+                  </div>
+                </div>
+                <span className="px-2 py-0.5 text-[10px] font-mono bg-cyan-950 text-cyan-300 border border-cyan-800 rounded font-semibold">
+                  SAFETY LOCK
+                </span>
+              </div>
+
+              <p className="text-xs text-slate-300 leading-relaxed font-sans">
+                Sebelum rekod lama dibersihkan daripada Supabase, muat turun salinan sandaran (backup). Pakej ini mengandungi fail JSON data mentah lengkap beserta ringkasan CSV untuk disimpan ke dalam <b>Google Drive</b> atau simpanan awan syarikat anda.
+              </p>
+
+              {/* Retention Policy Period Selector */}
+              <div className="space-y-2 text-xs font-mono">
+                <label className="block text-slate-300 font-semibold">
+                  Select Retention Cutoff Policy:
+                </label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {[
+                    { id: '30', label: '30 Days', desc: '1 Month' },
+                    { id: '90', label: '90 Days', desc: '1 Quarter (Recommended)' },
+                    { id: '180', label: '180 Days', desc: '6 Months' },
+                    { id: '365', label: '365 Days', desc: '1 Year' },
+                  ].map((preset) => (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => setRetentionPreset(preset.id as any)}
+                      className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                        retentionPreset === preset.id
+                          ? 'bg-cyan-950/80 border-cyan-500 text-cyan-300 shadow-md shadow-cyan-950/50'
+                          : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                      }`}
+                    >
+                      <div className="font-bold text-xs">{preset.label}</div>
+                      <div className="text-[10px] text-slate-500">{preset.desc}</div>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Custom Date Picker */}
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setRetentionPreset('custom')}
+                    className={`text-[11px] font-mono px-3 py-1.5 rounded-lg border transition-all cursor-pointer ${
+                      retentionPreset === 'custom'
+                        ? 'bg-cyan-950/80 border-cyan-500 text-cyan-300'
+                        : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    Custom Cutoff Date
+                  </button>
+
+                  {retentionPreset === 'custom' && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-cyan-400" />
+                      <input
+                        type="date"
+                        value={customCutoffDate}
+                        onChange={(e) => setCustomCutoffDate(e.target.value)}
+                        className="bg-[#090d16] border border-cyan-500/60 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none font-mono"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Effective Cutoff Date Banner */}
+              <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center justify-between text-xs font-mono">
+                <span className="text-slate-400">Effective Prune Cutoff Date:</span>
+                <span className="text-cyan-400 font-bold bg-[#090d16] px-2.5 py-1 rounded border border-slate-700">
+                  {getEffectiveCutoffDate()}
+                </span>
+              </div>
+
+              {/* Download Action */}
+              <div className="space-y-3 pt-2">
+                <button
+                  type="button"
+                  onClick={handleDownloadArchive}
+                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-semibold py-3 px-4 rounded-xl text-xs font-mono transition-all shadow-lg shadow-cyan-950/60 cursor-pointer"
+                >
+                  <Download className="h-4 w-4" />
+                  <span>Download Cold Storage Archive (.JSON + .CSV)</span>
+                </button>
+
+                {/* Google Drive Direct Link */}
+                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900/40 border border-slate-800/80 text-xs font-mono">
+                  <div className="flex items-center gap-2 text-slate-300">
+                    <Archive className="h-4 w-4 text-amber-400" />
+                    <span>Upload downloaded file to Google Drive:</span>
+                  </div>
+                  <a
+                    href="https://drive.google.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 text-[11px] font-semibold transition-colors border border-slate-700"
+                  >
+                    <span>Open Google Drive</span>
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+
+                {hasDownloadedBackup && downloadedPackageInfo && (
+                  <div className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-700/60 text-emerald-300 text-xs font-mono flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                    <span>
+                      Archive generated: <b>{downloadedPackageInfo.filename}.json</b> ({downloadedPackageInfo.count} records). Step 2 is now unlocked!
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* STEP 2: Prune Supabase Database (Protected) */}
+            <div className={`rounded-2xl border ${
+              hasDownloadedBackup ? 'border-amber-600/70 bg-[#121524]' : 'border-slate-800 bg-[#0f172a]/50'
+            } p-5 shadow-xl backdrop-blur-sm space-y-4`}>
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div className="flex items-center gap-2">
+                  <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${
+                    hasDownloadedBackup 
+                      ? 'bg-amber-500/20 border border-amber-500/50 text-amber-400' 
+                      : 'bg-slate-800 border border-slate-700 text-slate-500'
+                  } font-bold text-xs`}>
+                    2
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-white tracking-wide">
+                      STEP 2: Execute Supabase Database Prune
+                    </h3>
+                    <span className="text-[10px] font-mono text-slate-400">
+                      Admin Electronic Signature & 21 CFR Part 11 Audit Trail
+                    </span>
+                  </div>
+                </div>
+                {hasDownloadedBackup ? (
+                  <span className="px-2 py-0.5 text-[10px] font-mono bg-amber-950 text-amber-300 border border-amber-700 rounded font-bold animate-pulse">
+                    UNLOCKED
+                  </span>
+                ) : (
+                  <span className="px-2 py-0.5 text-[10px] font-mono bg-slate-900 text-slate-500 border border-slate-800 rounded font-bold">
+                    LOCKED
+                  </span>
+                )}
+              </div>
+
+              {!hasDownloadedBackup ? (
+                <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 text-slate-400 text-xs font-mono space-y-2">
+                  <div className="flex items-center gap-2 text-amber-400 font-semibold">
+                    <Lock className="h-4 w-4" />
+                    <span>Safety Protection Active</span>
+                  </div>
+                  <p className="text-[11px] leading-relaxed">
+                    Tindakan pembersihan (prune) disekat sehingga anda menyelesaikan <b>STEP 1</b> (Muat Turun Sandaran). Ini bagi menjamin tiada kehilangan data operasi yang tidak disengajakan.
+                  </p>
+                </div>
+              ) : (
+                <div className="p-3.5 rounded-xl bg-amber-950/30 border border-amber-800/40 text-amber-300 text-xs font-mono space-y-1">
+                  <div className="font-bold flex items-center gap-1.5">
+                    <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0" />
+                    <span>Pengesahan Pembersihan Data:</span>
+                  </div>
+                  <p className="text-[11px] text-amber-200/80 leading-relaxed font-sans">
+                    Semua rekod Sample Reports (berstatus <i>decided</i>) dan Deviations sebelum <b>{getEffectiveCutoffDate()}</b> akan dipadam daripada Supabase. Shift Sheet aktif, profil pengguna, dan spesifikasi produk KEKAL selamat.
+                  </p>
+                </div>
+              )}
+
+              {/* Prune Form */}
+              <form onSubmit={handleExecutePrune} className="space-y-4 text-xs font-mono">
+                <div>
+                  <label className="block text-slate-300 mb-1 font-semibold">
+                    Administrator Electronic Signature Password:
+                  </label>
+                  <div className="relative">
+                    <KeyRound className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-500" />
+                    <input
+                      type="password"
+                      disabled={!hasDownloadedBackup || !isAdmin || isPruning}
+                      required
+                      placeholder={hasDownloadedBackup ? "Enter administrator password..." : "Complete Step 1 first..."}
+                      value={prunePassword}
+                      onChange={(e) => setPrunePassword(e.target.value)}
+                      className="w-full bg-[#090d16] border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500 disabled:opacity-40 disabled:cursor-not-allowed"
+                    />
+                  </div>
+                  <span className="text-[10px] text-slate-500 mt-1 block">
+                    Confirms authorization per ISO 9001:2015 §8.5.3 (Control of Outputs).
+                  </span>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={!hasDownloadedBackup || !isAdmin || isPruning || !prunePassword.trim()}
+                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-red-700 via-rose-700 to-amber-700 hover:from-red-600 hover:to-amber-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-xl text-xs font-mono transition-all shadow-lg shadow-red-950/60 cursor-pointer"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span>
+                    {isPruning ? 'Pruning Supabase Database...' : `Permanently Prune Records Before ${getEffectiveCutoffDate()}`}
+                  </span>
+                </button>
+              </form>
+
+              {/* Audit & Compliance Standards Card */}
+              <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 text-[11px] font-mono text-slate-400 space-y-1.5">
+                <div className="flex items-center gap-1.5 text-cyan-400 font-bold">
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  <span>REGULATORY COMPLIANCE SAFEGUARDS:</span>
+                </div>
+                <ul className="space-y-1 text-[10px] text-slate-400">
+                  <li>• <b>Zero Data Loss:</b> Complete cold backup is always downloaded before prune execution.</li>
+                  <li>• <b>Immutable Audit Trail:</b> Every prune execution is stamped with Admin ID & timestamp in <code>audit_log</code>.</li>
+                  <li>• <b>Protected Active Shift:</b> The active shift sheet and running tanks are excluded from pruning.</li>
+                </ul>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 }

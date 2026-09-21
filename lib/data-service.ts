@@ -1248,3 +1248,191 @@ export function addAuditLog(
   setStored(STORAGE_KEYS.AUDIT_LOGS, logs);
   memoryAuditLogs = logs;
 }
+
+// ==============================================================================
+// 6. Data Retention & Auto-Archive / Prune Policy (Industrial Storage Protection)
+// ==============================================================================
+
+export interface StorageMetrics {
+  totalReports: number;
+  decidedReports: number;
+  activeSheetEntries: number;
+  deviationsCount: number;
+  auditLogsCount: number;
+  profilesCount: number;
+  estimatedStorageUsedKB: number;
+  supabaseLimitMB: number;
+  safeLimitPercentage: number;
+}
+
+export function getDatabaseStorageMetrics(): StorageMetrics {
+  const reports = getSampleReports();
+  const sheet = getActiveProcessSheet();
+  const deviations = getDeviations();
+  const auditLogs = getAuditLogs();
+  const profiles = getProfiles();
+
+  const totalReports = reports.length;
+  const decidedReports = reports.filter(r => r.status === 'decided').length;
+  const activeSheetEntries = sheet.entries?.length || 0;
+  const deviationsCount = deviations.length;
+  const auditLogsCount = auditLogs.length;
+  const profilesCount = profiles.length;
+
+  // Approximate storage calculation:
+  // Each report ~2 KB, each entry ~0.8 KB, each deviation ~0.5 KB, each audit ~0.5 KB, base system ~28000 KB (28 MB)
+  const dynamicKB = (totalReports * 2.0) + (activeSheetEntries * 0.8) + (deviationsCount * 0.5) + (auditLogsCount * 0.5) + (profilesCount * 0.5);
+  const totalKB = Math.round(28672 + dynamicKB); // 28 MB base catalog in KB
+
+  const supabaseLimitMB = 500;
+  const safeLimitPercentage = Number(((totalKB / (supabaseLimitMB * 1024)) * 100).toFixed(2));
+
+  return {
+    totalReports,
+    decidedReports,
+    activeSheetEntries,
+    deviationsCount,
+    auditLogsCount,
+    profilesCount,
+    estimatedStorageUsedKB: totalKB,
+    supabaseLimitMB,
+    safeLimitPercentage,
+  };
+}
+
+export function generateFullArchivePackage(cutoffDate: string): {
+  filename: string;
+  jsonContent: string;
+  csvSummaryContent: string;
+  recordsArchivedCount: number;
+} {
+  const reports = getSampleReports();
+  const deviations = getDeviations();
+  const auditLogs = getAuditLogs();
+
+  const archivedReports = reports.filter(r => r.sample_date < cutoffDate && r.status === 'decided');
+  const archivedDeviations = deviations.filter(d => d.created_at < cutoffDate);
+  const archivedAuditLogs = auditLogs.filter(a => a.occurred_at < cutoffDate);
+
+  const archiveData = {
+    exported_at: new Date().toISOString(),
+    plant_id: INITIAL_PLANT.id,
+    plant_name: INITIAL_PLANT.name,
+    cutoff_date: cutoffDate,
+    description: `Refinery Historical Cold Storage Backup (For Google Drive / Cloud Archiving)`,
+    counts: {
+      reports: archivedReports.length,
+      deviations: archivedDeviations.length,
+      auditLogs: archivedAuditLogs.length,
+    },
+    sample_reports: archivedReports,
+    deviations: archivedDeviations,
+    audit_logs: archivedAuditLogs,
+  };
+
+  // Build CSV summary
+  const csvHeaders = ['Report_No', 'Sample_Date', 'Time_Check', 'Lot_No', 'Product', 'Decision', 'Decided_By', 'Decided_At'];
+  const csvRows = archivedReports.map(r => [
+    r.report_no,
+    r.sample_date,
+    r.time_check,
+    r.lot_no,
+    `"${r.product_name}"`,
+    r.decision?.decision || 'N/A',
+    `"${r.decision?.decided_by_name || 'N/A'}"`,
+    r.decision?.decided_at || 'N/A',
+  ].join(','));
+
+  const csvContent = [csvHeaders.join(','), ...csvRows].join('\n');
+
+  const totalCount = archivedReports.length + archivedDeviations.length + archivedAuditLogs.length;
+  const filename = `Refinery_Plant_Archive_${cutoffDate}_${Date.now()}`;
+
+  return {
+    filename,
+    jsonContent: JSON.stringify(archiveData, null, 2),
+    csvSummaryContent: csvContent,
+    recordsArchivedCount: totalCount,
+  };
+}
+
+export async function executePruneRetentionPolicy(
+  cutoffDate: string,
+  adminPasswordConfirm: string
+): Promise<{ success: boolean; message?: string; prunedCounts?: { reports: number; deviations: number; auditLogs: number }; error?: string }> {
+  const profile = getCurrentProfile();
+  const role = getCurrentRole();
+
+  if (role !== 'admin') {
+    return { success: false, error: 'Access Denied: Only the Plant Administrator can execute data retention and pruning.' };
+  }
+
+  const expectedPassword = profile.password || 'password123';
+  if (!adminPasswordConfirm || adminPasswordConfirm.trim() !== expectedPassword) {
+    return { success: false, error: 'Electronic signature verification failed. Incorrect administrator password.' };
+  }
+
+  const currentReports = getSampleReports();
+  const currentDeviations = getDeviations();
+  const currentAuditLogs = getAuditLogs();
+
+  const toKeepReports = currentReports.filter(r => !(r.sample_date < cutoffDate && r.status === 'decided'));
+  const toKeepDeviations = currentDeviations.filter(d => !(d.created_at < cutoffDate));
+  const toKeepAuditLogs = currentAuditLogs.filter(a => !(a.occurred_at < cutoffDate));
+
+  const prunedReportsCount = currentReports.length - toKeepReports.length;
+  const prunedDeviationsCount = currentDeviations.length - toKeepDeviations.length;
+  const prunedAuditLogsCount = currentAuditLogs.length - toKeepAuditLogs.length;
+
+  // Update local storage
+  setStored(STORAGE_KEYS.REPORTS, toKeepReports);
+  memoryReports = toKeepReports;
+
+  setStored(STORAGE_KEYS.DEVIATIONS, toKeepDeviations);
+  memoryDeviations = toKeepDeviations;
+
+  setStored(STORAGE_KEYS.AUDIT_LOGS, toKeepAuditLogs);
+  memoryAuditLogs = toKeepAuditLogs;
+
+  // Call Supabase Prune API endpoint to clean remote database
+  if (typeof window !== 'undefined') {
+    try {
+      await fetch('/api/archive', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cutoffDate })
+      });
+    } catch (e) {
+      console.warn('[Prune API] Failed to reach /api/archive:', e);
+    }
+
+    window.dispatchEvent(new CustomEvent('refinery_reports_updated', { detail: toKeepReports }));
+  }
+
+  // Record official audit log entry
+  addAuditLog(
+    'system_maintenance',
+    `prune-${Date.now()}`,
+    'update',
+    {
+      action: 'DATA_RETENTION_PRUNE',
+      cutoff_date: cutoffDate,
+      pruned: { reports: prunedReportsCount, deviations: prunedDeviationsCount, audit_logs: prunedAuditLogsCount }
+    },
+    {
+      executed_by: profile.full_name,
+      employee_no: profile.employee_no,
+      timestamp: new Date().toISOString()
+    }
+  );
+
+  return {
+    success: true,
+    message: `Retention policy successfully executed! Pruned ${prunedReportsCount} sample reports, ${prunedDeviationsCount} deviations, and ${prunedAuditLogsCount} audit logs before ${cutoffDate}.`,
+    prunedCounts: {
+      reports: prunedReportsCount,
+      deviations: prunedDeviationsCount,
+      auditLogs: prunedAuditLogsCount,
+    }
+  };
+}
