@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   SampleReport, 
   Product, 
@@ -21,7 +21,8 @@ import {
   getSamplingPoints, 
   getParameters, 
   getRejectionReasons, 
-  getCurrentRole 
+  getCurrentRole,
+  getProductSpecs
 } from '@/lib/data-service';
 import { 
   FlaskConical, 
@@ -79,6 +80,7 @@ export default function SampleLabView() {
 
   // Enter results state
   const [resultInputs, setResultInputs] = useState<Record<string, { num?: number; text?: string }>>({});
+  const [requestedMap, setRequestedMap] = useState<Record<string, boolean>>({});
   const [resultsSuccess, setResultsSuccess] = useState<string | null>(null);
 
   // QC Decision Modal state
@@ -121,19 +123,104 @@ export default function SampleLabView() {
 
   const selectedReport = reports.find(r => r.id === selectedReportId) || reports[0];
 
-  // Initialize result inputs when selected report changes
+  // Merge full catalog parameters for open/awaiting report if any are missing
+  const displayResults = useMemo(() => {
+    if (!selectedReport) return [];
+    const existing = selectedReport.results || [];
+    if (selectedReport.decision) return existing;
+
+    const existingParamKeys = new Set(
+      existing.map(r => r.series_key ? `${r.parameter_id}-${r.series_key}` : r.parameter_id)
+    );
+    const merged = [...existing];
+
+    parameters.forEach(param => {
+      if (param.code === 'SFC' && param.series_values) {
+        param.series_values.forEach(temp => {
+          const key = `${param.id}-${temp}`;
+          if (!existingParamKeys.has(key)) {
+            merged.push({
+              id: `res-${selectedReport.id}-${temp}`,
+              report_id: selectedReport.id,
+              parameter_id: param.id,
+              parameter_code: param.code,
+              parameter_name: `SFC @ ${temp}°C`,
+              unit: param.unit,
+              series_key: temp,
+              requested: false,
+            });
+          }
+        });
+      } else {
+        if (!existingParamKeys.has(param.id)) {
+          merged.push({
+            id: `res-${selectedReport.id}-${param.code}`,
+            report_id: selectedReport.id,
+            parameter_id: param.id,
+            parameter_code: param.code,
+            parameter_name: param.name,
+            unit: param.unit,
+            requested: false,
+          });
+        }
+      }
+    });
+
+    return merged;
+  }, [selectedReport, parameters]);
+
+  // Initialize result inputs and active/ticked status when selected report changes
   useEffect(() => {
-    if (selectedReport?.results) {
+    if (displayResults.length > 0) {
       const inputs: Record<string, { num?: number; text?: string }> = {};
-      selectedReport.results.forEach(r => {
+      const reqs: Record<string, boolean> = {};
+
+      displayResults.forEach(r => {
         inputs[r.id] = {
           num: r.value_numeric ?? undefined,
           text: r.value_text ?? undefined,
         };
+        reqs[r.id] = r.requested !== false;
       });
+
       setResultInputs(inputs);
+      setRequestedMap(reqs);
     }
-  }, [selectedReport]);
+  }, [selectedReport?.id, displayResults.length]);
+
+  const handleToggleResultParam = (resId: string, checked: boolean) => {
+    setRequestedMap(prev => ({
+      ...prev,
+      [resId]: checked,
+    }));
+  };
+
+  const handleTickAll = () => {
+    const reqs: Record<string, boolean> = {};
+    displayResults.forEach(r => {
+      reqs[r.id] = true;
+    });
+    setRequestedMap(reqs);
+  };
+
+  const handleUntickAll = () => {
+    const reqs: Record<string, boolean> = {};
+    displayResults.forEach(r => {
+      reqs[r.id] = false;
+    });
+    setRequestedMap(reqs);
+  };
+
+  const handleApplyProductSpec = () => {
+    if (!selectedReport) return;
+    const specs = getProductSpecs(selectedReport.product_id || undefined);
+    const specParamIds = new Set(specs.map(s => s.parameter_id));
+    const reqs: Record<string, boolean> = {};
+    displayResults.forEach(r => {
+      reqs[r.id] = specParamIds.has(r.parameter_id);
+    });
+    setRequestedMap(reqs);
+  };
 
   const handleCreateSample = (e: React.FormEvent) => {
     e.preventDefault();
@@ -169,15 +256,25 @@ export default function SampleLabView() {
     if (!selectedReport) return;
     setResultsSuccess(null);
 
-    const payload = Object.entries(resultInputs).map(([resId, val]) => ({
-      resultId: resId,
-      value_numeric: val.num !== undefined ? Number(val.num) : null,
-      value_text: val.text ?? null,
-    }));
+    const payload = displayResults.map(res => {
+      const val = resultInputs[res.id] || {};
+      const isReq = requestedMap[res.id] !== false;
+      return {
+        resultId: res.id,
+        parameter_id: res.parameter_id,
+        parameter_code: res.parameter_code,
+        parameter_name: res.parameter_name,
+        unit: res.unit,
+        series_key: res.series_key,
+        value_numeric: isReq && val.num !== undefined ? Number(val.num) : null,
+        value_text: isReq ? (val.text ?? null) : null,
+        requested: isReq,
+      };
+    });
 
     const res = updateSampleResults(selectedReport.id, payload);
     if (res.success) {
-      setResultsSuccess('Laboratory test results recorded and validated against specification limits!');
+      setResultsSuccess('Laboratory test results & active parameters saved and validated against specification limits!');
       refreshReports();
     }
   };
@@ -187,9 +284,9 @@ export default function SampleLabView() {
     if (!selectedReport) return;
     setDecisionError(null);
 
-    // Collect failed parameters from results if any
+    // Collect failed parameters from results if any (ONLY active/ticked parameters)
     const failedParams = selectedReport.results
-      ?.filter(r => r.in_spec === false)
+      ?.filter(r => (requestedMap[r.id] ?? r.requested) !== false && r.in_spec === false)
       .map(r => `${r.parameter_name} (${r.value_numeric ?? r.value_text})`) || [];
 
     const res = submitQCDecision({
@@ -706,45 +803,106 @@ export default function SampleLabView() {
 
                 {/* Parameter Test Input Form */}
                 <form onSubmit={handleSaveResults} className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold uppercase tracking-wider text-cyan-400 font-mono">
-                      Lab Analysis Results Entry (RF-FR-001 Parameter Table)
-                    </span>
-                    <span className="text-[11px] text-slate-500 font-mono">
-                      Realtime specification limit comparison
-                    </span>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-cyan-400 font-mono">
+                        Lab Analysis Results Entry (RF-FR-001 Parameter Table)
+                      </span>
+                      <span className="rounded bg-slate-800 px-2.5 py-0.5 font-mono text-[11px] text-cyan-300 border border-slate-700">
+                        {displayResults.filter(r => requestedMap[r.id] !== false).length} / {displayResults.length} Parameters Active
+                      </span>
+                    </div>
+
+                    {(role === 'qc_analyst' || role === 'qc_manager' || role === 'admin') && !selectedReport.decision && (
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={handleApplyProductSpec}
+                          className="text-[11px] font-mono px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 transition-colors"
+                          title="Tick only parameters specified for this product"
+                        >
+                          Product Spec Only
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleTickAll}
+                          className="text-[11px] font-mono px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors"
+                        >
+                          Tick All
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleUntickAll}
+                          className="text-[11px] font-mono px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 border border-slate-700 transition-colors"
+                        >
+                          Untick All
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   <div className="rounded-xl border border-slate-800 bg-[#090d16] overflow-hidden">
                     <table className="w-full text-left text-xs">
                       <thead className="bg-slate-900/80 text-slate-400 font-mono text-[11px] border-b border-slate-800">
                         <tr>
+                          <th className="py-2.5 px-3 text-center w-14" title="Tick to test parameter, untick if product does not require it">
+                            Test (✓)
+                          </th>
                           <th className="py-2.5 px-3">Parameter Name</th>
                           <th className="py-2.5 px-3">Unit</th>
-                          <th className="py-2.5 px-3 w-40">Lab Result</th>
+                          <th className="py-2.5 px-3 w-44">Lab Result</th>
                           <th className="py-2.5 px-3 text-center">Spec Status</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-800/60 font-mono">
-                        {selectedReport.results?.map(res => {
+                        {displayResults.map(res => {
                           const inputVal = resultInputs[res.id] || {};
+                          const isUnticked = requestedMap[res.id] === false;
+                          const isDecided = Boolean(selectedReport.decision);
+                          const canEdit = (role === 'qc_analyst' || role === 'qc_manager' || role === 'admin') && !isDecided;
+
                           return (
-                            <tr key={res.id} className="hover:bg-slate-900/30">
-                              <td className="py-2.5 px-3 text-slate-200 font-sans">
+                            <tr
+                              key={res.id}
+                              className={`transition-colors ${
+                                isUnticked
+                                  ? 'opacity-40 bg-slate-950/40'
+                                  : 'hover:bg-slate-900/30'
+                              }`}
+                            >
+                              <td className="py-2.5 px-3 text-center">
+                                <input
+                                  type="checkbox"
+                                  checked={!isUnticked}
+                                  onChange={e => handleToggleResultParam(res.id, e.target.checked)}
+                                  disabled={!canEdit}
+                                  className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-cyan-500 focus:ring-cyan-500 cursor-pointer disabled:opacity-50"
+                                  title={isUnticked ? "Unticked: Test not applicable for this product" : "Ticked: Active parameter"}
+                                />
+                              </td>
+                              <td className={`py-2.5 px-3 font-sans ${isUnticked ? 'text-slate-500' : 'text-slate-200'}`}>
                                 {res.parameter_name}
                               </td>
-                              <td className="py-2.5 px-3 text-slate-500">
+                              <td className={`py-2.5 px-3 ${isUnticked ? 'text-slate-600' : 'text-slate-500'}`}>
                                 {res.unit || '-'}
                               </td>
                               <td className="py-2.5 px-3">
-                                {res.parameter_code === 'ODOUR' ? (
+                                {isUnticked ? (
+                                  <input
+                                    type="text"
+                                    disabled
+                                    value="N/A - Unticked"
+                                    className="w-full bg-slate-950/80 border border-slate-800/80 rounded px-2 py-1 text-xs text-slate-500 cursor-not-allowed font-mono italic"
+                                  />
+                                ) : res.parameter_code === 'ODOUR' ? (
                                   <select
+                                    disabled={!canEdit}
                                     value={inputVal.text || 'bland'}
                                     onChange={e => setResultInputs(prev => ({
                                       ...prev,
                                       [res.id]: { ...prev[res.id], text: e.target.value }
                                     }))}
-                                    className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white"
+                                    className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white disabled:opacity-50"
                                   >
                                     <option value="bland">Bland (Normal)</option>
                                     <option value="acceptable">Acceptable</option>
@@ -754,18 +912,23 @@ export default function SampleLabView() {
                                   <input
                                     type="number"
                                     step="0.001"
+                                    disabled={!canEdit}
                                     placeholder="Enter value"
                                     value={inputVal.num ?? ''}
                                     onChange={e => setResultInputs(prev => ({
                                       ...prev,
                                       [res.id]: { ...prev[res.id], num: e.target.value ? Number(e.target.value) : undefined }
                                     }))}
-                                    className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white focus:border-cyan-500"
+                                    className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white focus:border-cyan-500 disabled:opacity-50"
                                   />
                                 )}
                               </td>
                               <td className="py-2.5 px-3 text-center">
-                                {res.in_spec === true ? (
+                                {isUnticked ? (
+                                  <span className="inline-flex items-center text-[10px] text-slate-500 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+                                    N/A (Unticked)
+                                  </span>
+                                ) : res.in_spec === true ? (
                                   <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-800/40">
                                     <Check className="h-2.5 w-2.5" /> IN SPEC
                                   </span>

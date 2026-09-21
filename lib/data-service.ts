@@ -711,24 +711,17 @@ export function saveProcessEntry(updatedEntry: Partial<ProcessEntry> & { slot_in
         r => r.sample_date === currentSheet.shift_date && (r.time_check === slotTimeCheck || r.lot_no?.endsWith(`-${slotLabel}`))
       );
 
-      // Determine requested QC parameter IDs
+      // Determine requested QC parameter IDs (default based on product specification)
       const allParams = getParameters();
-      let targetParamIds: string[] = [];
-
-      if (Array.isArray(updatedEntry.qc_parameter_ids) && updatedEntry.qc_parameter_ids.length > 0) {
-        targetParamIds = updatedEntry.qc_parameter_ids;
-      } else {
-        targetParamIds = getDefaultParametersForProduct(finalEntry.product_id || undefined);
-      }
+      const defaultSpecParamIds = getDefaultParametersForProduct(finalEntry.product_id || undefined);
 
       finalEntry.auto_dispatch_qc = true;
-      finalEntry.qc_parameter_ids = targetParamIds;
-
-      const activeParams = allParams.filter(p => targetParamIds.includes(p.id));
+      finalEntry.qc_parameter_ids = defaultSpecParamIds;
 
       const buildResults = (repId: string): SampleResult[] => {
         const resultsList: SampleResult[] = [];
-        activeParams.forEach(param => {
+        allParams.forEach(param => {
+          const isReq = defaultSpecParamIds.length > 0 ? defaultSpecParamIds.includes(param.id) : true;
           if (param.code === 'SFC' && param.series_values) {
             param.series_values.forEach(temp => {
               resultsList.push({
@@ -739,7 +732,7 @@ export function saveProcessEntry(updatedEntry: Partial<ProcessEntry> & { slot_in
                 parameter_name: `SFC @ ${temp}°C`,
                 unit: param.unit,
                 series_key: temp,
-                requested: true,
+                requested: isReq,
               });
             });
           } else {
@@ -750,7 +743,7 @@ export function saveProcessEntry(updatedEntry: Partial<ProcessEntry> & { slot_in
               parameter_code: param.code,
               parameter_name: param.name,
               unit: param.unit,
-              requested: true,
+              requested: isReq,
             });
           }
         });
@@ -765,7 +758,7 @@ export function saveProcessEntry(updatedEntry: Partial<ProcessEntry> & { slot_in
           existing.product_name = productName;
           existing.submitted_by = profile.id;
           existing.submitted_by_name = profile.full_name;
-          if (existing.status === 'awaiting_results') {
+          if (existing.status === 'awaiting_results' && (!existing.results || existing.results.every(r => r.value_numeric == null && !r.value_text))) {
             existing.results = buildResults(existing.id);
           }
           setStored(STORAGE_KEYS.REPORTS, currentReports);
@@ -1123,26 +1116,60 @@ export function createSampleReport(data: {
 // Enter QC Results
 export function updateSampleResults(
   reportId: string, 
-  resultsData: { resultId: string; value_numeric?: number | null; value_text?: string | null }[]
+  resultsData: { 
+    resultId: string; 
+    parameter_id?: string;
+    parameter_code?: string;
+    parameter_name?: string;
+    unit?: string | null;
+    series_key?: number | null;
+    value_numeric?: number | null; 
+    value_text?: string | null; 
+    requested?: boolean; 
+  }[]
 ): { success: boolean; error?: string } {
   const reports = getSampleReports();
   const report = reports.find(r => r.id === reportId);
-  if (!report || !report.results) return { success: false, error: 'Report not found.' };
+  if (!report) return { success: false, error: 'Report not found.' };
+  if (!report.results) report.results = [];
 
   const profile = getCurrentProfile();
   const specs = getProductSpecs(report.product_id || undefined);
 
   resultsData.forEach(item => {
-    const res = report.results!.find(r => r.id === item.resultId);
-    if (!res) return;
+    let res = report.results!.find(r => r.id === item.resultId);
+    if (!res) {
+      if (!item.parameter_id) return;
+      res = {
+        id: item.resultId,
+        report_id: reportId,
+        parameter_id: item.parameter_id,
+        parameter_code: item.parameter_code || '',
+        parameter_name: item.parameter_name || '',
+        unit: item.unit ?? null,
+        series_key: item.series_key ?? null,
+        requested: item.requested !== false,
+      };
+      report.results!.push(res);
+    }
+
+    if (item.requested !== undefined) {
+      res.requested = item.requested;
+    }
     res.value_numeric = item.value_numeric;
     res.value_text = item.value_text;
     res.entered_by = profile.id;
     res.entered_by_name = profile.full_name;
     res.entered_at = new Date().toISOString();
 
+    // If unticked/not requested, do not validate against spec
+    if (res.requested === false) {
+      res.in_spec = null;
+      return;
+    }
+
     // Check spec
-    const spec = specs.find(s => s.parameter_id === res.parameter_id && (res.series_key ? s.series_key === res.series_key : true));
+    const spec = specs.find(s => s.parameter_id === res!.parameter_id && (res!.series_key ? s.series_key === res!.series_key : true));
     if (spec && res.value_numeric !== undefined && res.value_numeric !== null) {
       let pass = true;
       if (spec.min_value !== undefined && spec.min_value !== null && res.value_numeric < spec.min_value) pass = false;
