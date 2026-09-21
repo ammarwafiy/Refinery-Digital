@@ -136,7 +136,7 @@ export const INITIAL_PRODUCTS: Product[] = [
   { id: 'prod-42', code: 'SRIV60_FMF_SNAX', name: 'SRIV60 (FMF Snax)', category: 'specialty', sort_order: 42, active: true },
   { id: 'prod-43', code: 'SPLASH_OIL', name: 'Splash Oil', category: 'blend', sort_order: 43, active: true },
   { id: 'prod-44', code: 'FLUSH_OIL', name: 'Flush Oil', category: 'by-product', sort_order: 44, active: true },
-  { id: 'prod-45', code: 'PFAD', name: 'PFAD (Palm Fatty Acid Distillate)', category: 'by-product', sort_order: 45, active: true },
+  { id: 'prod-45', code: 'PFAD', name: 'PFAD', category: 'by-product', sort_order: 45, active: true },
 ];
 
 export const INITIAL_TANKS: Tank[] = [

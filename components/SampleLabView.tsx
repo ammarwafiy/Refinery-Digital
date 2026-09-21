@@ -367,7 +367,7 @@ export default function SampleLabView() {
               >
                 {products.map(p => (
                   <option key={p.id} value={p.id}>
-                    {p.name} [{p.category?.toUpperCase()}]
+                    {p.name}
                   </option>
                 ))}
                 <option value="others">Others — Free Text Entry</option>
