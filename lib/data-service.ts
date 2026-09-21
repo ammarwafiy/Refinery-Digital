@@ -295,6 +295,22 @@ export function getRejectionReasons(): RejectionReason[] {
   return INITIAL_REJECTION_REASONS;
 }
 
+// Calculate real-time shift slot index (0 = 0700, 1 = 0800, ..., 23 = 0600)
+export function getRealtimeSlotIndex(): number {
+  const now = new Date();
+  const mytHourStr = now.toLocaleTimeString('en-GB', {
+    timeZone: 'Asia/Kuala_Lumpur',
+    hour12: false,
+    hour: '2-digit',
+  });
+  const mytHour = parseInt(mytHourStr, 10);
+  if (mytHour >= 7) {
+    return mytHour - 7;
+  } else {
+    return mytHour + 17;
+  }
+}
+
 // 2. Process Sheet (RF-FR-004)
 export function getActiveProcessSheet(): ProcessSheet {
   return getStored<ProcessSheet>(STORAGE_KEYS.SHEET, memorySheet);
@@ -311,6 +327,20 @@ export function saveProcessEntry(updatedEntry: Partial<ProcessEntry> & { slot_in
   }
 
   const profile = getCurrentProfile();
+  const role = getCurrentRole();
+
+  // Real-time window enforcement: Operators can only record/edit during the active hour
+  const currentSlot = getRealtimeSlotIndex();
+  if ((profile.role === 'operator' || role === 'operator') && updatedEntry.slot_index !== currentSlot) {
+    const slotLabel = String(((updatedEntry.slot_index + 7) % 24) * 100).padStart(4, '0');
+    const curLabel = String(((currentSlot + 7) % 24) * 100).padStart(4, '0');
+    return {
+      success: false,
+      entry: {} as ProcessEntry,
+      error: `Akses Ditolak: Waktu catatan bagi slot ${slotLabel} telah tamat atau belum tiba. Operator hanya dibenarkan mengisi catatan bagi slot jam semasa (${curLabel}).`
+    };
+  }
+
   const limits = getParameterLimits();
 
   const entries = [...(currentSheet.entries || [])];
@@ -425,6 +455,11 @@ export function copyPreviousHour(slotIndex: number): { success: boolean; data?: 
   const sheet = getActiveProcessSheet();
   if (sheet.status === 'verified') {
     return { success: false, error: 'Lembaran ini telah disahkan dan dikunci. Tidak boleh menyalin atau mengubah bacaan.' };
+  }
+  const role = getCurrentRole();
+  const currentSlot = getRealtimeSlotIndex();
+  if (role === 'operator' && slotIndex !== currentSlot) {
+    return { success: false, error: 'Akses Ditolak: Operator hanya boleh menyalin bacaan pada slot jam semasa.' };
   }
   const prevEntry = sheet.entries?.find(e => e.slot_index === slotIndex - 1);
   if (!prevEntry) {

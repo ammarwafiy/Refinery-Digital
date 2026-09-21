@@ -16,7 +16,8 @@ import {
   unlockSheet,
   getProducts, 
   getParameterLimits, 
-  getCurrentRole 
+  getCurrentRole,
+  getRealtimeSlotIndex
 } from '@/lib/data-service';
 import { 
   CheckCircle2, 
@@ -44,7 +45,10 @@ interface ProcessLogViewProps {
 export default function ProcessLogView({ currentRole, currentUser }: ProcessLogViewProps = {}) {
   const [sheet, setSheet] = useState<ProcessSheet>(getActiveProcessSheet());
   const [products, setProducts] = useState<Product[]>([]);
-  const [selectedSlotIndex, setSelectedSlotIndex] = useState<number>(2); // Default to 0900 (has sample data)
+  const [selectedSlotIndex, setSelectedSlotIndex] = useState<number>(getRealtimeSlotIndex());
+  const [currentSlotIndex, setCurrentSlotIndex] = useState<number>(getRealtimeSlotIndex());
+  const [currentMinutesRemaining, setCurrentMinutesRemaining] = useState<number>(60);
+  const [currentTimeStr, setCurrentTimeStr] = useState<string>('');
   const [role, setRole] = useState<UserRole>(currentRole || currentUser?.role || getCurrentRole());
 
   // Active entry form state
@@ -66,6 +70,26 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
   const [unlockError, setUnlockError] = useState<string | null>(null);
 
   const limits = getParameterLimits();
+
+  // Realtime clock and slot tracker
+  useEffect(() => {
+    const updateRealtime = () => {
+      const now = new Date();
+      const mytDate = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kuala_Lumpur' }));
+      const currentMinute = mytDate.getMinutes();
+      const slot = getRealtimeSlotIndex();
+      
+      setCurrentSlotIndex(slot);
+      setCurrentMinutesRemaining(60 - currentMinute);
+      setCurrentTimeStr(
+        mytDate.toLocaleTimeString('en-GB', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })
+      );
+    };
+
+    updateRealtime();
+    const timer = setInterval(updateRealtime, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     setProducts(getProducts());
@@ -201,6 +225,16 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
 
   const selectedSlotLabel = String(((selectedSlotIndex + 7) % 24) * 100).padStart(4, '0');
   const currentSlotTimeStr = `${selectedSlotLabel.slice(0, 2)}:00`;
+  const nextSlotTimeStr = `${String((Number(selectedSlotLabel.slice(0, 2)) + 1) % 24).padStart(2, '0')}:00`;
+
+  // Realtime slot status
+  const isLiveSlot = selectedSlotIndex === currentSlotIndex;
+  const isPastSlot = selectedSlotIndex < currentSlotIndex;
+  const isFutureSlot = selectedSlotIndex > currentSlotIndex;
+
+  // Strict operator lock rule:
+  // Sheet is locked if verified, OR if logged in as operator and selecting a past/future slot
+  const isSlotDisabled = sheet.status === 'verified' || (role === 'operator' && !isLiveSlot);
 
   return (
     <div className="space-y-6">
@@ -299,13 +333,30 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
 
         {/* 2. 24-Hour Time Slot Navigator Strip */}
         <div className="mt-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider font-mono">
-              24-Hour Shift Timeline (Select hour slot to view or log readings):
-            </span>
-            <span className="text-[11px] text-slate-500 font-mono">
-              Green: Recorded · Amber: Deviation · Dashed: Pending
-            </span>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2.5">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider font-mono">
+                24-Hour Shift Timeline:
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 text-xs font-mono font-semibold shadow-sm">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
+                </span>
+                WAKTU KILANG: {currentTimeStr || '09:00'} MYT · Slot Semasa: {String(((currentSlotIndex + 7) % 24) * 100).padStart(4, '0')} ({String(((currentSlotIndex + 7) % 24)).padStart(2, '0')}:00 - {String(((currentSlotIndex + 8) % 24)).padStart(2, '0')}:00)
+              </span>
+              {role === 'operator' && (
+                <span className="text-[10px] font-mono text-amber-400/90 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-800/40">
+                  Mod Operator: Akses terhad jam semasa sahaja
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-3 text-[11px] font-mono text-slate-400">
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse"></span> Live Semasa</span>
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-400"></span> Direkod</span>
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-amber-400"></span> Deviation</span>
+              <span className="flex items-center gap-1"><Lock className="h-2.5 w-2.5 text-slate-500" /> Terkunci</span>
+            </div>
           </div>
 
           <div className="grid grid-cols-6 sm:grid-cols-12 lg:grid-cols-24 gap-1.5 overflow-x-auto pb-1">
@@ -313,14 +364,23 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
               const label = String(((idx + 7) % 24) * 100).padStart(4, '0');
               const entry = sheet.entries?.find(e => e.slot_index === idx);
               const isSelected = selectedSlotIndex === idx;
+              const isLive = idx === currentSlotIndex;
+              const isPast = idx < currentSlotIndex;
+              const isFuture = idx > currentSlotIndex;
               const hasDev = entry?.has_deviation;
               const isFilled = Boolean(entry);
 
               let slotColor = 'border-slate-800 bg-slate-900/60 text-slate-500 hover:border-slate-700';
-              if (hasDev) {
+              if (isLive) {
+                slotColor = 'border-cyan-400 bg-cyan-950/90 text-cyan-200 font-bold shadow-lg shadow-cyan-950/80 ring-1 ring-cyan-500/50';
+              } else if (hasDev) {
                 slotColor = 'border-amber-500/60 bg-amber-950/40 text-amber-300 font-semibold';
               } else if (isFilled) {
                 slotColor = 'border-emerald-500/40 bg-emerald-950/30 text-emerald-300';
+              } else if (isPast) {
+                slotColor = 'border-slate-800/80 bg-slate-950/60 text-slate-600';
+              } else {
+                slotColor = 'border-dashed border-slate-800/60 bg-slate-950/30 text-slate-600';
               }
 
               if (isSelected) {
@@ -334,18 +394,25 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                 <button
                   key={idx}
                   onClick={() => loadSlot(idx)}
-                  className={`flex flex-col items-center justify-center p-1.5 rounded-lg border text-xs font-mono transition-all relative ${slotColor} ${
+                  className={`flex flex-col items-center justify-center p-1.5 rounded-lg border text-xs font-mono transition-all relative cursor-pointer ${slotColor} ${
                     isShiftBoundary ? 'mr-1 sm:mr-1.5' : ''
                   }`}
+                  title={`Slot ${label} (${label.slice(0, 2)}:00) ${isLive ? '— Slot Aktif Jam Ini (Boleh diisi)' : isPast ? '— Masa Telah Tamat (Terkunci)' : '— Belum Tiba'}`}
                 >
                   <span className="text-[11px]">{label}</span>
-                  <div className="mt-0.5">
-                    {hasDev ? (
+                  <div className="mt-0.5 flex items-center justify-center">
+                    {isLive ? (
+                      <span className="text-[7.5px] px-1 py-0.2 rounded bg-cyan-400 text-slate-950 font-bold leading-none animate-pulse">
+                        LIVE
+                      </span>
+                    ) : hasDev ? (
                       <span className="h-1.5 w-1.5 rounded-full bg-amber-400 inline-block animate-ping" />
                     ) : isFilled ? (
                       <Check className="h-2.5 w-2.5 text-emerald-400" />
+                    ) : isPast ? (
+                      <Lock className="h-2 w-2 text-slate-600" />
                     ) : (
-                      <span className="h-1 w-1 rounded-full bg-slate-700 inline-block" />
+                      <span className="h-1 w-1 rounded-full bg-slate-800 inline-block" />
                     )}
                   </div>
                 </button>
@@ -363,8 +430,21 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
               {selectedSlotLabel}
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+              <h2 className="text-lg font-bold text-white flex items-center gap-2 flex-wrap">
                 <span>Hourly Readings for {currentSlotTimeStr} hrs</span>
+                {isLiveSlot ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-md bg-cyan-950/90 px-2.5 py-0.5 text-xs font-mono text-cyan-300 border border-cyan-500/50 shadow-sm animate-pulse">
+                    <span className="h-2 w-2 rounded-full bg-cyan-400"></span> LIVE WINDOW ({currentSlotTimeStr} - {nextSlotTimeStr})
+                  </span>
+                ) : isPastSlot ? (
+                  <span className="inline-flex items-center gap-1 rounded-md bg-amber-950/80 px-2.5 py-0.5 text-xs font-mono text-amber-300 border border-amber-500/40">
+                    <Lock className="h-3 w-3 text-amber-400" /> MASA TELAH TAMAT (READ-ONLY)
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 rounded-md bg-slate-900 px-2.5 py-0.5 text-xs font-mono text-slate-400 border border-slate-700/60">
+                    <Clock className="h-3 w-3" /> MENUNGGU MASA SYIF
+                  </span>
+                )}
                 {formData.has_deviation && (
                   <span className="inline-flex items-center gap-1 rounded bg-amber-950/80 px-2 py-0.5 text-xs font-mono text-amber-400 border border-amber-500/30">
                     <AlertTriangle className="h-3 w-3" /> Soft Deviation Logged
@@ -382,9 +462,9 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
             <button
               type="button"
               onClick={handleCopyPrevious}
-              disabled={selectedSlotIndex === 0 || sheet.status === 'verified'}
-              className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:hover:bg-slate-800 text-slate-200 px-3 py-2 rounded-lg text-xs font-mono transition-all border border-slate-700"
-              title="Copy previous hour readings to accelerate input"
+              disabled={selectedSlotIndex === 0 || isSlotDisabled}
+              className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:hover:bg-slate-800 text-slate-200 px-3 py-2 rounded-lg text-xs font-mono transition-all border border-slate-700 cursor-pointer disabled:cursor-not-allowed"
+              title={isSlotDisabled ? "Slot ini tidak aktif untuk penyalinan" : "Salin bacaan jam sebelumnya"}
             >
               <Copy className="h-3.5 w-3.5 text-cyan-400" />
               <span>Copy Previous Hour ({String((((selectedSlotIndex - 1 + 24) % 24) + 7) % 24 * 100).padStart(4, '0')})</span>
@@ -404,6 +484,81 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
           <div className="mb-5 flex items-center gap-2 rounded-xl bg-emerald-950/60 p-3.5 text-xs text-emerald-300 border border-emerald-800/60">
             <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
             <span>{successMessage}</span>
+          </div>
+        )}
+
+        {/* Realtime Window Feedback Banner for Operators */}
+        {role === 'operator' && isPastSlot && (
+          <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl bg-amber-950/40 p-4 text-xs text-amber-200 border border-amber-800/60 shadow-lg">
+            <div className="flex items-start gap-3">
+              <div className="rounded-lg bg-amber-950 p-2 border border-amber-600/40 text-amber-400 shrink-0">
+                <Lock className="h-5 w-5" />
+              </div>
+              <div>
+                <span className="font-semibold text-amber-200 text-sm block">
+                  Akses Ditutup: Waktu Catatan Slot {selectedSlotLabel} Telah Tamat
+                </span>
+                <p className="text-[11px] text-amber-300/80 mt-1 leading-relaxed">
+                  Mengikut peraturan operasi masa-nyata kilang penapisan, slot jam <strong>{currentSlotTimeStr} – {nextSlotTimeStr}</strong> telah ditutup dan dikunci daripada sebarang kemasukan baharu pada jam {nextSlotTimeStr}. 
+                  Operator hanya dibenarkan membaca rekod (Read-Only) bagi menjamin integriti audit data operasi.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => loadSlot(currentSlotIndex)}
+              className="shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-cyan-950 text-cyan-300 border border-cyan-600/60 hover:bg-cyan-900 text-xs font-mono font-medium transition-all shadow-md cursor-pointer"
+            >
+              <Clock className="h-3.5 w-3.5 text-cyan-400 animate-spin" />
+              <span>Buka Slot Aktif Sekarang ({String(((currentSlotIndex + 7) % 24) * 100).padStart(4, '0')})</span>
+            </button>
+          </div>
+        )}
+
+        {role === 'operator' && isFutureSlot && (
+          <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl bg-slate-900/90 p-4 text-xs text-slate-300 border border-slate-700/60 shadow-lg">
+            <div className="flex items-start gap-3">
+              <div className="rounded-lg bg-slate-950 p-2 border border-slate-700 text-cyan-400 shrink-0">
+                <Clock className="h-5 w-5" />
+              </div>
+              <div>
+                <span className="font-semibold text-slate-200 text-sm block">
+                  Menunggu Waktu Syif: Slot {selectedSlotLabel} Belum Bermula
+                </span>
+                <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                  Catatan log bagi jam <strong>{currentSlotTimeStr}</strong> hanya boleh diisi apabila waktu sebenar kilang mencecah jam {currentSlotTimeStr}. Pengisian awal tidak dibenarkan bagi memastikan data instrumen dicatat tepat pada waktunya.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => loadSlot(currentSlotIndex)}
+              className="shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-cyan-950 text-cyan-300 border border-cyan-600/60 hover:bg-cyan-900 text-xs font-mono font-medium transition-all shadow-md cursor-pointer"
+            >
+              <Clock className="h-3.5 w-3.5 text-cyan-400" />
+              <span>Buka Slot Aktif Sekarang ({String(((currentSlotIndex + 7) % 24) * 100).padStart(4, '0')})</span>
+            </button>
+          </div>
+        )}
+
+        {role === 'operator' && isLiveSlot && sheet.status !== 'verified' && (
+          <div className="mb-5 flex items-start sm:items-center justify-between gap-3 rounded-xl bg-cyan-950/40 p-4 text-xs text-cyan-300 border border-cyan-700/60 shadow-lg">
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-cyan-900/50 p-2 border border-cyan-500/40 text-cyan-400 shrink-0">
+                <span className="relative flex h-3.5 w-3.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-cyan-500"></span>
+                </span>
+              </div>
+              <div>
+                <span className="font-semibold text-cyan-200 text-sm block">
+                  SLOT AKTIF REALTIME: Jam {currentSlotTimeStr} – {nextSlotTimeStr} (Waktu Kilang: {currentTimeStr} MYT)
+                </span>
+                <p className="text-[11px] text-cyan-300/80 mt-0.5">
+                  Anda sedang dalam tetingkap catatan aktif. Baki <strong>{currentMinutesRemaining} minit</strong> sebelum slot jam ini ditutup secara automatik pada jam {nextSlotTimeStr}.
+                </p>
+              </div>
+            </div>
           </div>
         )}
 
@@ -452,7 +607,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
               <select
                 value={formData.product_id || ''}
                 onChange={e => handleFieldChange('product_id', e.target.value)}
-                disabled={sheet.status === 'verified'}
+                disabled={isSlotDisabled}
                 className="col-span-2 bg-[#090d16] border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-100 font-medium focus:outline-none focus:border-cyan-500 disabled:opacity-50"
               >
                 {products.map(p => (
@@ -487,8 +642,8 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     placeholder={ghostData.oil_feed_rate_litre?.toString() || 'e.g. 25000'}
                     value={formData.oil_feed_rate_litre ?? ''}
                     onChange={e => handleFieldChange('oil_feed_rate_litre', e.target.value ? Number(e.target.value) : null)}
-                    disabled={sheet.status === 'verified'}
-                    className="w-full bg-[#090d16] border border-slate-700 rounded-lg px-3 py-2 text-sm font-mono text-white focus:outline-none focus:border-cyan-500 disabled:opacity-50"
+                    disabled={isSlotDisabled}
+                    className="w-full bg-[#090d16] border border-slate-700 rounded-lg px-3 py-2 text-sm font-mono text-white focus:outline-none focus:border-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                   {ghostData.oil_feed_rate_litre !== undefined && (
                     <span className="absolute right-3 top-2 text-xs font-mono text-slate-600 pointer-events-none">
@@ -509,8 +664,8 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                   placeholder="2.0"
                   value={formData.deod_time_set_hr ?? ''}
                   onChange={e => handleFieldChange('deod_time_set_hr', e.target.value ? Number(e.target.value) : null)}
-                  disabled={sheet.status === 'verified'}
-                  className="w-full bg-[#090d16] border border-slate-700 rounded-lg px-3 py-2 text-sm font-mono text-white focus:outline-none focus:border-cyan-500 disabled:opacity-50"
+                  disabled={isSlotDisabled}
+                  className="w-full bg-[#090d16] border border-slate-700 rounded-lg px-3 py-2 text-sm font-mono text-white focus:outline-none focus:border-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -527,8 +682,8 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     placeholder={ghostData.vacuum_torr?.toString() || '2.4'}
                     value={formData.vacuum_torr ?? ''}
                     onChange={e => handleFieldChange('vacuum_torr', e.target.value ? Number(e.target.value) : null)}
-                    disabled={sheet.status === 'verified'}
-                    className={`w-full bg-[#090d16] border rounded-lg px-3 py-2 text-sm font-mono text-white focus:outline-none disabled:opacity-50 ${
+                    disabled={isSlotDisabled}
+                    className={`w-full bg-[#090d16] border rounded-lg px-3 py-2 text-sm font-mono text-white focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${
                       checkLimit('vacuum_torr', formData.vacuum_torr) === 'soft_warn'
                         ? 'border-amber-500 text-amber-300 bg-amber-950/20'
                         : checkLimit('vacuum_torr', formData.vacuum_torr) === 'hard_error'
@@ -575,8 +730,8 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                         placeholder={ghostVal?.toString() || '250.0'}
                         value={val ?? ''}
                         onChange={e => handleFieldChange(key, e.target.value ? Number(e.target.value) : null)}
-                        disabled={sheet.status === 'verified'}
-                        className={`w-full bg-[#090d16] border rounded-lg px-2.5 py-2 text-sm font-mono text-white focus:outline-none disabled:opacity-50 ${
+                        disabled={isSlotDisabled}
+                        className={`w-full bg-[#090d16] border rounded-lg px-2.5 py-2 text-sm font-mono text-white focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${
                           status === 'soft_warn'
                             ? 'border-amber-500 text-amber-300 bg-amber-950/20'
                             : status === 'hard_error'
@@ -607,8 +762,8 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     placeholder={ghostData.bc101_water_in_c?.toString() || '30.0'}
                     value={formData.bc101_water_in_c ?? ''}
                     onChange={e => handleFieldChange('bc101_water_in_c', e.target.value ? Number(e.target.value) : null)}
-                    disabled={sheet.status === 'verified'}
-                    className="w-full bg-[#090d16] border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-cyan-500"
+                    disabled={isSlotDisabled}
+                    className="w-full bg-[#090d16] border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div>
@@ -619,8 +774,8 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     placeholder={ghostData.bc101_water_out_c?.toString() || '42.0'}
                     value={formData.bc101_water_out_c ?? ''}
                     onChange={e => handleFieldChange('bc101_water_out_c', e.target.value ? Number(e.target.value) : null)}
-                    disabled={sheet.status === 'verified'}
-                    className="w-full bg-[#090d16] border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-cyan-500"
+                    disabled={isSlotDisabled}
+                    className="w-full bg-[#090d16] border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -640,8 +795,8 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     placeholder={ghostData.chill_water_in_c?.toString() || '10.0'}
                     value={formData.chill_water_in_c ?? ''}
                     onChange={e => handleFieldChange('chill_water_in_c', e.target.value ? Number(e.target.value) : null)}
-                    disabled={sheet.status === 'verified'}
-                    className="w-full bg-[#090d16] border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-cyan-500"
+                    disabled={isSlotDisabled}
+                    className="w-full bg-[#090d16] border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div>
@@ -652,8 +807,8 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     placeholder={ghostData.chill_water_out_c?.toString() || '16.0'}
                     value={formData.chill_water_out_c ?? ''}
                     onChange={e => handleFieldChange('chill_water_out_c', e.target.value ? Number(e.target.value) : null)}
-                    disabled={sheet.status === 'verified'}
-                    className="w-full bg-[#090d16] border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-cyan-500"
+                    disabled={isSlotDisabled}
+                    className="w-full bg-[#090d16] border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -673,8 +828,8 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     placeholder={ghostData.booster_press_bar?.toString() || '9.80'}
                     value={formData.booster_press_bar ?? ''}
                     onChange={e => handleFieldChange('booster_press_bar', e.target.value ? Number(e.target.value) : null)}
-                    disabled={sheet.status === 'verified'}
-                    className="w-full bg-[#090d16] border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-cyan-500"
+                    disabled={isSlotDisabled}
+                    className="w-full bg-[#090d16] border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div>
@@ -685,8 +840,8 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     placeholder={ghostData.ejector_press_bar?.toString() || '10.00'}
                     value={formData.ejector_press_bar ?? ''}
                     onChange={e => handleFieldChange('ejector_press_bar', e.target.value ? Number(e.target.value) : null)}
-                    disabled={sheet.status === 'verified'}
-                    className="w-full bg-[#090d16] border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-cyan-500"
+                    disabled={isSlotDisabled}
+                    className="w-full bg-[#090d16] border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -709,8 +864,8 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     placeholder="1.50"
                     value={formData.strip_steam_pct_of_oil ?? ''}
                     onChange={e => handleFieldChange('strip_steam_pct_of_oil', e.target.value ? Number(e.target.value) : null)}
-                    disabled={sheet.status === 'verified'}
-                    className="w-full bg-[#090d16] border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-cyan-500"
+                    disabled={isSlotDisabled}
+                    className="w-full bg-[#090d16] border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div>
@@ -721,8 +876,8 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     placeholder={ghostData.strip_steam_flow_kghr?.toString() || '375.0'}
                     value={formData.strip_steam_flow_kghr ?? ''}
                     onChange={e => handleFieldChange('strip_steam_flow_kghr', e.target.value ? Number(e.target.value) : null)}
-                    disabled={sheet.status === 'verified'}
-                    className="w-full bg-[#090d16] border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-cyan-500"
+                    disabled={isSlotDisabled}
+                    className="w-full bg-[#090d16] border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -742,8 +897,8 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     placeholder={ghostData.fp101a_press_bar?.toString() || '2.20'}
                     value={formData.fp101a_press_bar ?? ''}
                     onChange={e => handleFieldChange('fp101a_press_bar', e.target.value ? Number(e.target.value) : null)}
-                    disabled={sheet.status === 'verified'}
-                    className="w-full bg-[#090d16] border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-cyan-500"
+                    disabled={isSlotDisabled}
+                    className="w-full bg-[#090d16] border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div>
@@ -754,8 +909,8 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     placeholder={ghostData.fp101b_press_bar?.toString() || '2.10'}
                     value={formData.fp101b_press_bar ?? ''}
                     onChange={e => handleFieldChange('fp101b_press_bar', e.target.value ? Number(e.target.value) : null)}
-                    disabled={sheet.status === 'verified'}
-                    className="w-full bg-[#090d16] border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-cyan-500"
+                    disabled={isSlotDisabled}
+                    className="w-full bg-[#090d16] border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -772,8 +927,8 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
               placeholder="Record any valve adjustments, filter switchovers, or plant conditions..."
               value={formData.remarks || ''}
               onChange={e => handleFieldChange('remarks', e.target.value)}
-              disabled={sheet.status === 'verified'}
-              className="w-full bg-[#090d16] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-cyan-500"
+              disabled={isSlotDisabled}
+              className="w-full bg-[#090d16] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed"
             />
           </div>
 
@@ -785,11 +940,32 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
 
             <button
               type="submit"
-              disabled={sheet.status === 'verified'}
-              className="flex items-center gap-2 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-40 disabled:hover:bg-cyan-600 text-white font-medium px-6 py-3 rounded-xl text-sm transition-all shadow-lg shadow-cyan-950/60 font-mono cursor-pointer"
+              disabled={isSlotDisabled}
+              className={`flex items-center gap-2 font-medium px-6 py-3 rounded-xl text-sm transition-all shadow-lg font-mono ${
+                isSlotDisabled
+                  ? 'bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed opacity-60'
+                  : 'bg-cyan-600 hover:bg-cyan-500 text-white shadow-cyan-950/60 cursor-pointer'
+              }`}
             >
-              <Save className="h-4 w-4" />
-              <span>Save Hour {selectedSlotLabel} Readings</span>
+              {isSlotDisabled ? (
+                <>
+                  <Lock className="h-4 w-4 text-slate-500" />
+                  <span>
+                    {sheet.status === 'verified'
+                      ? 'Lembaran Syif Dikunci (Verified)'
+                      : role === 'operator' && isPastSlot
+                      ? `Masa Tamat: Slot Jam ${selectedSlotLabel} Ditutup (Read-Only)`
+                      : role === 'operator' && isFutureSlot
+                      ? `Menunggu: Slot Jam ${selectedSlotLabel} Belum Bermula`
+                      : `Slot Jam ${selectedSlotLabel} Dikunci`}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4" />
+                  <span>Save Hour {selectedSlotLabel} Readings</span>
+                </>
+              )}
             </button>
           </div>
         </form>
