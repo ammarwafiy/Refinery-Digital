@@ -13,7 +13,8 @@ import {
   Wifi,
   Layers,
   LogOut,
-  Users
+  Users,
+  FileSpreadsheet
 } from 'lucide-react';
 import { UserRole, Profile } from '@/types/refinery';
 import {
@@ -86,6 +87,7 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
   const navItems = [
     { id: 'process', label: 'RF-FR-004 Process Log', icon: Layers, badge: '24-Hour' },
     { id: 'supervisor', label: 'Supervisor Live Board', icon: Activity, badge: 'Realtime' },
+    { id: 'report', label: 'Report', icon: FileSpreadsheet, badge: 'CSV' },
     { id: 'qc', label: 'RF-FR-001 QC Lab', icon: FlaskConical, badge: 'Quality' },
     { id: 'analytics', label: 'Process Trends & Pareto', icon: BarChart3, badge: 'Analytics' },
     { id: 'export', label: 'Official Forms & Audit', icon: FileText, badge: 'ISO' },

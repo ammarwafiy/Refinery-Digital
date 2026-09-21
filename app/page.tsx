@@ -8,6 +8,7 @@ import SampleLabView from '@/components/SampleLabView';
 import AnalyticsTrendsView from '@/components/AnalyticsTrendsView';
 import OfficialFormsExportView from '@/components/OfficialFormsExportView';
 import AdminUserManagementView from '@/components/AdminUserManagementView';
+import ReportExportView from '@/components/ReportExportView';
 import LoginView from '@/components/LoginView';
 import { Profile } from '@/types/refinery';
 import { 
@@ -75,6 +76,7 @@ export default function Home() {
           <ProcessLogView currentRole={authUser.role} currentUser={authUser} />
         )}
         {currentTab === 'supervisor' && allowedTabs.includes('supervisor') && <SupervisorBoardView />}
+        {currentTab === 'report' && allowedTabs.includes('report') && <ReportExportView />}
         {currentTab === 'qc' && allowedTabs.includes('qc') && <SampleLabView />}
         {currentTab === 'analytics' && allowedTabs.includes('analytics') && <AnalyticsTrendsView />}
         {currentTab === 'export' && allowedTabs.includes('export') && <OfficialFormsExportView />}
