@@ -89,7 +89,7 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
     { id: 'qc', label: 'RF-FR-001 QC Lab', icon: FlaskConical, badge: 'Quality' },
     { id: 'analytics', label: 'Process Trends & Pareto', icon: BarChart3, badge: 'Analytics' },
     { id: 'export', label: 'Official Forms & Audit', icon: FileText, badge: 'ISO' },
-    { id: 'admin', label: 'Admin & Users', icon: Users, badge: 'Pentadbiran' },
+    { id: 'admin', label: 'Admin & Users', icon: Users, badge: 'Admin' },
   ];
 
   // RBAC Filter: Only show allowed navigation tabs for current role
@@ -166,7 +166,7 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
                 {item.badge && (
                   <span className={`text-[10px] px-1.5 py-0.2 rounded font-mono ${isActive ? 'bg-cyan-950 text-cyan-300 border border-cyan-500/30' : 'bg-slate-800 text-slate-500'
                     }`}>
-                    {item.badge}
+                  {item.badge}
                   </span>
                 )}
               </button>
@@ -204,7 +204,7 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
                           ? `${roleColors[r].bg} ${roleColors[r].text} ${roleColors[r].border} shadow-sm font-semibold`
                           : 'text-slate-500 hover:text-slate-300 border-transparent hover:bg-slate-800/60'
                         }`}
-                      title={`Simulasi Peranan ${formatLabel[r]}`}
+                      title={`Switch to ${formatLabel[r]} Role`}
                     >
                       {formatLabel[r]}
                     </button>
@@ -217,10 +217,10 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
             <div className="flex items-center gap-2 px-2 py-0.5">
               <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
               <span className={`px-2.5 py-1 rounded-lg text-[11px] font-mono font-bold uppercase border ${roleColors[role].bg} ${roleColors[role].text} ${roleColors[role].border}`}>
-                {role === 'operator' && 'MOD OPERATOR · LOG PROSES'}
-                {role === 'supervisor' && 'MOD PENYELIA · PAPAN LIVE'}
-                {(role === 'qc_analyst' || role === 'qc_manager') && 'MOD KUALITI · MAKMAL QC'}
-                {role === 'viewer' && 'MOD JURUAUDIT · REKOD ISO'}
+                {role === 'operator' && 'OPERATOR MODE · PROCESS LOG'}
+                {role === 'supervisor' && 'SUPERVISOR MODE · LIVE BOARD'}
+                {(role === 'qc_analyst' || role === 'qc_manager') && 'QUALITY MODE · QC LAB'}
+                {role === 'viewer' && 'AUDITOR MODE · ISO RECORDS'}
               </span>
             </div>
           )}
@@ -243,7 +243,7 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
                   ? 'bg-blue-900/70 text-blue-200 border-blue-500/60 shadow-sm'
                   : 'text-cyan-300 bg-cyan-950/50 border border-cyan-800/60 hover:bg-cyan-900/60 hover:text-cyan-100'
                 }`}
-              title="Panel Pentadbiran & Pengurusan Pengguna Loji"
+              title="Plant Administration & User Management Panel"
             >
               <Users className="h-3.5 w-3.5 text-cyan-400" />
               <span className="hidden md:inline">Admin & Users</span>
@@ -255,10 +255,10 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
             <button
               onClick={onLogout}
               className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium text-rose-400 bg-rose-950/40 border border-rose-800/50 hover:bg-rose-900/60 hover:text-rose-200 transition-all ml-1 cursor-pointer"
-              title="Log Keluar dari sesi & kembali ke skrin log masuk"
+              title="Sign out of current session and return to login screen"
             >
               <LogOut className="h-3.5 w-3.5" />
-              <span className="hidden md:inline">Log Keluar</span>
+              <span className="hidden md:inline">Sign Out</span>
             </button>
           )}
         </div>

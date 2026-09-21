@@ -82,12 +82,12 @@ function setStored<T>(key: string, val: T): void {
 // Consistent Industrial Employee ID Configuration
 // Format: 2-Letter Department Code + 4-Digit Number
 export const ROLE_ID_SERIES: Record<UserRole, { prefix: string; label: string; start: number; example: string }> = {
-  operator:   { prefix: 'OP', label: 'Operator Loji (0700-0600)', start: 1042, example: 'OP-1043' },
-  supervisor: { prefix: 'SV', label: 'Penyelia Syif (Supervisor)', start: 2014, example: 'SV-2015' },
-  qc_analyst: { prefix: 'QC', label: 'Juruanalisis Makmal QC', start: 3201, example: 'QC-3202' },
-  qc_manager: { prefix: 'QM', label: 'Pengurus Kawalan Kualiti', start: 4502, example: 'QM-4503' },
-  admin:      { prefix: 'AD', label: 'Pentadbir Loji / Kejuruteraan', start: 5010, example: 'AD-5011' },
-  viewer:     { prefix: 'AU', label: 'Juruaudit Kualiti (ISO/HACCP)', start: 9901, example: 'AU-9902' },
+  operator:   { prefix: 'OP', label: 'Plant Operator (0700-0600)', start: 1042, example: 'OP-1043' },
+  supervisor: { prefix: 'SV', label: 'Shift Supervisor', start: 2014, example: 'SV-2015' },
+  qc_analyst: { prefix: 'QC', label: 'QC Lab Analyst', start: 3201, example: 'QC-3202' },
+  qc_manager: { prefix: 'QM', label: 'Quality Control Manager', start: 4502, example: 'QM-4503' },
+  admin:      { prefix: 'AD', label: 'Plant Administrator / Engineering', start: 5010, example: 'AD-5011' },
+  viewer:     { prefix: 'AU', label: 'Quality Auditor (ISO/HACCP)', start: 9901, example: 'AU-9902' },
 };
 
 // Role-Based Views & Navigation Rules (RBAC)
@@ -156,14 +156,14 @@ export function loginUser(identifier: string, password?: string): { success: boo
   if (!found) {
     return { 
       success: false, 
-      error: `ID Pekerja "${identifier}" tidak ditemui dalam direktori loji. Sila semak semula ID anda (contoh: OP-1042, SV-2014, QC-3201).` 
+      error: `Employee ID "${identifier}" was not found in the plant directory. Please verify your ID (e.g., OP-1042, SV-2014, QC-3201).` 
     };
   }
 
   if (found.status === 'unactive' || found.active === false) {
     return {
       success: false,
-      error: `Akaun (${found.employee_no} - ${found.full_name}) telah dinyahaktifkan oleh Pentadbir Loji. Sila hubungi Pentadbiran Loji.`
+      error: `Account (${found.employee_no} - ${found.full_name}) has been deactivated by the Plant Administrator. Please contact plant administration.`
     };
   }
 
@@ -172,7 +172,7 @@ export function loginUser(identifier: string, password?: string): { success: boo
   if (!password || password.trim() !== expectedPassword) {
     return {
       success: false,
-      error: 'Kata laluan yang dimasukkan adalah salah. Sila pastikan kata laluan tepat untuk ID ini.'
+      error: 'The password entered is incorrect. Please ensure you enter the accurate password for this ID.'
     };
   }
 
@@ -322,7 +322,7 @@ export function saveProcessEntry(updatedEntry: Partial<ProcessEntry> & { slot_in
     return {
       success: false,
       entry: {} as ProcessEntry,
-      error: 'Lembaran ini telah disahkan dan dikunci. Hanya Pentadbir (Admin) yang boleh membuka semula kunci lembaran untuk penyuntingan.'
+      error: 'This sheet has been verified and locked. Only an Administrator can unlock the sheet for editing.'
     };
   }
 
@@ -337,7 +337,7 @@ export function saveProcessEntry(updatedEntry: Partial<ProcessEntry> & { slot_in
     return {
       success: false,
       entry: {} as ProcessEntry,
-      error: `Akses Ditolak: Waktu catatan bagi slot ${slotLabel} telah tamat atau belum tiba. Operator hanya dibenarkan mengisi catatan bagi slot jam semasa (${curLabel}).`
+      error: `Access Denied: Recording time window for slot ${slotLabel} has closed or not arrived yet. Operators are only permitted to record readings during the active hour slot (${curLabel}).`
     };
   }
 
@@ -454,12 +454,12 @@ export function copyPreviousHour(slotIndex: number): { success: boolean; data?: 
   }
   const sheet = getActiveProcessSheet();
   if (sheet.status === 'verified') {
-    return { success: false, error: 'Lembaran ini telah disahkan dan dikunci. Tidak boleh menyalin atau mengubah bacaan.' };
+    return { success: false, error: 'This sheet has been verified and locked. Readings cannot be copied or modified.' };
   }
   const role = getCurrentRole();
   const currentSlot = getRealtimeSlotIndex();
   if (role === 'operator' && slotIndex !== currentSlot) {
-    return { success: false, error: 'Akses Ditolak: Operator hanya boleh menyalin bacaan pada slot jam semasa.' };
+    return { success: false, error: 'Access Denied: Operators can only copy readings during the active hour slot.' };
   }
   const prevEntry = sheet.entries?.find(e => e.slot_index === slotIndex - 1);
   if (!prevEntry) {
@@ -497,19 +497,19 @@ export function copyPreviousHour(slotIndex: number): { success: boolean; data?: 
 // Supervisor Verification with Electronic Signature
 export function verifySheet(sheetId: string, passwordConfirm: string): { success: boolean; error?: string } {
   if (!passwordConfirm || passwordConfirm.length < 4) {
-    return { success: false, error: 'Kata laluan e-tandatangan diperlukan (minimum 4 aksara).' };
+    return { success: false, error: 'Electronic signature password is required (minimum 4 characters).' };
   }
   const sheet = getActiveProcessSheet();
   const profile = getCurrentProfile();
   const role = getCurrentRole();
 
   if (role !== 'supervisor' && role !== 'admin') {
-    return { success: false, error: 'Hanya Penyelia (Supervisor) atau Pentadbir (Admin) yang boleh mengesahkan lembaran ini.' };
+    return { success: false, error: 'Only a Shift Supervisor or Administrator can verify this sheet.' };
   }
 
   const expectedPassword = profile.password || 'password123';
   if (passwordConfirm.trim() !== expectedPassword) {
-    return { success: false, error: 'Kata laluan pengesahan e-tandatangan tidak tepat.' };
+    return { success: false, error: 'Electronic signature verification password is incorrect.' };
   }
 
   sheet.status = 'verified';
@@ -532,14 +532,14 @@ export function unlockSheet(sheetId: string, reason: string, passwordConfirm: st
   if (role !== 'admin' && profile.role !== 'admin') {
     return { 
       success: false, 
-      error: 'Hanya peranan Pentadbir (Admin) yang mempunyai kuasa untuk membuka semula kunci lembaran proses.' 
+      error: 'Only the Administrator role is authorized to unlock process sheets.' 
     };
   }
 
   if (!reason || reason.trim().length < 5) {
     return { 
       success: false, 
-      error: 'Sila masukkan sebab / justifikasi pembetulan untuk rekod audit trail (minimum 5 aksara).' 
+      error: 'Please enter a correction reason / justification for the audit trail record (minimum 5 characters).' 
     };
   }
 
@@ -547,7 +547,7 @@ export function unlockSheet(sheetId: string, reason: string, passwordConfirm: st
   if (!passwordConfirm || passwordConfirm.trim() !== expectedPassword) {
     return { 
       success: false, 
-      error: 'Kata laluan e-tandatangan Admin adalah salah. Sila sahkan kata laluan anda.' 
+      error: 'Admin electronic signature password is incorrect. Please verify your password.' 
     };
   }
 

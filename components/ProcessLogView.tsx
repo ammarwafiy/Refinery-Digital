@@ -196,14 +196,14 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
 
     const res = unlockSheet(sheet.id, unlockReason, unlockPassword);
     if (!res.success) {
-      setUnlockError(res.error || 'Gagal membuka semula kunci lembaran.');
+      setUnlockError(res.error || 'Failed to unlock sheet.');
       return;
     }
 
     setIsUnlockModalOpen(false);
     setUnlockReason('');
     setUnlockPassword('');
-    setSuccessMessage('Kunci lembaran berjaya dibuka semula oleh Admin! Anda kini boleh menyunting semula bacaan jam.');
+    setSuccessMessage('Process sheet unlocked successfully by Admin! You may now edit hourly readings.');
     refreshSheet();
   };
 
@@ -263,10 +263,10 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                         setUnlockPassword('');
                       }}
                       className="flex items-center gap-1 text-xs font-mono px-2.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/50 hover:bg-amber-500/30 transition-colors shadow-sm cursor-pointer"
-                      title="Buka semula kunci lembaran proses ini"
+                      title="Unlock this process sheet"
                     >
                       <Unlock className="h-3 w-3 text-amber-400" />
-                      <span>Buka Kunci</span>
+                      <span>Unlock Sheet</span>
                     </button>
                   )}
                 </div>
@@ -280,7 +280,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
               Nisshin Deodorizer Plant · Shift runs 07:00 (Today) to 06:00 (Tomorrow)
               {sheet.status === 'verified' && sheet.verified_by_name && (
                 <span className="ml-2 text-emerald-400 font-mono">
-                  · Disahkan oleh: {sheet.verified_by_name}
+                  · Verified by: {sheet.verified_by_name}
                 </span>
               )}
             </p>
@@ -322,10 +322,10 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                   setUnlockPassword('');
                 }}
                 className="flex items-center gap-2 bg-amber-600 hover:bg-amber-500 text-white font-medium px-3.5 py-2 rounded-lg text-xs transition-colors shadow-lg shadow-amber-950/50"
-                title="Buka semula kunci lembaran proses untuk pembetulan bacaan oleh Admin"
+                title="Unlock process sheet for data corrections by Admin"
               >
                 <Unlock className="h-4 w-4" />
-                <span>Admin Unlock / Buka Kunci</span>
+                <span>Admin Unlock</span>
               </button>
             )}
           </div>
@@ -343,19 +343,19 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
                 </span>
-                WAKTU KILANG: {currentTimeStr || '09:00'} MYT · Slot Semasa: {String(((currentSlotIndex + 7) % 24) * 100).padStart(4, '0')} ({String(((currentSlotIndex + 7) % 24)).padStart(2, '0')}:00 - {String(((currentSlotIndex + 8) % 24)).padStart(2, '0')}:00)
+                PLANT TIME: {currentTimeStr || '09:00'} MYT · Current Slot: {String(((currentSlotIndex + 7) % 24) * 100).padStart(4, '0')} ({String(((currentSlotIndex + 7) % 24)).padStart(2, '0')}:00 - {String(((currentSlotIndex + 8) % 24)).padStart(2, '0')}:00)
               </span>
               {role === 'operator' && (
                 <span className="text-[10px] font-mono text-amber-400/90 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-800/40">
-                  Mod Operator: Akses terhad jam semasa sahaja
+                  Operator Mode: Restricted to current active hour only
                 </span>
               )}
             </div>
             <div className="flex items-center gap-3 text-[11px] font-mono text-slate-400">
-              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse"></span> Live Semasa</span>
-              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-400"></span> Direkod</span>
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-cyan-400 animate-pulse"></span> Live Current</span>
+              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-400"></span> Recorded</span>
               <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-amber-400"></span> Deviation</span>
-              <span className="flex items-center gap-1"><Lock className="h-2.5 w-2.5 text-slate-500" /> Terkunci</span>
+              <span className="flex items-center gap-1"><Lock className="h-2.5 w-2.5 text-slate-500" /> Locked</span>
             </div>
           </div>
 
@@ -397,7 +397,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                   className={`flex flex-col items-center justify-center p-1.5 rounded-lg border text-xs font-mono transition-all relative cursor-pointer ${slotColor} ${
                     isShiftBoundary ? 'mr-1 sm:mr-1.5' : ''
                   }`}
-                  title={`Slot ${label} (${label.slice(0, 2)}:00) ${isLive ? '— Slot Aktif Jam Ini (Boleh diisi)' : isPast ? '— Masa Telah Tamat (Terkunci)' : '— Belum Tiba'}`}
+                  title={`Slot ${label} (${label.slice(0, 2)}:00) ${isLive ? '— Current Active Slot (Editable)' : isPast ? '— Expired (Locked)' : '— Upcoming'}`}
                 >
                   <span className="text-[11px]">{label}</span>
                   <div className="mt-0.5 flex items-center justify-center">
@@ -438,11 +438,11 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                   </span>
                 ) : isPastSlot ? (
                   <span className="inline-flex items-center gap-1 rounded-md bg-amber-950/80 px-2.5 py-0.5 text-xs font-mono text-amber-300 border border-amber-500/40">
-                    <Lock className="h-3 w-3 text-amber-400" /> MASA TELAH TAMAT (READ-ONLY)
+                    <Lock className="h-3 w-3 text-amber-400" /> EXPIRED (READ-ONLY)
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 rounded-md bg-slate-900 px-2.5 py-0.5 text-xs font-mono text-slate-400 border border-slate-700/60">
-                    <Clock className="h-3 w-3" /> MENUNGGU MASA SYIF
+                    <Clock className="h-3 w-3" /> AWAITING SHIFT HOUR
                   </span>
                 )}
                 {formData.has_deviation && (
@@ -464,7 +464,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
               onClick={handleCopyPrevious}
               disabled={selectedSlotIndex === 0 || isSlotDisabled}
               className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:hover:bg-slate-800 text-slate-200 px-3 py-2 rounded-lg text-xs font-mono transition-all border border-slate-700 cursor-pointer disabled:cursor-not-allowed"
-              title={isSlotDisabled ? "Slot ini tidak aktif untuk penyalinan" : "Salin bacaan jam sebelumnya"}
+              title={isSlotDisabled ? "This slot is not active for copying" : "Copy readings from previous hour"}
             >
               <Copy className="h-3.5 w-3.5 text-cyan-400" />
               <span>Copy Previous Hour ({String((((selectedSlotIndex - 1 + 24) % 24) + 7) % 24 * 100).padStart(4, '0')})</span>
@@ -496,11 +496,11 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
               </div>
               <div>
                 <span className="font-semibold text-amber-200 text-sm block">
-                  Akses Ditutup: Waktu Catatan Slot {selectedSlotLabel} Telah Tamat
+                  Access Closed: Recording Window for Slot {selectedSlotLabel} Has Expired
                 </span>
                 <p className="text-[11px] text-amber-300/80 mt-1 leading-relaxed">
-                  Mengikut peraturan operasi masa-nyata kilang penapisan, slot jam <strong>{currentSlotTimeStr} – {nextSlotTimeStr}</strong> telah ditutup dan dikunci daripada sebarang kemasukan baharu pada jam {nextSlotTimeStr}. 
-                  Operator hanya dibenarkan membaca rekod (Read-Only) bagi menjamin integriti audit data operasi.
+                  According to refinery realtime operating procedures, slot <strong>{currentSlotTimeStr} – {nextSlotTimeStr}</strong> was closed and locked from further data entry at {nextSlotTimeStr}. 
+                  Operators have read-only access to preserve operational audit integrity.
                 </p>
               </div>
             </div>
@@ -510,7 +510,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
               className="shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-cyan-950 text-cyan-300 border border-cyan-600/60 hover:bg-cyan-900 text-xs font-mono font-medium transition-all shadow-md cursor-pointer"
             >
               <Clock className="h-3.5 w-3.5 text-cyan-400 animate-spin" />
-              <span>Buka Slot Aktif Sekarang ({String(((currentSlotIndex + 7) % 24) * 100).padStart(4, '0')})</span>
+              <span>Open Current Active Slot ({String(((currentSlotIndex + 7) % 24) * 100).padStart(4, '0')})</span>
             </button>
           </div>
         )}
@@ -523,10 +523,10 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
               </div>
               <div>
                 <span className="font-semibold text-slate-200 text-sm block">
-                  Menunggu Waktu Syif: Slot {selectedSlotLabel} Belum Bermula
+                  Awaiting Shift Hour: Slot {selectedSlotLabel} Not Started
                 </span>
                 <p className="text-[11px] text-slate-400 mt-1 leading-relaxed">
-                  Catatan log bagi jam <strong>{currentSlotTimeStr}</strong> hanya boleh diisi apabila waktu sebenar kilang mencecah jam {currentSlotTimeStr}. Pengisian awal tidak dibenarkan bagi memastikan data instrumen dicatat tepat pada waktunya.
+                  Log entries for hour <strong>{currentSlotTimeStr}</strong> can only be recorded when the actual plant time reaches {currentSlotTimeStr}. Pre-filling is restricted to ensure instrument data is recorded in real time.
                 </p>
               </div>
             </div>
@@ -536,7 +536,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
               className="shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-cyan-950 text-cyan-300 border border-cyan-600/60 hover:bg-cyan-900 text-xs font-mono font-medium transition-all shadow-md cursor-pointer"
             >
               <Clock className="h-3.5 w-3.5 text-cyan-400" />
-              <span>Buka Slot Aktif Sekarang ({String(((currentSlotIndex + 7) % 24) * 100).padStart(4, '0')})</span>
+              <span>Open Current Active Slot ({String(((currentSlotIndex + 7) % 24) * 100).padStart(4, '0')})</span>
             </button>
           </div>
         )}
@@ -552,10 +552,10 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
               </div>
               <div>
                 <span className="font-semibold text-cyan-200 text-sm block">
-                  SLOT AKTIF REALTIME: Jam {currentSlotTimeStr} – {nextSlotTimeStr} (Waktu Kilang: {currentTimeStr} MYT)
+                  REALTIME ACTIVE SLOT: Hour {currentSlotTimeStr} – {nextSlotTimeStr} (Plant Time: {currentTimeStr} MYT)
                 </span>
                 <p className="text-[11px] text-cyan-300/80 mt-0.5">
-                  Anda sedang dalam tetingkap catatan aktif. Baki <strong>{currentMinutesRemaining} minit</strong> sebelum slot jam ini ditutup secara automatik pada jam {nextSlotTimeStr}.
+                  You are currently within the active entry window. <strong>{currentMinutesRemaining} minutes</strong> remaining before this slot automatically closes at {nextSlotTimeStr}.
                 </p>
               </div>
             </div>
@@ -568,13 +568,13 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
             <div className="flex items-start sm:items-center gap-2.5">
               <Lock className="h-4 w-4 shrink-0 text-emerald-400 mt-0.5 sm:mt-0" />
               <div>
-                <span className="font-semibold text-emerald-200">Lembaran Syif Telah Disahkan & Dikunci (Locked for Audit Integrity)</span>
+                <span className="font-semibold text-emerald-200">Shift Sheet Verified & Locked (Locked for Audit Integrity)</span>
                 <p className="text-[11px] text-emerald-400/80 mt-0.5">
-                  Semua medan input jam telah dikunci daripada sebarang suntingan. 
-                  {sheet.verified_by_name ? ` Disahkan oleh ${sheet.verified_by_name}.` : ''} 
+                  All hourly input fields have been locked from editing. 
+                  {sheet.verified_by_name ? ` Verified by ${sheet.verified_by_name}.` : ''} 
                   {role === 'admin' 
-                    ? ' Sebagai Admin, anda mempunyai kuasa penuh untuk membuka semula kunci sekiranya terdapat keperluan pembetulan.'
-                    : ' Hanya Pentadbir Loji (Admin) yang mempunyai autoriti untuk membuka semula kunci lembaran ini.'}
+                    ? ' As Admin, you have full authority to reopen the lock if data corrections are necessary.'
+                    : ' Only the Plant Administrator (Admin) has authority to unlock this sheet.'}
                 </p>
               </div>
             </div>
@@ -590,7 +590,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                 className="shrink-0 flex items-center gap-1.5 bg-amber-600/90 hover:bg-amber-500 text-white font-medium px-3.5 py-1.5 rounded-lg text-xs transition-colors border border-amber-500/40 shadow-sm"
               >
                 <Unlock className="h-3.5 w-3.5" />
-                <span>Buka Semula Kunci (Admin)</span>
+                <span>Unlock Sheet (Admin)</span>
               </button>
             )}
           </div>
@@ -952,12 +952,12 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                   <Lock className="h-4 w-4 text-slate-500" />
                   <span>
                     {sheet.status === 'verified'
-                      ? 'Lembaran Syif Dikunci (Verified)'
+                      ? 'Shift Sheet Locked (Verified)'
                       : role === 'operator' && isPastSlot
-                      ? `Masa Tamat: Slot Jam ${selectedSlotLabel} Ditutup (Read-Only)`
+                      ? `Expired: Hour ${selectedSlotLabel} Closed (Read-Only)`
                       : role === 'operator' && isFutureSlot
-                      ? `Menunggu: Slot Jam ${selectedSlotLabel} Belum Bermula`
-                      : `Slot Jam ${selectedSlotLabel} Dikunci`}
+                      ? `Awaiting: Hour ${selectedSlotLabel} Not Started`
+                      : `Hour ${selectedSlotLabel} Locked`}
                   </span>
                 </>
               ) : (
@@ -1037,16 +1037,16 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
               </div>
               <div>
                 <h3 className="text-lg font-bold text-white">
-                  Admin Unlock: Buka Kunci Lembaran
+                  Admin Unlock: Process Sheet
                 </h3>
                 <span className="text-[11px] font-mono text-amber-400/90">
-                  Kuasa Khas Pentadbir Loji · RF-FR-004
+                  Plant Administrator Authority · RF-FR-004
                 </span>
               </div>
             </div>
 
             <p className="text-xs text-slate-300 mb-4 leading-relaxed bg-slate-950/60 p-3 rounded-lg border border-slate-800">
-              Membuka semula kunci lembaran ini akan membolehkan Operator / Penyelia menyunting semula bacaan jam bagi syif ini. Setiap tindakan pembukaan kunci akan direkodkan ke dalam <strong className="text-amber-300 font-mono">Audit Trail</strong> kekal bersama alasan anda.
+              Unlocking this sheet will allow Operators / Supervisors to re-edit hourly readings for this shift. Every unlock event is permanently logged into the immutable <strong className="text-amber-300 font-mono">Audit Trail</strong> along with your stated justification.
             </p>
 
             {unlockError && (
@@ -1058,12 +1058,12 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
             <form onSubmit={handleUnlockSheet} className="space-y-4">
               <div>
                 <label className="block text-xs font-mono text-slate-300 mb-1">
-                  Sebab Pembukaan Kunci / Justifikasi Pembetulan (Wajib):
+                  Unlock Reason / Correction Justification (Required):
                 </label>
                 <textarea
                   required
                   rows={2}
-                  placeholder="Contoh: Pembetulan bacaan suhu Tray 3 disebabkan salah input semasa syif..."
+                  placeholder="e.g. Correcting Tray 3 temperature reading due to erroneous keyboard input during shift..."
                   value={unlockReason}
                   onChange={e => setUnlockReason(e.target.value)}
                   className="w-full bg-[#090d16] border border-slate-700 rounded-lg px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-amber-500 resize-none"
@@ -1072,12 +1072,12 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
 
               <div>
                 <label className="block text-xs font-mono text-slate-300 mb-1">
-                  Kata Laluan Pengesahan Admin (E-Signature):
+                  Admin Confirmation Password (E-Signature):
                 </label>
                 <input
                   type="password"
                   required
-                  placeholder="Masukkan kata laluan Admin..."
+                  placeholder="Enter Admin password..."
                   value={unlockPassword}
                   onChange={e => setUnlockPassword(e.target.value)}
                   className="w-full bg-[#090d16] border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500"
@@ -1088,16 +1088,16 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                 <button
                   type="button"
                   onClick={() => setIsUnlockModalOpen(false)}
-                  className="px-4 py-2 rounded-lg text-xs font-medium text-slate-400 hover:text-white"
+                  className="px-4 py-2 rounded-lg text-xs font-medium text-slate-400 hover:text-white cursor-pointer"
                 >
-                  Batal
+                  Cancel
                 </button>
                 <button
                   type="submit"
-                  className="bg-amber-600 hover:bg-amber-500 text-white font-medium px-5 py-2 rounded-lg text-xs transition-colors flex items-center gap-1.5 shadow-lg shadow-amber-950/50"
+                  className="bg-amber-600 hover:bg-amber-500 text-white font-medium px-5 py-2 rounded-lg text-xs transition-colors flex items-center gap-1.5 shadow-lg shadow-amber-950/50 cursor-pointer"
                 >
                   <Unlock className="h-4 w-4" />
-                  <span>Sahkan & Buka Kunci</span>
+                  <span>Confirm & Unlock</span>
                 </button>
               </div>
             </form>

@@ -37,7 +37,7 @@ export default function LoginView({ onLogin }: LoginViewProps) {
       if (res.success && res.profile) {
         onLogin(res.profile);
       } else {
-        setErrorMessage(res.error || 'Pengesahan gagal. Sila semak ID Pekerja atau kata laluan anda.');
+        setErrorMessage(res.error || 'Authentication failed. Please verify your Employee ID or password.');
       }
     }, 450);
   };
@@ -75,10 +75,10 @@ export default function LoginView({ onLogin }: LoginViewProps) {
               <Lock className="h-6 w-6" />
             </div>
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white font-sans">
-              Log Masuk Kakitangan
+              Plant Personnel Sign In
             </h1>
             <p className="mt-1.5 text-xs text-slate-400 font-sans">
-              Sila masukkan ID Pekerja dan kata laluan untuk mengakses sistem kawalan loji & makmal QC.
+              Please enter your Employee ID and password to access the refinery process control & QC laboratory systems.
             </p>
           </div>
 
@@ -94,14 +94,14 @@ export default function LoginView({ onLogin }: LoginViewProps) {
           <form onSubmit={handleFormSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-mono text-slate-300 mb-1.5">
-                ID Pekerja (Employee ID) / Email:
+                Employee ID / Email:
               </label>
               <div className="relative">
                 <User className="absolute left-3.5 top-3 h-4 w-4 text-slate-500" />
                 <input
                   type="text"
                   required
-                  placeholder="Contoh: OP-1042, SV-2014, QC-3201"
+                  placeholder="e.g. OP-1042, SV-2014, QC-3201"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
                   className="w-full bg-[#090d16] border border-slate-700 rounded-xl pl-10 pr-3 py-2.5 text-sm font-mono text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
@@ -111,7 +111,7 @@ export default function LoginView({ onLogin }: LoginViewProps) {
 
             <div>
               <label className="block text-xs font-mono text-slate-300 mb-1.5">
-                Kata Laluan:
+                Password:
               </label>
               <div className="relative">
                 <KeyRound className="absolute left-3.5 top-3 h-4 w-4 text-slate-500" />
@@ -127,7 +127,7 @@ export default function LoginView({ onLogin }: LoginViewProps) {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-3 text-slate-500 hover:text-slate-300 transition-colors"
-                  title={showPassword ? 'Sembunyi kata laluan' : 'Papar kata laluan'}
+                  title={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -141,7 +141,7 @@ export default function LoginView({ onLogin }: LoginViewProps) {
                   defaultChecked
                   className="h-3.5 w-3.5 rounded border-slate-700 bg-slate-900 text-cyan-500"
                 />
-                <span>Ingat sesi log masuk di peranti ini</span>
+                <span>Remember login session on this device</span>
               </label>
             </div>
 
@@ -151,10 +151,10 @@ export default function LoginView({ onLogin }: LoginViewProps) {
               className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 disabled:opacity-50 text-white font-semibold py-2.5 px-4 rounded-xl text-sm transition-all shadow-lg shadow-cyan-950/60 font-mono mt-2 cursor-pointer"
             >
               {isLoading ? (
-                <span>Mengesahkan Kredensial...</span>
+                <span>Authenticating Credentials...</span>
               ) : (
                 <>
-                  <span>Sahkan & Masuk ke Sistem Loji</span>
+                  <span>Sign In to Plant System</span>
                   <ArrowRight className="h-4 w-4" />
                 </>
               )}
@@ -163,7 +163,7 @@ export default function LoginView({ onLogin }: LoginViewProps) {
 
           {/* Security Notice Footer on Login Card */}
           <div className="mt-5 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-mono text-slate-500">
-            <span>Akses Terhad Kakitangan Loji</span>
+            <span>Authorized Plant Personnel Only</span>
             <span className="text-slate-400">PRD-REF-001</span>
           </div>
         </div>
@@ -171,7 +171,7 @@ export default function LoginView({ onLogin }: LoginViewProps) {
 
       {/* Industrial Footer */}
       <div className="w-full border-t border-slate-800/80 bg-[#070a10] py-4 px-6 text-center text-xs text-slate-500 font-mono">
-        Lam Soon Edible Oils Sdn. Bhd. · Sistem Pengurusan Operasi & Kualiti Minyak Sawit Bersepadu
+        Lam Soon Edible Oils Sdn. Bhd. · Integrated Palm Oil Refinery Operations & Quality Management System
       </div>
     </div>
   );
