@@ -614,28 +614,54 @@ export function getRealtimeSlotIndex(): number {
 
 // All Process Sheets Store Management
 export function getAllProcessSheets(): Record<string, ProcessSheet> {
-  const stored = getStored<Record<string, ProcessSheet> | null>(STORAGE_KEYS.ALL_SHEETS, null);
-  if (stored && typeof stored === 'object' && Object.keys(stored).length > 0) {
-    // Preserve legacy active sheet if stored before multi-date support
-    const legacy = getStored<ProcessSheet | null>(STORAGE_KEYS.SHEET, null);
-    if (legacy && legacy.shift_date && !stored[legacy.shift_date]) {
-      stored[legacy.shift_date] = legacy;
-      setStored(STORAGE_KEYS.ALL_SHEETS, stored);
-    }
-    return stored;
+  let stored = getStored<Record<string, ProcessSheet> | null>(STORAGE_KEYS.ALL_SHEETS, null);
+  if (!stored || typeof stored !== 'object') {
+    stored = {};
   }
 
+  // Preserve legacy active sheet if stored before multi-date support
   const legacy = getStored<ProcessSheet | null>(STORAGE_KEYS.SHEET, null);
-  const initialMap: Record<string, ProcessSheet> = {};
-  if (legacy && legacy.shift_date) {
-    initialMap[legacy.shift_date] = legacy;
+  if (legacy && legacy.shift_date && !stored[legacy.shift_date]) {
+    stored[legacy.shift_date] = legacy;
   }
-  if (!initialMap['2026-09-20']) {
-    initialMap['2026-09-20'] = JSON.parse(JSON.stringify(INITIAL_SHEET));
+
+  // Seed sample verified past sheets if missing
+  let changed = false;
+  if (!stored['2026-09-21']) {
+    const s21: ProcessSheet = JSON.parse(JSON.stringify(INITIAL_SHEET));
+    s21.id = 'sheet-2026-09-21';
+    s21.shift_date = '2026-09-21';
+    s21.status = 'verified';
+    s21.opened_at = '2026-09-21T06:55:00+08:00';
+    s21.verified_by = 'p-sv-01';
+    s21.verified_by_name = 'Lee Wei Chen (SV-2015)';
+    s21.verified_at = '2026-09-22T06:58:12+08:00';
+    s21.entries = (s21.entries || []).map(e => ({
+      ...e,
+      id: `entry-21-${e.slot_index}`,
+      sheet_id: 'sheet-2026-09-21',
+      slot_start: `2026-09-21T${e.slot_label.slice(0, 2)}:00:00+08:00`,
+      recorded_at: `2026-09-21T${e.slot_label.slice(0, 2)}:55:00+08:00`,
+    }));
+    stored['2026-09-21'] = s21;
+    changed = true;
   }
-  setStored(STORAGE_KEYS.ALL_SHEETS, initialMap);
-  memoryAllSheets = initialMap;
-  return initialMap;
+
+  if (!stored['2026-09-20']) {
+    const s20: ProcessSheet = JSON.parse(JSON.stringify(INITIAL_SHEET));
+    s20.status = 'verified';
+    s20.verified_by = 'p-sv-01';
+    s20.verified_by_name = 'Lee Wei Chen (SV-2015)';
+    s20.verified_at = '2026-09-21T06:55:30+08:00';
+    stored['2026-09-20'] = s20;
+    changed = true;
+  }
+
+  if (changed || !getStored(STORAGE_KEYS.ALL_SHEETS, null)) {
+    setStored(STORAGE_KEYS.ALL_SHEETS, stored);
+  }
+  memoryAllSheets = stored;
+  return stored;
 }
 
 export function saveAllProcessSheets(sheets: Record<string, ProcessSheet>): void {
@@ -664,20 +690,31 @@ export function getProcessSheetByDate(shiftDate: string): ProcessSheet {
   const setSteamBar = prevSheet?.set_steam_supply_bar ?? 3.0;
 
   const profile = getCurrentProfile();
+  const isPast = shiftDate < getRealtimeShiftDate();
+  const entries: ProcessEntry[] = isPast
+    ? (INITIAL_SHEET.entries || []).map(e => ({
+        ...e,
+        id: `entry-${shiftDate}-${e.slot_index}`,
+        sheet_id: `sheet-${shiftDate}`,
+        slot_start: `${shiftDate}T${e.slot_label.slice(0, 2)}:00:00+08:00`,
+        recorded_at: `${shiftDate}T${e.slot_label.slice(0, 2)}:55:00+08:00`,
+      }))
+    : [];
+
   const newSheet: ProcessSheet = {
     id: `sheet-${shiftDate}`,
     plant_id: INITIAL_PLANT.id,
     shift_date: shiftDate,
     stripping_steam_pct: strippingSteam,
     set_steam_supply_bar: setSteamBar,
-    status: 'open',
+    status: isPast ? 'verified' : 'open',
     opened_by: profile?.id || 'p-op-01',
     opened_by_name: profile?.full_name || 'Plant Operator',
     opened_at: `${shiftDate}T06:55:00+08:00`,
-    verified_by: null,
-    verified_by_name: null,
-    verified_at: null,
-    entries: [],
+    verified_by: isPast ? 'p-sv-01' : null,
+    verified_by_name: isPast ? 'Lee Wei Chen (SV-2015)' : null,
+    verified_at: isPast ? `${shiftDate}T23:59:00+08:00` : null,
+    entries,
   };
 
   all[shiftDate] = newSheet;

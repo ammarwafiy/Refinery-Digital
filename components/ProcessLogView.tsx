@@ -407,7 +407,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-2 mt-0.5">
+              <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                 <select
                   value={activeShiftDate}
                   onChange={(e) => handleDateChange(e.target.value)}
@@ -419,7 +419,21 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                       {d} {d === getRealtimeShiftDate() ? '(Today · Live)' : ''}
                     </option>
                   ))}
+                  {!availableDates.includes(activeShiftDate) && (
+                    <option value={activeShiftDate} className="bg-slate-900 text-slate-200">
+                      {activeShiftDate} (Custom Date)
+                    </option>
+                  )}
                 </select>
+
+                <input
+                  type="date"
+                  value={activeShiftDate}
+                  onChange={(e) => e.target.value && handleDateChange(e.target.value)}
+                  className="bg-slate-950 border border-slate-700 text-slate-300 rounded px-1.5 py-0.5 text-[11px] font-mono focus:border-cyan-500 focus:outline-none cursor-pointer"
+                  title="Pick any historical date from calendar"
+                />
+
                 {!isLiveShift && (
                   <button
                     type="button"

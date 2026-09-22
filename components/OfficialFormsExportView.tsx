@@ -5,9 +5,12 @@ import {
   getActiveProcessSheet, 
   getSampleReports, 
   getAuditLogs,
-  updateSampleResults 
+  updateSampleResults,
+  getAvailableShiftDates,
+  getProcessSheetByDate,
+  getRealtimeShiftDate
 } from '@/lib/data-service';
-import type { SampleReport } from '@/types/refinery';
+import type { SampleReport, ProcessSheet } from '@/types/refinery';
 import { 
   FileText, 
   Printer, 
@@ -22,12 +25,17 @@ import {
   Edit3,
   Save,
   X,
-  Check
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Clock
 } from 'lucide-react';
 import { formatDateTime } from '@/lib/utils';
 
 export default function OfficialFormsExportView() {
-  const [sheet, setSheet] = useState(getActiveProcessSheet);
+  const [selectedShiftDate, setSelectedShiftDate] = useState<string>(() => getRealtimeShiftDate());
+  const [availableShiftDates, setAvailableShiftDates] = useState<string[]>(() => getAvailableShiftDates());
+  const [sheet, setSheet] = useState<ProcessSheet>(() => getProcessSheetByDate(getRealtimeShiftDate()));
   const [reports, setReports] = useState<SampleReport[]>(() => getSampleReports());
   const [auditLogs, setAuditLogs] = useState(() => getAuditLogs());
 
@@ -42,12 +50,32 @@ export default function OfficialFormsExportView() {
   const [editRemarksText, setEditRemarksText] = useState('');
   const [saveSuccessMsg, setSaveSuccessMsg] = useState<string | null>(null);
 
+  const handleShiftDateChange = (newDate: string) => {
+    setSelectedShiftDate(newDate);
+    setSheet(getProcessSheetByDate(newDate));
+  };
+
+  const handleStepDay = (deltaDays: number) => {
+    try {
+      const cur = new Date(selectedShiftDate + 'T12:00:00');
+      cur.setDate(cur.getDate() + deltaDays);
+      const y = cur.getFullYear();
+      const m = String(cur.getMonth() + 1).padStart(2, '0');
+      const d = String(cur.getDate()).padStart(2, '0');
+      const nextDate = `${y}-${m}-${d}`;
+      handleShiftDateChange(nextDate);
+    } catch {
+      // ignore
+    }
+  };
+
   useEffect(() => {
     const refreshData = () => {
       const repList = getSampleReports();
       setReports(repList);
-      setSheet(getActiveProcessSheet());
+      setSheet(getProcessSheetByDate(selectedShiftDate));
       setAuditLogs(getAuditLogs());
+      setAvailableShiftDates(getAvailableShiftDates());
     };
 
     refreshData();
@@ -61,7 +89,7 @@ export default function OfficialFormsExportView() {
       window.removeEventListener('refinery_sheet_updated', refreshData);
       window.removeEventListener('storage', refreshData);
     };
-  }, []);
+  }, [selectedShiftDate]);
 
   useEffect(() => {
     if (reports.length > 0) {
@@ -274,6 +302,105 @@ export default function OfficialFormsExportView() {
           </button>
         </div>
 
+        {/* When activeFormType === 'rf_fr_004', show Shift Date Selector */}
+        {activeFormType === 'rf_fr_004' && (
+          <div className="mt-3 pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <span className="text-slate-400 font-semibold uppercase flex items-center gap-1.5">
+                <Calendar className="h-3.5 w-3.5 text-cyan-400" />
+                Select Shift Date (Tarikh Sheet):
+              </span>
+
+              {/* Quick prev/next day buttons and dropdown */}
+              <div className="flex items-center bg-slate-900 border border-slate-700 rounded-lg overflow-hidden shadow-inner">
+                <button
+                  type="button"
+                  onClick={() => handleStepDay(-1)}
+                  className="px-2.5 py-1 text-slate-300 hover:text-white hover:bg-slate-800 transition-colors border-r border-slate-700 cursor-pointer"
+                  title="Previous Day (Hari Sebelumnya)"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                </button>
+                <select
+                  value={selectedShiftDate}
+                  onChange={e => handleShiftDateChange(e.target.value)}
+                  className="bg-transparent text-white px-2.5 py-1 text-xs font-mono focus:outline-none cursor-pointer"
+                >
+                  {availableShiftDates.map(d => (
+                    <option key={d} value={d} className="bg-slate-900 text-slate-200">
+                      {d} {d === getRealtimeShiftDate() ? '(Today · Live)' : '(Past Sheet)'}
+                    </option>
+                  ))}
+                  {!availableShiftDates.includes(selectedShiftDate) && (
+                    <option value={selectedShiftDate} className="bg-slate-900 text-slate-200">
+                      {selectedShiftDate} (Custom Date)
+                    </option>
+                  )}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => handleStepDay(1)}
+                  className="px-2.5 py-1 text-slate-300 hover:text-white hover:bg-slate-800 transition-colors border-l border-slate-700 cursor-pointer"
+                  title="Next Day (Hari Berikutnya)"
+                >
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
+
+              {/* Calendar Date Picker Input */}
+              <div className="flex items-center gap-1.5 text-slate-400">
+                <span className="text-[11px]">or Calendar:</span>
+                <input
+                  type="date"
+                  value={selectedShiftDate}
+                  onChange={e => {
+                    if (e.target.value) {
+                      handleShiftDateChange(e.target.value);
+                    }
+                  }}
+                  className="bg-slate-900 border border-slate-700 text-white rounded-lg px-2.5 py-1 text-xs font-mono focus:border-cyan-500 focus:outline-none cursor-pointer"
+                />
+              </div>
+
+              {selectedShiftDate !== getRealtimeShiftDate() && (
+                <button
+                  type="button"
+                  onClick={() => handleShiftDateChange(getRealtimeShiftDate())}
+                  className="px-2.5 py-1 rounded-lg bg-cyan-950/80 hover:bg-cyan-900 text-cyan-400 border border-cyan-700/50 text-[11px] font-mono transition-all cursor-pointer shadow-sm"
+                >
+                  Jump to Today (Live)
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2 text-xs">
+              <span className="text-slate-400">Status:</span>
+              <span className={`px-2 py-0.5 rounded uppercase font-bold text-[10px] ${
+                sheet.status === 'verified' 
+                  ? 'bg-emerald-950 text-emerald-400 border border-emerald-500/40' 
+                  : 'bg-amber-950 text-amber-400 border border-amber-500/40'
+              }`}>
+                {sheet.status}
+              </span>
+
+              {sheet.shift_date === getRealtimeShiftDate() ? (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-400 border border-emerald-500/40 text-[10px] font-bold">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  LIVE SHIFT
+                </span>
+              ) : (
+                <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 text-[10px]">
+                  ARCHIVED / PAST
+                </span>
+              )}
+
+              <span className="text-slate-500 text-[11px] hidden md:inline">
+                ({(sheet.entries || []).length}/24 Hours Recorded)
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* When activeFormType === 'rf_fr_001', show Lot selector and Quick Edit Remarks button */}
         {activeFormType === 'rf_fr_001' && (
           <div className="mt-3 pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
@@ -338,12 +465,17 @@ export default function OfficialFormsExportView() {
             <div className="grid grid-cols-4 gap-4 mt-4 pt-3 border-t border-slate-300 font-mono text-xs">
               <div>
                 <span className="text-slate-500">SHIFT DATE:</span> <strong>{sheet.shift_date}</strong>
+                {sheet.shift_date === getRealtimeShiftDate() ? (
+                  <span className="ml-1.5 text-[10px] text-emerald-700 font-bold bg-emerald-100 px-1 rounded">(LIVE)</span>
+                ) : (
+                  <span className="ml-1.5 text-[10px] text-slate-600 font-normal bg-slate-200 px-1 rounded">(PAST LOG)</span>
+                )}
               </div>
               <div>
-                <span className="text-slate-500">STRIPPING STEAM:</span> <strong>{sheet.stripping_steam_pct.toFixed(2)} % of oil</strong>
+                <span className="text-slate-500">STRIPPING STEAM:</span> <strong>{(sheet.stripping_steam_pct ?? 1.5).toFixed(2)} % of oil</strong>
               </div>
               <div>
-                <span className="text-slate-500">STEAM SUPPLY:</span> <strong>{sheet.set_steam_supply_bar.toFixed(2)} Bar</strong>
+                <span className="text-slate-500">STEAM SUPPLY:</span> <strong>{(sheet.set_steam_supply_bar ?? 3.0).toFixed(2)} Bar</strong>
               </div>
               <div className="text-right">
                 <span className="text-slate-500">STATUS:</span> <strong className="uppercase">{sheet.status}</strong>
