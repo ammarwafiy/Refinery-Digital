@@ -9,7 +9,6 @@ import {
   FlaskConical,
   BarChart3,
   FileText,
-  UserCheck,
   Wifi,
   Layers,
   LogOut,
@@ -21,10 +20,7 @@ import {
 import { UserRole, Profile } from '@/types/refinery';
 import {
   getCurrentRole,
-  setCurrentRole,
   getCurrentProfile,
-  getProfiles,
-  setAuthUser,
   ROLE_ALLOWED_TABS,
   ROLE_DEFAULT_TAB
 } from '@/lib/data-service';
@@ -69,24 +65,6 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
     const timer = setInterval(updateClock, 1000);
     return () => clearInterval(timer);
   }, [currentUser]);
-
-  const handleRoleChange = (newRole: UserRole) => {
-    setCurrentRole(newRole);
-    setRole(newRole);
-    const profiles = getProfiles();
-    const matched = profiles.find(p => p.role === newRole);
-    if (matched) {
-      setAuthUser(matched);
-      setProfile(matched);
-      onRoleChange?.(matched);
-    } else {
-      const p = getCurrentProfile();
-      setProfile(p);
-      onRoleChange?.(p);
-    }
-    setActiveTab(ROLE_DEFAULT_TAB[newRole] || 'process');
-    setIsMobileMenuOpen(false);
-  };
 
   const navItems = [
     { id: 'process', label: 'RF-FR-004 Process Log', shortLabel: 'Process Log', icon: Layers, badge: '24-Hour' },
@@ -232,54 +210,17 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
 
           {/* User Info & Role Bar */}
           <div className="flex items-center gap-2 bg-slate-900/90 p-1.5 rounded-xl border border-slate-800 shadow-md">
-            {role === 'admin' ? (
-              /* Role Switcher for Admin Only */
-              <>
-                <div className="flex items-center gap-1.5 pl-2 pr-1 text-slate-400 text-xs">
-                  <UserCheck className="h-3.5 w-3.5 text-cyan-400" />
-                  <span className="hidden xl:inline text-[11px] font-mono uppercase text-slate-400">Admin Switcher:</span>
-                </div>
-
-                <div className="flex items-center gap-1">
-                  {(['operator', 'supervisor', 'qc_analyst', 'qc_manager', 'admin'] as UserRole[]).map((r) => {
-                    const isSelected = role === r;
-                    const formatLabel: Record<UserRole, string> = {
-                      operator: 'Operator',
-                      supervisor: 'Supervisor',
-                      qc_analyst: 'QC Analyst',
-                      qc_manager: 'QC Manager',
-                      admin: 'Admin',
-                      viewer: 'Viewer',
-                    };
-
-                    return (
-                      <button
-                        key={r}
-                        onClick={() => handleRoleChange(r)}
-                        className={`px-2.5 py-1 rounded-lg text-xs font-medium font-mono transition-all border cursor-pointer ${isSelected
-                            ? `${roleColors[r].bg} ${roleColors[r].text} ${roleColors[r].border} shadow-sm font-semibold`
-                            : 'text-slate-500 hover:text-slate-300 border-transparent hover:bg-slate-800/60'
-                          }`}
-                        title={`Switch to ${formatLabel[r]} Role`}
-                      >
-                        {formatLabel[r]}
-                      </button>
-                    );
-                  })}
-                </div>
-              </>
-            ) : (
-              /* Dedicated Role Mode Badge for Non-Admin */
-              <div className="flex items-center gap-2 px-2 py-0.5">
-                <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span className={`px-2.5 py-1 rounded-lg text-[11px] font-mono font-bold uppercase border ${roleColors[role].bg} ${roleColors[role].text} ${roleColors[role].border}`}>
-                  {role === 'operator' && 'OPERATOR MODE · PROCESS LOG'}
-                  {role === 'supervisor' && 'SUPERVISOR MODE · LIVE BOARD'}
-                  {(role === 'qc_analyst' || role === 'qc_manager') && 'QUALITY MODE · QC LAB'}
-                  {role === 'viewer' && 'AUDITOR MODE · ISO RECORDS'}
-                </span>
-              </div>
-            )}
+            {/* Dedicated Role Mode Badge */}
+            <div className="flex items-center gap-2 px-2 py-0.5">
+              <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className={`px-2.5 py-1 rounded-lg text-[11px] font-mono font-bold uppercase border ${roleColors[role].bg} ${roleColors[role].text} ${roleColors[role].border}`}>
+                {role === 'operator' && 'OPERATOR MODE · PROCESS LOG'}
+                {role === 'supervisor' && 'SUPERVISOR MODE · LIVE BOARD'}
+                {(role === 'qc_analyst' || role === 'qc_manager') && 'QUALITY MODE · QC LAB'}
+                {role === 'admin' && 'ADMINISTRATOR MODE · PLANT CONTROL'}
+                {role === 'viewer' && 'AUDITOR MODE · ISO RECORDS'}
+              </span>
+            </div>
 
             {/* User Profile Badge */}
             <div className="border-l border-slate-800 pl-2.5 pr-2 text-right">
@@ -381,41 +322,7 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
               })}
             </div>
 
-            {/* Admin Role Switcher for Mobile */}
-            {role === 'admin' && (
-              <div className="pt-2 border-t border-slate-800/80 space-y-2">
-                <div className="text-[11px] font-mono text-cyan-400 uppercase font-semibold flex items-center gap-1.5">
-                  <UserCheck className="h-3.5 w-3.5" />
-                  <span>Admin Role Switcher (Mobile):</span>
-                </div>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {(['operator', 'supervisor', 'qc_analyst', 'qc_manager', 'admin'] as UserRole[]).map((r) => {
-                    const isSelected = role === r;
-                    const formatLabel: Record<UserRole, string> = {
-                      operator: 'Operator',
-                      supervisor: 'Supervisor',
-                      qc_analyst: 'QC Analyst',
-                      qc_manager: 'QC Manager',
-                      admin: 'Admin',
-                      viewer: 'Viewer',
-                    };
-                    return (
-                      <button
-                        key={r}
-                        onClick={() => handleRoleChange(r)}
-                        className={`p-2 rounded-lg text-xs font-mono font-medium border text-center transition-all ${
-                          isSelected
-                            ? `${roleColors[r].bg} ${roleColors[r].text} ${roleColors[r].border} font-bold shadow-sm`
-                            : 'bg-slate-900/60 text-slate-400 border-slate-800 hover:text-white'
-                        }`}
-                      >
-                        {formatLabel[r]}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
+
 
             {/* Mobile Actions: Sign Out */}
             {onLogout && (
