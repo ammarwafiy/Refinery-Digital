@@ -1,11 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   getActiveProcessSheet, 
   getSampleReports, 
-  getAuditLogs 
+  getAuditLogs,
+  updateSampleResults 
 } from '@/lib/data-service';
+import type { SampleReport } from '@/types/refinery';
 import { 
   FileText, 
   Printer, 
@@ -16,19 +18,104 @@ import {
   ShieldCheck, 
   Table, 
   Calendar,
-  Layers
+  Layers,
+  Edit3,
+  Save,
+  X,
+  Check
 } from 'lucide-react';
 import { formatDateTime } from '@/lib/utils';
 
 export default function OfficialFormsExportView() {
-  const sheet = getActiveProcessSheet();
-  const reports = getSampleReports();
-  const auditLogs = getAuditLogs();
+  const [sheet, setSheet] = useState(getActiveProcessSheet);
+  const [reports, setReports] = useState<SampleReport[]>(() => getSampleReports());
+  const [auditLogs, setAuditLogs] = useState(() => getAuditLogs());
 
   const [activeFormType, setActiveFormType] = useState<'rf_fr_004' | 'rf_fr_001' | 'audit'>('rf_fr_004');
-  const [selectedReportId, setSelectedReportId] = useState<string>(reports[0]?.id || '');
+  const [selectedReportId, setSelectedReportId] = useState<string>('');
+
+  // Quick Edit Remarks Modal State
+  const [isEditingRemarks, setIsEditingRemarks] = useState(false);
+  const [editFlushing, setEditFlushing] = useState(false);
+  const [editCooling, setEditCooling] = useState(false);
+  const [editPushover, setEditPushover] = useState(false);
+  const [editRemarksText, setEditRemarksText] = useState('');
+  const [saveSuccessMsg, setSaveSuccessMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    const refreshData = () => {
+      const repList = getSampleReports();
+      setReports(repList);
+      setSheet(getActiveProcessSheet());
+      setAuditLogs(getAuditLogs());
+    };
+
+    refreshData();
+
+    window.addEventListener('refinery_reports_updated', refreshData);
+    window.addEventListener('refinery_sheet_updated', refreshData);
+    window.addEventListener('storage', refreshData);
+
+    return () => {
+      window.removeEventListener('refinery_reports_updated', refreshData);
+      window.removeEventListener('refinery_sheet_updated', refreshData);
+      window.removeEventListener('storage', refreshData);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (reports.length > 0) {
+      if (!selectedReportId || !reports.some(r => r.id === selectedReportId)) {
+        setSelectedReportId(reports[0].id);
+      }
+    }
+  }, [reports, selectedReportId]);
 
   const activeReport = reports.find(r => r.id === selectedReportId) || reports[0];
+
+  const openEditRemarks = () => {
+    if (!activeReport) return;
+    setEditFlushing(Boolean(activeReport.remark_flushing));
+    setEditCooling(Boolean(activeReport.remark_cooling));
+    setEditPushover(Boolean(activeReport.remark_pushover));
+    setEditRemarksText(activeReport.remarks || '');
+    setSaveSuccessMsg(null);
+    setIsEditingRemarks(true);
+  };
+
+  const handleSaveCertificateRemarks = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activeReport) return;
+
+    const currentResults = (activeReport.results || []).map(r => ({
+      resultId: r.id,
+      parameter_id: r.parameter_id,
+      parameter_code: r.parameter_code,
+      parameter_name: r.parameter_name,
+      unit: r.unit,
+      series_key: r.series_key,
+      value_numeric: r.value_numeric,
+      value_text: r.value_text,
+      requested: r.requested !== false,
+    }));
+
+    const res = updateSampleResults(activeReport.id, currentResults, {
+      remark_flushing: editFlushing,
+      remark_cooling: editCooling,
+      remark_pushover: editPushover,
+      remarks: editRemarksText.trim() ? editRemarksText : null,
+    });
+
+    if (res.success) {
+      setSaveSuccessMsg('Remarks & operating conditions saved and synced with QC Lab & Supabase!');
+      const repList = getSampleReports();
+      setReports(repList);
+      setTimeout(() => {
+        setIsEditingRemarks(false);
+        setSaveSuccessMsg(null);
+      }, 1200);
+    }
+  };
 
   const handlePrint = () => {
     window.print();
@@ -80,7 +167,11 @@ export default function OfficialFormsExportView() {
       link.click();
       document.body.removeChild(link);
     } else if (activeFormType === 'rf_fr_001') {
-      const headers = ['Report No', 'Sample Date', 'Time', 'Lot No', 'Product', 'Tank', 'Status', 'Decision', 'Decided By'];
+      const headers = [
+        'Report No', 'Sample Date', 'Time', 'Lot No', 'Product', 'Tank',
+        'Status', 'Flushing', 'Cooling', 'Push Over', 'Remarks',
+        'Decision', 'Decided By'
+      ];
       const rows = reports.map(r => [
         r.report_no,
         r.sample_date,
@@ -89,6 +180,10 @@ export default function OfficialFormsExportView() {
         `"${(r.product_name || '').replace(/"/g, '""')}"`,
         r.feed_tank_code || '-',
         r.status,
+        r.remark_flushing ? 'YES' : 'NO',
+        r.remark_cooling ? 'YES' : 'NO',
+        r.remark_pushover ? 'YES' : 'NO',
+        `"${(r.remarks || '').replace(/"/g, '""')}"`,
         r.decision?.decision || 'PENDING',
         r.decision?.decided_by_name || '-'
       ]);
@@ -143,12 +238,12 @@ export default function OfficialFormsExportView() {
         </div>
 
         {/* Form Selector Tabs */}
-        <div className="mt-4 flex items-center gap-2 border-t border-slate-800 pt-3 text-xs font-mono">
+        <div className="mt-4 flex items-center gap-2 border-t border-slate-800 pt-3 text-xs font-mono flex-wrap">
           <button
             onClick={() => setActiveFormType('rf_fr_004')}
             className={`px-3.5 py-1.5 rounded-lg border transition-all ${
               activeFormType === 'rf_fr_004'
-                ? 'bg-blue-600 text-white border-blue-500'
+                ? 'bg-blue-600 text-white border-blue-500 shadow-md shadow-blue-900/30'
                 : 'border-slate-800 text-slate-400 hover:bg-slate-800'
             }`}
           >
@@ -159,7 +254,7 @@ export default function OfficialFormsExportView() {
             onClick={() => setActiveFormType('rf_fr_001')}
             className={`px-3.5 py-1.5 rounded-lg border transition-all ${
               activeFormType === 'rf_fr_001'
-                ? 'bg-blue-600 text-white border-blue-500'
+                ? 'bg-blue-600 text-white border-blue-500 shadow-md shadow-blue-900/30'
                 : 'border-slate-800 text-slate-400 hover:bg-slate-800'
             }`}
           >
@@ -170,7 +265,7 @@ export default function OfficialFormsExportView() {
             onClick={() => setActiveFormType('audit')}
             className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border transition-all ${
               activeFormType === 'audit'
-                ? 'bg-blue-600 text-white border-blue-500'
+                ? 'bg-blue-600 text-white border-blue-500 shadow-md shadow-blue-900/30'
                 : 'border-slate-800 text-slate-400 hover:bg-slate-800'
             }`}
           >
@@ -178,6 +273,40 @@ export default function OfficialFormsExportView() {
             <span>Immutable Audit Trail ({auditLogs.length})</span>
           </button>
         </div>
+
+        {/* When activeFormType === 'rf_fr_001', show Lot selector and Quick Edit Remarks button */}
+        {activeFormType === 'rf_fr_001' && (
+          <div className="mt-3 pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <span className="text-slate-400 font-semibold uppercase flex items-center gap-1.5">
+                <FileText className="h-3.5 w-3.5 text-cyan-400" />
+                Select Sample Lot / Certificate:
+              </span>
+              <select
+                value={selectedReportId}
+                onChange={e => setSelectedReportId(e.target.value)}
+                className="bg-slate-900 border border-slate-700 text-white rounded-lg px-3 py-1.5 focus:border-cyan-500 focus:outline-none max-w-sm md:max-w-md shadow-inner text-xs font-mono"
+              >
+                {reports.map(r => (
+                  <option key={r.id} value={r.id}>
+                    {r.lot_no} — {r.product_name} ({r.time_check} · {r.status.toUpperCase()})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={openEditRemarks}
+                className="flex items-center gap-1.5 bg-blue-600/90 hover:bg-blue-600 text-white px-3.5 py-1.5 rounded-lg border border-blue-500/50 shadow transition-all hover:shadow-blue-500/20 cursor-pointer"
+              >
+                <Edit3 className="h-3.5 w-3.5" />
+                <span>Edit Remarks & Operating Flags</span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* FORM 1: RF-FR-004 Layout */}
@@ -389,6 +518,98 @@ export default function OfficialFormsExportView() {
             </tbody>
           </table>
 
+          {/* Section: Operating Conditions & Remarks (RF-FR-001 Official Section) */}
+          <div className="border border-slate-900 p-3.5 rounded font-mono text-xs mb-4 bg-slate-50/80">
+            <div className="flex items-center justify-between border-b border-slate-300 pb-2 mb-2.5">
+              <div className="font-bold text-slate-900 uppercase tracking-wide flex items-center gap-2">
+                <span>OPERATING CONDITIONS & QC REMARKS</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-slate-500 uppercase">
+                  Refinery QC Checklist
+                </span>
+                <button
+                  type="button"
+                  onClick={openEditRemarks}
+                  className="no-print text-[10px] text-blue-700 hover:text-blue-900 hover:underline flex items-center gap-1 font-sans cursor-pointer"
+                >
+                  <Edit3 className="h-2.5 w-2.5" /> Edit Remarks
+                </button>
+              </div>
+            </div>
+
+            {/* Operating Condition Checkboxes */}
+            <div className="grid grid-cols-3 gap-3 mb-3">
+              <div className={`flex items-center gap-2 p-2 rounded border ${
+                activeReport.remark_flushing 
+                  ? 'border-emerald-700 bg-emerald-50 text-emerald-950 font-bold' 
+                  : 'border-slate-300 bg-white text-slate-600'
+              }`}>
+                <div className={`w-4 h-4 rounded flex items-center justify-center border text-[11px] leading-none ${
+                  activeReport.remark_flushing 
+                    ? 'border-emerald-700 bg-emerald-600 text-white font-black' 
+                    : 'border-slate-400 bg-white text-transparent'
+                }`}>
+                  ✓
+                </div>
+                <div>
+                  <div className="text-[11px] leading-none">FLUSHING</div>
+                  <div className="text-[9px] text-slate-500 font-normal mt-0.5">Sampling line flushed</div>
+                </div>
+              </div>
+
+              <div className={`flex items-center gap-2 p-2 rounded border ${
+                activeReport.remark_cooling 
+                  ? 'border-blue-700 bg-blue-50 text-blue-950 font-bold' 
+                  : 'border-slate-300 bg-white text-slate-600'
+              }`}>
+                <div className={`w-4 h-4 rounded flex items-center justify-center border text-[11px] leading-none ${
+                  activeReport.remark_cooling 
+                    ? 'border-blue-700 bg-blue-600 text-white font-black' 
+                    : 'border-slate-400 bg-white text-transparent'
+                }`}>
+                  ✓
+                </div>
+                <div>
+                  <div className="text-[11px] leading-none">COOLING</div>
+                  <div className="text-[9px] text-slate-500 font-normal mt-0.5">Crystallizer active cooling</div>
+                </div>
+              </div>
+
+              <div className={`flex items-center gap-2 p-2 rounded border ${
+                activeReport.remark_pushover 
+                  ? 'border-purple-700 bg-purple-50 text-purple-950 font-bold' 
+                  : 'border-slate-300 bg-white text-slate-600'
+              }`}>
+                <div className={`w-4 h-4 rounded flex items-center justify-center border text-[11px] leading-none ${
+                  activeReport.remark_pushover 
+                    ? 'border-purple-700 bg-purple-600 text-white font-black' 
+                    : 'border-slate-400 bg-white text-transparent'
+                }`}>
+                  ✓
+                </div>
+                <div>
+                  <div className="text-[11px] leading-none">PUSH OVER</div>
+                  <div className="text-[9px] text-slate-500 font-normal mt-0.5">Pushover transfer operation</div>
+                </div>
+              </div>
+            </div>
+
+            {/* QC Remarks & Analytical Observations Box */}
+            <div className="border border-slate-300 rounded bg-white p-2.5">
+              <div className="text-[10px] font-bold text-slate-600 uppercase mb-1">
+                QC Remarks & Analytical Observations:
+              </div>
+              <div className="text-xs text-slate-800 font-mono whitespace-pre-wrap min-h-[38px]">
+                {activeReport.remarks?.trim() ? (
+                  activeReport.remarks
+                ) : (
+                  <span className="text-slate-400 italic">No special remarks or process deviations noted for this sample lot.</span>
+                )}
+              </div>
+            </div>
+          </div>
+
           {/* QC Formal Decision Stamp */}
           <div className="border-2 border-slate-900 p-4 rounded bg-slate-50 text-xs font-mono">
             <div className="flex items-center justify-between border-b border-slate-300 pb-2 mb-2 font-bold">
@@ -467,6 +688,126 @@ export default function OfficialFormsExportView() {
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* Quick Edit Remarks Modal (RF-FR-001) */}
+      {isEditingRemarks && activeReport && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 no-print">
+          <div className="w-full max-w-lg rounded-2xl border border-slate-700 bg-[#0f172a] p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center gap-2 text-white font-semibold">
+                <Edit3 className="h-4 w-4 text-cyan-400" />
+                <span>Edit Remarks & Operating Flags — Lot {activeReport.lot_no}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsEditingRemarks(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {saveSuccessMsg && (
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-xs font-mono">
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
+                <span>{saveSuccessMsg}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSaveCertificateRemarks} className="space-y-4">
+              {/* Checkboxes */}
+              <div>
+                <label className="block text-xs font-mono text-slate-400 mb-2 font-semibold">
+                  Operating Condition Checklist:
+                </label>
+                <div className="grid grid-cols-3 gap-2.5">
+                  <label className={`flex items-start gap-2.5 p-2.5 rounded-xl border transition-all cursor-pointer select-none ${
+                    editFlushing 
+                      ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-300 shadow-sm' 
+                      : 'bg-slate-900/40 border-slate-800 text-slate-400 hover:border-slate-700'
+                  }`}>
+                    <input
+                      type="checkbox"
+                      checked={editFlushing}
+                      onChange={e => setEditFlushing(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 rounded bg-slate-950 border-slate-700 text-emerald-500 focus:ring-0 cursor-pointer"
+                    />
+                    <div className="font-mono text-xs">
+                      <div className="font-semibold text-white">Flushing</div>
+                      <div className="text-[10px] text-slate-500">Line flushed</div>
+                    </div>
+                  </label>
+
+                  <label className={`flex items-start gap-2.5 p-2.5 rounded-xl border transition-all cursor-pointer select-none ${
+                    editCooling 
+                      ? 'bg-blue-950/40 border-blue-500/50 text-blue-300 shadow-sm' 
+                      : 'bg-slate-900/40 border-slate-800 text-slate-400 hover:border-slate-700'
+                  }`}>
+                    <input
+                      type="checkbox"
+                      checked={editCooling}
+                      onChange={e => setEditCooling(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 rounded bg-slate-950 border-slate-700 text-blue-500 focus:ring-0 cursor-pointer"
+                    />
+                    <div className="font-mono text-xs">
+                      <div className="font-semibold text-white">Cooling</div>
+                      <div className="text-[10px] text-slate-500">Active cooling</div>
+                    </div>
+                  </label>
+
+                  <label className={`flex items-start gap-2.5 p-2.5 rounded-xl border transition-all cursor-pointer select-none ${
+                    editPushover 
+                      ? 'bg-purple-950/40 border-purple-500/50 text-purple-300 shadow-sm' 
+                      : 'bg-slate-900/40 border-slate-800 text-slate-400 hover:border-slate-700'
+                  }`}>
+                    <input
+                      type="checkbox"
+                      checked={editPushover}
+                      onChange={e => setEditPushover(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 rounded bg-slate-950 border-slate-700 text-purple-500 focus:ring-0 cursor-pointer"
+                    />
+                    <div className="font-mono text-xs">
+                      <div className="font-semibold text-white">Push over</div>
+                      <div className="text-[10px] text-slate-500">Pushover transfer</div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Free Text Blank Area for QC Remarks */}
+              <div>
+                <label className="block text-xs font-mono text-slate-400 mb-1.5 font-semibold">
+                  QC Remarks & Observations (Free text):
+                </label>
+                <textarea
+                  rows={3}
+                  value={editRemarksText}
+                  onChange={e => setEditRemarksText(e.target.value)}
+                  placeholder="Type remarks here (e.g. sample appearance, clarity, moisture haze, process deviations, or batch notes)..."
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 resize-y"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800 font-mono">
+                <button
+                  type="button"
+                  onClick={() => setIsEditingRemarks(false)}
+                  className="px-4 py-2 rounded-xl text-xs text-slate-400 hover:bg-slate-800 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex items-center gap-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-medium px-4 py-2 rounded-xl text-xs transition-colors shadow font-mono cursor-pointer"
+                >
+                  <Save className="h-3.5 w-3.5" />
+                  <span>Save & Sync Remarks</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

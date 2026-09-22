@@ -1851,6 +1851,10 @@ export function updateSampleResults(
   setStored(STORAGE_KEYS.REPORTS, reports);
   memoryReports = reports;
 
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('refinery_reports_updated', { detail: reports }));
+  }
+
   addAuditLog('sample_results', reportId, 'update', null, { status: 'results_entered' });
 
   // Auto-sync updated report and lab results to Supabase
@@ -1913,6 +1917,10 @@ export function submitQCDecision(data: {
 
   setStored(STORAGE_KEYS.REPORTS, reports);
   memoryReports = reports;
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('refinery_reports_updated', { detail: reports }));
+  }
 
   addAuditLog('qc_decisions', decisionObj.id, 'insert', null, decisionObj);
 

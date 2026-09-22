@@ -193,9 +193,14 @@ export default function SampleDetailPage({ params }: { params: Promise<{ id: str
           <div><span className="text-slate-500">Lot:</span> <span className="text-white ml-1 font-mono">{String(report.lot_no)}</span></div>
           <div><span className="text-slate-500">Product:</span> <span className="text-white ml-1">{productName}</span></div>
           <div><span className="text-slate-500">Submitted by:</span> <span className="text-white ml-1">{String(report.submitted_by_name || '—')}</span></div>
-          {Boolean(report.remark_flushing) && <div className="text-amber-400">✓ Flushing</div>}
-          {Boolean(report.remark_cooling) && <div className="text-amber-400">✓ Cooling</div>}
-          {Boolean(report.remark_pushover) && <div className="text-amber-400">✓ Push Over</div>}
+          {Boolean(report.remark_flushing) && <div className="text-emerald-400 font-semibold">✓ Flushing</div>}
+          {Boolean(report.remark_cooling) && <div className="text-blue-400 font-semibold">✓ Cooling</div>}
+          {Boolean(report.remark_pushover) && <div className="text-purple-400 font-semibold">✓ Push Over</div>}
+          {Boolean(report.remarks) && (
+            <div className="col-span-2 sm:col-span-4 mt-1 pt-2 border-t border-slate-800/80 text-slate-300">
+              <span className="text-slate-500 font-medium">Remarks:</span> <span className="italic">{String(report.remarks)}</span>
+            </div>
+          )}
         </div>
       </div>
 
