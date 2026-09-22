@@ -284,11 +284,13 @@ if (typeof window !== 'undefined') {
   // Initial sync upon client mounting
   setTimeout(() => {
     syncProfilesFromSupabase().catch(() => {});
+    syncSampleReportsFromSupabase().catch(() => {});
   }, 150);
 
   // Background auto-sync interval (every 20 seconds)
   setInterval(() => {
     syncProfilesFromSupabase().catch(() => {});
+    syncSampleReportsFromSupabase().catch(() => {});
   }, 20000);
 
   // Live Supabase Realtime PostgreSQL Change listener
@@ -307,9 +309,23 @@ if (typeof window !== 'undefined') {
         .subscribe((status) => {
           console.info('[Supabase Realtime] Profile channel status:', status);
         });
+
+      supabase
+        .channel('refinery_reports_live')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'sample_reports' },
+          (payload) => {
+            console.info('[Supabase Realtime] Sample reports change detected:', payload.eventType);
+            syncSampleReportsFromSupabase().catch(() => {});
+          }
+        )
+        .subscribe((status) => {
+          console.info('[Supabase Realtime] Sample reports channel status:', status);
+        });
     }
   } catch (subErr) {
-    console.warn('[Supabase Realtime] Failed to initialize profiles channel:', subErr);
+    console.warn('[Supabase Realtime] Failed to initialize realtime channels:', subErr);
   }
 }
 
@@ -1333,6 +1349,310 @@ export function getSampleReport(id: string): SampleReport | undefined {
   return list.find(r => r.id === id);
 }
 
+// Derive standard uppercase shortcode for product lot numbering
+export function deriveProductLotCode(product?: Product | null, customOther?: string | null): string {
+  if (!product && !customOther) return 'PROD';
+  const nameOrCode = product?.code || customOther || product?.name || 'PROD';
+  const upper = nameOrCode.toUpperCase().replace(/[\s\-_]+/g, '_');
+
+  // Exact & substring matches for refinery products
+  if (upper.includes('PL_65') || upper.includes('PL65')) return 'PL65';
+  if (upper.includes('PL_60') || upper.includes('PL60')) return 'PL60';
+  if (upper.includes('PL_56') || upper.includes('PL56')) return 'PL56';
+  if (upper.includes('PFAD')) return 'PFAD';
+  if (upper.includes('RPMO')) return 'RPMO';
+  if (upper.includes('RPKO')) return 'RPKO';
+  if (upper.includes('RPKL')) return 'RPKL';
+  if (upper.includes('RSTN_S') || upper.includes('RSTN(S)')) return 'RSTNS';
+  if (upper.includes('RSTN_H') || upper.includes('RSTN(H)')) return 'RSTNH';
+  if (upper.includes('RSTN')) return 'RSTN';
+  if (upper.includes('CHOCOHI_357') || upper.includes('CHOC_357') || upper.includes('CHOCOHI 357') || upper.includes('357A')) return 'CHOC357';
+  if (upper.includes('CHOCOHI_369') || upper.includes('CHOC_369') || upper.includes('CHOCOHI 369') || upper.includes('369A')) return 'CHOC369';
+  if (upper.includes('DAISY')) return 'DAISY';
+  if (upper.includes('NATUREL_LITE') || upper.includes('NATL')) return 'NATL';
+  if (upper.includes('NATUREL_OLIVE') || upper.includes('NATO')) return 'NATO';
+  if (upper.includes('PASTRIFET') || upper.includes('PASTRI')) return 'PASTRI';
+  if (upper.includes('SHORTENING') || upper.includes('SHORT')) return 'SHORT';
+  if (upper.includes('FARM_COW') || upper.includes('FCOW')) return 'FCOW';
+  if (upper.includes('FLUSH')) return 'FLUSH';
+  if (upper.includes('SPLASH')) return 'SPLASH';
+  if (upper.includes('PALM_FAT') || upper.includes('PFAT')) return 'PFAT';
+  if (upper.includes('RBDPO') || upper.includes('RBD_PALM_OIL')) return 'RBDPO';
+  if (upper.includes('RBDPOL') || upper.includes('RBD_PALM_OLEIN')) return 'RBDPOL';
+  if (upper.includes('RBDPS') || upper.includes('RBD_PALM_STEARIN')) return 'RBDPS';
+
+  // Fallback: extract first 6 alphanumeric letters
+  const cleaned = upper.replace(/[^A-Z0-9]/g, '');
+  return cleaned.slice(0, 6) || 'PROD';
+}
+
+// Automatically generate next sequential Lot number based on product & date (e.g. LOT-PL65-2609-04)
+export function generateNextLotNo(productId?: string, sampleDate?: string, customOther?: string): string {
+  const products = getProducts();
+  const prod = products.find(p => p.id === productId);
+  const code = deriveProductLotCode(prod, customOther);
+
+  // Extract YYMM from sampleDate (e.g. '2026-09-22' -> '2609')
+  const dateStr = sampleDate || new Date().toISOString().split('T')[0];
+  const parts = dateStr.split('-');
+  const yymm = parts.length >= 2 
+    ? `${parts[0].slice(-2)}${parts[1].padStart(2, '0')}`
+    : '2609';
+
+  const prefix = `LOT-${code}-${yymm}-`;
+
+  // Scan through existing local and synced reports to find highest sequence
+  const allReports = getSampleReports();
+  let maxSeq = 0;
+
+  allReports.forEach(r => {
+    if (r.lot_no && r.lot_no.startsWith(prefix)) {
+      const rest = r.lot_no.substring(prefix.length);
+      const numMatch = rest.match(/^(\d+)/);
+      if (numMatch) {
+        const n = parseInt(numMatch[1], 10);
+        if (!isNaN(n) && n > maxSeq) {
+          maxSeq = n;
+        }
+      }
+    }
+  });
+
+  const nextSeq = String(maxSeq + 1).padStart(2, '0');
+  return `${prefix}${nextSeq}`;
+}
+
+// Background Synchronization of Sample Report and Lab Results to Supabase Database
+export async function syncSampleReportToSupabase(report: SampleReport): Promise<{ success: boolean; error?: string }> {
+  if (!supabase) return { success: false, error: 'Supabase not initialized' };
+
+  try {
+    // 1. Resolve UUIDs from Supabase reference tables
+    const [prodsRes, paramsRes, tanksRes, spsRes] = await Promise.all([
+      supabase.from('products').select('id, code, name'),
+      supabase.from('parameters').select('id, code, name'),
+      supabase.from('tanks').select('id, code'),
+      supabase.from('sampling_points').select('id, name')
+    ]);
+
+    const sbProducts = prodsRes.data || [];
+    const sbParams = paramsRes.data || [];
+    const sbTanks = tanksRes.data || [];
+    const sbSps = spsRes.data || [];
+
+    // Match Product in Supabase
+    let sbProductId: string | null = null;
+    let sbProductOther: string | null = report.product_other || null;
+
+    if (report.product_id && report.product_id !== 'others') {
+      const localProd = getProducts().find(p => p.id === report.product_id);
+      const matched = sbProducts.find(p => 
+        (localProd && p.code === localProd.code) || 
+        (localProd && p.name.toLowerCase() === localProd.name.toLowerCase()) ||
+        (report.product_name && p.name.toLowerCase() === report.product_name.toLowerCase())
+      );
+      if (matched) {
+        sbProductId = matched.id;
+      } else {
+        sbProductOther = report.product_name || 'Others';
+      }
+    } else {
+      sbProductOther = report.product_other || report.product_name || 'Others';
+    }
+
+    // Match Tank UUIDs
+    let sbFeedTankId: string | null = null;
+    let sbDiscTankId: string | null = null;
+    if (report.feed_tank_code) {
+      const match = sbTanks.find(t => t.code === report.feed_tank_code);
+      if (match) sbFeedTankId = match.id;
+    }
+    if (report.discharge_tank_code) {
+      const match = sbTanks.find(t => t.code === report.discharge_tank_code);
+      if (match) sbDiscTankId = match.id;
+    }
+
+    // Match Sampling Point UUID
+    let sbSpId: string | null = null;
+    if (report.sampling_point_name) {
+      const match = sbSps.find(s => s.name === report.sampling_point_name);
+      if (match) sbSpId = match.id;
+    }
+
+    const plantId = INITIAL_PLANT.id || '11111111-1111-1111-1111-111111111111';
+
+    let formattedTime = report.time_check || '08:00:00';
+    if (formattedTime.length === 5) formattedTime += ':00';
+
+    const dbReportPayload: any = {
+      plant_id: plantId,
+      report_no: report.report_no,
+      sample_date: report.sample_date,
+      time_check: formattedTime,
+      lot_no: report.lot_no,
+      product_id: sbProductId,
+      product_other: sbProductOther,
+      feed_tank_id: sbFeedTankId,
+      discharge_tank_id: sbDiscTankId,
+      crystallizer_no: report.crystallizer_no || null,
+      batch_no: report.batch_no || null,
+      sampling_point_id: sbSpId,
+      submitted_by_name: report.submitted_by_name || 'QC Laboratory',
+      remark_flushing: Boolean(report.remark_flushing),
+      remark_cooling: Boolean(report.remark_cooling),
+      remark_pushover: Boolean(report.remark_pushover),
+      remarks: report.remarks || null,
+      status: report.status || 'draft',
+    };
+
+    const { data: upsertedReport, error: repErr } = await supabase
+      .from('sample_reports')
+      .upsert(dbReportPayload, { onConflict: 'report_no' })
+      .select('id')
+      .single();
+
+    if (repErr) {
+      console.warn('[Supabase Sync] Report upsert warning:', repErr);
+      return { success: false, error: repErr.message };
+    }
+
+    const sbReportUuid = upsertedReport?.id;
+    if (sbReportUuid && Array.isArray(report.results) && report.results.length > 0) {
+      const resultsToUpsert: any[] = [];
+      report.results.forEach(res => {
+        const matchedParam = sbParams.find(p => p.code === res.parameter_code);
+        if (matchedParam) {
+          resultsToUpsert.push({
+            report_id: sbReportUuid,
+            parameter_id: matchedParam.id,
+            series_key: res.series_key != null ? Number(res.series_key) : null,
+            requested: res.requested !== false,
+            value_numeric: res.value_numeric != null ? Number(res.value_numeric) : null,
+            value_text: res.value_text || null,
+            in_spec: res.in_spec != null ? res.in_spec : null,
+            entered_by_name: res.entered_by_name || null,
+          });
+        }
+      });
+
+      if (resultsToUpsert.length > 0) {
+        const { error: resultsErr } = await supabase
+          .from('sample_results')
+          .upsert(resultsToUpsert, { onConflict: 'report_id,parameter_id,series_key' });
+        if (resultsErr) {
+          console.warn('[Supabase Sync] Results upsert warning:', resultsErr);
+        }
+      }
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    console.warn('[Supabase Sync] Error syncing sample report to Supabase:', err);
+    return { success: false, error: err?.message || 'Sync failed' };
+  }
+}
+
+// Fetch live sample reports from Supabase and synchronize with local storage
+export async function syncSampleReportsFromSupabase(): Promise<{ success: boolean; count: number }> {
+  if (!supabase) return { success: false, count: 0 };
+  try {
+    const { data: remoteReports, error: repErr } = await supabase
+      .from('sample_reports')
+      .select(`
+        *,
+        product:products(id, code, name),
+        feed_tank:tanks!feed_tank_id(id, code),
+        discharge_tank:tanks!discharge_tank_id(id, code),
+        sampling_point:sampling_points(id, name),
+        results:sample_results(
+          id,
+          parameter_id,
+          series_key,
+          requested,
+          value_numeric,
+          value_text,
+          in_spec,
+          entered_by,
+          parameter:parameters(id, code, name, unit)
+        )
+      `)
+      .order('sample_date', { ascending: false });
+
+    if (repErr || !Array.isArray(remoteReports) || remoteReports.length === 0) {
+      return { success: false, count: 0 };
+    }
+
+    const currentReports = getSampleReports();
+    const mergedReports: SampleReport[] = [...currentReports];
+
+    remoteReports.forEach((sbRep: any) => {
+      const existingIdx = mergedReports.findIndex(r => r.report_no === sbRep.report_no);
+      
+      const mappedResults: SampleResult[] = Array.isArray(sbRep.results) ? sbRep.results.map((r: any) => ({
+        id: r.id,
+        report_id: sbRep.id,
+        parameter_id: r.parameter?.id || r.parameter_id,
+        parameter_code: r.parameter?.code || '',
+        parameter_name: r.parameter?.name || '',
+        unit: r.parameter?.unit || null,
+        series_key: r.series_key != null ? Number(r.series_key) : null,
+        requested: r.requested !== false,
+        value_numeric: r.value_numeric,
+        value_text: r.value_text,
+        in_spec: r.in_spec,
+      })) : [];
+
+      const mappedReport: SampleReport = {
+        id: sbRep.id,
+        plant_id: sbRep.plant_id,
+        report_no: sbRep.report_no,
+        sample_date: sbRep.sample_date,
+        time_check: (sbRep.time_check || '').slice(0, 5) || '08:00',
+        lot_no: sbRep.lot_no,
+        product_id: sbRep.product_id,
+        product_name: sbRep.product?.name || sbRep.product_other || 'Others',
+        product_other: sbRep.product_other,
+        feed_tank_id: sbRep.feed_tank_id,
+        feed_tank_code: sbRep.feed_tank?.code,
+        discharge_tank_id: sbRep.discharge_tank_id,
+        discharge_tank_code: sbRep.discharge_tank?.code,
+        crystallizer_no: sbRep.crystallizer_no,
+        batch_no: sbRep.batch_no,
+        sampling_point_id: sbRep.sampling_point_id,
+        sampling_point_name: sbRep.sampling_point?.name,
+        submitted_by: sbRep.submitted_by,
+        submitted_by_name: sbRep.submitted_by_name || 'Operator',
+        remark_flushing: Boolean(sbRep.remark_flushing),
+        remark_cooling: Boolean(sbRep.remark_cooling),
+        remark_pushover: Boolean(sbRep.remark_pushover),
+        remarks: sbRep.remarks,
+        status: sbRep.status as any,
+        created_by: sbRep.created_by || 'system',
+        created_at: sbRep.created_at || new Date().toISOString(),
+        results: mappedResults.length > 0 ? mappedResults : undefined,
+      };
+
+      if (existingIdx >= 0) {
+        mergedReports[existingIdx] = { ...mergedReports[existingIdx], ...mappedReport };
+      } else {
+        mergedReports.unshift(mappedReport);
+      }
+    });
+
+    memoryReports = mergedReports;
+    setStored(STORAGE_KEYS.REPORTS, mergedReports);
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('refinery_reports_updated', { detail: mergedReports }));
+    }
+
+    return { success: true, count: remoteReports.length };
+  } catch (syncErr) {
+    console.warn('[Supabase Sync] Fetch error:', syncErr);
+    return { success: false, count: 0 };
+  }
+}
+
 export function createSampleReport(data: {
   sample_date: string;
   time_check: string;
@@ -1435,6 +1755,12 @@ export function createSampleReport(data: {
   memoryReports = reports;
 
   addAuditLog('sample_reports', reportId, 'insert', null, newReport);
+
+  // Auto-sync new sample report & parameter requests to Supabase
+  syncSampleReportToSupabase(newReport).catch(err => {
+    console.warn('[Supabase Sync] Auto-sync failed on createSampleReport:', err);
+  });
+
   return { success: true, report: newReport };
 }
 
@@ -1451,7 +1777,13 @@ export function updateSampleResults(
     value_numeric?: number | null; 
     value_text?: string | null; 
     requested?: boolean; 
-  }[]
+  }[],
+  remarksData?: {
+    remark_flushing?: boolean;
+    remark_cooling?: boolean;
+    remark_pushover?: boolean;
+    remarks?: string | null;
+  }
 ): { success: boolean; error?: string } {
   const reports = getSampleReports();
   const report = reports.find(r => r.id === reportId);
@@ -1460,6 +1792,14 @@ export function updateSampleResults(
 
   const profile = getCurrentProfile();
   const specs = getProductSpecs(report.product_id || undefined);
+
+  // Update remarks and operational condition checkboxes if provided
+  if (remarksData) {
+    if (remarksData.remark_flushing !== undefined) report.remark_flushing = remarksData.remark_flushing;
+    if (remarksData.remark_cooling !== undefined) report.remark_cooling = remarksData.remark_cooling;
+    if (remarksData.remark_pushover !== undefined) report.remark_pushover = remarksData.remark_pushover;
+    if (remarksData.remarks !== undefined) report.remarks = remarksData.remarks;
+  }
 
   resultsData.forEach(item => {
     let res = report.results!.find(r => r.id === item.resultId);
@@ -1512,6 +1852,12 @@ export function updateSampleResults(
   memoryReports = reports;
 
   addAuditLog('sample_results', reportId, 'update', null, { status: 'results_entered' });
+
+  // Auto-sync updated report and lab results to Supabase
+  syncSampleReportToSupabase(report).catch(err => {
+    console.warn('[Supabase Sync] Auto-sync failed on updateSampleResults:', err);
+  });
+
   return { success: true };
 }
 
@@ -1569,6 +1915,12 @@ export function submitQCDecision(data: {
   memoryReports = reports;
 
   addAuditLog('qc_decisions', decisionObj.id, 'insert', null, decisionObj);
+
+  // Auto-sync decision status to Supabase
+  syncSampleReportToSupabase(report).catch(err => {
+    console.warn('[Supabase Sync] Auto-sync failed on submitQCDecision:', err);
+  });
+
   return { success: true };
 }
 

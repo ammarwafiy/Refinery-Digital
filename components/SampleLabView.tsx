@@ -25,7 +25,8 @@ import {
   getCurrentRole,
   getProductSpecs,
   getRealtimeShiftDate,
-  ensureAutoDispatchedQC
+  ensureAutoDispatchedQC,
+  generateNextLotNo
 } from '@/lib/data-service';
 import { 
   FlaskConical, 
@@ -42,7 +43,10 @@ import {
   Check, 
   Filter, 
   ShieldCheck,
-  Building2
+  Building2,
+  Sparkles,
+  RefreshCw,
+  FileText
 } from 'lucide-react';
 import { formatNumber } from '@/lib/utils';
 
@@ -70,11 +74,11 @@ export default function SampleLabView({ currentRole, currentUser }: SampleLabVie
   const [filterStatus, setFilterStatus] = useState<string>('all');
 
   // "Raise New Sample" form state
-  const [newLotNo, setNewLotNo] = useState('');
   const [newDate, setNewDate] = useState<string>(() => getRealtimeShiftDate());
   const [newTimeCheck, setNewTimeCheck] = useState('11:30');
   const [newProductId, setNewProductId] = useState('prod-26'); // PL 65 Matsuyama
   const [newProductOther, setNewProductOther] = useState('');
+  const [newLotNo, setNewLotNo] = useState<string>(() => generateNextLotNo('prod-26', getRealtimeShiftDate()));
   const [newFeedTankId, setNewFeedTankId] = useState('tank-01');
   const [newDischargeTankId, setNewDischargeTankId] = useState('tank-04');
   const [newCrystallizerNo, setNewCrystallizerNo] = useState('CR-04');
@@ -88,6 +92,18 @@ export default function SampleLabView({ currentRole, currentUser }: SampleLabVie
     'param-ffa', 'param-h2o', 'param-iv', 'param-pv', 'param-col-r', 'param-col-y', 'param-odour', 'param-cloud', 'param-sfc', 'param-temp'
   ]);
   const [selectedTempKeys, setSelectedTempKeys] = useState<number[]>([10, 15, 20, 25, 30, 35, 40, 45, 50]);
+
+  // QC Remarks & Operating Conditions state (in RF-FR-001 QC Lab Detail View)
+  const [qcRemarkFlushing, setQcRemarkFlushing] = useState(false);
+  const [qcRemarkCooling, setQcRemarkCooling] = useState(false);
+  const [qcRemarkPushover, setQcRemarkPushover] = useState(false);
+  const [qcRemarksText, setQcRemarksText] = useState('');
+
+  // Auto-generate next sequential Lot Number whenever Product or Date changes
+  useEffect(() => {
+    const auto = generateNextLotNo(newProductId, newDate, newProductOther);
+    setNewLotNo(auto);
+  }, [newProductId, newDate, newProductOther]);
 
   // Enter results state
   const [resultInputs, setResultInputs] = useState<Record<string, { num?: number; text?: string }>>({});
@@ -279,8 +295,14 @@ export default function SampleLabView({ currentRole, currentUser }: SampleLabVie
     }
   };
 
-  // Initialize result inputs and active/ticked status when selected report changes
+  // Initialize result inputs, active/ticked status, and QC remarks when selected report changes
   useEffect(() => {
+    if (selectedReport) {
+      setQcRemarkFlushing(selectedReport.remark_flushing ?? false);
+      setQcRemarkCooling(selectedReport.remark_cooling ?? false);
+      setQcRemarkPushover(selectedReport.remark_pushover ?? false);
+      setQcRemarksText(selectedReport.remarks || '');
+    }
     if (displayResults.length > 0) {
       const inputs: Record<string, { num?: number; text?: string }> = {};
       const reqs: Record<string, boolean> = {};
@@ -388,9 +410,14 @@ export default function SampleLabView({ currentRole, currentUser }: SampleLabVie
       };
     });
 
-    const res = updateSampleResults(selectedReport.id, payload);
+    const res = updateSampleResults(selectedReport.id, payload, {
+      remark_flushing: qcRemarkFlushing,
+      remark_cooling: qcRemarkCooling,
+      remark_pushover: qcRemarkPushover,
+      remarks: qcRemarksText,
+    });
     if (res.success) {
-      setResultsSuccess('Laboratory test results & active parameters saved and validated against specification limits!');
+      setResultsSuccess('Laboratory test results, operating remarks & checkboxes saved and synced with Supabase!');
       refreshReports();
     }
   };
@@ -540,15 +567,34 @@ export default function SampleLabView({ currentRole, currentUser }: SampleLabVie
           <form onSubmit={handleCreateSample} className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-mono text-slate-400 mb-1">Lot Number *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. LOT-PL65-2609-04"
-                  value={newLotNo}
-                  onChange={e => setNewLotNo(e.target.value)}
-                  className="w-full bg-[#090d16] border border-slate-700 rounded-lg px-3 py-2 text-sm font-mono text-white focus:outline-none focus:border-cyan-500"
-                />
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-mono text-slate-400">Lot Number *</label>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-mono text-cyan-400 bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-800/40">
+                    <Sparkles className="h-3 w-3" /> Auto-Generated per Product
+                  </span>
+                </div>
+                <div className="relative">
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. LOT-PL65-2609-04"
+                    value={newLotNo}
+                    onChange={e => setNewLotNo(e.target.value)}
+                    className="w-full bg-[#090d16] border border-slate-700 rounded-lg pl-3 pr-20 py-2 text-sm font-mono text-white focus:outline-none focus:border-cyan-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setNewLotNo(generateNextLotNo(newProductId, newDate, newProductOther))}
+                    className="absolute right-1.5 top-1.5 bottom-1.5 px-2.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-cyan-400 text-xs font-mono transition-colors flex items-center gap-1"
+                    title="Regenerate next sequential lot number based on selected product & date"
+                  >
+                    <RefreshCw className="h-3 w-3" />
+                    <span>Sync</span>
+                  </button>
+                </div>
+                <p className="mt-1 text-[10px] text-slate-500 font-mono">
+                  Pattern: LOT-[PROD]-[YYMM]-[SEQ] • Auto-synced to Supabase
+                </p>
               </div>
 
               <div>
@@ -1311,6 +1357,93 @@ export default function SampleLabView({ currentRole, currentUser }: SampleLabVie
                         })}
                       </tbody>
                     </table>
+                  </div>
+
+                  {/* QC Operating Conditions & Remarks Section */}
+                  <div className="rounded-xl border border-slate-800 bg-[#090d16] p-4 space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/80 pb-2.5">
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-cyan-400" />
+                        <span className="text-xs font-semibold uppercase tracking-wider text-cyan-400 font-mono">
+                          QC Operating Conditions & Remarks (RF-FR-001)
+                        </span>
+                      </div>
+                      <span className="text-[11px] font-mono text-slate-500">
+                        Tick operating conditions & enter laboratory observations
+                      </span>
+                    </div>
+
+                    {/* Checkboxes: Flushing, Cooling, Push over */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <label className={`flex items-start gap-3 p-3 rounded-xl border transition-all cursor-pointer select-none ${
+                        qcRemarkFlushing 
+                          ? 'bg-amber-950/40 border-amber-500/50 text-amber-300 shadow-sm' 
+                          : 'bg-slate-900/40 border-slate-800 text-slate-400 hover:border-slate-700'
+                      }`}>
+                        <input
+                          type="checkbox"
+                          disabled={!canEdit}
+                          checked={qcRemarkFlushing}
+                          onChange={e => setQcRemarkFlushing(e.target.checked)}
+                          className="mt-0.5 h-4 w-4 rounded bg-slate-950 border-slate-700 text-amber-500 focus:ring-0 focus:ring-offset-0 cursor-pointer"
+                        />
+                        <div className="font-mono text-xs">
+                          <div className="font-semibold text-white">Flushing</div>
+                          <div className="text-[10px] text-slate-500">Sampling line flushed</div>
+                        </div>
+                      </label>
+
+                      <label className={`flex items-start gap-3 p-3 rounded-xl border transition-all cursor-pointer select-none ${
+                        qcRemarkCooling 
+                          ? 'bg-blue-950/40 border-blue-500/50 text-blue-300 shadow-sm' 
+                          : 'bg-slate-900/40 border-slate-800 text-slate-400 hover:border-slate-700'
+                      }`}>
+                        <input
+                          type="checkbox"
+                          disabled={!canEdit}
+                          checked={qcRemarkCooling}
+                          onChange={e => setQcRemarkCooling(e.target.checked)}
+                          className="mt-0.5 h-4 w-4 rounded bg-slate-950 border-slate-700 text-blue-500 focus:ring-0 focus:ring-offset-0 cursor-pointer"
+                        />
+                        <div className="font-mono text-xs">
+                          <div className="font-semibold text-white">Cooling</div>
+                          <div className="text-[10px] text-slate-500">Crystallizer active cooling</div>
+                        </div>
+                      </label>
+
+                      <label className={`flex items-start gap-3 p-3 rounded-xl border transition-all cursor-pointer select-none ${
+                        qcRemarkPushover 
+                          ? 'bg-purple-950/40 border-purple-500/50 text-purple-300 shadow-sm' 
+                          : 'bg-slate-900/40 border-slate-800 text-slate-400 hover:border-slate-700'
+                      }`}>
+                        <input
+                          type="checkbox"
+                          disabled={!canEdit}
+                          checked={qcRemarkPushover}
+                          onChange={e => setQcRemarkPushover(e.target.checked)}
+                          className="mt-0.5 h-4 w-4 rounded bg-slate-950 border-slate-700 text-purple-500 focus:ring-0 focus:ring-offset-0 cursor-pointer"
+                        />
+                        <div className="font-mono text-xs">
+                          <div className="font-semibold text-white">Push over</div>
+                          <div className="text-[10px] text-slate-500">Pushover transfer operation</div>
+                        </div>
+                      </label>
+                    </div>
+
+                    {/* Blank Remarks Box for QC to Type */}
+                    <div>
+                      <label className="block text-xs font-mono text-slate-400 mb-1.5">
+                        Remarks & Observations (Blank box for QC free text):
+                      </label>
+                      <textarea
+                        disabled={!canEdit}
+                        rows={3}
+                        placeholder="Type remarks here (e.g. sample appearance, clarity, moisture haze, process deviations, or batch notes)..."
+                        value={qcRemarksText}
+                        onChange={e => setQcRemarksText(e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 disabled:opacity-50 resize-y"
+                      />
+                    </div>
                   </div>
 
                   {(role === 'qc_analyst' || role === 'qc_manager' || role === 'admin') && (

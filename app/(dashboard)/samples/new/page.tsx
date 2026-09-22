@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createSupabaseBrowser } from '@/lib/supabase/client'
 import { FlaskConical, Save, CheckCircle2, AlertTriangle, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import { generateNextLotNo } from '@/lib/data-service'
 
 export default function NewSampleReportPage() {
   const supabase = createSupabaseBrowser()
@@ -33,6 +34,14 @@ export default function NewSampleReportPage() {
     remarks: '',
     selected_params: [] as string[],
   })
+
+  // Auto-generate sequential lot number when product or date changes
+  useEffect(() => {
+    if (form.product_id || form.product_other) {
+      const autoLot = generateNextLotNo(form.product_id, form.sample_date, form.product_other)
+      setForm(f => ({ ...f, lot_no: autoLot }))
+    }
+  }, [form.product_id, form.sample_date, form.product_other])
 
   useEffect(() => {
     const load = async () => {
