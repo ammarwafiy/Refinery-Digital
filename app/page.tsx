@@ -85,7 +85,7 @@ export default function Home() {
 
       {/* Industrial Plant Footer */}
       <footer className="w-full border-t border-slate-800/80 bg-[#070a10] py-4 px-4 text-xs text-slate-500 font-mono no-print">
-        <div className="max-w-7xl mx-auto flex items-center justify-center sm:justify-start gap-2">
+        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-center gap-2 text-center">
           <Flame className="h-4 w-4 text-amber-500 shrink-0" />
           <span className="text-slate-300 font-semibold">
             Lam Soon Edible Oils Sdn. Bhd.
