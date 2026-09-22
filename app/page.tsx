@@ -19,9 +19,7 @@ import {
   ROLE_DEFAULT_TAB 
 } from '@/lib/data-service';
 import { 
-  Flame, 
-  Cpu, 
-  ShieldCheck, 
+  Flame 
 } from 'lucide-react';
 
 export default function Home() {
@@ -86,30 +84,14 @@ export default function Home() {
       </main>
 
       {/* Industrial Plant Footer */}
-      <footer className="w-full border-t border-slate-800/80 bg-[#070a10] py-6 px-4 text-xs text-slate-500 font-mono no-print">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <Flame className="h-4 w-4 text-amber-500" />
-            <span className="text-slate-300 font-semibold">
-              Lam Soon Edible Oils Sdn. Bhd.
-            </span>
-            <span className="text-slate-600">·</span>
-            <span>Nisshin Deodorizer Plant Refinery Management System</span>
-          </div>
-
-          <div className="flex items-center gap-4 text-[11px]">
-            <span className="flex items-center gap-1.5 text-emerald-400">
-              <Cpu className="h-3.5 w-3.5" /> Next.js 15 App Router · TypeScript Strict
-            </span>
-            <span className="text-slate-700">|</span>
-            <span className="flex items-center gap-1.5 text-cyan-400">
-              <ShieldCheck className="h-3.5 w-3.5" /> Supabase RLS & Audit Triggers
-            </span>
-            <span className="text-slate-700">|</span>
-            <span className="text-slate-400">
-              PRD-REF-001 Rev. 00
-            </span>
-          </div>
+      <footer className="w-full border-t border-slate-800/80 bg-[#070a10] py-4 px-4 text-xs text-slate-500 font-mono no-print">
+        <div className="max-w-7xl mx-auto flex items-center justify-center sm:justify-start gap-2">
+          <Flame className="h-4 w-4 text-amber-500 shrink-0" />
+          <span className="text-slate-300 font-semibold">
+            Lam Soon Edible Oils Sdn. Bhd.
+          </span>
+          <span className="text-slate-600">·</span>
+          <span>Nisshin Deodorizer Plant Refinery Management System</span>
         </div>
       </footer>
     </div>
