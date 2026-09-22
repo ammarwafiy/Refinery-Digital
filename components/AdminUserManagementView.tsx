@@ -29,7 +29,10 @@ import {
   Calendar,
   Archive,
   FileSpreadsheet,
-  Zap
+  Zap,
+  X,
+  AlertCircle,
+  Info
 } from 'lucide-react';
 import { UserRole, Profile } from '@/types/refinery';
 import { 
@@ -83,6 +86,49 @@ export default function AdminUserManagementView() {
   const [prunePassword, setPrunePassword] = useState('');
   const [isPruning, setIsPruning] = useState(false);
   const [pruneStatusMessage, setPruneStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Custom Toast & Modal Notification State (Replaces native browser alert, confirm, prompt)
+  const [toasts, setToasts] = useState<{
+    id: string;
+    type: 'success' | 'warning' | 'error' | 'info';
+    title: string;
+    message: string;
+  }[]>([]);
+
+  const showToast = (type: 'success' | 'warning' | 'error' | 'info', title: string, message: string) => {
+    const id = `${Date.now()}-${Math.random()}`;
+    setToasts(prev => [...prev, { id, type, title, message }]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 5500);
+  };
+
+  const dismissToast = (id: string) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  };
+
+  interface ConfirmModalState {
+    isOpen: boolean;
+    type: 'danger' | 'warning' | 'info';
+    title: string;
+    badgeText?: string;
+    description: string;
+    details?: {
+      name?: string;
+      employeeNo?: string;
+      extraNote?: string;
+    };
+    confirmButtonText: string;
+    confirmButtonVariant?: 'danger' | 'warning' | 'primary';
+    requiresPassword?: boolean;
+    passwordPlaceholder?: string;
+    defaultPassword?: string;
+    onConfirm: (password?: string) => Promise<void> | void;
+  }
+
+  const [confirmModal, setConfirmModal] = useState<ConfirmModalState | null>(null);
+  const [modalPasswordInput, setModalPasswordInput] = useState('');
+  const [modalIsSubmitting, setModalIsSubmitting] = useState(false);
 
   const refreshStorage = () => {
     try {
@@ -182,120 +228,156 @@ export default function AdminUserManagementView() {
   const handleExecutePrune = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!hasDownloadedBackup) {
-      alert('Safety Constraint: You must download the archive package to backup data to Google Drive first before pruning.');
+      showToast(
+        'warning',
+        'Syarat Keselamatan ISO 9001',
+        'Anda mesti memuat turun pakej sandaran (backup) ke komputer / Google Drive terlebih dahulu sebelum melaksanakan pembersihan.'
+      );
       return;
     }
 
     const cutoff = getEffectiveCutoffDate();
-    const confirmed = window.confirm(
-      `CRITICAL CONFIRMATION (ISO 9001 / HACCP RETENTION):\n\n` +
-      `Are you sure you want to permanently prune Supabase database records older than ${cutoff}?\n\n` +
-      `• Historical decided sample reports and deviations before ${cutoff} will be deleted.\n` +
-      `• Active shift sheets, plant specifications, tank calibration, and staff accounts will NOT be touched.\n\n` +
-      `Click OK to authenticate with your administrator electronic signature.`
-    );
-    if (!confirmed) return;
+    setConfirmModal({
+      isOpen: true,
+      type: 'danger',
+      title: 'Pengesahan Pembersihan Pangkalan Data',
+      badgeText: 'ISO 9001 / HACCP RETENTION',
+      description: `Adakah anda pasti ingin membersihkan rekod Supabase yang lebih lama daripada ${cutoff}?`,
+      details: {
+        extraNote: `• Rekod laporan sampel & sisihan sebelum ${cutoff} akan dipadam secara kekal daripada Supabase.\n• Lembaran syif aktif, spesifikasi loji, kalibrasi tangki & akaun staf TIDAK akan disentuh.`
+      },
+      confirmButtonText: 'Sahkan & Bersihkan Rekod',
+      confirmButtonVariant: 'danger',
+      onConfirm: async () => {
+        setIsPruning(true);
+        setPruneStatusMessage(null);
 
-    setIsPruning(true);
-    setPruneStatusMessage(null);
-
-    try {
-      const res = await executePruneRetentionPolicy(cutoff, prunePassword);
-      if (res.success) {
-        setPruneStatusMessage({
-          type: 'success',
-          text: res.message || 'Database pruning successfully executed!'
-        });
-        setPrunePassword('');
-        setHasDownloadedBackup(false);
-        refreshStorage();
-        refreshData();
-      } else {
-        setPruneStatusMessage({
-          type: 'error',
-          text: res.error || 'Pruning rejected. Verification failed.'
-        });
+        try {
+          const res = await executePruneRetentionPolicy(cutoff, prunePassword);
+          if (res.success) {
+            const successMsg = res.message || 'Database pruning berjaya dilaksanakan!';
+            setPruneStatusMessage({
+              type: 'success',
+              text: successMsg
+            });
+            showToast('success', 'Pembersihan Selesai', successMsg);
+            setPrunePassword('');
+            setHasDownloadedBackup(false);
+            refreshStorage();
+            refreshData();
+          } else {
+            const errorMsg = res.error || 'Pruning ditolak. Pengesahan gagal.';
+            setPruneStatusMessage({
+              type: 'error',
+              text: errorMsg
+            });
+            showToast('error', 'Pruning Ditolak', errorMsg);
+          }
+        } catch (err: any) {
+          const errorMsg = err?.message || 'Ralat berlaku semasa pembersihan pangkalan data.';
+          setPruneStatusMessage({
+            type: 'error',
+            text: errorMsg
+          });
+          showToast('error', 'Ralat Sistem', errorMsg);
+        } finally {
+          setIsPruning(false);
+        }
       }
-    } catch (err: any) {
-      setPruneStatusMessage({
-        type: 'error',
-        text: err?.message || 'Error occurred during database pruning execution.'
-      });
-    } finally {
-      setIsPruning(false);
-    }
+    });
   };
 
   const handleOneClickAutoPrune = async () => {
     if (!isAdmin) {
-      alert('Access Denied: Only Plant Administrator can execute data retention.');
+      showToast(
+        'error',
+        'Akses Ditolak',
+        'Hanya Pentadbir Loji (Plant Administrator) dibenarkan melaksanakan pengekalan data & pembersihan.'
+      );
       return;
     }
 
-    const passwordInput = prompt(
-      '1-CLICK AUTO ARCHIVE & PRUNE (FAST TRACK):\n\n' +
-      'Sistem akan memuat turun sandaran (.json & .csv) ke komputer anda dan membersihkan rekod lama di Supabase serentak.\n\n' +
-      'Masukkan Kata Laluan Administrator untuk mengesahkan:', 
-      'password123'
-    );
-    if (!passwordInput) return;
+    const cutoff = getEffectiveCutoffDate();
+    setModalPasswordInput('password123');
+    setConfirmModal({
+      isOpen: true,
+      type: 'warning',
+      title: '1-Click Auto Archive & Prune (Fast Track)',
+      badgeText: 'FAST-TRACK MAINTENANCE',
+      description: 'Sistem akan memuat turun sandaran (.json & .csv) ke komputer anda dan membersihkan rekod lama di Supabase secara serentak.',
+      details: {
+        extraNote: `Tarikh had pengekalan: Rekod sebelum ${cutoff} akan diarkibkan & dipadam secara automatik.`
+      },
+      requiresPassword: true,
+      defaultPassword: 'password123',
+      passwordPlaceholder: 'Masukkan Kata Laluan Pentadbir...',
+      confirmButtonText: 'Muat Turun & Bersihkan Sekarang',
+      confirmButtonVariant: 'warning',
+      onConfirm: async (passwordInput?: string) => {
+        const pass = passwordInput || 'password123';
+        setIsPruning(true);
+        setPruneStatusMessage(null);
 
-    setIsPruning(true);
-    setPruneStatusMessage(null);
+        try {
+          const pkg = generateFullArchivePackage(cutoff);
 
-    try {
-      const cutoff = getEffectiveCutoffDate();
-      const pkg = generateFullArchivePackage(cutoff);
+          // 1. Auto-download JSON
+          const blobJson = new Blob([pkg.jsonContent], { type: 'application/json;charset=utf-8;' });
+          const urlJson = URL.createObjectURL(blobJson);
+          const aJson = document.createElement('a');
+          aJson.href = urlJson;
+          aJson.download = `${pkg.filename}.json`;
+          document.body.appendChild(aJson);
+          aJson.click();
+          document.body.removeChild(aJson);
+          URL.revokeObjectURL(urlJson);
 
-      // 1. Auto-download JSON
-      const blobJson = new Blob([pkg.jsonContent], { type: 'application/json;charset=utf-8;' });
-      const urlJson = URL.createObjectURL(blobJson);
-      const aJson = document.createElement('a');
-      aJson.href = urlJson;
-      aJson.download = `${pkg.filename}.json`;
-      document.body.appendChild(aJson);
-      aJson.click();
-      document.body.removeChild(aJson);
-      URL.revokeObjectURL(urlJson);
+          // 2. Auto-download CSV
+          const blobCsv = new Blob([pkg.csvSummaryContent], { type: 'text/csv;charset=utf-8;' });
+          const urlCsv = URL.createObjectURL(blobCsv);
+          const aCsv = document.createElement('a');
+          aCsv.href = urlCsv;
+          aCsv.download = `${pkg.filename}_summary.csv`;
+          document.body.appendChild(aCsv);
+          aCsv.click();
+          document.body.removeChild(aCsv);
+          URL.revokeObjectURL(urlCsv);
 
-      // 2. Auto-download CSV
-      const blobCsv = new Blob([pkg.csvSummaryContent], { type: 'text/csv;charset=utf-8;' });
-      const urlCsv = URL.createObjectURL(blobCsv);
-      const aCsv = document.createElement('a');
-      aCsv.href = urlCsv;
-      aCsv.download = `${pkg.filename}_summary.csv`;
-      document.body.appendChild(aCsv);
-      aCsv.click();
-      document.body.removeChild(aCsv);
-      URL.revokeObjectURL(urlCsv);
+          // 3. Execute prune
+          const res = await executePruneRetentionPolicy(cutoff, pass);
 
-      // 3. Execute prune
-      const res = await executePruneRetentionPolicy(cutoff, passwordInput);
+          if (res.success) {
+            const successMsg = `⚡ 1-Click Auto Archive & Prune Selesai! Fail sandaran (${pkg.recordsArchivedCount} rekod) telah dimuat turun dan Supabase telah dibersihkan untuk rekod sebelum ${cutoff}.`;
+            setPruneStatusMessage({
+              type: 'success',
+              text: successMsg
+            });
+            showToast('success', 'Arkib & Prune Selesai', `Sandaran dimuat turun & ${pkg.recordsArchivedCount} rekod dibersihkan.`);
+            refreshStorage();
+            refreshData();
 
-      if (res.success) {
-        setPruneStatusMessage({
-          type: 'success',
-          text: `⚡ 1-Click Auto Archive & Prune Selesai! Fail sandaran (${pkg.recordsArchivedCount} rekod) telah dimuat turun dan Supabase telah dibersihkan untuk rekod sebelum ${cutoff}.`
-        });
-        refreshStorage();
-        refreshData();
-
-        // 4. Open Google Drive in new tab
-        window.open('https://drive.google.com', '_blank');
-      } else {
-        setPruneStatusMessage({
-          type: 'error',
-          text: res.error || 'Prune authorization failed. Incorrect administrator password.'
-        });
+            // 4. Open Google Drive in new tab
+            window.open('https://drive.google.com', '_blank');
+          } else {
+            const errorMsg = res.error || 'Prune authorization failed. Incorrect administrator password.';
+            setPruneStatusMessage({
+              type: 'error',
+              text: errorMsg
+            });
+            showToast('error', 'Gagal Melaksanakan Prune', errorMsg);
+          }
+        } catch (err: any) {
+          const errorMsg = err?.message || 'Error during 1-click execution.';
+          setPruneStatusMessage({
+            type: 'error',
+            text: errorMsg
+          });
+          showToast('error', 'Ralat', errorMsg);
+        } finally {
+          setIsPruning(false);
+        }
       }
-    } catch (err: any) {
-      setPruneStatusMessage({
-        type: 'error',
-        text: err?.message || 'Error during 1-click execution.'
-      });
-    } finally {
-      setIsPruning(false);
-    }
+    });
   };
 
   const handleManualSync = async () => {
@@ -348,13 +430,17 @@ export default function AdminUserManagementView() {
 
       refreshData();
       setFullName('');
+      const successMsg = `✓ Staff member ${created.full_name} (${created.employee_no}) registered and synced to Supabase database successfully!`;
       setStatusMessage({ 
         type: 'success', 
-        text: `✓ Staff member ${created.full_name} (${created.employee_no}) registered and synced to Supabase database successfully!` 
+        text: successMsg 
       });
+      showToast('success', 'Pendaftaran Kakitangan Berjaya', successMsg);
       setAutoId(generateNextEmployeeId(selectedRole));
     } catch (err: any) {
-      setStatusMessage({ type: 'error', text: err?.message || 'Failed to register staff member. Please try again.' });
+      const errMsg = err?.message || 'Failed to register staff member. Please try again.';
+      setStatusMessage({ type: 'error', text: errMsg });
+      showToast('error', 'Gagal Mendaftar Staf', errMsg);
     } finally {
       setIsSubmitting(false);
     }
@@ -362,38 +448,84 @@ export default function AdminUserManagementView() {
 
   const handleToggleStatus = async (employeeNo: string, currentActive: boolean, name: string) => {
     if (employeeNo === currentProfile.employee_no || employeeNo === currentProfile.id) {
-      alert('Warning: You cannot deactivate your own active account.');
+      showToast(
+        'warning',
+        'Tindakan Disekat',
+        'Anda tidak boleh menyahaktifkan akaun anda sendiri yang sedang digunakan.'
+      );
       return;
     }
-    const confirmed = window.confirm(`Are you sure you want to ${currentActive ? 'deactivate' : 'reactivate'} staff account: ${name}?`);
-    if (!confirmed) return;
 
-    await toggleProfileActive(employeeNo);
-    refreshData();
-    setStatusMessage({
-      type: 'success',
-      text: `✓ Staff account status for "${name}" updated to: ${currentActive ? 'UNACTIVE' : 'ACTIVE'} and synced to Supabase.`
+    setConfirmModal({
+      isOpen: true,
+      type: currentActive ? 'warning' : 'info',
+      title: currentActive ? 'Nyahaktifkan Akaun Staff' : 'Aktifkan Semula Akaun Staff',
+      badgeText: currentActive ? 'STATUS: UNACTIVE' : 'STATUS: ACTIVE',
+      description: currentActive
+        ? `Adakah anda pasti ingin menyahaktifkan akaun kakitangan ini? Kakitangan tidak akan dapat log masuk ke sistem sehingga diaktifkan semula.`
+        : `Adakah anda pasti ingin mengaktifkan semula akaun kakitangan ini ke dalam sistem?`,
+      details: {
+        name,
+        employeeNo,
+        extraNote: currentActive
+          ? 'Kakitangan tidak boleh log masuk, tetapi semua sejarah rekod log audit terdahulu dikekalkan.'
+          : 'Kakitangan kini boleh log masuk semula menggunakan kelayakan ID staf mereka.'
+      },
+      confirmButtonText: currentActive ? 'Nyahaktifkan Kakitangan' : 'Aktifkan Semula Kakitangan',
+      confirmButtonVariant: currentActive ? 'warning' : 'primary',
+      onConfirm: async () => {
+        await toggleProfileActive(employeeNo);
+        refreshData();
+        const msg = `✓ Status akaun "${name}" kini ditukar kepada: ${currentActive ? 'UNACTIVE' : 'ACTIVE'} dan dikemas kini ke Supabase.`;
+        setStatusMessage({
+          type: 'success',
+          text: msg
+        });
+        showToast('success', 'Status Kakitangan Dikemas Kini', msg);
+      }
     });
   };
 
   const handleDeleteUser = async (employeeNo: string, name: string) => {
     if (employeeNo === currentProfile.employee_no || employeeNo === currentProfile.id) {
-      alert('Warning: You cannot delete your own active administrator account.');
+      showToast(
+        'warning',
+        'Tindakan Disekat',
+        'Anda tidak boleh memadam akaun Administrator aktif anda sendiri.'
+      );
       return;
     }
-    const confirmed = window.confirm(`Are you sure you want to permanently delete staff account: "${name}" (${employeeNo}) from the plant system and Supabase database?`);
-    if (!confirmed) return;
 
-    try {
-      await deleteProfile(employeeNo);
-      refreshData();
-      setStatusMessage({
-        type: 'success',
-        text: `✓ Staff account "${name}" (${employeeNo}) permanently deleted from system & Supabase database.`
-      });
-    } catch {
-      setStatusMessage({ type: 'error', text: `Failed to delete staff member ${name}.` });
-    }
+    setConfirmModal({
+      isOpen: true,
+      type: 'danger',
+      title: 'Sahkan Pemadaman Akaun Staff',
+      badgeText: 'TINDAKAN KEKAL / PERMANENT DELETE',
+      description: `Adakah anda pasti ingin memadam akaun kakitangan ini daripada sistem loji dan pangkalan data Supabase?`,
+      details: {
+        name,
+        employeeNo,
+        extraNote: 'Tindakan ini adalah kekal. Akaun kakitangan ini akan dipadamkan daripada sistem dan Supabase serta tidak boleh dipulihkan semula.'
+      },
+      confirmButtonText: 'Ya, Padam Akaun Ini',
+      confirmButtonVariant: 'danger',
+      onConfirm: async () => {
+        try {
+          await deleteProfile(employeeNo);
+          refreshData();
+          const msg = `✓ Akaun kakitangan "${name}" (${employeeNo}) berjaya dipadam dari sistem & Supabase.`;
+          setStatusMessage({
+            type: 'success',
+            text: msg
+          });
+          showToast('success', 'Akaun Staff Dipadam', msg);
+        } catch {
+          const errMsg = `Gagal memadam akaun kakitangan ${name}. Sila cuba lagi.`;
+          setStatusMessage({ type: 'error', text: errMsg });
+          showToast('error', 'Ralat Pemadaman', errMsg);
+        }
+      }
+    });
   };
 
   const handleSwitchToAdmin = () => {
@@ -403,10 +535,12 @@ export default function AdminUserManagementView() {
     setAuthUser(adminUser);
     setCurrentRoleState('admin');
     setCurrentProfileState(adminUser);
+    const switchMsg = `Session switched to Plant Administrator: ${adminUser.full_name} (${adminUser.employee_no}). Full administrative permissions granted.`;
     setStatusMessage({
       type: 'success',
-      text: `Session switched to Plant Administrator: ${adminUser.full_name} (${adminUser.employee_no}). Full administrative permissions granted.`
+      text: switchMsg
     });
+    showToast('info', 'Sesi Pentadbir Diaktifkan', switchMsg);
   };
 
   const isAdmin = currentRole === 'admin';
@@ -1303,6 +1437,233 @@ export default function AdminUserManagementView() {
 
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* FLOATING TOAST NOTIFICATION CONTAINER (REPLACES NATIVE alert())           */}
+      {/* ========================================================================= */}
+      <div 
+        aria-live="polite" 
+        className="fixed top-5 right-5 z-[9999] flex flex-col gap-2.5 pointer-events-none max-w-sm w-full px-4 sm:px-0"
+      >
+        {toasts.map((t) => (
+          <div
+            key={t.id}
+            className={`pointer-events-auto rounded-2xl border p-4 shadow-2xl backdrop-blur-xl transition-all duration-300 animate-in slide-in-from-top-3 flex items-start gap-3 ${
+              t.type === 'success'
+                ? 'bg-[#061e16]/95 border-emerald-500/40 text-emerald-100 shadow-emerald-950/60'
+                : t.type === 'warning'
+                ? 'bg-[#261704]/95 border-amber-500/40 text-amber-100 shadow-amber-950/60'
+                : t.type === 'error'
+                ? 'bg-[#27080c]/95 border-rose-500/40 text-rose-100 shadow-rose-950/60'
+                : 'bg-[#081726]/95 border-cyan-500/40 text-cyan-100 shadow-cyan-950/60'
+            }`}
+          >
+            <div className="shrink-0 mt-0.5">
+              {t.type === 'success' && <CheckCircle2 className="h-5 w-5 text-emerald-400" />}
+              {t.type === 'warning' && <AlertTriangle className="h-5 w-5 text-amber-400" />}
+              {t.type === 'error' && <AlertCircle className="h-5 w-5 text-rose-400" />}
+              {t.type === 'info' && <Info className="h-5 w-5 text-cyan-400" />}
+            </div>
+            <div className="flex-1 min-w-0 pr-1">
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className="text-xs font-bold font-mono tracking-wide uppercase">
+                  {t.title}
+                </span>
+              </div>
+              <p className="text-xs text-slate-200 leading-relaxed font-sans">
+                {t.message}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => dismissToast(t.id)}
+              className="shrink-0 p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              title="Tutup Notifikasi"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {/* ========================================================================= */}
+      {/* CUSTOM GLASSMORPHISM CONFIRMATION MODAL (REPLACES window.confirm & prompt)*/}
+      {/* ========================================================================= */}
+      {confirmModal && confirmModal.isOpen && (
+        <div 
+          className="fixed inset-0 z-[9998] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
+          onClick={() => {
+            if (!modalIsSubmitting) {
+              setConfirmModal(null);
+              setModalPasswordInput('');
+            }
+          }}
+        >
+          <div 
+            className="relative max-w-md w-full bg-[#0a0f1d] border border-slate-700/80 rounded-2xl shadow-2xl shadow-black/90 overflow-hidden animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Top gradient highlight strip */}
+            <div 
+              className={`h-1.5 w-full ${
+                confirmModal.type === 'danger'
+                  ? 'bg-gradient-to-r from-red-500 via-rose-500 to-amber-500'
+                  : confirmModal.type === 'warning'
+                  ? 'bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500'
+                  : 'bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500'
+              }`} 
+            />
+
+            <div className="p-6 space-y-4">
+              {/* Header with icon and title */}
+              <div className="flex items-start gap-3.5">
+                <div 
+                  className={`p-3 rounded-2xl shrink-0 shadow-lg ${
+                    confirmModal.type === 'danger'
+                      ? 'bg-red-500/15 border border-red-500/30 text-red-400 shadow-red-950/50'
+                      : confirmModal.type === 'warning'
+                      ? 'bg-amber-500/15 border border-amber-500/30 text-amber-400 shadow-amber-950/50'
+                      : 'bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 shadow-cyan-950/50'
+                  }`}
+                >
+                  {confirmModal.type === 'danger' && <Trash2 className="h-6 w-6" />}
+                  {confirmModal.type === 'warning' && <AlertTriangle className="h-6 w-6" />}
+                  {confirmModal.type === 'info' && <ShieldCheck className="h-6 w-6" />}
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  {confirmModal.badgeText && (
+                    <span 
+                      className={`inline-block text-[10px] font-mono font-bold px-2 py-0.5 rounded-full mb-1.5 border uppercase ${
+                        confirmModal.type === 'danger'
+                          ? 'bg-red-950/60 text-red-300 border-red-800/60'
+                          : confirmModal.type === 'warning'
+                          ? 'bg-amber-950/60 text-amber-300 border-amber-800/60'
+                          : 'bg-cyan-950/60 text-cyan-300 border-cyan-800/60'
+                      }`}
+                    >
+                      {confirmModal.badgeText}
+                    </span>
+                  )}
+                  <h3 className="text-base font-bold text-white tracking-wide">
+                    {confirmModal.title}
+                  </h3>
+                  <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+                    {confirmModal.description}
+                  </p>
+                </div>
+              </div>
+
+              {/* Staff details card if available */}
+              {confirmModal.details?.name && (
+                <div className="bg-[#060b14] border border-slate-800/80 rounded-xl p-3.5 space-y-2">
+                  <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">
+                    Maklumat Kakitangan Terlibat:
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm font-semibold text-slate-100">
+                      {confirmModal.details.name}
+                    </div>
+                    {confirmModal.details.employeeNo && (
+                      <span className="text-xs font-mono font-bold text-cyan-400 bg-cyan-950/60 border border-cyan-800/50 px-2.5 py-0.5 rounded-lg">
+                        {confirmModal.details.employeeNo}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Extra note or consequences */}
+              {confirmModal.details?.extraNote && (
+                <div 
+                  className={`p-3 rounded-xl border text-xs leading-relaxed ${
+                    confirmModal.type === 'danger'
+                      ? 'bg-red-950/30 border-red-900/50 text-red-200'
+                      : confirmModal.type === 'warning'
+                      ? 'bg-amber-950/30 border-amber-900/50 text-amber-200'
+                      : 'bg-slate-900/60 border-slate-800 text-slate-300'
+                  }`}
+                >
+                  <p className="whitespace-pre-line font-sans">
+                    {confirmModal.details.extraNote}
+                  </p>
+                </div>
+              )}
+
+              {/* Password Input for Secure Actions (e.g. 1-Click Prune) */}
+              {confirmModal.requiresPassword && (
+                <div className="space-y-1.5 pt-1">
+                  <label className="text-[11px] font-mono text-slate-400 block font-semibold">
+                    Kata Laluan Pentadbir (Admin Authorization):
+                  </label>
+                  <div className="relative">
+                    <Lock className="h-4 w-4 text-slate-500 absolute left-3 top-3" />
+                    <input
+                      type="password"
+                      value={modalPasswordInput}
+                      onChange={(e) => setModalPasswordInput(e.target.value)}
+                      placeholder={confirmModal.passwordPlaceholder || 'Kata laluan pentadbir...'}
+                      className="w-full bg-[#060b14] border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-amber-500"
+                      autoFocus
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-800/80">
+                <button
+                  type="button"
+                  disabled={modalIsSubmitting}
+                  onClick={() => {
+                    setConfirmModal(null);
+                    setModalPasswordInput('');
+                  }}
+                  className="px-4 py-2.5 rounded-xl border border-slate-700 bg-slate-800/70 hover:bg-slate-800 text-slate-300 hover:text-white font-mono text-xs transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  Batal / Cancel
+                </button>
+
+                <button
+                  type="button"
+                  disabled={modalIsSubmitting || (confirmModal.requiresPassword && !modalPasswordInput.trim())}
+                  onClick={async () => {
+                    setModalIsSubmitting(true);
+                    try {
+                      await confirmModal.onConfirm(modalPasswordInput);
+                      setConfirmModal(null);
+                      setModalPasswordInput('');
+                    } finally {
+                      setModalIsSubmitting(false);
+                    }
+                  }}
+                  className={`px-5 py-2.5 rounded-xl font-mono text-xs font-bold text-white shadow-lg flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+                    confirmModal.confirmButtonVariant === 'danger'
+                      ? 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 shadow-red-950/60'
+                      : confirmModal.confirmButtonVariant === 'warning'
+                      ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 shadow-amber-950/60'
+                      : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 shadow-cyan-950/60'
+                  }`}
+                >
+                  {modalIsSubmitting ? (
+                    <>
+                      <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                      <span>Memproses...</span>
+                    </>
+                  ) : (
+                    <>
+                      {confirmModal.type === 'danger' && <Trash2 className="h-3.5 w-3.5" />}
+                      {confirmModal.type === 'warning' && <AlertTriangle className="h-3.5 w-3.5" />}
+                      {confirmModal.type === 'info' && <CheckCircle2 className="h-3.5 w-3.5" />}
+                      <span>{confirmModal.confirmButtonText}</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
