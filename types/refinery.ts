@@ -275,10 +275,10 @@ export interface QCDecision {
 }
 
 export interface AuditLogEntry {
-  id: number;
+  id: number | string;
   table_name: string;
-  record_id: string;
-  action: 'insert' | 'update' | 'void';
+  record_id?: string;
+  action: 'insert' | 'update' | 'void' | 'delete';
   actor_name?: string;
   old_row?: Record<string, unknown> | null;
   new_row?: Record<string, unknown> | null;

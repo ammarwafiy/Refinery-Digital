@@ -285,12 +285,14 @@ if (typeof window !== 'undefined') {
   setTimeout(() => {
     syncProfilesFromSupabase().catch(() => {});
     syncSampleReportsFromSupabase().catch(() => {});
+    syncAuditLogsFromSupabase().catch(() => {});
   }, 150);
 
   // Background auto-sync interval (every 20 seconds)
   setInterval(() => {
     syncProfilesFromSupabase().catch(() => {});
     syncSampleReportsFromSupabase().catch(() => {});
+    syncAuditLogsFromSupabase().catch(() => {});
   }, 20000);
 
   // Live Supabase Realtime PostgreSQL Change listener
@@ -322,6 +324,20 @@ if (typeof window !== 'undefined') {
         )
         .subscribe((status) => {
           console.info('[Supabase Realtime] Sample reports channel status:', status);
+        });
+
+      supabase
+        .channel('refinery_audit_live')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'audit_log' },
+          (payload) => {
+            console.info('[Supabase Realtime] Audit log change detected:', payload.eventType);
+            syncAuditLogsFromSupabase().catch(() => {});
+          }
+        )
+        .subscribe((status) => {
+          console.info('[Supabase Realtime] Audit log channel status:', status);
         });
     }
   } catch (subErr) {
@@ -924,6 +940,13 @@ export function saveProcessEntry(
     } catch (e) {
       console.warn('[Auto-QC] Failed to sync auto-dispatched QC sample on save:', e);
     }
+  }
+
+  // Trigger Supabase background sync
+  if (supabase) {
+    syncProcessSheetToSupabase(currentSheet).catch(e => {
+      console.warn('[Process Sheet Sync] Background sync warning:', e);
+    });
   }
 
   return { success: true, entry: finalEntry };
@@ -1974,6 +1997,174 @@ export function getAuditLogs(): AuditLogEntry[] {
   return getStored<AuditLogEntry[]>(STORAGE_KEYS.AUDIT_LOGS, memoryAuditLogs);
 }
 
+// Sync single audit log entry to Supabase audit_log table in background
+export async function syncAuditLogToSupabase(entry: AuditLogEntry): Promise<void> {
+  if (!supabase) return;
+  try {
+    const payload = {
+      table_name: entry.table_name,
+      action: entry.action,
+      actor: entry.actor_name,
+      old_row: entry.old_row || null,
+      new_row: entry.new_row || null,
+      occurred_at: entry.occurred_at,
+    };
+    await supabase.from('audit_log').insert(payload);
+  } catch (err) {
+    console.warn('[Supabase Sync] Audit log insert warning:', err);
+  }
+}
+
+// Fetch live database-level audit logs from Supabase and synchronize with local storage
+export async function syncAuditLogsFromSupabase(): Promise<{ success: boolean; count: number }> {
+  if (!supabase) return { success: false, count: 0 };
+  try {
+    const { data: remoteLogs, error } = await supabase
+      .from('audit_log')
+      .select('*')
+      .order('occurred_at', { ascending: false })
+      .limit(300);
+
+    if (error || !remoteLogs) return { success: false, count: 0 };
+
+    const localLogs = getAuditLogs();
+    const map = new Map<string, AuditLogEntry>();
+
+    // Index existing local logs
+    localLogs.forEach(l => map.set(String(l.id), l));
+
+    // Overlay Supabase logs
+    remoteLogs.forEach((row: any) => {
+      const key = `sb_${row.id}`;
+      const actorName = row.actor 
+        || row.new_row?.submitted_by_name 
+        || row.new_row?.recorded_by_name 
+        || row.new_row?.verified_by_name 
+        || 'System / DB Trigger';
+
+      map.set(key, {
+        id: key,
+        table_name: row.table_name,
+        record_id: row.record_id,
+        action: (row.action || 'insert') as any,
+        actor_name: actorName,
+        old_row: row.old_row,
+        new_row: row.new_row,
+        occurred_at: row.occurred_at,
+      });
+    });
+
+    const merged = Array.from(map.values()).sort((a, b) => 
+      new Date(b.occurred_at).getTime() - new Date(a.occurred_at).getTime()
+    );
+
+    setStored(STORAGE_KEYS.AUDIT_LOGS, merged);
+    memoryAuditLogs = merged;
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('refinery_audit_updated', { detail: merged }));
+    }
+
+    return { success: true, count: merged.length };
+  } catch (err) {
+    console.warn('[Supabase Sync] Audit logs fetch error:', err);
+    return { success: false, count: 0 };
+  }
+}
+
+// Sync complete Process Sheet & Hourly Entries to Supabase
+export async function syncProcessSheetToSupabase(sheet: ProcessSheet): Promise<{ success: boolean; error?: string }> {
+  if (!supabase) return { success: false, error: 'Supabase client unavailable' };
+  try {
+    const plantId = sheet.plant_id || INITIAL_PLANT.id || '11111111-1111-1111-1111-111111111111';
+
+    // 1. Upsert process sheet
+    const sheetPayload: any = {
+      plant_id: plantId,
+      shift_date: sheet.shift_date,
+      stripping_steam_pct: sheet.stripping_steam_pct ?? 1.5,
+      set_steam_supply_bar: sheet.set_steam_supply_bar ?? 3.0,
+      status: sheet.status || 'open',
+    };
+
+    const { data: upsertedSheet, error: sheetErr } = await supabase
+      .from('process_sheets')
+      .upsert(sheetPayload, { onConflict: 'plant_id,shift_date' })
+      .select('id')
+      .single();
+
+    if (sheetErr) {
+      console.warn('[Supabase Sync] Process sheet upsert warning:', sheetErr);
+      return { success: false, error: sheetErr.message };
+    }
+
+    const sbSheetId = upsertedSheet?.id;
+    if (sbSheetId && Array.isArray(sheet.entries) && sheet.entries.length > 0) {
+      // Fetch products to match product_id UUID
+      const { data: sbProds } = await supabase.from('products').select('id, code, name');
+      const productsList = sbProds || [];
+
+      const entriesPayload: any[] = [];
+      sheet.entries.forEach(e => {
+        let sbProdId: string | null = null;
+        if (e.product_id) {
+          const match = productsList.find(p => p.id === e.product_id || p.name === e.product_name);
+          if (match) sbProdId = match.id;
+        }
+
+        const slotLabel = e.slot_label || String(((e.slot_index + 7) % 24) * 100).padStart(4, '0');
+        const hour = slotLabel.slice(0, 2);
+        const slotStart = e.slot_start || `${sheet.shift_date}T${hour}:00:00+08:00`;
+
+        entriesPayload.push({
+          sheet_id: sbSheetId,
+          slot_index: e.slot_index,
+          slot_label: slotLabel,
+          slot_start: slotStart,
+          product_id: sbProdId,
+          oil_feed_rate_litre: e.oil_feed_rate_litre != null ? Number(e.oil_feed_rate_litre) : null,
+          deod_time_set_hr: e.deod_time_set_hr != null ? Number(e.deod_time_set_hr) : null,
+          vacuum_torr: e.vacuum_torr != null ? Number(e.vacuum_torr) : null,
+          tray_1_temp_c: e.tray_1_temp_c != null ? Number(e.tray_1_temp_c) : null,
+          tray_2_temp_c: e.tray_2_temp_c != null ? Number(e.tray_2_temp_c) : null,
+          tray_3_temp_c: e.tray_3_temp_c != null ? Number(e.tray_3_temp_c) : null,
+          tray_4_temp_c: e.tray_4_temp_c != null ? Number(e.tray_4_temp_c) : null,
+          tray_5_temp_c: e.tray_5_temp_c != null ? Number(e.tray_5_temp_c) : null,
+          tray_6_temp_c: e.tray_6_temp_c != null ? Number(e.tray_6_temp_c) : null,
+          tray_7_temp_c: e.tray_7_temp_c != null ? Number(e.tray_7_temp_c) : null,
+          bc101_water_in_c: e.bc101_water_in_c != null ? Number(e.bc101_water_in_c) : null,
+          bc101_water_out_c: e.bc101_water_out_c != null ? Number(e.bc101_water_out_c) : null,
+          chill_water_in_c: e.chill_water_in_c != null ? Number(e.chill_water_in_c) : null,
+          chill_water_out_c: e.chill_water_out_c != null ? Number(e.chill_water_out_c) : null,
+          booster_press_bar: e.booster_press_bar != null ? Number(e.booster_press_bar) : null,
+          ejector_press_bar: e.ejector_press_bar != null ? Number(e.ejector_press_bar) : null,
+          strip_steam_pct_of_oil: e.strip_steam_pct_of_oil != null ? Number(e.strip_steam_pct_of_oil) : null,
+          strip_steam_flow_kghr: e.strip_steam_flow_kghr != null ? Number(e.strip_steam_flow_kghr) : null,
+          fp101a_press_bar: e.fp101a_press_bar != null ? Number(e.fp101a_press_bar) : null,
+          fp101b_press_bar: e.fp101b_press_bar != null ? Number(e.fp101b_press_bar) : null,
+          remarks: e.remarks || null,
+          no_production_reason: e.no_production_reason || null,
+          has_deviation: Boolean(e.has_deviation),
+        });
+      });
+
+      if (entriesPayload.length > 0) {
+        const { error: entriesErr } = await supabase
+          .from('process_entries')
+          .upsert(entriesPayload, { onConflict: 'sheet_id,slot_index' });
+        if (entriesErr) {
+          console.warn('[Supabase Sync] Process entries upsert warning:', entriesErr);
+        }
+      }
+    }
+
+    return { success: true };
+  } catch (err: any) {
+    console.warn('[Supabase Sync] Process sheet sync error:', err);
+    return { success: false, error: err?.message };
+  }
+}
+
 export function addAuditLog(
   tableName: string, 
   recordId: string, 
@@ -1996,6 +2187,15 @@ export function addAuditLog(
   logs.unshift(newEntry);
   setStored(STORAGE_KEYS.AUDIT_LOGS, logs);
   memoryAuditLogs = logs;
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('refinery_audit_updated', { detail: logs }));
+  }
+
+  // Asynchronously sync to Supabase audit_log table
+  if (supabase) {
+    syncAuditLogToSupabase(newEntry).catch(() => {});
+  }
 }
 
 // ==============================================================================

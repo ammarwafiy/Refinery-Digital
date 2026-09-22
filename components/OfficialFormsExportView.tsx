@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   getActiveProcessSheet, 
   getSampleReports, 
@@ -8,9 +8,10 @@ import {
   updateSampleResults,
   getAvailableShiftDates,
   getProcessSheetByDate,
-  getRealtimeShiftDate
+  getRealtimeShiftDate,
+  syncAuditLogsFromSupabase
 } from '@/lib/data-service';
-import type { SampleReport, ProcessSheet } from '@/types/refinery';
+import type { SampleReport, ProcessSheet, AuditLogEntry } from '@/types/refinery';
 import { 
   FileText, 
   Printer, 
@@ -28,7 +29,11 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
-  Clock
+  Clock,
+  Search,
+  Filter,
+  RotateCcw,
+  Eye
 } from 'lucide-react';
 import { formatDateTime } from '@/lib/utils';
 
@@ -37,7 +42,14 @@ export default function OfficialFormsExportView() {
   const [availableShiftDates, setAvailableShiftDates] = useState<string[]>(() => getAvailableShiftDates());
   const [sheet, setSheet] = useState<ProcessSheet>(() => getProcessSheetByDate(getRealtimeShiftDate()));
   const [reports, setReports] = useState<SampleReport[]>(() => getSampleReports());
-  const [auditLogs, setAuditLogs] = useState(() => getAuditLogs());
+  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>(() => getAuditLogs());
+
+  // Audit Trail filtering state
+  const [auditDateFilter, setAuditDateFilter] = useState<string>('all');
+  const [auditTableFilter, setAuditTableFilter] = useState<string>('all');
+  const [auditActionFilter, setAuditActionFilter] = useState<string>('all');
+  const [auditSearchQuery, setAuditSearchQuery] = useState<string>('');
+  const [expandedLogId, setExpandedLogId] = useState<string | number | null>(null);
 
   const [activeFormType, setActiveFormType] = useState<'rf_fr_004' | 'rf_fr_001' | 'audit'>('rf_fr_004');
   const [selectedReportId, setSelectedReportId] = useState<string>('');
@@ -69,6 +81,63 @@ export default function OfficialFormsExportView() {
     }
   };
 
+  // Available unique dates in audit trail
+  const availableAuditDates = useMemo(() => {
+    const dates = new Set<string>();
+    auditLogs.forEach(l => {
+      if (l.occurred_at) {
+        dates.add(l.occurred_at.slice(0, 10));
+      }
+    });
+    return Array.from(dates).sort((a, b) => b.localeCompare(a));
+  }, [auditLogs]);
+
+  // Available unique table names in audit trail
+  const availableAuditTables = useMemo(() => {
+    const tables = new Set<string>();
+    auditLogs.forEach(l => {
+      if (l.table_name) tables.add(l.table_name);
+    });
+    return Array.from(tables).sort();
+  }, [auditLogs]);
+
+  // Navigate audit trail date backward / forward by day
+  const handleAuditStepDay = (deltaDays: number) => {
+    try {
+      const baseDate = auditDateFilter !== 'all' 
+        ? auditDateFilter 
+        : (availableAuditDates[0] || getRealtimeShiftDate());
+      const cur = new Date(baseDate + 'T12:00:00');
+      cur.setDate(cur.getDate() + deltaDays);
+      const y = cur.getFullYear();
+      const m = String(cur.getMonth() + 1).padStart(2, '0');
+      const d = String(cur.getDate()).padStart(2, '0');
+      setAuditDateFilter(`${y}-${m}-${d}`);
+    } catch {
+      // ignore
+    }
+  };
+
+  // Filtered audit logs matching active controls
+  const filteredAuditLogs = useMemo(() => {
+    return auditLogs.filter(log => {
+      const logDate = log.occurred_at ? log.occurred_at.slice(0, 10) : '';
+      if (auditDateFilter !== 'all' && logDate !== auditDateFilter) return false;
+      if (auditTableFilter !== 'all' && log.table_name !== auditTableFilter) return false;
+      if (auditActionFilter !== 'all' && log.action !== auditActionFilter) return false;
+      if (auditSearchQuery.trim()) {
+        const q = auditSearchQuery.toLowerCase();
+        const matchActor = (log.actor_name || '').toLowerCase().includes(q);
+        const matchTable = (log.table_name || '').toLowerCase().includes(q);
+        const matchAction = (log.action || '').toLowerCase().includes(q);
+        const matchDetail = JSON.stringify(log.new_row || log.old_row || {}).toLowerCase().includes(q);
+        const matchId = String(log.record_id || log.id || '').toLowerCase().includes(q);
+        if (!matchActor && !matchTable && !matchAction && !matchDetail && !matchId) return false;
+      }
+      return true;
+    });
+  }, [auditLogs, auditDateFilter, auditTableFilter, auditActionFilter, auditSearchQuery]);
+
   useEffect(() => {
     const refreshData = () => {
       const repList = getSampleReports();
@@ -79,14 +148,17 @@ export default function OfficialFormsExportView() {
     };
 
     refreshData();
+    syncAuditLogsFromSupabase().catch(() => {});
 
     window.addEventListener('refinery_reports_updated', refreshData);
     window.addEventListener('refinery_sheet_updated', refreshData);
+    window.addEventListener('refinery_audit_updated', refreshData);
     window.addEventListener('storage', refreshData);
 
     return () => {
       window.removeEventListener('refinery_reports_updated', refreshData);
       window.removeEventListener('refinery_sheet_updated', refreshData);
+      window.removeEventListener('refinery_audit_updated', refreshData);
       window.removeEventListener('storage', refreshData);
     };
   }, [selectedShiftDate]);
@@ -224,6 +296,32 @@ export default function OfficialFormsExportView() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+    } else if (activeFormType === 'audit') {
+      const headers = [
+        'Timestamp (MYT)',
+        'Table Name',
+        'Action',
+        'Authorized Actor',
+        'Record ID',
+        'Audit Details'
+      ];
+      const rows = filteredAuditLogs.map(log => [
+        `"${formatDateTime(log.occurred_at)}"`,
+        log.table_name,
+        log.action.toUpperCase(),
+        `"${(log.actor_name || 'System / DB Trigger').replace(/"/g, '""')}"`,
+        `"${String(log.record_id || log.id || '-').replace(/"/g, '""')}"`,
+        `"${JSON.stringify(log.new_row || log.old_row || {}).replace(/"/g, '""')}"`
+      ]);
+
+      const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement('a');
+      link.setAttribute('href', encodedUri);
+      link.setAttribute('download', `Immutable_Audit_Trail_${auditDateFilter === 'all' ? 'All_Dates' : auditDateFilter}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   };
 
@@ -249,7 +347,7 @@ export default function OfficialFormsExportView() {
           <div className="flex items-center gap-2 font-mono text-xs">
             <button
               onClick={handlePrint}
-              className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-xl transition-all border border-slate-700 shadow"
+              className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-xl transition-all border border-slate-700 shadow cursor-pointer"
             >
               <Printer className="h-4 w-4 text-cyan-400" />
               <span>Print Official PDF</span>
@@ -257,7 +355,7 @@ export default function OfficialFormsExportView() {
 
             <button
               onClick={handleExportCSV}
-              className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl transition-all shadow-lg shadow-emerald-950/40"
+              className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl transition-all shadow-lg shadow-emerald-950/40 cursor-pointer"
             >
               <Download className="h-4 w-4" />
               <span>Export Excel / CSV</span>
@@ -269,7 +367,7 @@ export default function OfficialFormsExportView() {
         <div className="mt-4 flex items-center gap-2 border-t border-slate-800 pt-3 text-xs font-mono flex-wrap">
           <button
             onClick={() => setActiveFormType('rf_fr_004')}
-            className={`px-3.5 py-1.5 rounded-lg border transition-all ${
+            className={`px-3.5 py-1.5 rounded-lg border transition-all cursor-pointer ${
               activeFormType === 'rf_fr_004'
                 ? 'bg-blue-600 text-white border-blue-500 shadow-md shadow-blue-900/30'
                 : 'border-slate-800 text-slate-400 hover:bg-slate-800'
@@ -280,7 +378,7 @@ export default function OfficialFormsExportView() {
 
           <button
             onClick={() => setActiveFormType('rf_fr_001')}
-            className={`px-3.5 py-1.5 rounded-lg border transition-all ${
+            className={`px-3.5 py-1.5 rounded-lg border transition-all cursor-pointer ${
               activeFormType === 'rf_fr_001'
                 ? 'bg-blue-600 text-white border-blue-500 shadow-md shadow-blue-900/30'
                 : 'border-slate-800 text-slate-400 hover:bg-slate-800'
@@ -290,15 +388,20 @@ export default function OfficialFormsExportView() {
           </button>
 
           <button
-            onClick={() => setActiveFormType('audit')}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border transition-all ${
+            onClick={() => {
+              setActiveFormType('audit');
+              syncAuditLogsFromSupabase().catch(() => {});
+            }}
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border transition-all cursor-pointer ${
               activeFormType === 'audit'
                 ? 'bg-blue-600 text-white border-blue-500 shadow-md shadow-blue-900/30'
                 : 'border-slate-800 text-slate-400 hover:bg-slate-800'
             }`}
           >
             <History className="h-3.5 w-3.5" />
-            <span>Immutable Audit Trail ({auditLogs.length})</span>
+            <span>
+              Immutable Audit Trail ({filteredAuditLogs.length !== auditLogs.length ? `${filteredAuditLogs.length}/${auditLogs.length}` : auditLogs.length})
+            </span>
           </button>
         </div>
 
@@ -431,6 +534,162 @@ export default function OfficialFormsExportView() {
                 <Edit3 className="h-3.5 w-3.5" />
                 <span>Edit Remarks & Operating Flags</span>
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* When activeFormType === 'audit', show Audit Trail Date Selector & Filters */}
+        {activeFormType === 'audit' && (
+          <div className="mt-3 pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <span className="text-slate-400 font-semibold uppercase flex items-center gap-1.5">
+                <Calendar className="h-3.5 w-3.5 text-cyan-400" />
+                Filter Audit Date (Tarikh Audit):
+              </span>
+
+              {/* Quick prev/next day buttons and dropdown */}
+              <div className="flex items-center bg-slate-900 border border-slate-700 rounded-lg overflow-hidden shadow-inner">
+                <button
+                  type="button"
+                  onClick={() => handleAuditStepDay(-1)}
+                  className="px-2.5 py-1 text-slate-300 hover:text-white hover:bg-slate-800 transition-colors border-r border-slate-700 cursor-pointer"
+                  title="Previous Day (Hari Sebelumnya)"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                </button>
+                <select
+                  value={auditDateFilter}
+                  onChange={e => setAuditDateFilter(e.target.value)}
+                  className="bg-transparent text-white px-2.5 py-1 text-xs font-mono focus:outline-none cursor-pointer"
+                >
+                  <option value="all" className="bg-slate-900 text-slate-200">
+                    All Recorded Dates ({auditLogs.length} logs)
+                  </option>
+                  {availableAuditDates.map(d => {
+                    const count = auditLogs.filter(l => l.occurred_at?.startsWith(d)).length;
+                    return (
+                      <option key={d} value={d} className="bg-slate-900 text-slate-200">
+                        {d} {d === getRealtimeShiftDate() ? '(Today)' : ''} — ({count} logs)
+                      </option>
+                    );
+                  })}
+                  {auditDateFilter !== 'all' && !availableAuditDates.includes(auditDateFilter) && (
+                    <option value={auditDateFilter} className="bg-slate-900 text-slate-200">
+                      {auditDateFilter} (Custom Date)
+                    </option>
+                  )}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => handleAuditStepDay(1)}
+                  className="px-2.5 py-1 text-slate-300 hover:text-white hover:bg-slate-800 transition-colors border-l border-slate-700 cursor-pointer"
+                  title="Next Day (Hari Berikutnya)"
+                >
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
+
+              {/* Calendar Date Picker Input */}
+              <div className="flex items-center gap-1.5 text-slate-400">
+                <span className="text-[11px]">or Calendar:</span>
+                <input
+                  type="date"
+                  value={auditDateFilter === 'all' ? '' : auditDateFilter}
+                  onChange={e => {
+                    if (e.target.value) {
+                      setAuditDateFilter(e.target.value);
+                    }
+                  }}
+                  className="bg-slate-900 border border-slate-700 text-white rounded-lg px-2.5 py-1 text-xs font-mono focus:border-cyan-500 focus:outline-none cursor-pointer"
+                />
+              </div>
+
+              {auditDateFilter !== 'all' && (
+                <button
+                  type="button"
+                  onClick={() => setAuditDateFilter('all')}
+                  className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600 text-[11px] font-mono transition-all cursor-pointer shadow-sm"
+                >
+                  Show All Dates
+                </button>
+              )}
+
+              {auditDateFilter !== getRealtimeShiftDate() && (
+                <button
+                  type="button"
+                  onClick={() => setAuditDateFilter(getRealtimeShiftDate())}
+                  className="px-2.5 py-1 rounded-lg bg-cyan-950/80 hover:bg-cyan-900 text-cyan-400 border border-cyan-700/50 text-[11px] font-mono transition-all cursor-pointer shadow-sm"
+                >
+                  Today&apos;s Logs
+                </button>
+              )}
+            </div>
+
+            {/* Right side filter controls: Table, Action, and Search */}
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Table Name Filter */}
+              <div className="flex items-center gap-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1">
+                <Filter className="h-3 w-3 text-cyan-400" />
+                <select
+                  value={auditTableFilter}
+                  onChange={e => setAuditTableFilter(e.target.value)}
+                  className="bg-transparent text-white text-xs font-mono focus:outline-none cursor-pointer"
+                >
+                  <option value="all" className="bg-slate-900 text-slate-200">All Tables</option>
+                  {availableAuditTables.map(t => (
+                    <option key={t} value={t} className="bg-slate-900 text-slate-200">{t}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Action Filter */}
+              <div className="flex items-center gap-1 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1">
+                <select
+                  value={auditActionFilter}
+                  onChange={e => setAuditActionFilter(e.target.value)}
+                  className="bg-transparent text-white text-xs font-mono focus:outline-none cursor-pointer"
+                >
+                  <option value="all" className="bg-slate-900 text-slate-200">All Actions</option>
+                  <option value="insert" className="bg-slate-900 text-emerald-400">INSERT</option>
+                  <option value="update" className="bg-slate-900 text-amber-400">UPDATE</option>
+                  <option value="void" className="bg-slate-900 text-rose-400">VOID / DELETE</option>
+                </select>
+              </div>
+
+              {/* Search text box */}
+              <div className="relative">
+                <Search className="h-3.5 w-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  value={auditSearchQuery}
+                  onChange={e => setAuditSearchQuery(e.target.value)}
+                  placeholder="Search actor, lot, id..."
+                  className="bg-slate-900 border border-slate-700 text-white rounded-lg pl-8 pr-3 py-1 text-xs font-mono focus:border-cyan-500 focus:outline-none w-44 placeholder-slate-500"
+                />
+              </div>
+
+              {/* Clear filters button */}
+              {(auditDateFilter !== 'all' || auditTableFilter !== 'all' || auditActionFilter !== 'all' || auditSearchQuery.trim()) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuditDateFilter('all');
+                    setAuditTableFilter('all');
+                    setAuditActionFilter('all');
+                    setAuditSearchQuery('');
+                  }}
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg bg-rose-950/60 hover:bg-rose-900 text-rose-400 border border-rose-600/40 text-[11px] font-mono cursor-pointer transition-colors"
+                  title="Reset all filters"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  <span>Reset</span>
+                </button>
+              )}
+
+              {/* Records count badge */}
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-950/60 border border-blue-500/30 text-blue-300 font-bold text-[11px]">
+                <span>{filteredAuditLogs.length} / {auditLogs.length} Records</span>
+              </div>
             </div>
           </div>
         )}
@@ -772,55 +1031,281 @@ export default function OfficialFormsExportView() {
       {/* FORM 3: Audit Trail Viewer */}
       {activeFormType === 'audit' && (
         <div className="rounded-2xl border border-slate-800 bg-[#0f172a] p-6 shadow-xl space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-            <div className="flex items-center gap-2 text-white font-semibold">
-              <History className="h-5 w-5 text-cyan-400" />
-              <span>Immutable System Audit Trail Log (Database Trigger Level)</span>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+            <div className="flex items-center gap-2.5 text-white font-semibold">
+              <div className="p-1.5 rounded-lg bg-cyan-950 border border-cyan-500/30 text-cyan-400">
+                <History className="h-5 w-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span>Immutable System Audit Trail Log</span>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-500/30 text-[10px] font-mono">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    Live Supabase Sync
+                  </span>
+                </div>
+                <div className="text-[11px] text-slate-400 font-mono font-normal">
+                  Database trigger-level tamper-proof append-only ledger
+                </div>
+              </div>
             </div>
-            <span className="text-xs font-mono text-slate-500">
-              Tamper-Proof Append-Only Records
-            </span>
+
+            <div className="flex items-center gap-2 font-mono text-xs">
+              <button
+                type="button"
+                onClick={async () => {
+                  const res = await syncAuditLogsFromSupabase();
+                  if (res.success) {
+                    setAuditLogs(getAuditLogs());
+                  }
+                }}
+                className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 transition-colors cursor-pointer text-xs"
+                title="Fetch latest audit logs directly from Supabase"
+              >
+                <RotateCcw className="h-3.5 w-3.5 text-cyan-400" />
+                <span>Sync Supabase</span>
+              </button>
+
+              <span className="text-xs font-mono text-slate-400 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-lg">
+                Showing {filteredAuditLogs.length} of {auditLogs.length} Records
+              </span>
+            </div>
           </div>
 
-          <div className="rounded-xl border border-slate-800 bg-[#090d16] overflow-hidden">
-            <table className="w-full text-left text-xs font-mono">
-              <thead className="bg-slate-900/80 text-slate-400 text-[11px] border-b border-slate-800">
-                <tr>
-                  <th className="py-2.5 px-3">Timestamp (MYT)</th>
-                  <th className="py-2.5 px-3">Table Name</th>
-                  <th className="py-2.5 px-3">Action</th>
-                  <th className="py-2.5 px-3">Authorized Actor</th>
-                  <th className="py-2.5 px-3">Audit Details</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/60">
-                {auditLogs.map(log => (
-                  <tr key={log.id} className="hover:bg-slate-900/30">
-                    <td className="py-2.5 px-3 text-slate-400 whitespace-nowrap">
-                      {formatDateTime(log.occurred_at)}
-                    </td>
-                    <td className="py-2.5 px-3 text-cyan-400 font-semibold">
-                      {log.table_name}
-                    </td>
-                    <td className="py-2.5 px-3">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                        log.action === 'insert' ? 'bg-emerald-950 text-emerald-400' :
-                        log.action === 'update' ? 'bg-amber-950 text-amber-400' : 'bg-rose-950 text-rose-400'
-                      }`}>
-                        {log.action}
-                      </span>
-                    </td>
-                    <td className="py-2.5 px-3 text-slate-200">
-                      {log.actor_name || 'System / DB Trigger'}
-                    </td>
-                    <td className="py-2.5 px-3 text-slate-400 max-w-md truncate">
-                      {JSON.stringify(log.new_row || log.old_row || {})}
-                    </td>
+          {/* Active Filter Chips */}
+          {(auditDateFilter !== 'all' || auditTableFilter !== 'all' || auditActionFilter !== 'all' || auditSearchQuery.trim()) && (
+            <div className="flex items-center gap-2 flex-wrap text-xs font-mono pt-1 pb-1">
+              <span className="text-slate-400 text-[11px]">Active Filters:</span>
+
+              {auditDateFilter !== 'all' && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-700/50 text-[11px]">
+                  Date: {auditDateFilter}
+                  <button
+                    type="button"
+                    onClick={() => setAuditDateFilter('all')}
+                    className="hover:text-white cursor-pointer"
+                  >
+                    ×
+                  </button>
+                </span>
+              )}
+
+              {auditTableFilter !== 'all' && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-950 text-blue-300 border border-blue-700/50 text-[11px]">
+                  Table: {auditTableFilter}
+                  <button
+                    type="button"
+                    onClick={() => setAuditTableFilter('all')}
+                    className="hover:text-white cursor-pointer"
+                  >
+                    ×
+                  </button>
+                </span>
+              )}
+
+              {auditActionFilter !== 'all' && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-950 text-amber-300 border border-amber-700/50 text-[11px]">
+                  Action: {auditActionFilter.toUpperCase()}
+                  <button
+                    type="button"
+                    onClick={() => setAuditActionFilter('all')}
+                    className="hover:text-white cursor-pointer"
+                  >
+                    ×
+                  </button>
+                </span>
+              )}
+
+              {auditSearchQuery.trim() && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-purple-950 text-purple-300 border border-purple-700/50 text-[11px]">
+                  Search: &ldquo;{auditSearchQuery}&rdquo;
+                  <button
+                    type="button"
+                    onClick={() => setAuditSearchQuery('')}
+                    className="hover:text-white cursor-pointer"
+                  >
+                    ×
+                  </button>
+                </span>
+              )}
+
+              <button
+                type="button"
+                onClick={() => {
+                  setAuditDateFilter('all');
+                  setAuditTableFilter('all');
+                  setAuditActionFilter('all');
+                  setAuditSearchQuery('');
+                }}
+                className="text-[11px] text-slate-400 hover:text-slate-200 underline ml-1 cursor-pointer"
+              >
+                Clear all
+              </button>
+            </div>
+          )}
+
+          {/* Audit Logs Table or Empty State */}
+          {filteredAuditLogs.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-slate-800 bg-[#090d16] p-10 text-center space-y-3 font-mono">
+              <div className="h-10 w-10 mx-auto rounded-full bg-slate-900 flex items-center justify-center text-slate-500">
+                <History className="h-5 w-5" />
+              </div>
+              <div className="text-white font-semibold text-sm">No Audit Trail Records Found</div>
+              <p className="text-xs text-slate-400 max-w-md mx-auto">
+                No database ledger events match the selected date ({auditDateFilter === 'all' ? 'All Dates' : auditDateFilter}) or active search filters.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setAuditDateFilter('all');
+                  setAuditTableFilter('all');
+                  setAuditActionFilter('all');
+                  setAuditSearchQuery('');
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-950 hover:bg-cyan-900 text-cyan-400 border border-cyan-700/40 text-xs font-mono transition-colors cursor-pointer"
+              >
+                <RotateCcw className="h-3 w-3" />
+                <span>Reset All Filters</span>
+              </button>
+            </div>
+          ) : (
+            <div className="rounded-xl border border-slate-800 bg-[#090d16] overflow-hidden">
+              <table className="w-full text-left text-xs font-mono">
+                <thead className="bg-slate-900/80 text-slate-400 text-[11px] border-b border-slate-800">
+                  <tr>
+                    <th className="py-2.5 px-3">Timestamp (MYT)</th>
+                    <th className="py-2.5 px-3">Table Name</th>
+                    <th className="py-2.5 px-3">Action</th>
+                    <th className="py-2.5 px-3">Authorized Actor</th>
+                    <th className="py-2.5 px-3">Record ID</th>
+                    <th className="py-2.5 px-3">Audit Details &amp; Payload</th>
+                    <th className="py-2.5 px-3 text-right">Inspect</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-slate-800/60">
+                  {filteredAuditLogs.map(log => (
+                    <tr key={log.id} className="hover:bg-slate-900/40 transition-colors">
+                      <td className="py-2.5 px-3 text-slate-400 whitespace-nowrap">
+                        {formatDateTime(log.occurred_at)}
+                      </td>
+                      <td className="py-2.5 px-3 text-cyan-400 font-semibold whitespace-nowrap">
+                        <span className="px-1.5 py-0.5 rounded bg-cyan-950/60 border border-cyan-800/40 text-[11px]">
+                          {log.table_name}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3 whitespace-nowrap">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                          log.action === 'insert' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800/40' :
+                          log.action === 'update' ? 'bg-amber-950 text-amber-400 border border-amber-800/40' : 'bg-rose-950 text-rose-400 border border-rose-800/40'
+                        }`}>
+                          {log.action}
+                        </span>
+                      </td>
+                      <td className="py-2.5 px-3 text-slate-200 whitespace-nowrap font-medium">
+                        {log.actor_name || 'System / DB Trigger'}
+                      </td>
+                      <td className="py-2.5 px-3 text-slate-500 text-[11px] max-w-[120px] truncate font-mono">
+                        {String(log.record_id || log.id || '-')}
+                      </td>
+                      <td className="py-2.5 px-3 text-slate-400 max-w-sm md:max-w-md truncate font-mono text-[11px]">
+                        {JSON.stringify(log.new_row || log.old_row || {})}
+                      </td>
+                      <td className="py-2.5 px-3 text-right whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={() => setExpandedLogId(log.id)}
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 text-[10px] transition-colors cursor-pointer"
+                        >
+                          <Eye className="h-3 w-3 text-cyan-400" />
+                          <span>View JSON</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Expanded Audit Log JSON Modal */}
+          {expandedLogId != null && (() => {
+            const expLog = auditLogs.find(l => l.id === expandedLogId);
+            if (!expLog) return null;
+            return (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 no-print">
+                <div className="w-full max-w-2xl rounded-2xl border border-slate-700 bg-[#0f172a] p-6 shadow-2xl space-y-4 max-h-[90vh] flex flex-col font-mono text-xs">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <div className="flex items-center gap-2 text-white font-semibold text-sm">
+                      <History className="h-4 w-4 text-cyan-400" />
+                      <span>Audit Record Details — ID: {String(expLog.id)}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setExpandedLogId(null)}
+                      className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-900/60 p-3 rounded-xl border border-slate-800 text-[11px]">
+                    <div>
+                      <div className="text-slate-500">Timestamp:</div>
+                      <div className="text-white font-medium">{formatDateTime(expLog.occurred_at)}</div>
+                    </div>
+                    <div>
+                      <div className="text-slate-500">Table:</div>
+                      <div className="text-cyan-400 font-semibold">{expLog.table_name}</div>
+                    </div>
+                    <div>
+                      <div className="text-slate-500">Action:</div>
+                      <div className="uppercase font-bold text-emerald-400">{expLog.action}</div>
+                    </div>
+                    <div>
+                      <div className="text-slate-500">Actor:</div>
+                      <div className="text-slate-200">{expLog.actor_name || 'System / DB Trigger'}</div>
+                    </div>
+                  </div>
+
+                  <div className="overflow-y-auto space-y-3 flex-1 pr-1">
+                    {expLog.new_row && (
+                      <div>
+                        <div className="text-emerald-400 font-bold mb-1 text-[11px] flex items-center gap-1.5">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+                          NEW ROW DATA (State after operation):
+                        </div>
+                        <pre className="bg-[#090d16] p-3 rounded-xl border border-slate-800 text-[11px] text-slate-300 overflow-x-auto whitespace-pre-wrap">
+                          {JSON.stringify(expLog.new_row, null, 2)}
+                        </pre>
+                      </div>
+                    )}
+
+                    {expLog.old_row && (
+                      <div>
+                        <div className="text-rose-400 font-bold mb-1 text-[11px] flex items-center gap-1.5">
+                          <span className="h-1.5 w-1.5 rounded-full bg-rose-400"></span>
+                          OLD ROW DATA (State before operation):
+                        </div>
+                        <pre className="bg-[#090d16] p-3 rounded-xl border border-slate-800 text-[11px] text-slate-300 overflow-x-auto whitespace-pre-wrap">
+                          {JSON.stringify(expLog.old_row, null, 2)}
+                        </pre>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-end pt-3 border-t border-slate-800">
+                    <button
+                      type="button"
+                      onClick={() => setExpandedLogId(null)}
+                      className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs transition-colors cursor-pointer"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
         </div>
       )}
 
