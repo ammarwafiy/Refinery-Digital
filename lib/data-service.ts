@@ -45,6 +45,7 @@ const STORAGE_KEYS = {
   CURRENT_ROLE: 'refinery_current_role',
   PROFILES: 'refinery_staff_profiles',
   SHEET: 'refinery_active_sheet',
+  ALL_SHEETS: 'refinery_all_sheets',
   REPORTS: 'refinery_sample_reports',
   DEVIATIONS: 'refinery_deviations',
   AUDIT_LOGS: 'refinery_audit_logs',
@@ -55,6 +56,9 @@ let memoryAuthUser: Profile | null = null;
 let memoryRole: UserRole = 'operator';
 let memoryProfiles: Profile[] = JSON.parse(JSON.stringify(INITIAL_PROFILES));
 let memorySheet: ProcessSheet = JSON.parse(JSON.stringify(INITIAL_SHEET));
+let memoryAllSheets: Record<string, ProcessSheet> = {
+  '2026-09-20': JSON.parse(JSON.stringify(INITIAL_SHEET)),
+};
 let memoryReports: SampleReport[] = JSON.parse(JSON.stringify(INITIAL_REPORTS));
 let memoryDeviations: Deviation[] = JSON.parse(JSON.stringify(INITIAL_DEVIATIONS));
 let memoryAuditLogs: AuditLogEntry[] = JSON.parse(JSON.stringify(INITIAL_AUDIT_LOGS));
@@ -548,6 +552,34 @@ export function getRejectionReasons(): RejectionReason[] {
   return INITIAL_REJECTION_REASONS;
 }
 
+// Calculate real-time shift date based on plant operating rule:
+// Shift runs 07:00 (Today) to 06:00 (Tomorrow).
+// Between 00:00:00 and 06:59:59 AM, the shift still belongs to yesterday's shift date.
+export function getRealtimeShiftDate(): string {
+  const now = new Date();
+  const mytParts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Kuala_Lumpur',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    hour12: false,
+  }).formatToParts(now);
+
+  const year = mytParts.find(p => p.type === 'year')?.value || '2026';
+  const month = mytParts.find(p => p.type === 'month')?.value || '09';
+  const day = mytParts.find(p => p.type === 'day')?.value || '22';
+  const hour = parseInt(mytParts.find(p => p.type === 'hour')?.value || '8', 10);
+
+  if (hour < 7) {
+    const d = new Date(`${year}-${month}-${day}T12:00:00Z`);
+    d.setUTCDate(d.getUTCDate() - 1);
+    return d.toISOString().slice(0, 10);
+  }
+
+  return `${year}-${month}-${day}`;
+}
+
 // Calculate real-time shift slot index (0 = 0700, 1 = 0800, ..., 23 = 0600)
 export function getRealtimeSlotIndex(): number {
   const now = new Date();
@@ -564,13 +596,96 @@ export function getRealtimeSlotIndex(): number {
   }
 }
 
-// 2. Process Sheet (RF-FR-004)
-export function getActiveProcessSheet(): ProcessSheet {
-  return getStored<ProcessSheet>(STORAGE_KEYS.SHEET, memorySheet);
+// All Process Sheets Store Management
+export function getAllProcessSheets(): Record<string, ProcessSheet> {
+  const stored = getStored<Record<string, ProcessSheet> | null>(STORAGE_KEYS.ALL_SHEETS, null);
+  if (stored && typeof stored === 'object' && Object.keys(stored).length > 0) {
+    // Preserve legacy active sheet if stored before multi-date support
+    const legacy = getStored<ProcessSheet | null>(STORAGE_KEYS.SHEET, null);
+    if (legacy && legacy.shift_date && !stored[legacy.shift_date]) {
+      stored[legacy.shift_date] = legacy;
+      setStored(STORAGE_KEYS.ALL_SHEETS, stored);
+    }
+    return stored;
+  }
+
+  const legacy = getStored<ProcessSheet | null>(STORAGE_KEYS.SHEET, null);
+  const initialMap: Record<string, ProcessSheet> = {};
+  if (legacy && legacy.shift_date) {
+    initialMap[legacy.shift_date] = legacy;
+  }
+  if (!initialMap['2026-09-20']) {
+    initialMap['2026-09-20'] = JSON.parse(JSON.stringify(INITIAL_SHEET));
+  }
+  setStored(STORAGE_KEYS.ALL_SHEETS, initialMap);
+  memoryAllSheets = initialMap;
+  return initialMap;
 }
 
-export function saveProcessEntry(updatedEntry: Partial<ProcessEntry> & { slot_index: number }): { success: boolean; entry: ProcessEntry; error?: string } {
-  const currentSheet = getActiveProcessSheet();
+export function saveAllProcessSheets(sheets: Record<string, ProcessSheet>): void {
+  memoryAllSheets = sheets;
+  setStored(STORAGE_KEYS.ALL_SHEETS, sheets);
+}
+
+export function getAvailableShiftDates(): string[] {
+  const all = getAllProcessSheets();
+  const today = getRealtimeShiftDate();
+  const dateSet = new Set<string>([today, ...Object.keys(all)]);
+  return Array.from(dateSet).sort((a, b) => b.localeCompare(a));
+}
+
+// 2. Process Sheet (RF-FR-004)
+export function getProcessSheetByDate(shiftDate: string): ProcessSheet {
+  const all = getAllProcessSheets();
+  if (all[shiftDate]) {
+    return all[shiftDate];
+  }
+
+  // Find previous sheet to carry forward setpoints (stripping steam & tray steam supply)
+  const prevDates = Object.keys(all).filter(d => d < shiftDate).sort((a, b) => b.localeCompare(a));
+  const prevSheet = prevDates.length > 0 ? all[prevDates[0]] : null;
+  const strippingSteam = prevSheet?.stripping_steam_pct ?? 1.5;
+  const setSteamBar = prevSheet?.set_steam_supply_bar ?? 3.0;
+
+  const profile = getCurrentProfile();
+  const newSheet: ProcessSheet = {
+    id: `sheet-${shiftDate}`,
+    plant_id: INITIAL_PLANT.id,
+    shift_date: shiftDate,
+    stripping_steam_pct: strippingSteam,
+    set_steam_supply_bar: setSteamBar,
+    status: 'open',
+    opened_by: profile?.id || 'p-op-01',
+    opened_by_name: profile?.full_name || 'Plant Operator',
+    opened_at: `${shiftDate}T06:55:00+08:00`,
+    verified_by: null,
+    verified_by_name: null,
+    verified_at: null,
+    entries: [],
+  };
+
+  all[shiftDate] = newSheet;
+  saveAllProcessSheets(all);
+
+  if (shiftDate === getRealtimeShiftDate()) {
+    setStored(STORAGE_KEYS.SHEET, newSheet);
+    memorySheet = newSheet;
+  }
+
+  return newSheet;
+}
+
+export function getActiveProcessSheet(): ProcessSheet {
+  const realtimeDate = getRealtimeShiftDate();
+  return getProcessSheetByDate(realtimeDate);
+}
+
+export function saveProcessEntry(
+  updatedEntry: Partial<ProcessEntry> & { slot_index: number },
+  targetShiftDate?: string
+): { success: boolean; entry: ProcessEntry; error?: string } {
+  const shiftDate = targetShiftDate || getRealtimeShiftDate();
+  const currentSheet = getProcessSheetByDate(shiftDate);
   if (currentSheet.status === 'verified') {
     return {
       success: false,
@@ -696,8 +811,14 @@ export function saveProcessEntry(updatedEntry: Partial<ProcessEntry> & { slot_in
 
   // Update sheet
   currentSheet.entries = entries;
-  setStored(STORAGE_KEYS.SHEET, currentSheet);
-  memorySheet = currentSheet;
+  const allSheets = getAllProcessSheets();
+  allSheets[currentSheet.shift_date] = currentSheet;
+  saveAllProcessSheets(allSheets);
+
+  if (currentSheet.shift_date === getRealtimeShiftDate()) {
+    setStored(STORAGE_KEYS.SHEET, currentSheet);
+    memorySheet = currentSheet;
+  }
 
   // Add audit log
   addAuditLog('process_entries', finalEntry.id, existingIdx >= 0 ? 'update' : 'insert', null, finalEntry);
@@ -825,11 +946,14 @@ export function saveProcessEntry(updatedEntry: Partial<ProcessEntry> & { slot_in
 }
 
 // Copy Previous Hour logic
-export function copyPreviousHour(slotIndex: number): { success: boolean; data?: Partial<ProcessEntry>; prevSlotLabel?: string; error?: string } {
+export function copyPreviousHour(
+  slotIndex: number,
+  targetShiftDate?: string
+): { success: boolean; data?: Partial<ProcessEntry>; prevSlotLabel?: string; error?: string } {
   if (slotIndex <= 0) {
     return { success: false, error: 'Cannot copy for the 0700 first hour of the shift.' };
   }
-  const sheet = getActiveProcessSheet();
+  const sheet = targetShiftDate ? getProcessSheetByDate(targetShiftDate) : getActiveProcessSheet();
   if (sheet.status === 'verified') {
     return { success: false, error: 'This sheet has been verified and locked. Readings cannot be copied or modified.' };
   }
@@ -849,6 +973,19 @@ export function copyPreviousHour(slotIndex: number): { success: boolean; data?: 
     } else {
       // Fallback to any recorded entry in the sheet
       prevEntry = [...sheet.entries].sort((a, b) => b.slot_index - a.slot_index)[0];
+    }
+  }
+
+  // If this is a fresh sheet and no entries exist yet today, check yesterday's or previous sheet
+  if (!prevEntry) {
+    const all = getAllProcessSheets();
+    const prevDates = Object.keys(all).filter(d => d < sheet.shift_date).sort((a, b) => b.localeCompare(a));
+    for (const d of prevDates) {
+      const pastSheet = all[d];
+      if (pastSheet.entries && pastSheet.entries.length > 0) {
+        prevEntry = [...pastSheet.entries].sort((a, b) => b.slot_index - a.slot_index)[0];
+        if (prevEntry) break;
+      }
     }
   }
 
@@ -890,11 +1027,15 @@ export function copyPreviousHour(slotIndex: number): { success: boolean; data?: 
 }
 
 // Supervisor Verification with Electronic Signature
-export function verifySheet(sheetId: string, passwordConfirm: string): { success: boolean; error?: string } {
+export function verifyProcessSheet(
+  sheetId: string, 
+  passwordConfirm: string,
+  targetShiftDate?: string
+): { success: boolean; error?: string } {
   if (!passwordConfirm || passwordConfirm.length < 4) {
     return { success: false, error: 'Electronic signature password is required (minimum 4 characters).' };
   }
-  const sheet = getActiveProcessSheet();
+  const sheet = targetShiftDate ? getProcessSheetByDate(targetShiftDate) : getActiveProcessSheet();
   const profile = getCurrentProfile();
   const role = getCurrentRole();
 
@@ -912,15 +1053,28 @@ export function verifySheet(sheetId: string, passwordConfirm: string): { success
   sheet.verified_by_name = profile.full_name;
   sheet.verified_at = new Date().toISOString();
 
-  setStored(STORAGE_KEYS.SHEET, sheet);
-  memorySheet = sheet;
+  const allSheets = getAllProcessSheets();
+  allSheets[sheet.shift_date] = sheet;
+  saveAllProcessSheets(allSheets);
+
+  if (sheet.shift_date === getRealtimeShiftDate()) {
+    setStored(STORAGE_KEYS.SHEET, sheet);
+    memorySheet = sheet;
+  }
 
   addAuditLog('process_sheets', sheetId, 'update', { status: 'open' }, { status: 'verified', verified_by: profile.full_name });
   return { success: true };
 }
 
+export const verifySheet = verifyProcessSheet;
+
 // Admin Unlock Sheet with Mandatory Justification & Electronic Signature
-export function unlockSheet(sheetId: string, reason: string, passwordConfirm: string): { success: boolean; error?: string } {
+export function unlockSheet(
+  sheetId: string, 
+  reason: string, 
+  passwordConfirm: string,
+  targetShiftDate?: string
+): { success: boolean; error?: string } {
   const profile = getCurrentProfile();
   const role = getCurrentRole();
 
@@ -946,7 +1100,7 @@ export function unlockSheet(sheetId: string, reason: string, passwordConfirm: st
     };
   }
 
-  const sheet = getActiveProcessSheet();
+  const sheet = targetShiftDate ? getProcessSheetByDate(targetShiftDate) : getActiveProcessSheet();
   const previousStatus = sheet.status;
   const previousVerifiedBy = sheet.verified_by_name;
 
@@ -955,8 +1109,14 @@ export function unlockSheet(sheetId: string, reason: string, passwordConfirm: st
   sheet.verified_by_name = null;
   sheet.verified_at = null;
 
-  setStored(STORAGE_KEYS.SHEET, sheet);
-  memorySheet = sheet;
+  const allSheets = getAllProcessSheets();
+  allSheets[sheet.shift_date] = sheet;
+  saveAllProcessSheets(allSheets);
+
+  if (sheet.shift_date === getRealtimeShiftDate()) {
+    setStored(STORAGE_KEYS.SHEET, sheet);
+    memorySheet = sheet;
+  }
 
   addAuditLog(
     'process_sheets', 

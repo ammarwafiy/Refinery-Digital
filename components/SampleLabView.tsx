@@ -23,7 +23,8 @@ import {
   getParameters, 
   getRejectionReasons, 
   getCurrentRole,
-  getProductSpecs
+  getProductSpecs,
+  getRealtimeShiftDate
 } from '@/lib/data-service';
 import { 
   FlaskConical, 
@@ -67,7 +68,7 @@ export default function SampleLabView({ currentRole, currentUser }: SampleLabVie
 
   // "Raise New Sample" form state
   const [newLotNo, setNewLotNo] = useState('');
-  const [newDate, setNewDate] = useState('2026-09-20');
+  const [newDate, setNewDate] = useState<string>(() => getRealtimeShiftDate());
   const [newTimeCheck, setNewTimeCheck] = useState('11:30');
   const [newProductId, setNewProductId] = useState('prod-26'); // PL 65 Matsuyama
   const [newProductOther, setNewProductOther] = useState('');

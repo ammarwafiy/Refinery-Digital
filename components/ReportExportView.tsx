@@ -20,10 +20,12 @@ import {
 } from 'lucide-react';
 import {
   getActiveProcessSheet,
+  getAllProcessSheets,
   getSampleReports,
   getDeviations,
   getProducts
 } from '@/lib/data-service';
+import { ProcessEntry } from '@/types/refinery';
 
 type ReportPeriod = 'daily' | 'monthly' | 'yearly';
 type ReportCategory = 'process' | 'qc' | 'deviations' | 'master';
@@ -64,12 +66,20 @@ export default function ReportExportView() {
     return true;
   };
 
-  // Filtered Process Entries
+  // Filtered Process Entries across all saved shift sheets
   const filteredProcessEntries = useMemo(() => {
-    const entries = sheet.entries || [];
-    return entries.filter(e => {
+    const allSheets = getAllProcessSheets();
+    const sheetsList = Object.values(allSheets);
+    const allEntries: (ProcessEntry & { sheet_date?: string })[] = [];
+    sheetsList.forEach(s => {
+      (s.entries || []).forEach(e => {
+        allEntries.push({ ...e, sheet_date: s.shift_date });
+      });
+    });
+
+    return allEntries.filter(e => {
       // Check sheet date
-      const dateMatches = matchesDate(sheet.shift_date);
+      const dateMatches = matchesDate(e.sheet_date || sheet.shift_date);
       const productMatches = selectedProductId === 'all' || e.product_id === selectedProductId || (e.product_name && e.product_name.toLowerCase().includes(selectedProductId.toLowerCase()));
       const queryMatches = !searchQuery || 
         (e.slot_label && e.slot_label.includes(searchQuery)) ||

@@ -11,6 +11,9 @@ import {
 } from '@/types/refinery';
 import { 
   getActiveProcessSheet, 
+  getProcessSheetByDate,
+  getAvailableShiftDates,
+  getRealtimeShiftDate,
   saveProcessEntry, 
   copyPreviousHour, 
   verifySheet, 
@@ -47,7 +50,11 @@ interface ProcessLogViewProps {
 }
 
 export default function ProcessLogView({ currentRole, currentUser }: ProcessLogViewProps = {}) {
-  const [sheet, setSheet] = useState<ProcessSheet>(getActiveProcessSheet());
+  const [activeShiftDate, setActiveShiftDate] = useState<string>(getRealtimeShiftDate());
+  const [availableDates, setAvailableDates] = useState<string[]>([]);
+  const [sheet, setSheet] = useState<ProcessSheet>(() => getProcessSheetByDate(getRealtimeShiftDate()));
+  const isLiveShift = activeShiftDate === getRealtimeShiftDate();
+
   const [products, setProducts] = useState<Product[]>([]);
   const [parameters, setParameters] = useState<Parameter[]>([]);
   const [autoDispatchQc, setAutoDispatchQc] = useState<boolean>(true);
@@ -80,37 +87,64 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
 
   const limits = getParameterLimits();
 
-  // Realtime clock and slot tracker
+  // Realtime clock, slot tracker, and shift date rollover
   useEffect(() => {
+    setAvailableDates(getAvailableShiftDates());
+
     const updateRealtime = () => {
       const now = new Date();
       const mytDate = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Kuala_Lumpur' }));
       const currentMinute = mytDate.getMinutes();
       const slot = getRealtimeSlotIndex();
+      const realtimeDate = getRealtimeShiftDate();
       
       setCurrentSlotIndex(slot);
       setCurrentMinutesRemaining(60 - currentMinute);
       setCurrentTimeStr(
         mytDate.toLocaleTimeString('en-GB', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })
       );
+
+      // Auto-rollover in realtime when shift date changes (e.g. 07:00 AM hits)
+      setActiveShiftDate(prevDate => {
+        if (isLiveShift && prevDate !== realtimeDate) {
+          const freshSheet = getProcessSheetByDate(realtimeDate);
+          setSheet(freshSheet);
+          setSelectedSlotIndex(slot);
+          loadSlot(slot, freshSheet);
+          setAvailableDates(getAvailableShiftDates());
+          return realtimeDate;
+        }
+        return prevDate;
+      });
     };
 
     updateRealtime();
     const timer = setInterval(updateRealtime, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [isLiveShift]);
 
   useEffect(() => {
     setProducts(getProducts());
     setParameters(getParameters());
     setRole(currentRole || currentUser?.role || getCurrentRole());
     refreshSheet();
-  }, [currentRole, currentUser]);
+  }, [currentRole, currentUser, activeShiftDate]);
+
+  const handleDateChange = (newDate: string) => {
+    setActiveShiftDate(newDate);
+    const targetSheet = getProcessSheetByDate(newDate);
+    setSheet(targetSheet);
+    const isNowLive = newDate === getRealtimeShiftDate();
+    const targetSlot = isNowLive ? getRealtimeSlotIndex() : 0;
+    setSelectedSlotIndex(targetSlot);
+    loadSlot(targetSlot, targetSheet);
+  };
 
   const refreshSheet = (preserveSuccess = false) => {
-    const s = getActiveProcessSheet();
+    const s = getProcessSheetByDate(activeShiftDate);
     setSheet(s);
     loadSlot(selectedSlotIndex, s, preserveSuccess);
+    setAvailableDates(getAvailableShiftDates());
   };
 
   const loadSlot = (slotIdx: number, activeSheet = sheet, preserveSuccess = false) => {
@@ -165,7 +199,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
       setValidationError('Cannot copy for the 0700 first hour of the shift.');
       return;
     }
-    const res = copyPreviousHour(selectedSlotIndex);
+    const res = copyPreviousHour(selectedSlotIndex, activeShiftDate);
     if (res.success && res.data) {
       setIsCopying(true);
       const sourceSlot = res.prevSlotLabel || String((((selectedSlotIndex - 1 + 24) % 24) + 7) % 24 * 100).padStart(4, '0');
@@ -198,7 +232,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
       ...formData,
       slot_index: selectedSlotIndex,
       auto_dispatch_qc: autoDispatchQc,
-    });
+    }, activeShiftDate);
 
     if (!res.success) {
       setIsSaving(false);
@@ -224,7 +258,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
     e.preventDefault();
     setVerifyError(null);
 
-    const res = verifySheet(sheet.id, signaturePassword);
+    const res = verifySheet(sheet.id, signaturePassword, activeShiftDate);
     if (!res.success) {
       setVerifyError(res.error || 'Verification failed.');
       return;
@@ -232,6 +266,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
 
     setIsVerifyModalOpen(false);
     setSignaturePassword('');
+    setSuccessMessage('Shift sheet verified and locked successfully by Supervisor!');
     refreshSheet();
   };
 
@@ -239,7 +274,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
     e.preventDefault();
     setUnlockError(null);
 
-    const res = unlockSheet(sheet.id, unlockReason, unlockPassword);
+    const res = unlockSheet(sheet.id, unlockReason, unlockPassword, activeShiftDate);
     if (!res.success) {
       setUnlockError(res.error || 'Failed to unlock sheet.');
       return;
@@ -274,13 +309,13 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
 
   // Realtime slot status
   const isLiveSlot = selectedSlotIndex === currentSlotIndex;
-  const isPastSlot = selectedSlotIndex < currentSlotIndex;
-  const isFutureSlot = selectedSlotIndex > currentSlotIndex;
+  const isPastSlot = isLiveShift ? selectedSlotIndex < currentSlotIndex : true;
+  const isFutureSlot = isLiveShift ? selectedSlotIndex > currentSlotIndex : false;
 
   // Strict realtime lock rule:
-  // Only the active live window slot is editable and savable.
-  // Past and future timeline slots are locked in read-only mode to maintain plant operational audit integrity.
-  const isSlotDisabled = sheet.status === 'verified' || !isLiveSlot;
+  // Only the active live window slot on today's live shift date is editable and savable.
+  // Past shift sheets, past slots, and future slots are locked in read-only mode to maintain plant operational audit integrity.
+  const isSlotDisabled = sheet.status === 'verified' || !isLiveShift || !isLiveSlot;
 
   return (
     <div className="space-y-6">
@@ -335,8 +370,43 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
           {/* Header Setpoints */}
           <div className="flex flex-wrap items-center gap-4 text-xs font-mono">
             <div className="bg-slate-900/90 px-3 py-2 rounded-lg border border-slate-800">
-              <span className="text-slate-500 block text-[10px]">SHIFT DATE</span>
-              <span className="text-slate-200 font-semibold">{sheet.shift_date}</span>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-slate-500 block text-[10px] font-mono">SHIFT DATE</span>
+                {isLiveShift ? (
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-950/90 border border-emerald-500/50 text-emerald-400 text-[10px] font-bold">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    LIVE
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-950/90 border border-amber-500/50 text-amber-400 text-[10px]">
+                    PAST LOG
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2 mt-0.5">
+                <select
+                  value={activeShiftDate}
+                  onChange={(e) => handleDateChange(e.target.value)}
+                  className="bg-transparent text-slate-200 font-semibold font-mono text-xs border-0 focus:ring-0 p-0 cursor-pointer hover:text-cyan-400"
+                  title="Select Shift Date to view log"
+                >
+                  {availableDates.map(d => (
+                    <option key={d} value={d} className="bg-slate-900 text-slate-200">
+                      {d} {d === getRealtimeShiftDate() ? '(Today · Live)' : ''}
+                    </option>
+                  ))}
+                </select>
+                {!isLiveShift && (
+                  <button
+                    type="button"
+                    onClick={() => handleDateChange(getRealtimeShiftDate())}
+                    className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950 hover:bg-cyan-900 text-cyan-300 border border-cyan-700/60 transition-colors cursor-pointer"
+                    title="Return to today's active live shift"
+                  >
+                    Go Live
+                  </button>
+                )}
+              </div>
             </div>
             <div className="bg-slate-900/90 px-3 py-2 rounded-lg border border-slate-800">
               <span className="text-slate-500 block text-[10px]">STRIPPING STEAM</span>
@@ -384,14 +454,27 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
               <span className="text-xs font-semibold text-slate-300 uppercase tracking-wider font-mono">
                 24-Hour Shift Timeline:
               </span>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 text-xs font-mono font-semibold shadow-sm">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
+              {isLiveShift ? (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-cyan-950/80 border border-cyan-500/40 text-cyan-300 text-xs font-mono font-semibold shadow-sm">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
+                  </span>
+                  PLANT TIME: {currentTimeStr || '09:00'} MYT · Current Slot: {String(((currentSlotIndex + 7) % 24) * 100).padStart(4, '0')} ({String(((currentSlotIndex + 7) % 24)).padStart(2, '0')}:00 - {String(((currentSlotIndex + 8) % 24)).padStart(2, '0')}:00)
                 </span>
-                PLANT TIME: {currentTimeStr || '09:00'} MYT · Current Slot: {String(((currentSlotIndex + 7) % 24) * 100).padStart(4, '0')} ({String(((currentSlotIndex + 7) % 24)).padStart(2, '0')}:00 - {String(((currentSlotIndex + 8) % 24)).padStart(2, '0')}:00)
-              </span>
-              {role === 'operator' && (
+              ) : (
+                <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-amber-950/80 border border-amber-500/40 text-amber-300 text-xs font-mono font-semibold shadow-sm">
+                  <span>HISTORICAL SHIFT: {activeShiftDate} (Read-Only)</span>
+                  <button
+                    type="button"
+                    onClick={() => handleDateChange(getRealtimeShiftDate())}
+                    className="text-cyan-300 hover:text-cyan-200 underline cursor-pointer"
+                  >
+                    Switch to Live Shift ({getRealtimeShiftDate()})
+                  </button>
+                </span>
+              )}
+              {role === 'operator' && isLiveShift && (
                 <span className="text-[10px] font-mono text-amber-400/90 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-800/40">
                   Operator Mode: Restricted to current active hour only
                 </span>
@@ -410,9 +493,9 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
               const label = String(((idx + 7) % 24) * 100).padStart(4, '0');
               const entry = sheet.entries?.find(e => e.slot_index === idx);
               const isSelected = selectedSlotIndex === idx;
-              const isLive = idx === currentSlotIndex;
-              const isPast = idx < currentSlotIndex;
-              const isFuture = idx > currentSlotIndex;
+              const isLive = isLiveShift && idx === currentSlotIndex;
+              const isPast = isLiveShift ? idx < currentSlotIndex : true;
+              const isFuture = isLiveShift ? idx > currentSlotIndex : false;
               const hasDev = entry?.has_deviation;
               const isFilled = Boolean(entry);
 
@@ -557,8 +640,34 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
           </div>
         )}
 
+        {/* Historical Shift Read-Only Notification Banner */}
+        {!isLiveShift && (
+          <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl bg-slate-900/80 p-4 text-xs text-slate-300 border border-slate-700/60 shadow-lg">
+            <div className="flex items-start gap-3">
+              <div className="rounded-lg bg-slate-800 p-2 border border-slate-700 text-cyan-400 shrink-0">
+                <Clock className="h-5 w-5" />
+              </div>
+              <div>
+                <span className="font-semibold text-slate-100 text-sm block">
+                  Viewing Historical Shift Log ({activeShiftDate}) · Read-Only
+                </span>
+                <span className="text-slate-400 block mt-0.5">
+                  You are viewing past records. Live input and hourly recordings are active on today&apos;s shift sheet ({getRealtimeShiftDate()}).
+                </span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleDateChange(getRealtimeShiftDate())}
+              className="bg-cyan-600 hover:bg-cyan-500 text-white font-medium px-4 py-2 rounded-xl text-xs transition-colors shrink-0 shadow-md font-mono cursor-pointer"
+            >
+              Switch to Live Shift
+            </button>
+          </div>
+        )}
+
         {/* Realtime Window Feedback Banner */}
-        {isPastSlot && sheet.status !== 'verified' && (
+        {isLiveShift && isPastSlot && sheet.status !== 'verified' && (
           <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl bg-amber-950/40 p-4 text-xs text-amber-200 border border-amber-800/60 shadow-lg">
             <div className="flex items-start gap-3">
               <div className="rounded-lg bg-amber-950 p-2 border border-amber-600/40 text-amber-400 shrink-0">
@@ -611,7 +720,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
           </div>
         )}
 
-        {isLiveSlot && sheet.status !== 'verified' && (
+        {isLiveShift && isLiveSlot && sheet.status !== 'verified' && (
           <div className="mb-5 flex items-start sm:items-center justify-between gap-3 rounded-xl bg-cyan-950/40 p-4 text-xs text-cyan-300 border border-cyan-700/60 shadow-lg">
             <div className="flex items-center gap-3">
               <div className="rounded-lg bg-cyan-900/50 p-2 border border-cyan-500/40 text-cyan-400 shrink-0">
@@ -1090,6 +1199,8 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     <span>
                       {sheet.status === 'verified'
                         ? 'Shift Sheet Locked (Verified)'
+                        : !isLiveShift
+                        ? `Historical Log (${activeShiftDate}) · Read-Only`
                         : isPastSlot
                         ? `Expired: Hour ${selectedSlotLabel} Closed (Read-Only)`
                         : isFutureSlot
