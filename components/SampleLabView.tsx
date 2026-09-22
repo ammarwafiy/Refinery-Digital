@@ -87,6 +87,7 @@ export default function SampleLabView({ currentRole, currentUser }: SampleLabVie
   const [selectedParamIds, setSelectedParamIds] = useState<string[]>([
     'param-ffa', 'param-h2o', 'param-iv', 'param-pv', 'param-col-r', 'param-col-y', 'param-odour', 'param-cloud', 'param-sfc', 'param-temp'
   ]);
+  const [selectedTempKeys, setSelectedTempKeys] = useState<number[]>([10, 15, 20, 25, 30, 35, 40, 45, 50]);
 
   // Enter results state
   const [resultInputs, setResultInputs] = useState<Record<string, { num?: number; text?: string }>>({});
@@ -138,37 +139,145 @@ export default function SampleLabView({ currentRole, currentUser }: SampleLabVie
   // Merge full catalog parameters so QC can always view and tick/untick any parameter
   const displayResults = useMemo(() => {
     if (!selectedReport) return [];
-    const existing = selectedReport.results || [];
+    const rawExisting = selectedReport.results || [];
 
-    // Filter out legacy sfc series if present
-    const cleanExisting = existing.filter(r => !r.series_key);
-    const existingParamKeys = new Set(cleanExisting.map(r => r.parameter_id));
-    const merged = [...cleanExisting];
+    // Normalize any legacy results where SFC had a series_key into separate TEMP results
+    const existing = rawExisting.map(r => {
+      if ((r.parameter_code === 'SFC' || r.parameter_id === 'param-sfc') && r.series_key != null) {
+        return {
+          ...r,
+          parameter_id: 'param-temp',
+          parameter_code: 'TEMP',
+          parameter_name: `Temperature ${r.series_key}°C`,
+          unit: '%',
+        };
+      }
+      return r;
+    });
+
+    const existingParamKeys = new Set(
+      existing.map(r => r.series_key != null ? `${r.parameter_id}-${r.series_key}` : r.parameter_id)
+    );
+    const merged = [...existing];
 
     parameters.forEach(param => {
-      if (!existingParamKeys.has(param.id)) {
-        merged.push({
-          id: `res-${selectedReport.id}-${param.code}`,
-          report_id: selectedReport.id,
-          parameter_id: param.id,
-          parameter_code: param.code,
-          parameter_name: param.name,
-          unit: param.unit,
-          requested: false,
+      if (param.is_series && param.series_values) {
+        param.series_values.forEach(temp => {
+          const key = `${param.id}-${temp}`;
+          if (!existingParamKeys.has(key)) {
+            merged.push({
+              id: `res-${selectedReport.id}-${param.code}-${temp}`,
+              report_id: selectedReport.id,
+              parameter_id: param.id,
+              parameter_code: param.code,
+              parameter_name: `${param.name} ${temp}°C`,
+              unit: param.unit,
+              series_key: temp,
+              requested: false,
+            });
+          }
         });
+      } else {
+        if (!existingParamKeys.has(param.id)) {
+          merged.push({
+            id: `res-${selectedReport.id}-${param.code}`,
+            report_id: selectedReport.id,
+            parameter_id: param.id,
+            parameter_code: param.code,
+            parameter_name: param.name,
+            unit: param.unit,
+            requested: false,
+          });
+        }
       }
     });
 
-    // Sort parameters based on standard catalog order (sort_order)
+    // Sort parameters based on standard catalog order (sort_order), and series by series_key ascending
     const paramOrderMap = new Map(parameters.map(p => [p.id, p.sort_order]));
     merged.sort((a, b) => {
       const orderA = paramOrderMap.get(a.parameter_id) ?? 99;
       const orderB = paramOrderMap.get(b.parameter_id) ?? 99;
-      return orderA - orderB;
+      if (orderA !== orderB) return orderA - orderB;
+      if (a.series_key != null && b.series_key != null) {
+        return Number(a.series_key) - Number(b.series_key);
+      }
+      return 0;
     });
 
     return merged;
   }, [selectedReport, parameters]);
+
+  // Separate standard parameters (including standalone SFC) from Temperature series
+  const standardResults = useMemo(() => {
+    return displayResults.filter(r => r.parameter_code !== 'TEMP');
+  }, [displayResults]);
+
+  const tempResults = useMemo(() => {
+    return displayResults.filter(r => r.parameter_code === 'TEMP');
+  }, [displayResults]);
+
+  // Master Temperature tick box state: checked if all active, indeterminate/partial if some
+  const isTempAllTicked = useMemo(() => {
+    return tempResults.length > 0 && tempResults.every(r => requestedMap[r.id] !== false);
+  }, [tempResults, requestedMap]);
+
+  const isTempAnyTicked = useMemo(() => {
+    return tempResults.some(r => requestedMap[r.id] !== false);
+  }, [tempResults, requestedMap]);
+
+  const activeTempCount = useMemo(() => {
+    return tempResults.filter(r => requestedMap[r.id] !== false).length;
+  }, [tempResults, requestedMap]);
+
+  // Toggle master Temperature parameter: ticks/unticks all 9 temperatures together
+  const handleToggleMasterTemp = (checked: boolean) => {
+    setRequestedMap(prev => {
+      const next = { ...prev };
+      tempResults.forEach(r => {
+        next[r.id] = checked;
+      });
+      return next;
+    });
+  };
+
+  // Toggle single parameter in New Sample registration
+  const toggleParam = (id: string) => {
+    setSelectedParamIds(prev => {
+      const exists = prev.includes(id);
+      if (exists) {
+        if (id === 'param-temp') setSelectedTempKeys([]);
+        return prev.filter(p => p !== id);
+      } else {
+        if (id === 'param-temp') setSelectedTempKeys([10, 15, 20, 25, 30, 35, 40, 45, 50]);
+        return [...prev, id];
+      }
+    });
+  };
+
+  // Toggle single temperature point in New Sample registration
+  const toggleTempKey = (temp: number) => {
+    setSelectedTempKeys(prev => {
+      const next = prev.includes(temp) ? prev.filter(t => t !== temp) : [...prev, temp].sort((a, b) => a - b);
+      if (next.length > 0 && !selectedParamIds.includes('param-temp')) {
+        setSelectedParamIds(p => [...p, 'param-temp']);
+      } else if (next.length === 0 && selectedParamIds.includes('param-temp')) {
+        setSelectedParamIds(p => p.filter(id => id !== 'param-temp'));
+      }
+      return next;
+    });
+  };
+
+  const handleToggleAllTempsForNew = (checked: boolean) => {
+    if (checked) {
+      setSelectedTempKeys([10, 15, 20, 25, 30, 35, 40, 45, 50]);
+      if (!selectedParamIds.includes('param-temp')) {
+        setSelectedParamIds(prev => [...prev, 'param-temp']);
+      }
+    } else {
+      setSelectedTempKeys([]);
+      setSelectedParamIds(prev => prev.filter(id => id !== 'param-temp'));
+    }
+  };
 
   // Initialize result inputs and active/ticked status when selected report changes
   useEffect(() => {
@@ -216,9 +325,14 @@ export default function SampleLabView({ currentRole, currentUser }: SampleLabVie
     if (!selectedReport) return;
     const specs = getProductSpecs(selectedReport.product_id || undefined);
     const specParamIds = new Set(specs.map(s => s.parameter_id));
+    const specTempKeys = new Set(specs.filter(s => s.parameter_id === 'param-temp' && s.series_key != null).map(s => Number(s.series_key)));
     const reqs: Record<string, boolean> = {};
     displayResults.forEach(r => {
-      reqs[r.id] = specParamIds.has(r.parameter_id);
+      if (r.parameter_code === 'TEMP' && r.series_key != null) {
+        reqs[r.id] = specTempKeys.has(Number(r.series_key));
+      } else {
+        reqs[r.id] = specParamIds.has(r.parameter_id);
+      }
     });
     setRequestedMap(reqs);
   };
@@ -243,6 +357,7 @@ export default function SampleLabView({ currentRole, currentUser }: SampleLabVie
       remark_pushover: newRemarkPushover,
       remarks: newRemarks,
       selected_parameter_ids: selectedParamIds,
+      selected_temperatures: selectedTempKeys,
     });
 
     if (res.success && res.report) {
@@ -309,13 +424,6 @@ export default function SampleLabView({ currentRole, currentUser }: SampleLabVie
     setDecisionPassword('');
     setDecisionNarrative('');
     refreshReports();
-  };
-
-  // Toggle parameter selection in "Raise New Sample"
-  const toggleParam = (pId: string) => {
-    setSelectedParamIds(prev => 
-      prev.includes(pId) ? prev.filter(id => id !== pId) : [...prev, pId]
-    );
   };
 
   // Filtered reports list
@@ -600,7 +708,7 @@ export default function SampleLabView({ currentRole, currentUser }: SampleLabVie
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 text-xs">
-                {parameters.map(param => {
+                {parameters.filter(p => p.code !== 'TEMP').map(param => {
                   const isChecked = selectedParamIds.includes(param.id);
                   return (
                     <label
@@ -622,6 +730,71 @@ export default function SampleLabView({ currentRole, currentUser }: SampleLabVie
                     </label>
                   );
                 })}
+              </div>
+
+              {/* Dedicated Temperature Test Points Selection (10, 15, 20, 25, 30, 35, 40, 45, 50°C) */}
+              <div className="mt-4 pt-3 border-t border-slate-800/80">
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="new-temp-master"
+                      checked={selectedParamIds.includes('param-temp') && selectedTempKeys.length === 9}
+                      onChange={e => handleToggleAllTempsForNew(e.target.checked)}
+                      className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-cyan-500 focus:ring-cyan-500 cursor-pointer"
+                    />
+                    <label htmlFor="new-temp-master" className="text-xs font-semibold text-cyan-400 font-mono cursor-pointer flex items-center gap-2">
+                      <span>Temperature Test Points</span>
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-cyan-300 border border-slate-700">
+                        {selectedTempKeys.length} / 9 Active
+                      </span>
+                    </label>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleAllTempsForNew(true)}
+                      className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 transition-colors"
+                    >
+                      Select All 9
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleAllTempsForNew(false)}
+                      className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 border border-slate-700 transition-colors"
+                    >
+                      Deselect All
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-9 gap-2">
+                  {[10, 15, 20, 25, 30, 35, 40, 45, 50].map(temp => {
+                    const isTicked = selectedTempKeys.includes(temp);
+                    return (
+                      <label
+                        key={temp}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          toggleTempKey(temp);
+                        }}
+                        className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg border text-xs font-mono cursor-pointer transition-all ${
+                          isTicked
+                            ? 'border-cyan-500/50 bg-cyan-950/40 text-cyan-300 font-bold shadow-sm shadow-cyan-950/50'
+                            : 'border-slate-800 bg-slate-900/80 text-slate-400 hover:border-slate-700'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isTicked}
+                          readOnly
+                          className="h-3.5 w-3.5 rounded border-slate-700 text-cyan-500 focus:ring-cyan-500 pointer-events-none"
+                        />
+                        <span>{temp}°C</span>
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 
@@ -827,7 +1000,8 @@ export default function SampleLabView({ currentRole, currentUser }: SampleLabVie
                         Lab Analysis Results Entry (RF-FR-001 Parameter Table)
                       </span>
                       <span className="rounded bg-slate-800 px-2.5 py-0.5 font-mono text-[11px] text-cyan-300 border border-slate-700">
-                        {displayResults.filter(r => requestedMap[r.id] !== false).length} / {displayResults.length} Parameters Active
+                        {standardResults.filter(r => requestedMap[r.id] !== false).length + (isTempAnyTicked ? 1 : 0)} / {standardResults.length + (tempResults.length > 0 ? 1 : 0)} Parameters Active
+                        {isTempAnyTicked && ` · ${activeTempCount}/9 Temps Active`}
                       </span>
                     </div>
 
@@ -873,7 +1047,8 @@ export default function SampleLabView({ currentRole, currentUser }: SampleLabVie
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-800/60 font-mono">
-                        {displayResults.map(res => {
+                        {/* 1. Standard Laboratory Parameters (FFA to FAC C12:0, and Solid Fat Content SFC) */}
+                        {standardResults.map(res => {
                           const inputVal = resultInputs[res.id] || {};
                           const isUnticked = requestedMap[res.id] === false;
                           const canEdit = (role === 'qc_analyst' || role === 'qc_manager' || role === 'admin');
@@ -928,9 +1103,175 @@ export default function SampleLabView({ currentRole, currentUser }: SampleLabVie
                                 ) : (
                                   <input
                                     type="number"
-                                    step={res.parameter_code === 'SFC' || res.parameter_code === 'TEMP' || res.parameter_code === 'BPP' || res.parameter_code === 'SLIP_MELT' || res.parameter_code === 'CLOUD_POINT' || res.parameter_code === 'SOAP' || res.parameter_code === 'IV' || res.parameter_code === 'COLOUR_R' || res.parameter_code === 'COLOUR_Y' ? "0.1" : "0.001"}
+                                    step={res.parameter_code === 'SFC' || res.parameter_code === 'BPP' || res.parameter_code === 'SLIP_MELT' || res.parameter_code === 'CLOUD_POINT' || res.parameter_code === 'SOAP' || res.parameter_code === 'IV' || res.parameter_code === 'COLOUR_R' || res.parameter_code === 'COLOUR_Y' ? "0.1" : "0.001"}
                                     disabled={!canEdit}
                                     placeholder="Enter value"
+                                    value={inputVal.num ?? ''}
+                                    onChange={e => setResultInputs(prev => ({
+                                      ...prev,
+                                      [res.id]: { ...prev[res.id], num: e.target.value ? Number(e.target.value) : undefined }
+                                    }))}
+                                    className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white focus:border-cyan-500 disabled:opacity-50 font-mono"
+                                  />
+                                )}
+                              </td>
+                              <td className="py-2.5 px-3 text-center">
+                                {isUnticked ? (
+                                  <span className="inline-flex items-center text-[10px] text-slate-500 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+                                    N/A (Unticked)
+                                  </span>
+                                ) : res.in_spec === true ? (
+                                  <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-800/40">
+                                    <Check className="h-2.5 w-2.5" /> IN SPEC
+                                  </span>
+                                ) : res.in_spec === false ? (
+                                  <span className="inline-flex items-center gap-1 text-[10px] text-rose-400 bg-rose-950/80 px-2 py-0.5 rounded border border-rose-800/40 font-bold">
+                                    <XCircle className="h-2.5 w-2.5" /> OUT OF SPEC
+                                  </span>
+                                ) : (
+                                  <span className="text-[10px] text-slate-500">
+                                    Pending Input
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+
+                        {/* 2. Master Temperature Row (Controls all 9 points: 10, 15, 20, 25, 30, 35, 40, 45, 50°C) */}
+                        {tempResults.length > 0 && (
+                          <tr className={`border-t-2 border-slate-800 transition-colors ${
+                            !isTempAnyTicked
+                              ? 'bg-slate-950/70 opacity-60'
+                              : 'bg-cyan-950/20 hover:bg-cyan-950/30'
+                          }`}>
+                            <td className="py-2.5 px-3 text-center">
+                              <input
+                                type="checkbox"
+                                checked={isTempAllTicked}
+                                onChange={e => handleToggleMasterTemp(e.target.checked)}
+                                disabled={!(role === 'qc_analyst' || role === 'qc_manager' || role === 'admin')}
+                                className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-cyan-500 focus:ring-cyan-500 cursor-pointer disabled:opacity-50"
+                                title={isTempAllTicked ? "Untick all 9 temperatures" : "Tick all 9 temperatures"}
+                              />
+                            </td>
+                            <td className="py-2.5 px-3">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className={`font-semibold font-sans ${isTempAnyTicked ? 'text-cyan-300' : 'text-slate-400'}`}>
+                                  Temperature
+                                </span>
+                                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-cyan-300 border border-slate-700">
+                                  9 Test Points: 10, 15, 20, 25, 30, 35, 40, 45, 50°C
+                                </span>
+                              </div>
+                            </td>
+                            <td className="py-2.5 px-3 text-slate-500 font-mono">
+                              %
+                            </td>
+                            <td className="py-2.5 px-3">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-[11px] font-mono text-slate-400">
+                                  {activeTempCount === 9
+                                    ? 'All 9 Active'
+                                    : activeTempCount === 0
+                                    ? 'None Active (Unticked)'
+                                    : `${activeTempCount} / 9 Active`}
+                                </span>
+                                {(role === 'qc_analyst' || role === 'qc_manager' || role === 'admin') && (
+                                  <div className="flex items-center gap-1">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleToggleMasterTemp(true)}
+                                      className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 transition-colors"
+                                    >
+                                      All
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleToggleMasterTemp(false)}
+                                      className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-400 border border-slate-700 transition-colors"
+                                    >
+                                      Clear
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                            <td className="py-2.5 px-3 text-center">
+                              {!isTempAnyTicked ? (
+                                <span className="inline-flex items-center text-[10px] text-slate-500 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
+                                  N/A (Unticked)
+                                </span>
+                              ) : tempResults.some(r => requestedMap[r.id] !== false && r.in_spec === false) ? (
+                                <span className="inline-flex items-center gap-1 text-[10px] text-rose-400 bg-rose-950/80 px-2 py-0.5 rounded border border-rose-800/40 font-bold">
+                                  <XCircle className="h-2.5 w-2.5" /> OUT OF SPEC
+                                </span>
+                              ) : tempResults.filter(r => requestedMap[r.id] !== false).every(r => r.in_spec === true) ? (
+                                <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-800/40">
+                                  <Check className="h-2.5 w-2.5" /> ALL IN SPEC
+                                </span>
+                              ) : (
+                                <span className="text-[10px] text-slate-500">
+                                  Pending Input
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        )}
+
+                        {/* 3. Nine Individual Temperature Test Points: 10, 15, 20, 25, 30, 35, 40, 45, 50°C */}
+                        {tempResults.map(res => {
+                          const inputVal = resultInputs[res.id] || {};
+                          const isUnticked = requestedMap[res.id] === false;
+                          const canEdit = (role === 'qc_analyst' || role === 'qc_manager' || role === 'admin');
+
+                          return (
+                            <tr
+                              key={res.id}
+                              className={`transition-colors border-l-2 ${
+                                isUnticked
+                                  ? 'opacity-40 bg-slate-950/40 border-l-slate-800'
+                                  : 'hover:bg-slate-900/30 border-l-cyan-500/60 bg-slate-950/20'
+                              }`}
+                            >
+                              <td className="py-2.5 px-3 text-center">
+                                <input
+                                  type="checkbox"
+                                  checked={!isUnticked}
+                                  onChange={e => handleToggleResultParam(res.id, e.target.checked)}
+                                  disabled={!canEdit}
+                                  className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-cyan-500 focus:ring-cyan-500 cursor-pointer disabled:opacity-50"
+                                  title={isUnticked ? `Unticked: Temperature ${res.series_key}°C not tested` : `Ticked: Test Temperature ${res.series_key}°C`}
+                                />
+                              </td>
+                              <td className="py-2.5 px-3 font-sans">
+                                <div className="flex items-center gap-2 pl-4">
+                                  <span className="text-cyan-500/80 font-mono text-xs select-none">↳</span>
+                                  <span className={`font-medium ${isUnticked ? 'text-slate-500' : 'text-slate-200'}`}>
+                                    Temperature {res.series_key}°C
+                                  </span>
+                                  <span className="text-[10px] font-mono text-slate-500 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">
+                                    Pt {res.series_key}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className={`py-2.5 px-3 ${isUnticked ? 'text-slate-600' : 'text-slate-500'}`}>
+                                {res.unit || '%'}
+                              </td>
+                              <td className="py-2.5 px-3">
+                                {isUnticked ? (
+                                  <input
+                                    type="text"
+                                    disabled
+                                    value="N/A - Unticked"
+                                    className="w-full bg-slate-950/80 border border-slate-800/80 rounded px-2 py-1 text-xs text-slate-500 cursor-not-allowed font-mono italic"
+                                  />
+                                ) : (
+                                  <input
+                                    type="number"
+                                    step="0.1"
+                                    disabled={!canEdit}
+                                    placeholder={`Val @ ${res.series_key}°C`}
                                     value={inputVal.num ?? ''}
                                     onChange={e => setResultInputs(prev => ({
                                       ...prev,

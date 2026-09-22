@@ -951,15 +951,30 @@ export function ensureAutoDispatchedQC(
       const resultsList: SampleResult[] = [];
       allParams.forEach(param => {
         const isReq = defaultSpecParamIds.length > 0 ? defaultSpecParamIds.includes(param.id) : true;
-        resultsList.push({
-          id: `res-${Date.now()}-${param.code}-${Math.random().toString(36).slice(2, 6)}`,
-          report_id: repId,
-          parameter_id: param.id,
-          parameter_code: param.code,
-          parameter_name: param.name,
-          unit: param.unit,
-          requested: isReq,
-        });
+        if (param.is_series && param.series_values) {
+          param.series_values.forEach(temp => {
+            resultsList.push({
+              id: `res-${Date.now()}-${param.code}-${temp}-${Math.random().toString(36).slice(2, 6)}`,
+              report_id: repId,
+              parameter_id: param.id,
+              parameter_code: param.code,
+              parameter_name: `${param.name} ${temp}°C`,
+              unit: param.unit,
+              series_key: temp,
+              requested: isReq,
+            });
+          });
+        } else {
+          resultsList.push({
+            id: `res-${Date.now()}-${param.code}-${Math.random().toString(36).slice(2, 6)}`,
+            report_id: repId,
+            parameter_id: param.id,
+            parameter_code: param.code,
+            parameter_name: param.name,
+            unit: param.unit,
+            requested: isReq,
+          });
+        }
       });
       return resultsList;
     };
@@ -1260,7 +1275,50 @@ export function acknowledgeDeviation(deviationId: string, actionTaken: string): 
 
 // 4. Sample Reports & Lab (RF-FR-001)
 export function getSampleReports(): SampleReport[] {
-  return getStored<SampleReport[]>(STORAGE_KEYS.REPORTS, memoryReports);
+  const reports = getStored<SampleReport[]>(STORAGE_KEYS.REPORTS, memoryReports);
+  let migrated = false;
+  reports.forEach(rep => {
+    if (rep.results && rep.results.length > 0) {
+      const hasLegacySfcSeries = rep.results.some(
+        r => (r.parameter_code === 'SFC' || r.parameter_id === 'param-sfc') && r.series_key != null
+      );
+      if (hasLegacySfcSeries) {
+        migrated = true;
+        const hasSingleSfc = rep.results.some(
+          r => (r.parameter_code === 'SFC' || r.parameter_id === 'param-sfc') && r.series_key == null
+        );
+        rep.results = rep.results.map(r => {
+          if ((r.parameter_code === 'SFC' || r.parameter_id === 'param-sfc') && r.series_key != null) {
+            return {
+              ...r,
+              parameter_id: 'param-temp',
+              parameter_code: 'TEMP',
+              parameter_name: `Temperature ${r.series_key}°C`,
+              unit: '%',
+            };
+          }
+          return r;
+        });
+        if (!hasSingleSfc) {
+          rep.results.push({
+            id: `res-${rep.id}-SFC`,
+            report_id: rep.id,
+            parameter_id: 'param-sfc',
+            parameter_code: 'SFC',
+            parameter_name: 'Solid Fat Content (SFC)',
+            unit: '%',
+            requested: true,
+            value_numeric: undefined,
+          });
+        }
+      }
+    }
+  });
+  if (migrated) {
+    setStored(STORAGE_KEYS.REPORTS, reports);
+    memoryReports = reports;
+  }
+  return reports;
 }
 
 export function getSampleReport(id: string): SampleReport | undefined {
@@ -1284,6 +1342,7 @@ export function createSampleReport(data: {
   remark_pushover: boolean;
   remarks?: string;
   selected_parameter_ids: string[];
+  selected_temperatures?: number[];
 }): { success: boolean; report?: SampleReport; error?: string } {
   const profile = getCurrentProfile();
   const products = getProducts();
@@ -1304,15 +1363,33 @@ export function createSampleReport(data: {
   data.selected_parameter_ids.forEach(pId => {
     const param = params.find(p => p.id === pId);
     if (!param) return;
-    results.push({
-      id: `res-${Date.now()}-${param.code}`,
-      report_id: reportId,
-      parameter_id: param.id,
-      parameter_code: param.code,
-      parameter_name: param.name,
-      unit: param.unit,
-      requested: true,
-    });
+    if (param.is_series && param.series_values) {
+      const activeTemps = data.selected_temperatures && data.selected_temperatures.length > 0
+        ? param.series_values.filter(t => data.selected_temperatures!.includes(t))
+        : param.series_values;
+      activeTemps.forEach(temp => {
+        results.push({
+          id: `res-${Date.now()}-${param.code}-${temp}`,
+          report_id: reportId,
+          parameter_id: param.id,
+          parameter_code: param.code,
+          parameter_name: `${param.name} ${temp}°C`,
+          unit: param.unit,
+          series_key: temp,
+          requested: true,
+        });
+      });
+    } else {
+      results.push({
+        id: `res-${Date.now()}-${param.code}`,
+        report_id: reportId,
+        parameter_id: param.id,
+        parameter_code: param.code,
+        parameter_name: param.name,
+        unit: param.unit,
+        requested: true,
+      });
+    }
   });
 
   const newReport: SampleReport = {
@@ -1410,7 +1487,7 @@ export function updateSampleResults(
     }
 
     // Check spec
-    const spec = specs.find(s => s.parameter_id === res!.parameter_id && (res!.series_key ? s.series_key === res!.series_key : true));
+    const spec = specs.find(s => s.parameter_id === res!.parameter_id && (res!.series_key != null ? Number(s.series_key) === Number(res!.series_key) : s.series_key == null));
     if (spec && res.value_numeric !== undefined && res.value_numeric !== null) {
       let pass = true;
       if (spec.min_value !== undefined && spec.min_value !== null && res.value_numeric < spec.min_value) pass = false;

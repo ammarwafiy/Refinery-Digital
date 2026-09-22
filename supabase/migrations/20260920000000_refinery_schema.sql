@@ -384,7 +384,7 @@ insert into parameters (code, name, unit, decimals, is_series, series_values, in
 ('SOAP', 'Soap Content', 'ppm', 1, false, null, 'numeric', 11),
 ('FAC_C12', 'Fatty Acid Composition C12:0', '%', 2, false, null, 'numeric', 12),
 ('SFC', 'Solid Fat Content (SFC)', '%', 1, false, null, 'numeric', 13),
-('TEMP', 'Temperature', '°C', 1, false, null, 'numeric', 14)
+('TEMP', 'Temperature Series', '%', 1, true, array[10,15,20,25,30,35,40,45,50], 'numeric', 14)
 on conflict (code) do nothing;
 
 -- Rejection Reason Codes
