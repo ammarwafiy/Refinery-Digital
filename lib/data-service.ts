@@ -2529,59 +2529,148 @@ export function getDatabaseStorageMetrics(): StorageMetrics {
   };
 }
 
-export function generateFullArchivePackage(cutoffDate: string): {
-  filename: string;
-  jsonContent: string;
-  csvSummaryContent: string;
-  recordsArchivedCount: number;
+export function getArchivePreviewCounts(cutoffDate: string, isAll?: boolean): {
+  reports: number;
+  deviations: number;
+  auditLogs: number;
+  sheets: number;
+  total: number;
 } {
   const reports = getSampleReports();
   const deviations = getDeviations();
   const auditLogs = getAuditLogs();
+  const allSheets = getAllProcessSheets();
 
-  const archivedReports = reports.filter(r => r.sample_date < cutoffDate && r.status === 'decided');
-  const archivedDeviations = deviations.filter(d => d.created_at < cutoffDate);
-  const archivedAuditLogs = auditLogs.filter(a => a.occurred_at < cutoffDate);
+  if (isAll || cutoffDate === 'all' || cutoffDate === 'ALL' || cutoffDate === 'FULL') {
+    const sLen = Object.values(allSheets).length;
+    return {
+      reports: reports.length,
+      deviations: deviations.length,
+      auditLogs: auditLogs.length,
+      sheets: sLen,
+      total: reports.length + deviations.length + auditLogs.length + sLen,
+    };
+  }
+
+  const rCount = reports.filter(r => r.sample_date <= cutoffDate && (r.status === 'decided' || r.sample_date < cutoffDate)).length;
+  const dCount = deviations.filter(d => (d.created_at || '').slice(0, 10) <= cutoffDate).length;
+  const aCount = auditLogs.filter(a => (a.occurred_at || '').slice(0, 10) <= cutoffDate).length;
+  const sCount = Object.values(allSheets).filter(s => s.shift_date <= cutoffDate).length;
+
+  return {
+    reports: rCount,
+    deviations: dCount,
+    auditLogs: aCount,
+    sheets: sCount,
+    total: rCount + dCount + aCount + sCount,
+  };
+}
+
+export function generateFullArchivePackage(
+  cutoffDate: string,
+  options?: { isFullBackup?: boolean }
+): {
+  filename: string;
+  jsonContent: string;
+  csvSummaryContent: string;
+  recordsArchivedCount: number;
+  counts: {
+    reports: number;
+    deviations: number;
+    auditLogs: number;
+    sheets: number;
+  };
+} {
+  const reports = getSampleReports();
+  const deviations = getDeviations();
+  const auditLogs = getAuditLogs();
+  const allSheets = getAllProcessSheets();
+
+  const isAll = options?.isFullBackup || cutoffDate === 'all' || cutoffDate === 'ALL' || cutoffDate === 'FULL';
+
+  const archivedReports = isAll
+    ? reports
+    : reports.filter(r => r.sample_date <= cutoffDate && (r.status === 'decided' || r.sample_date < cutoffDate));
+  const archivedDeviations = isAll
+    ? deviations
+    : deviations.filter(d => (d.created_at || '').slice(0, 10) <= cutoffDate);
+  const archivedAuditLogs = isAll
+    ? auditLogs
+    : auditLogs.filter(a => (a.occurred_at || '').slice(0, 10) <= cutoffDate);
+  const archivedSheets = isAll
+    ? Object.values(allSheets)
+    : Object.values(allSheets).filter(s => s.shift_date <= cutoffDate);
 
   const archiveData = {
     exported_at: new Date().toISOString(),
     plant_id: INITIAL_PLANT.id,
     plant_name: INITIAL_PLANT.name,
-    cutoff_date: cutoffDate,
-    description: `Refinery Historical Cold Storage Backup (For Google Drive / Cloud Archiving)`,
+    cutoff_date: isAll ? 'ALL_RECORDS_UNLIMITED' : cutoffDate,
+    mode: isAll ? 'FULL_PLANT_BACKUP' : 'COLD_STORAGE_ARCHIVE',
+    description: isAll
+      ? 'Refinery Full Plant Backup Package (Complete Historical & Operational Records)'
+      : `Refinery Historical Cold Storage Backup (Records on or before ${cutoffDate})`,
     counts: {
       reports: archivedReports.length,
       deviations: archivedDeviations.length,
       auditLogs: archivedAuditLogs.length,
+      processSheets: archivedSheets.length,
     },
     sample_reports: archivedReports,
+    process_sheets: archivedSheets,
     deviations: archivedDeviations,
     audit_logs: archivedAuditLogs,
   };
 
-  // Build CSV summary
-  const csvHeaders = ['Report_No', 'Sample_Date', 'Time_Check', 'Lot_No', 'Product', 'Decision', 'Decided_By', 'Decided_At'];
+  // Build CSV summary with rich columns for Excel inspection
+  const csvHeaders = [
+    'Report_No',
+    'Sample_Date',
+    'Time_Check',
+    'Lot_No',
+    'Product',
+    'Feed_Tank',
+    'Discharge_Tank',
+    'Status',
+    'Decision',
+    'Reason',
+    'Disposition',
+    'Decided_By',
+    'Decided_At'
+  ];
   const csvRows = archivedReports.map(r => [
     r.report_no,
     r.sample_date,
     r.time_check,
     r.lot_no,
     `"${r.product_name}"`,
-    r.decision?.decision || 'N/A',
+    r.feed_tank_code || 'N/A',
+    r.discharge_tank_code || 'N/A',
+    r.status,
+    r.decision?.decision || (r.status === 'awaiting_results' ? 'Awaiting Results' : 'Pending'),
+    `"${r.decision?.reason_label || r.decision?.reason_detail || 'N/A'}"`,
+    r.decision?.disposition || 'N/A',
     `"${r.decision?.decided_by_name || 'N/A'}"`,
     r.decision?.decided_at || 'N/A',
   ].join(','));
 
   const csvContent = [csvHeaders.join(','), ...csvRows].join('\n');
 
-  const totalCount = archivedReports.length + archivedDeviations.length + archivedAuditLogs.length;
-  const filename = `Refinery_Plant_Archive_${cutoffDate}_${Date.now()}`;
+  const totalCount = archivedReports.length + archivedDeviations.length + archivedAuditLogs.length + archivedSheets.length;
+  const tag = isAll ? 'Full_Plant_Backup' : `Archive_${cutoffDate}`;
+  const filename = `Refinery_${tag}_${Date.now()}`;
 
   return {
     filename,
     jsonContent: JSON.stringify(archiveData, null, 2),
     csvSummaryContent: csvContent,
     recordsArchivedCount: totalCount,
+    counts: {
+      reports: archivedReports.length,
+      deviations: archivedDeviations.length,
+      auditLogs: archivedAuditLogs.length,
+      sheets: archivedSheets.length,
+    }
   };
 }
 

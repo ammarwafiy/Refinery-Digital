@@ -49,6 +49,7 @@ import {
   ROLE_ID_SERIES,
   getDatabaseStorageMetrics,
   generateFullArchivePackage,
+  getArchivePreviewCounts,
   executePruneRetentionPolicy,
   StorageMetrics
 } from '@/lib/data-service';
@@ -75,7 +76,7 @@ export default function AdminUserManagementView() {
 
   // Retention & Auto-Archive / Prune State
   const [storageMetrics, setStorageMetrics] = useState<StorageMetrics | null>(null);
-  const [retentionPreset, setRetentionPreset] = useState<'30' | '90' | '180' | '365' | 'custom'>('90');
+  const [retentionPreset, setRetentionPreset] = useState<'all' | 'today' | '30' | '90' | '180' | '365' | 'custom'>('all');
   const [customCutoffDate, setCustomCutoffDate] = useState<string>(() => {
     const d = new Date();
     d.setDate(d.getDate() - 90);
@@ -177,6 +178,8 @@ export default function AdminUserManagementView() {
   };
 
   const getEffectiveCutoffDate = () => {
+    if (retentionPreset === 'all') return 'all';
+    if (retentionPreset === 'today') return new Date().toISOString().split('T')[0];
     if (retentionPreset === 'custom') return customCutoffDate;
     const days = parseInt(retentionPreset, 10);
     const d = new Date();
@@ -184,10 +187,11 @@ export default function AdminUserManagementView() {
     return d.toISOString().split('T')[0];
   };
 
-  const handleDownloadArchive = () => {
+  const handleDownloadArchive = (forceAll = false) => {
     try {
-      const cutoff = getEffectiveCutoffDate();
-      const pkg = generateFullArchivePackage(cutoff);
+      const isAll = forceAll || retentionPreset === 'all';
+      const cutoff = isAll ? 'all' : getEffectiveCutoffDate();
+      const pkg = generateFullArchivePackage(cutoff, { isFullBackup: isAll });
 
       // Trigger JSON file download (complete structured data)
       const blobJson = new Blob([pkg.jsonContent], { type: 'application/json;charset=utf-8;' });
@@ -215,13 +219,19 @@ export default function AdminUserManagementView() {
       setDownloadedPackageInfo({ filename: pkg.filename, count: pkg.recordsArchivedCount });
       setPruneStatusMessage({
         type: 'success',
-        text: `✓ Cold Storage Backup downloaded (${pkg.recordsArchivedCount} records packaged). You can now upload this file to Google Drive. Step 2 (Pruning) is unlocked!`
+        text: `✓ Sandaran dimuat turun (${pkg.recordsArchivedCount} rekod dibungkus). Anda kini boleh simpan fail ini ke Google Drive.`
       });
+      showToast(
+        'success',
+        'Sandaran Berjaya Dimuat Turun',
+        `${pkg.recordsArchivedCount} rekod (${pkg.counts.reports} Laporan QC, ${pkg.counts.deviations} Sisihan, ${pkg.counts.auditLogs} Audit Log, ${pkg.counts.sheets} Lembaran Syif) telah dieksport ke fail Excel (.csv) & .json!`
+      );
     } catch (err: any) {
       setPruneStatusMessage({
         type: 'error',
         text: `Failed to generate archive package: ${err?.message || 'Unknown error'}`
       });
+      showToast('error', 'Ralat Muat Turun', err?.message || 'Gagal menjana fail sandaran');
     }
   };
 
@@ -1234,12 +1244,13 @@ export default function AdminUserManagementView() {
                 <label className="block text-slate-300 font-semibold">
                   Select Retention Cutoff Policy:
                 </label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {[
-                    { id: '30', label: '30 Days', desc: '1 Month' },
-                    { id: '90', label: '90 Days', desc: '1 Quarter (Recommended)' },
-                    { id: '180', label: '180 Days', desc: '6 Months' },
-                    { id: '365', label: '365 Days', desc: '1 Year' },
+                    { id: 'all', label: 'Semua Rekod', desc: 'Full Backup (100% Data Semasa)' },
+                    { id: 'today', label: 'Hari Ini', desc: 'Sehingga 22 Sep 2026' },
+                    { id: '30', label: '30 Hari Lalu', desc: 'Rekod < 30 hari' },
+                    { id: '90', label: '90 Hari Lalu', desc: 'Suku Tahun (Lalai)' },
+                    { id: '180', label: '180 Hari Lalu', desc: 'Setengah Tahun' },
                   ].map((preset) => (
                     <button
                       key={preset.id}
@@ -1255,54 +1266,110 @@ export default function AdminUserManagementView() {
                       <div className="text-[10px] text-slate-500">{preset.desc}</div>
                     </button>
                   ))}
-                </div>
-
-                {/* Custom Date Picker */}
-                <div className="pt-2">
                   <button
                     type="button"
                     onClick={() => setRetentionPreset('custom')}
-                    className={`text-[11px] font-mono px-3 py-1.5 rounded-lg border transition-all cursor-pointer ${
+                    className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
                       retentionPreset === 'custom'
-                        ? 'bg-cyan-950/80 border-cyan-500 text-cyan-300'
-                        : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200'
+                        ? 'bg-cyan-950/80 border-cyan-500 text-cyan-300 shadow-md shadow-cyan-950/50'
+                        : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-800'
                     }`}
                   >
-                    Custom Cutoff Date
+                    <div className="font-bold text-xs">Tarikh Custom</div>
+                    <div className="text-[10px] text-slate-500">Pilih Sendiri</div>
                   </button>
-
-                  {retentionPreset === 'custom' && (
-                    <div className="mt-2 flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-cyan-400" />
-                      <input
-                        type="date"
-                        value={customCutoffDate}
-                        onChange={(e) => setCustomCutoffDate(e.target.value)}
-                        className="bg-[#090d16] border border-cyan-500/60 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none font-mono"
-                      />
-                    </div>
-                  )}
                 </div>
+
+                {/* Custom Date Picker */}
+                {retentionPreset === 'custom' && (
+                  <div className="pt-2 flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-cyan-400" />
+                    <input
+                      type="date"
+                      value={customCutoffDate}
+                      onChange={(e) => setCustomCutoffDate(e.target.value)}
+                      className="bg-[#090d16] border border-cyan-500/60 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none font-mono"
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Effective Cutoff Date Banner */}
               <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center justify-between text-xs font-mono">
                 <span className="text-slate-400">Effective Prune Cutoff Date:</span>
                 <span className="text-cyan-400 font-bold bg-[#090d16] px-2.5 py-1 rounded border border-slate-700">
-                  {getEffectiveCutoffDate()}
+                  {retentionPreset === 'all' ? 'SEMUA REKOD (TIADA HAD TARIKH)' : getEffectiveCutoffDate()}
                 </span>
               </div>
 
-              {/* Download Action */}
+              {/* Dynamic Live Preview Box */}
+              {(() => {
+                const effectiveCutoff = getEffectiveCutoffDate();
+                const preview = getArchivePreviewCounts(effectiveCutoff, retentionPreset === 'all');
+                return (
+                  <div className="p-3.5 rounded-xl bg-[#090d16] border border-slate-800 space-y-2.5">
+                    <div className="flex items-center justify-between text-xs font-mono">
+                      <span className="text-slate-400">Kandungan Rekod Untuk Dieksport:</span>
+                      <span className={`px-2.5 py-0.5 rounded font-bold ${preview.total > 0 ? 'bg-cyan-950 text-cyan-300 border border-cyan-800' : 'bg-amber-950 text-amber-300 border border-amber-800'}`}>
+                        {preview.total} Rekod Ditemui
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-4 gap-2 text-[10px] font-mono text-center">
+                      <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800">
+                        <div className="text-cyan-400 font-bold text-xs">{preview.reports}</div>
+                        <div className="text-slate-400 text-[9px] mt-0.5">QC Reports</div>
+                      </div>
+                      <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800">
+                        <div className="text-emerald-400 font-bold text-xs">{preview.sheets}</div>
+                        <div className="text-slate-400 text-[9px] mt-0.5">Shift Sheets</div>
+                      </div>
+                      <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800">
+                        <div className="text-amber-400 font-bold text-xs">{preview.deviations}</div>
+                        <div className="text-slate-400 text-[9px] mt-0.5">Deviations</div>
+                      </div>
+                      <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800">
+                        <div className="text-purple-400 font-bold text-xs">{preview.auditLogs}</div>
+                        <div className="text-slate-400 text-[9px] mt-0.5">Audit Logs</div>
+                      </div>
+                    </div>
+                    {preview.total === 0 ? (
+                      <div className="p-2.5 rounded-lg bg-amber-950/40 border border-amber-800/60 text-amber-300 text-[11px] font-sans flex items-start gap-2">
+                        <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+                        <span>
+                          <b>Kenapa 0 Rekod?</b> Semua data loji dalam sistem sekarang bertarikh <b>September 2026</b>. Dasar had tarikh yang dipilih ({effectiveCutoff}) hanya mencari rekod lama sebelum tarikh tersebut. Sila pilih preset <b>"Semua Rekod"</b> atau <b>"Hari Ini"</b> di atas untuk memuat turun semua rekod ke dalam fail Excel & JSON anda.
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="text-[10px] font-mono text-emerald-400/90 flex items-center gap-1.5">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                        <span>Fail Excel (.csv) & .json akan mengandungi kesemua {preview.total} rekod ini secara lengkap.</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+
+              {/* Download Action Buttons */}
               <div className="space-y-3 pt-2">
                 <button
                   type="button"
-                  onClick={handleDownloadArchive}
-                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-semibold py-3 px-4 rounded-xl text-xs font-mono transition-all shadow-lg shadow-cyan-950/60 cursor-pointer"
+                  onClick={() => handleDownloadArchive(true)}
+                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold py-3 px-4 rounded-xl text-xs font-mono transition-all shadow-lg shadow-emerald-950/60 cursor-pointer"
                 >
                   <Download className="h-4 w-4" />
-                  <span>Download Cold Storage Archive (.JSON + .CSV)</span>
+                  <span>📥 Muat Turun Full Plant Backup (.JSON + .CSV) — Semua Rekod Semasa</span>
                 </button>
+
+                {retentionPreset !== 'all' && (
+                  <button
+                    type="button"
+                    onClick={() => handleDownloadArchive(false)}
+                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-semibold py-2.5 px-4 rounded-xl text-xs font-mono transition-all shadow-lg shadow-cyan-950/60 cursor-pointer"
+                  >
+                    <Download className="h-4 w-4" />
+                    <span>Muat Turun Sandaran Mengikut Had ({getEffectiveCutoffDate()})</span>
+                  </button>
+                )}
 
                 {/* Google Drive Direct Link */}
                 <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900/40 border border-slate-800/80 text-xs font-mono">
