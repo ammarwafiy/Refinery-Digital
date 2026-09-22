@@ -109,7 +109,7 @@ export const ROLE_DEFAULT_TAB: Record<UserRole, string> = {
   supervisor: 'supervisor',
   qc_analyst: 'qc',
   qc_manager: 'qc',
-  admin: 'admin',
+  admin: 'process',
   viewer: 'export',
 };
 

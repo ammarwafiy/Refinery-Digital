@@ -73,7 +73,6 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
     { id: 'qc', label: 'RF-FR-001 QC Lab', shortLabel: 'QC Lab', icon: FlaskConical, badge: 'Quality' },
     { id: 'analytics', label: 'Process Trends & Pareto', shortLabel: 'Trends', icon: BarChart3, badge: 'Analytics' },
     { id: 'export', label: 'Official Forms & Audit', shortLabel: 'Forms & Audit', icon: FileText, badge: 'ISO' },
-    { id: 'admin', label: 'Admin & Users', shortLabel: 'Admin', icon: Users, badge: 'Admin' },
   ];
 
   // RBAC Filter: Only show allowed navigation tabs for current role
@@ -232,18 +231,18 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
               </div>
             </div>
 
-            {/* Admin Management Button - Admin Only */}
+            {/* Admin Management Button - Admin Only (Directly to the left of Sign Out) */}
             {role === 'admin' && (
               <button
                 onClick={() => setActiveTab('admin')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition-all ml-1 cursor-pointer border ${activeTab === 'admin'
-                    ? 'bg-blue-900/70 text-blue-200 border-blue-500/60 shadow-sm'
-                    : 'text-cyan-300 bg-cyan-950/50 border border-cyan-800/60 hover:bg-cyan-900/60 hover:text-cyan-100'
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ml-1 cursor-pointer border shadow-sm ${activeTab === 'admin'
+                    ? 'bg-blue-600 text-white border-blue-400 shadow-blue-900/50'
+                    : 'text-cyan-300 bg-cyan-950/60 border-cyan-800/80 hover:bg-cyan-900/60 hover:text-white'
                   }`}
                 title="Plant Administration & User Management Panel"
               >
                 <Users className="h-3.5 w-3.5 text-cyan-400" />
-                <span className="hidden md:inline">Admin & Users</span>
+                <span>Admin & Users</span>
               </button>
             )}
 
@@ -323,6 +322,25 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
             </div>
 
 
+
+            {/* Admin Management Button for Mobile (Above Sign Out) */}
+            {role === 'admin' && (
+              <div className="pt-2 border-t border-slate-800">
+                <button
+                  onClick={() => {
+                    setActiveTab('admin');
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer border shadow-sm ${activeTab === 'admin'
+                      ? 'bg-blue-600 text-white border-blue-400'
+                      : 'text-cyan-300 bg-cyan-950/70 border-cyan-800/80 hover:bg-cyan-900/60 hover:text-white'
+                    }`}
+                >
+                  <Users className="h-4 w-4 text-cyan-400" />
+                  <span>Admin & Users Panel</span>
+                </button>
+              </div>
+            )}
 
             {/* Mobile Actions: Sign Out */}
             {onLogout && (
