@@ -549,8 +549,8 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
               const isLive = isLiveShift && idx === currentSlotIndex;
               const isPast = isLiveShift ? idx < currentSlotIndex : true;
               const isFuture = isLiveShift ? idx > currentSlotIndex : false;
-              const hasDev = entry?.has_deviation;
-              const isFilled = Boolean(entry);
+              const hasDev = Boolean(entry?.has_deviation);
+              const isFilled = Boolean(entry && (entry.recorded_by || entry.product_id || entry.vacuum_torr != null || entry.oil_feed_rate_litre != null || entry.no_production_reason != null));
 
               let slotColor = 'border-slate-800 bg-slate-900/60 text-slate-500 hover:border-slate-700';
               if (isLive) {
@@ -559,6 +559,9 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                 } else {
                   slotColor = 'border-cyan-400 bg-cyan-950/90 text-cyan-200 font-bold shadow-lg shadow-cyan-950/80 ring-1 ring-cyan-500/50';
                 }
+              } else if (isFuture) {
+                // Future slots on a live shift are upcoming and can never be marked as recorded
+                slotColor = 'border-dashed border-slate-800/60 bg-slate-950/30 text-slate-600';
               } else if (hasDev) {
                 slotColor = 'border-amber-500/60 bg-amber-950/40 text-amber-300 font-semibold';
               } else if (isFilled) {
@@ -583,7 +586,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                   className={`flex flex-col items-center justify-center p-1.5 rounded-lg border text-xs font-mono transition-all relative cursor-pointer ${slotColor} ${
                     isShiftBoundary ? 'mr-1 sm:mr-1.5' : ''
                   }`}
-                  title={`Slot ${label} (${label.slice(0, 2)}:00) ${isLive ? (isFilled ? '— Current Active Slot (Recorded & Saved)' : '— Current Active Slot (Editable)') : isPast ? '— Expired (Locked)' : '— Upcoming'}`}
+                  title={`Slot ${label} (${label.slice(0, 2)}:00) ${isLive ? (isFilled ? '— Current Active Slot (Recorded & Saved)' : '— Current Active Slot (Editable)') : isFuture ? '— Upcoming (Awaiting Shift Hour)' : isPast ? (isFilled ? '— Recorded (Closed)' : '— Expired (Locked)') : '— Upcoming'}`}
                 >
                   <span className="text-[11px]">{label}</span>
                   <div className="mt-0.5 flex items-center justify-center">
@@ -598,6 +601,8 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                           LIVE
                         </span>
                       )
+                    ) : isFuture ? (
+                      <span className="h-1 w-1 rounded-full bg-slate-800 inline-block" />
                     ) : hasDev ? (
                       <span className="h-1.5 w-1.5 rounded-full bg-amber-400 inline-block animate-ping" />
                     ) : isFilled ? (

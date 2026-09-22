@@ -2390,24 +2390,6 @@ export async function syncProcessSheetsFromSupabase(): Promise<{ success: boolea
 
       mappedEntries.sort((a, b) => a.slot_index - b.slot_index);
 
-      // Merge into full 24 slots if any slots are missing
-      const fullEntries: ProcessEntry[] = [];
-      for (let i = 0; i < 24; i++) {
-        const found = mappedEntries.find(me => me.slot_index === i);
-        if (found) {
-          fullEntries.push(found);
-        } else {
-          fullEntries.push(existing.entries?.[i] || {
-            id: makeEntryUuid(shiftDate, i),
-            sheet_id: s.id,
-            slot_index: i,
-            slot_label: String(((i + 7) % 24) * 100).padStart(4, '0'),
-            slot_start: `${shiftDate}T${String((i + 7) % 24).padStart(2, '0')}:00:00+08:00`,
-            has_deviation: false,
-          });
-        }
-      }
-
       allSheets[shiftDate] = {
         id: s.id,
         plant_id: s.plant_id || INITIAL_PLANT.id,
@@ -2421,8 +2403,13 @@ export async function syncProcessSheetsFromSupabase(): Promise<{ success: boolea
         verified_by: s.verified_by || existing.verified_by,
         verified_by_name: s.verified_by_name || existing.verified_by_name,
         verified_at: s.verified_at || existing.verified_at,
-        entries: fullEntries,
+        entries: mappedEntries,
       };
+
+      if (shiftDate === getRealtimeShiftDate()) {
+        setStored(STORAGE_KEYS.SHEET, allSheets[shiftDate]);
+        memorySheet = allSheets[shiftDate];
+      }
     });
 
     setStored(STORAGE_KEYS.ALL_SHEETS, allSheets);
