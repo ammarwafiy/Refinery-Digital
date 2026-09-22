@@ -1294,7 +1294,14 @@ export function getSampleReports(): SampleReport[] {
               parameter_id: 'param-temp',
               parameter_code: 'TEMP',
               parameter_name: `Temperature ${r.series_key}°C`,
-              unit: '%',
+              unit: '-',
+            };
+          }
+          if ((r.parameter_code === 'TEMP' || r.parameter_id === 'param-temp') && (r.unit === '%' || !r.unit)) {
+            migrated = true;
+            return {
+              ...r,
+              unit: '-',
             };
           }
           return r;

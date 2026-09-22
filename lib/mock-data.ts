@@ -170,7 +170,7 @@ export const INITIAL_PARAMETERS: Parameter[] = [
   { id: 'param-soap', code: 'SOAP', name: 'Soap Content', unit: 'ppm', decimals: 1, is_series: false, input_kind: 'numeric', sort_order: 11 },
   { id: 'param-fac', code: 'FAC_C12', name: 'Fatty Acid Composition C12:0', unit: '%', decimals: 2, is_series: false, input_kind: 'numeric', sort_order: 12 },
   { id: 'param-sfc', code: 'SFC', name: 'Solid Fat Content (SFC)', unit: '%', decimals: 1, is_series: false, input_kind: 'numeric', sort_order: 13 },
-  { id: 'param-temp', code: 'TEMP', name: 'Temperature', unit: '%', decimals: 1, is_series: true, series_values: [10, 15, 20, 25, 30, 35, 40, 45, 50], input_kind: 'numeric', sort_order: 14 },
+  { id: 'param-temp', code: 'TEMP', name: 'Temperature', unit: '-', decimals: 1, is_series: true, series_values: [10, 15, 20, 25, 30, 35, 40, 45, 50], input_kind: 'text', sort_order: 14 },
 ];
 
 export const INITIAL_LIMITS: ParameterLimit[] = [
@@ -405,10 +405,10 @@ export const INITIAL_REPORTS: SampleReport[] = [
       { id: 'res-7', report_id: 'rep-001', parameter_id: 'param-odour', parameter_code: 'ODOUR', parameter_name: 'Odour Assessment', unit: null, requested: true, value_text: 'bland', in_spec: true },
       { id: 'res-8', report_id: 'rep-001', parameter_id: 'param-cloud', parameter_code: 'CLOUD_POINT', parameter_name: 'Cloud Point', unit: '°C', requested: true, value_numeric: 2.6, in_spec: true },
       { id: 'res-sfc', report_id: 'rep-001', parameter_id: 'param-sfc', parameter_code: 'SFC', parameter_name: 'Solid Fat Content (SFC)', unit: '%', requested: true, value_numeric: 26.8, in_spec: true },
-      { id: 'res-temp-10', report_id: 'rep-001', parameter_id: 'param-temp', parameter_code: 'TEMP', parameter_name: 'Temperature 10°C', unit: '%', series_key: 10, requested: true, value_numeric: 51.5, in_spec: true },
-      { id: 'res-temp-20', report_id: 'rep-001', parameter_id: 'param-temp', parameter_code: 'TEMP', parameter_name: 'Temperature 20°C', unit: '%', series_key: 20, requested: true, value_numeric: 26.8, in_spec: true },
-      { id: 'res-temp-30', report_id: 'rep-001', parameter_id: 'param-temp', parameter_code: 'TEMP', parameter_name: 'Temperature 30°C', unit: '%', series_key: 30, requested: true, value_numeric: 7.9, in_spec: true },
-      { id: 'res-temp-35', report_id: 'rep-001', parameter_id: 'param-temp', parameter_code: 'TEMP', parameter_name: 'Temperature 35°C', unit: '%', series_key: 35, requested: true, value_numeric: 0.4, in_spec: true },
+      { id: 'res-temp-10', report_id: 'rep-001', parameter_id: 'param-temp', parameter_code: 'TEMP', parameter_name: 'Temperature 10°C', unit: '-', series_key: 10, requested: true, value_numeric: 51.5, in_spec: true },
+      { id: 'res-temp-20', report_id: 'rep-001', parameter_id: 'param-temp', parameter_code: 'TEMP', parameter_name: 'Temperature 20°C', unit: '-', series_key: 20, requested: true, value_numeric: 26.8, in_spec: true },
+      { id: 'res-temp-30', report_id: 'rep-001', parameter_id: 'param-temp', parameter_code: 'TEMP', parameter_name: 'Temperature 30°C', unit: '-', series_key: 30, requested: true, value_numeric: 7.9, in_spec: true },
+      { id: 'res-temp-35', report_id: 'rep-001', parameter_id: 'param-temp', parameter_code: 'TEMP', parameter_name: 'Temperature 35°C', unit: '-', series_key: 35, requested: true, value_numeric: 0.4, in_spec: true },
     ],
     decision: {
       id: 'dec-001',

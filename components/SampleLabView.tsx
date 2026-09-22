@@ -171,7 +171,7 @@ export default function SampleLabView({ currentRole, currentUser }: SampleLabVie
               parameter_id: param.id,
               parameter_code: param.code,
               parameter_name: `${param.name} ${temp}°C`,
-              unit: param.unit,
+              unit: param.code === 'TEMP' ? '-' : (param.unit || '-'),
               series_key: temp,
               requested: false,
             });
@@ -1166,7 +1166,7 @@ export default function SampleLabView({ currentRole, currentUser }: SampleLabVie
                               </div>
                             </td>
                             <td className="py-2.5 px-3 text-slate-500 font-mono">
-                              %
+                              -
                             </td>
                             <td className="py-2.5 px-3">
                               <div className="flex items-center justify-between gap-2">
@@ -1256,7 +1256,7 @@ export default function SampleLabView({ currentRole, currentUser }: SampleLabVie
                                 </div>
                               </td>
                               <td className={`py-2.5 px-3 ${isUnticked ? 'text-slate-600' : 'text-slate-500'}`}>
-                                {res.unit || '%'}
+                                {res.parameter_code === 'TEMP' ? '-' : (res.unit || '-')}
                               </td>
                               <td className="py-2.5 px-3">
                                 {isUnticked ? (
@@ -1264,20 +1264,26 @@ export default function SampleLabView({ currentRole, currentUser }: SampleLabVie
                                     type="text"
                                     disabled
                                     value="N/A - Unticked"
-                                    className="w-full bg-slate-950/80 border border-slate-800/80 rounded px-2 py-1 text-xs text-slate-500 cursor-not-allowed font-mono italic"
+                                    className="w-full bg-slate-950/80 border border-slate-800/80 rounded px-2.5 py-1 text-xs text-slate-500 cursor-not-allowed font-mono italic"
                                   />
                                 ) : (
                                   <input
-                                    type="number"
-                                    step="0.1"
+                                    type="text"
                                     disabled={!canEdit}
-                                    placeholder={`Val @ ${res.series_key}°C`}
-                                    value={inputVal.num ?? ''}
-                                    onChange={e => setResultInputs(prev => ({
-                                      ...prev,
-                                      [res.id]: { ...prev[res.id], num: e.target.value ? Number(e.target.value) : undefined }
-                                    }))}
-                                    className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white focus:border-cyan-500 disabled:opacity-50 font-mono"
+                                    placeholder=""
+                                    value={inputVal.text !== undefined ? inputVal.text : (inputVal.num !== undefined ? String(inputVal.num) : '')}
+                                    onChange={e => {
+                                      const raw = e.target.value;
+                                      const numVal = raw.trim() !== '' && !isNaN(Number(raw)) ? Number(raw) : undefined;
+                                      setResultInputs(prev => ({
+                                        ...prev,
+                                        [res.id]: {
+                                          num: numVal,
+                                          text: raw,
+                                        }
+                                      }));
+                                    }}
+                                    className="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1 text-xs text-white focus:border-cyan-500 disabled:opacity-50 font-mono"
                                   />
                                 )}
                               </td>
