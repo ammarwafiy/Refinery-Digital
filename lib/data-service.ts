@@ -35,10 +35,55 @@ import {
   INITIAL_SHEET, 
   INITIAL_DEVIATIONS, 
   INITIAL_REPORTS, 
-  INITIAL_AUDIT_LOGS 
+  INITIAL_AUDIT_LOGS,
+  DEFAULT_PRODUCT_ID,
+  DEFAULT_FEED_TANK_ID,
+  DEFAULT_DISCHARGE_TANK_ID,
+  DEFAULT_SAMPLING_POINT_ID,
+  PARAM_IDS
 } from './mock-data';
 
 import { supabase, isSupabaseConfigured } from './supabase';
+
+// =============================================================================
+// Hierarchical Structured RFC-4122 UUID Standard Generator
+// =============================================================================
+export function makeSheetUuid(dateStr: string): string {
+  const compact = (dateStr || '2026-09-20').replace(/-/g, '');
+  return `60000000-0000-0000-0000-0000${compact}`;
+}
+
+export function makeEntryUuid(dateStr: string, slotIndex: number): string {
+  const parts = (dateStr || '2026-09-20').split('-');
+  const mmdd = `${parts[1] || '09'}${parts[2] || '20'}`;
+  const hexSlot = (slotIndex ?? 0).toString(16).padStart(2, '0');
+  return `61000000-${mmdd}-0000-0000-0000000000${hexSlot}`;
+}
+
+export function makeSampleReportUuid(seed?: number | string): string {
+  const num = typeof seed === 'number' ? seed : parseInt(String(seed || Date.now()).replace(/\D/g, '').slice(-12), 10) || Math.floor(Math.random() * 1000000);
+  const hexNum = (num % 0xffffffffffff).toString(16).padStart(12, '0');
+  return `70000000-0000-0000-0000-${hexNum}`;
+}
+
+export function makeSampleResultUuid(reportSeq: number | string, paramIndex: number): string {
+  const rNum = typeof reportSeq === 'number' ? reportSeq : parseInt(String(reportSeq).replace(/\D/g, '').slice(-4), 10) || 1;
+  const rHex = (rNum % 0xffff).toString(16).padStart(4, '0');
+  const pHex = (paramIndex % 0xffffffffffff).toString(16).padStart(12, '0');
+  return `71000000-${rHex}-0000-0000-${pHex}`;
+}
+
+export function makeDecisionUuid(seed?: number | string): string {
+  const num = typeof seed === 'number' ? seed : parseInt(String(seed || Date.now()).replace(/\D/g, '').slice(-12), 10) || Math.floor(Math.random() * 1000000);
+  const hexNum = (num % 0xffffffffffff).toString(16).padStart(12, '0');
+  return `80000000-0000-0000-0000-${hexNum}`;
+}
+
+export function makeDeviationUuid(seed?: number | string): string {
+  const num = typeof seed === 'number' ? seed : parseInt(String(seed || Date.now()).replace(/\D/g, '').slice(-12), 10) || Math.floor(Math.random() * 1000000);
+  const hexNum = (num % 0xffffffffffff).toString(16).padStart(12, '0');
+  return `90000000-0000-0000-0000-${hexNum}`;
+}
 
 const STORAGE_KEYS = {
   AUTH_USER: 'refinery_auth_user',
@@ -284,6 +329,7 @@ if (typeof window !== 'undefined') {
   // Initial sync upon client mounting
   setTimeout(() => {
     syncProfilesFromSupabase().catch(() => {});
+    syncProcessSheetsFromSupabase().catch(() => {});
     syncSampleReportsFromSupabase().catch(() => {});
     syncAuditLogsFromSupabase().catch(() => {});
   }, 150);
@@ -291,6 +337,7 @@ if (typeof window !== 'undefined') {
   // Background auto-sync interval (every 20 seconds)
   setInterval(() => {
     syncProfilesFromSupabase().catch(() => {});
+    syncProcessSheetsFromSupabase().catch(() => {});
     syncSampleReportsFromSupabase().catch(() => {});
     syncAuditLogsFromSupabase().catch(() => {});
   }, 20000);
@@ -308,9 +355,31 @@ if (typeof window !== 'undefined') {
             syncProfilesFromSupabase().catch(() => {});
           }
         )
-        .subscribe((status) => {
-          console.info('[Supabase Realtime] Profile channel status:', status);
-        });
+        .subscribe();
+
+      supabase
+        .channel('refinery_sheets_live')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'process_sheets' },
+          () => {
+            console.info('[Supabase Realtime] Process sheets change detected');
+            syncProcessSheetsFromSupabase().catch(() => {});
+          }
+        )
+        .subscribe();
+
+      supabase
+        .channel('refinery_entries_live')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'process_entries' },
+          () => {
+            console.info('[Supabase Realtime] Process entries change detected');
+            syncProcessSheetsFromSupabase().catch(() => {});
+          }
+        )
+        .subscribe();
 
       supabase
         .channel('refinery_reports_live')
@@ -322,9 +391,19 @@ if (typeof window !== 'undefined') {
             syncSampleReportsFromSupabase().catch(() => {});
           }
         )
-        .subscribe((status) => {
-          console.info('[Supabase Realtime] Sample reports channel status:', status);
-        });
+        .subscribe();
+
+      supabase
+        .channel('refinery_decisions_live')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'qc_decisions' },
+          () => {
+            console.info('[Supabase Realtime] QC decisions change detected');
+            syncSampleReportsFromSupabase().catch(() => {});
+          }
+        )
+        .subscribe();
 
       supabase
         .channel('refinery_audit_live')
@@ -336,9 +415,7 @@ if (typeof window !== 'undefined') {
             syncAuditLogsFromSupabase().catch(() => {});
           }
         )
-        .subscribe((status) => {
-          console.info('[Supabase Realtime] Audit log channel status:', status);
-        });
+        .subscribe();
     }
   } catch (subErr) {
     console.warn('[Supabase Realtime] Failed to initialize realtime channels:', subErr);
@@ -556,7 +633,7 @@ export function getDefaultParametersForProduct(productId?: string): string[] {
   const specs = getProductSpecs(productId);
   if (specs && specs.length > 0) {
     const fromSpecs = Array.from(new Set(specs.map(s => s.parameter_id)));
-    if (!fromSpecs.includes('param-odour')) fromSpecs.push('param-odour');
+    if (!fromSpecs.includes(PARAM_IDS.ODOUR)) fromSpecs.push(PARAM_IDS.ODOUR);
     return fromSpecs;
   }
 
@@ -565,16 +642,24 @@ export function getDefaultParametersForProduct(productId?: string): string[] {
   const prod = products.find(p => p.id === productId);
   const name = (prod?.name || '').toLowerCase();
 
-  const standard = ['param-ffa', 'param-h2o', 'param-iv', 'param-pv', 'param-col-r', 'param-col-y', 'param-odour'];
+  const standard = [
+    PARAM_IDS.FFA,
+    PARAM_IDS.H2O,
+    PARAM_IDS.IV,
+    PARAM_IDS.PV,
+    PARAM_IDS.COLOUR_R,
+    PARAM_IDS.COLOUR_Y,
+    PARAM_IDS.ODOUR,
+  ];
 
   if (name.includes('olein') || name.includes('superolein')) {
-    return [...standard, 'param-cloud'];
+    return [...standard, PARAM_IDS.CLOUD_POINT];
   }
   if (name.includes('stearin') || name.includes('matsuyama') || name.includes('hard') || name.includes('fat')) {
-    return [...standard, 'param-smp', 'param-cloud', 'param-sfc', 'param-temp'];
+    return [...standard, PARAM_IDS.SLIP_MELT, PARAM_IDS.CLOUD_POINT, PARAM_IDS.SFC, PARAM_IDS.TEMP];
   }
   if (name.includes('pfad') || name.includes('acid')) {
-    return ['param-ffa', 'param-h2o', 'param-iv', 'param-fac'];
+    return [PARAM_IDS.FFA, PARAM_IDS.H2O, PARAM_IDS.IV, PARAM_IDS.FAC_C12];
   }
 
   return standard;
@@ -645,17 +730,17 @@ export function getAllProcessSheets(): Record<string, ProcessSheet> {
   let changed = false;
   if (!stored['2026-09-21']) {
     const s21: ProcessSheet = JSON.parse(JSON.stringify(INITIAL_SHEET));
-    s21.id = 'sheet-2026-09-21';
+    s21.id = makeSheetUuid('2026-09-21');
     s21.shift_date = '2026-09-21';
     s21.status = 'verified';
     s21.opened_at = '2026-09-21T06:55:00+08:00';
-    s21.verified_by = 'p-sv-01';
-    s21.verified_by_name = 'Lee Wei Chen (SV-2015)';
-    s21.verified_at = '2026-09-22T06:58:12+08:00';
+    s21.verified_by = 'SV-2014';
+    s21.verified_by_name = 'Chong Wei Lun (SV-2014)';
+    s21.verified_at = '2026-09-21T19:30:00+08:00';
     s21.entries = (s21.entries || []).map(e => ({
       ...e,
-      id: `entry-21-${e.slot_index}`,
-      sheet_id: 'sheet-2026-09-21',
+      id: makeEntryUuid('2026-09-21', e.slot_index),
+      sheet_id: makeSheetUuid('2026-09-21'),
       slot_start: `2026-09-21T${e.slot_label.slice(0, 2)}:00:00+08:00`,
       recorded_at: `2026-09-21T${e.slot_label.slice(0, 2)}:55:00+08:00`,
     }));
@@ -666,9 +751,9 @@ export function getAllProcessSheets(): Record<string, ProcessSheet> {
   if (!stored['2026-09-20']) {
     const s20: ProcessSheet = JSON.parse(JSON.stringify(INITIAL_SHEET));
     s20.status = 'verified';
-    s20.verified_by = 'p-sv-01';
-    s20.verified_by_name = 'Lee Wei Chen (SV-2015)';
-    s20.verified_at = '2026-09-21T06:55:30+08:00';
+    s20.verified_by = 'SV-2014';
+    s20.verified_by_name = 'Chong Wei Lun (SV-2014)';
+    s20.verified_at = '2026-09-20T19:30:00+08:00';
     stored['2026-09-20'] = s20;
     changed = true;
   }
@@ -710,25 +795,25 @@ export function getProcessSheetByDate(shiftDate: string): ProcessSheet {
   const entries: ProcessEntry[] = isPast
     ? (INITIAL_SHEET.entries || []).map(e => ({
         ...e,
-        id: `entry-${shiftDate}-${e.slot_index}`,
-        sheet_id: `sheet-${shiftDate}`,
+        id: makeEntryUuid(shiftDate, e.slot_index),
+        sheet_id: makeSheetUuid(shiftDate),
         slot_start: `${shiftDate}T${e.slot_label.slice(0, 2)}:00:00+08:00`,
         recorded_at: `${shiftDate}T${e.slot_label.slice(0, 2)}:55:00+08:00`,
       }))
     : [];
 
   const newSheet: ProcessSheet = {
-    id: `sheet-${shiftDate}`,
+    id: makeSheetUuid(shiftDate),
     plant_id: INITIAL_PLANT.id,
     shift_date: shiftDate,
     stripping_steam_pct: strippingSteam,
     set_steam_supply_bar: setSteamBar,
     status: isPast ? 'verified' : 'open',
-    opened_by: profile?.id || 'p-op-01',
+    opened_by: profile?.id || 'OP-1042',
     opened_by_name: profile?.full_name || 'Plant Operator',
     opened_at: `${shiftDate}T06:55:00+08:00`,
-    verified_by: isPast ? 'p-sv-01' : null,
-    verified_by_name: isPast ? 'Lee Wei Chen (SV-2015)' : null,
+    verified_by: isPast ? 'SV-2014' : null,
+    verified_by_name: isPast ? 'Chong Wei Lun (SV-2014)' : null,
     verified_at: isPast ? `${shiftDate}T23:59:00+08:00` : null,
     entries,
   };
@@ -843,7 +928,7 @@ export function saveProcessEntry(
     finalEntry = {
       ...updatedEntry,
       product_name: productName,
-      id: `entry-${Date.now()}-${updatedEntry.slot_index}`,
+      id: makeEntryUuid(currentSheet.shift_date, updatedEntry.slot_index),
       sheet_id: currentSheet.id,
       slot_label: slotLabel,
       slot_start: now,
@@ -860,7 +945,7 @@ export function saveProcessEntry(
     const currentDevs = getDeviations();
     observedDeviations.forEach(d => {
       currentDevs.unshift({
-        id: `dev-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        id: makeDeviationUuid(Date.now() + Math.floor(Math.random() * 1000)),
         entry_id: finalEntry.id,
         slot_label: slotLabel,
         field_key: d.key,
@@ -1014,7 +1099,7 @@ export function ensureAutoDispatchedQC(
 
     // Default fallback
     if (!productId) {
-      productId = 'prod-26'; // PL 65 Matsuyama
+      productId = DEFAULT_PRODUCT_ID; // PL 65 Matsuyama
     }
 
     const allProducts = getProducts();
@@ -1025,12 +1110,13 @@ export function ensureAutoDispatchedQC(
 
     const buildResults = (repId: string): SampleResult[] => {
       const resultsList: SampleResult[] = [];
+      let resSeq = 1;
       allParams.forEach(param => {
         const isReq = defaultSpecParamIds.length > 0 ? defaultSpecParamIds.includes(param.id) : true;
         if (param.is_series && param.series_values) {
           param.series_values.forEach(temp => {
             resultsList.push({
-              id: `res-${Date.now()}-${param.code}-${temp}-${Math.random().toString(36).slice(2, 6)}`,
+              id: makeSampleResultUuid(repId, resSeq++),
               report_id: repId,
               parameter_id: param.id,
               parameter_code: param.code,
@@ -1042,7 +1128,7 @@ export function ensureAutoDispatchedQC(
           });
         } else {
           resultsList.push({
-            id: `res-${Date.now()}-${param.code}-${Math.random().toString(36).slice(2, 6)}`,
+            id: makeSampleResultUuid(repId, resSeq++),
             report_id: repId,
             parameter_id: param.id,
             parameter_code: param.code,
@@ -1076,7 +1162,8 @@ export function ensureAutoDispatchedQC(
     }
 
     // Auto-create new QC sample report immediately for this timeline slot
-    const reportId = `rep-${Date.now()}-${slotLabel}`;
+    const reportSeq = Math.floor(1000 + Math.random() * 9000);
+    const reportId = makeSampleReportUuid(reportSeq);
     const cleanProdCode = (prodObj?.code || productName.split(' ')[0] || 'PL65').replace(/[^a-zA-Z0-9]/g, '');
     const cleanDateCode = targetShiftDate.replace(/-/g, '').slice(2);
     const lotNo = `LOT-${cleanProdCode}-${cleanDateCode}-${slotLabel}`;
@@ -1094,22 +1181,22 @@ export function ensureAutoDispatchedQC(
       product_id: productId,
       product_name: productName,
       product_other: null,
-      feed_tank_id: 'tank-01',
+      feed_tank_id: DEFAULT_FEED_TANK_ID,
       feed_tank_code: 'TK-101A',
-      discharge_tank_id: 'tank-04',
+      discharge_tank_id: DEFAULT_DISCHARGE_TANK_ID,
       discharge_tank_code: 'TK-201A',
       crystallizer_no: 'CR-04',
       batch_no: `B${cleanDateCode}${slotLabel.slice(0, 2)}`,
-      sampling_point_id: 'sp-01',
+      sampling_point_id: DEFAULT_SAMPLING_POINT_ID,
       sampling_point_name: 'Deodorizer Outlet Pipe (Header 4)',
-      submitted_by: profile?.id || 'p-op-01',
+      submitted_by: profile?.id || 'OP-1042',
       submitted_by_name: profile?.full_name || 'Timeline Auto-Dispatch',
       remark_flushing: false,
       remark_cooling: false,
       remark_pushover: false,
       remarks: `Auto-dispatched on shift timeline activation (Hour ${slotLabel} - ${productName})`,
       status: 'awaiting_results',
-      created_by: profile?.id || 'p-op-01',
+      created_by: profile?.id || 'OP-1042',
       created_at: now,
       results: buildResults(reportId),
     };
@@ -1482,6 +1569,37 @@ export function generateNextLotNo(productId?: string, sampleDate?: string, custo
   return `${prefix}${nextSeq}`;
 }
 
+// Background Synchronization of QC Decision to Supabase qc_decisions table
+export async function syncQCDecisionToSupabase(decision: QCDecision): Promise<{ success: boolean; error?: string }> {
+  if (!supabase) return { success: false, error: 'Supabase client unavailable' };
+  try {
+    const payload: any = {
+      id: decision.id || makeDecisionUuid(),
+      report_id: decision.report_id,
+      decision: decision.decision,
+      reason_id: decision.reason_id || null,
+      reason_detail: decision.reason_detail || null,
+      failed_parameters: Array.isArray(decision.failed_parameters) ? decision.failed_parameters : [],
+      disposition: decision.disposition || null,
+      decided_by: decision.decided_by || null,
+      decided_at: decision.decided_at || new Date().toISOString(),
+    };
+
+    const { error } = await supabase
+      .from('qc_decisions')
+      .upsert(payload, { onConflict: 'report_id' });
+
+    if (error) {
+      console.warn('[Supabase Sync] Decision upsert warning:', error);
+      return { success: false, error: error.message };
+    }
+    return { success: true };
+  } catch (err: any) {
+    console.warn('[Supabase Sync] Decision sync error:', err);
+    return { success: false, error: err?.message };
+  }
+}
+
 // Background Synchronization of Sample Report and Lab Results to Supabase Database
 export async function syncSampleReportToSupabase(report: SampleReport): Promise<{ success: boolean; error?: string }> {
   if (!supabase) return { success: false, error: 'Supabase not initialized' };
@@ -1545,6 +1663,7 @@ export async function syncSampleReportToSupabase(report: SampleReport): Promise<
     if (formattedTime.length === 5) formattedTime += ':00';
 
     const dbReportPayload: any = {
+      id: report.id || makeSampleReportUuid(),
       plant_id: plantId,
       report_no: report.report_no,
       sample_date: report.sample_date,
@@ -1576,13 +1695,15 @@ export async function syncSampleReportToSupabase(report: SampleReport): Promise<
       return { success: false, error: repErr.message };
     }
 
-    const sbReportUuid = upsertedReport?.id;
+    const sbReportUuid = upsertedReport?.id || report.id;
     if (sbReportUuid && Array.isArray(report.results) && report.results.length > 0) {
       const resultsToUpsert: any[] = [];
+      let rIdx = 1;
       report.results.forEach(res => {
         const matchedParam = sbParams.find(p => p.code === res.parameter_code);
         if (matchedParam) {
           resultsToUpsert.push({
+            id: res.id || makeSampleResultUuid(sbReportUuid, rIdx++),
             report_id: sbReportUuid,
             parameter_id: matchedParam.id,
             series_key: res.series_key != null ? Number(res.series_key) : null,
@@ -1605,6 +1726,13 @@ export async function syncSampleReportToSupabase(report: SampleReport): Promise<
       }
     }
 
+    // If report has an attached QC decision, sync to qc_decisions table as well
+    if (sbReportUuid && report.decision) {
+      syncQCDecisionToSupabase({ ...report.decision, report_id: sbReportUuid }).catch(decErr => {
+        console.warn('[Supabase Sync] QC Decision auto-sync warning:', decErr);
+      });
+    }
+
     return { success: true };
   } catch (err: any) {
     console.warn('[Supabase Sync] Error syncing sample report to Supabase:', err);
@@ -1624,6 +1752,7 @@ export async function syncSampleReportsFromSupabase(): Promise<{ success: boolea
         feed_tank:tanks!feed_tank_id(id, code),
         discharge_tank:tanks!discharge_tank_id(id, code),
         sampling_point:sampling_points(id, name),
+        decisions:qc_decisions(*),
         results:sample_results(
           id,
           parameter_id,
@@ -1662,6 +1791,25 @@ export async function syncSampleReportsFromSupabase(): Promise<{ success: boolea
         in_spec: r.in_spec,
       })) : [];
 
+      const sbDec = Array.isArray(sbRep.decisions) && sbRep.decisions.length > 0 ? sbRep.decisions[0] : sbRep.decisions;
+      let mappedDecision: QCDecision | undefined = undefined;
+      if (sbDec) {
+        const reasonObj = getRejectionReasons().find(r => r.id === sbDec.reason_id);
+        mappedDecision = {
+          id: sbDec.id,
+          report_id: sbRep.id,
+          decision: sbDec.decision,
+          reason_id: sbDec.reason_id,
+          reason_label: reasonObj?.label,
+          reason_detail: sbDec.reason_detail,
+          failed_parameters: sbDec.failed_parameters,
+          disposition: sbDec.disposition,
+          decided_by: sbDec.decided_by,
+          decided_by_name: getProfiles().find(p => p.id === sbDec.decided_by)?.full_name || sbDec.decided_by,
+          decided_at: sbDec.decided_at,
+        };
+      }
+
       const mappedReport: SampleReport = {
         id: sbRep.id,
         plant_id: sbRep.plant_id,
@@ -1690,6 +1838,7 @@ export async function syncSampleReportsFromSupabase(): Promise<{ success: boolea
         created_by: sbRep.created_by || 'system',
         created_at: sbRep.created_at || new Date().toISOString(),
         results: mappedResults.length > 0 ? mappedResults : undefined,
+        decision: mappedDecision,
       };
 
       if (existingIdx >= 0) {
@@ -1742,11 +1891,13 @@ export function createSampleReport(data: {
   const disc = tanks.find(t => t.id === data.discharge_tank_id);
   const sp = sps.find(s => s.id === data.sampling_point_id);
 
-  const reportId = `rep-${Date.now()}`;
+  const reportSeq = Math.floor(1000 + Math.random() * 9000);
+  const reportId = makeSampleReportUuid(reportSeq);
   const reportNo = `SAR-2026-${String(Math.floor(100000 + Math.random() * 900000))}`;
 
   // Prepare requested parameter results
   const results: SampleResult[] = [];
+  let resSeq = 1;
   data.selected_parameter_ids.forEach(pId => {
     const param = params.find(p => p.id === pId);
     if (!param) return;
@@ -1756,7 +1907,7 @@ export function createSampleReport(data: {
         : param.series_values;
       activeTemps.forEach(temp => {
         results.push({
-          id: `res-${Date.now()}-${param.code}-${temp}`,
+          id: makeSampleResultUuid(reportSeq, resSeq++),
           report_id: reportId,
           parameter_id: param.id,
           parameter_code: param.code,
@@ -1768,7 +1919,7 @@ export function createSampleReport(data: {
       });
     } else {
       results.push({
-        id: `res-${Date.now()}-${param.code}`,
+        id: makeSampleResultUuid(reportSeq, resSeq++),
         report_id: reportId,
         parameter_id: param.id,
         parameter_code: param.code,
@@ -1959,7 +2110,7 @@ export function submitQCDecision(data: {
   const reasonObj = reasons.find(r => r.id === data.reason_id);
 
   const decisionObj: QCDecision = {
-    id: `dec-${Date.now()}`,
+    id: makeDecisionUuid(),
     report_id: data.report_id,
     decision: data.decision,
     reason_id: data.reason_id,
@@ -1987,6 +2138,9 @@ export function submitQCDecision(data: {
   // Auto-sync decision status to Supabase
   syncSampleReportToSupabase(report).catch(err => {
     console.warn('[Supabase Sync] Auto-sync failed on submitQCDecision:', err);
+  });
+  syncQCDecisionToSupabase(decisionObj).catch(err => {
+    console.warn('[Supabase Sync] Decision direct sync warning on submitQCDecision:', err);
   });
 
   return { success: true };
@@ -2080,6 +2234,7 @@ export async function syncProcessSheetToSupabase(sheet: ProcessSheet): Promise<{
 
     // 1. Upsert process sheet
     const sheetPayload: any = {
+      id: sheet.id || makeSheetUuid(sheet.shift_date),
       plant_id: plantId,
       shift_date: sheet.shift_date,
       stripping_steam_pct: sheet.stripping_steam_pct ?? 1.5,
@@ -2098,7 +2253,7 @@ export async function syncProcessSheetToSupabase(sheet: ProcessSheet): Promise<{
       return { success: false, error: sheetErr.message };
     }
 
-    const sbSheetId = upsertedSheet?.id;
+    const sbSheetId = upsertedSheet?.id || sheet.id;
     if (sbSheetId && Array.isArray(sheet.entries) && sheet.entries.length > 0) {
       // Fetch products to match product_id UUID
       const { data: sbProds } = await supabase.from('products').select('id, code, name');
@@ -2116,10 +2271,11 @@ export async function syncProcessSheetToSupabase(sheet: ProcessSheet): Promise<{
         const hour = slotLabel.slice(0, 2);
         const slotStart = e.slot_start || `${sheet.shift_date}T${hour}:00:00+08:00`;
 
+        // Note: slot_label is GENERATED ALWAYS STORED in PostgreSQL, omit from insert payload
         entriesPayload.push({
+          id: e.id || makeEntryUuid(sheet.shift_date, e.slot_index),
           sheet_id: sbSheetId,
           slot_index: e.slot_index,
-          slot_label: slotLabel,
           slot_start: slotStart,
           product_id: sbProdId,
           oil_feed_rate_litre: e.oil_feed_rate_litre != null ? Number(e.oil_feed_rate_litre) : null,
@@ -2145,6 +2301,8 @@ export async function syncProcessSheetToSupabase(sheet: ProcessSheet): Promise<{
           remarks: e.remarks || null,
           no_production_reason: e.no_production_reason || null,
           has_deviation: Boolean(e.has_deviation),
+          recorded_by: e.recorded_by || null,
+          recorded_at: e.recorded_at || null,
         });
       });
 
@@ -2162,6 +2320,128 @@ export async function syncProcessSheetToSupabase(sheet: ProcessSheet): Promise<{
   } catch (err: any) {
     console.warn('[Supabase Sync] Process sheet sync error:', err);
     return { success: false, error: err?.message };
+  }
+}
+
+// Fetch all live 24-hour process sheets and hourly entries from Supabase
+export async function syncProcessSheetsFromSupabase(): Promise<{ success: boolean; count: number }> {
+  if (!supabase) return { success: false, count: 0 };
+  try {
+    const { data: sheets, error } = await supabase
+      .from('process_sheets')
+      .select(`
+        *,
+        entries:process_entries(
+          *,
+          product:products(id, code, name),
+          deviations(*)
+        )
+      `)
+      .order('shift_date', { ascending: false });
+
+    if (error || !Array.isArray(sheets) || sheets.length === 0) {
+      return { success: false, count: 0 };
+    }
+
+    const allSheets = getAllProcessSheets();
+
+    sheets.forEach((s: any) => {
+      const shiftDate = s.shift_date;
+      const existing = allSheets[shiftDate] || getProcessSheetByDate(shiftDate);
+
+      const mappedEntries: ProcessEntry[] = (s.entries || []).map((e: any) => {
+        const slotLabel = e.slot_label || String(((e.slot_index + 7) % 24) * 100).padStart(4, '0');
+        const prodName = e.product?.name || (e.product_id ? (getProducts().find(p => p.id === e.product_id)?.name) : null);
+        return {
+          id: e.id || makeEntryUuid(shiftDate, e.slot_index),
+          sheet_id: s.id,
+          slot_index: e.slot_index,
+          slot_label: slotLabel,
+          slot_start: e.slot_start,
+          product_id: e.product_id,
+          product_name: prodName,
+          oil_feed_rate_litre: e.oil_feed_rate_litre,
+          deod_time_set_hr: e.deod_time_set_hr,
+          vacuum_torr: e.vacuum_torr,
+          tray_1_temp_c: e.tray_1_temp_c,
+          tray_2_temp_c: e.tray_2_temp_c,
+          tray_3_temp_c: e.tray_3_temp_c,
+          tray_4_temp_c: e.tray_4_temp_c,
+          tray_5_temp_c: e.tray_5_temp_c,
+          tray_6_temp_c: e.tray_6_temp_c,
+          tray_7_temp_c: e.tray_7_temp_c,
+          bc101_water_in_c: e.bc101_water_in_c,
+          bc101_water_out_c: e.bc101_water_out_c,
+          chill_water_in_c: e.chill_water_in_c,
+          chill_water_out_c: e.chill_water_out_c,
+          booster_press_bar: e.booster_press_bar,
+          ejector_press_bar: e.ejector_press_bar,
+          strip_steam_pct_of_oil: e.strip_steam_pct_of_oil,
+          strip_steam_flow_kghr: e.strip_steam_flow_kghr,
+          fp101a_press_bar: e.fp101a_press_bar,
+          fp101b_press_bar: e.fp101b_press_bar,
+          remarks: e.remarks,
+          no_production_reason: e.no_production_reason,
+          has_deviation: Boolean(e.has_deviation),
+          recorded_by: e.recorded_by,
+          recorded_at: e.recorded_at,
+        };
+      });
+
+      mappedEntries.sort((a, b) => a.slot_index - b.slot_index);
+
+      // Merge into full 24 slots if any slots are missing
+      const fullEntries: ProcessEntry[] = [];
+      for (let i = 0; i < 24; i++) {
+        const found = mappedEntries.find(me => me.slot_index === i);
+        if (found) {
+          fullEntries.push(found);
+        } else {
+          fullEntries.push(existing.entries?.[i] || {
+            id: makeEntryUuid(shiftDate, i),
+            sheet_id: s.id,
+            slot_index: i,
+            slot_label: String(((i + 7) % 24) * 100).padStart(4, '0'),
+            slot_start: `${shiftDate}T${String((i + 7) % 24).padStart(2, '0')}:00:00+08:00`,
+            has_deviation: false,
+          });
+        }
+      }
+
+      allSheets[shiftDate] = {
+        id: s.id,
+        plant_id: s.plant_id || INITIAL_PLANT.id,
+        shift_date: shiftDate,
+        stripping_steam_pct: s.stripping_steam_pct,
+        set_steam_supply_bar: s.set_steam_supply_bar,
+        status: s.status,
+        opened_by: s.opened_by || existing.opened_by || 'OP-1042',
+        opened_by_name: s.opened_by_name || existing.opened_by_name || 'Ahmad Razak (Lead Operator)',
+        opened_at: s.opened_at || existing.opened_at || `${shiftDate}T06:55:00+08:00`,
+        verified_by: s.verified_by || existing.verified_by,
+        verified_by_name: s.verified_by_name || existing.verified_by_name,
+        verified_at: s.verified_at || existing.verified_at,
+        entries: fullEntries,
+      };
+    });
+
+    setStored(STORAGE_KEYS.ALL_SHEETS, allSheets);
+    memoryAllSheets = allSheets;
+
+    const today = new Date().toISOString().split('T')[0];
+    if (allSheets[today]) {
+      setStored(STORAGE_KEYS.SHEET, allSheets[today]);
+      memorySheet = allSheets[today];
+    }
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('refinery_sheet_updated', { detail: allSheets }));
+    }
+
+    return { success: true, count: sheets.length };
+  } catch (err) {
+    console.warn('[Supabase Sync] Process sheets fetch error:', err);
+    return { success: false, count: 0 };
   }
 }
 

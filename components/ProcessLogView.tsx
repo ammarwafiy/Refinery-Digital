@@ -26,6 +26,7 @@ import {
   getRealtimeSlotIndex,
   ensureAutoDispatchedQC
 } from '@/lib/data-service';
+import { DEFAULT_PRODUCT_ID } from '@/lib/mock-data';
 import { 
   CheckCircle2, 
   AlertTriangle, 
@@ -174,7 +175,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
       setAutoDispatchQc(existingEntry.auto_dispatch_qc !== false);
     } else {
       // Initialize with defaults / carried-over product
-      const defaultProdId = prevEntry?.product_id || products[25]?.id || 'prod-26';
+      const defaultProdId = prevEntry?.product_id || products[25]?.id || DEFAULT_PRODUCT_ID;
       const initialDispatch = prevEntry ? prevEntry.auto_dispatch_qc !== false : true;
 
       setFormData({

@@ -28,6 +28,13 @@ import {
   ensureAutoDispatchedQC,
   generateNextLotNo
 } from '@/lib/data-service';
+import {
+  DEFAULT_PRODUCT_ID,
+  DEFAULT_FEED_TANK_ID,
+  DEFAULT_DISCHARGE_TANK_ID,
+  DEFAULT_SAMPLING_POINT_ID,
+  PARAM_IDS
+} from '@/lib/mock-data';
 import { 
   FlaskConical, 
   Plus, 
@@ -38,7 +45,7 @@ import {
   Search, 
   FileCheck2, 
   ChevronRight, 
-  ChevronDown,
+  ChevronDown, 
   Save, 
   Check, 
   Filter, 
@@ -76,20 +83,20 @@ export default function SampleLabView({ currentRole, currentUser }: SampleLabVie
   // "Raise New Sample" form state
   const [newDate, setNewDate] = useState<string>(() => getRealtimeShiftDate());
   const [newTimeCheck, setNewTimeCheck] = useState('11:30');
-  const [newProductId, setNewProductId] = useState('prod-26'); // PL 65 Matsuyama
+  const [newProductId, setNewProductId] = useState(DEFAULT_PRODUCT_ID); // PL 65 Matsuyama
   const [newProductOther, setNewProductOther] = useState('');
-  const [newLotNo, setNewLotNo] = useState<string>(() => generateNextLotNo('prod-26', getRealtimeShiftDate()));
-  const [newFeedTankId, setNewFeedTankId] = useState('tank-01');
-  const [newDischargeTankId, setNewDischargeTankId] = useState('tank-04');
+  const [newLotNo, setNewLotNo] = useState<string>(() => generateNextLotNo(DEFAULT_PRODUCT_ID, getRealtimeShiftDate()));
+  const [newFeedTankId, setNewFeedTankId] = useState(DEFAULT_FEED_TANK_ID);
+  const [newDischargeTankId, setNewDischargeTankId] = useState(DEFAULT_DISCHARGE_TANK_ID);
   const [newCrystallizerNo, setNewCrystallizerNo] = useState('CR-04');
   const [newBatchNo, setNewBatchNo] = useState('B260904');
-  const [newSamplingPointId, setNewSamplingPointId] = useState('sp-01');
+  const [newSamplingPointId, setNewSamplingPointId] = useState(DEFAULT_SAMPLING_POINT_ID);
   const [newRemarkFlushing, setNewRemarkFlushing] = useState(false);
   const [newRemarkCooling, setNewRemarkCooling] = useState(false);
   const [newRemarkPushover, setNewRemarkPushover] = useState(false);
   const [newRemarks, setNewRemarks] = useState('');
   const [selectedParamIds, setSelectedParamIds] = useState<string[]>([
-    'param-ffa', 'param-h2o', 'param-iv', 'param-pv', 'param-col-r', 'param-col-y', 'param-odour', 'param-cloud', 'param-sfc', 'param-temp'
+    PARAM_IDS.FFA, PARAM_IDS.H2O, PARAM_IDS.IV, PARAM_IDS.PV, PARAM_IDS.COLOUR_R, PARAM_IDS.COLOUR_Y, PARAM_IDS.ODOUR, PARAM_IDS.CLOUD_POINT, PARAM_IDS.SFC, PARAM_IDS.TEMP
   ]);
   const [selectedTempKeys, setSelectedTempKeys] = useState<number[]>([10, 15, 20, 25, 30, 35, 40, 45, 50]);
 
