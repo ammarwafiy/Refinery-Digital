@@ -137,6 +137,7 @@ create table if not exists process_entries (
 
   booster_press_bar numeric(6,2), 
   ejector_press_bar numeric(6,2),
+  tray_steam_supply_bar numeric(6,2),
 
   strip_steam_pct_of_oil numeric(5,2),
   strip_steam_flow_kghr  numeric(8,1),

@@ -163,6 +163,7 @@ export interface ProcessEntry {
 
   booster_press_bar?: number | null;
   ejector_press_bar?: number | null;
+  tray_steam_supply_bar?: number | null;
 
   strip_steam_pct_of_oil?: number | null;
   strip_steam_flow_kghr?: number | null;

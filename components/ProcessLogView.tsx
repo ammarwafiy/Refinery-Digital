@@ -181,7 +181,8 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
         slot_index: slotIdx,
         product_id: defaultProdId,
         deod_time_set_hr: 2.0,
-        strip_steam_pct_of_oil: activeSheet.stripping_steam_pct,
+        strip_steam_pct_of_oil: prevEntry?.strip_steam_pct_of_oil ?? activeSheet.stripping_steam_pct ?? 1.5,
+        tray_steam_supply_bar: prevEntry?.tray_steam_supply_bar ?? activeSheet.set_steam_supply_bar ?? 3.0,
         auto_dispatch_qc: initialDispatch,
       });
       setAutoDispatchQc(initialDispatch);
@@ -326,6 +327,20 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
   // Past shift sheets, past slots, and future slots are locked in read-only mode to maintain plant operational audit integrity.
   const isSlotDisabled = sheet.status === 'verified' || !isLiveShift || !isLiveSlot;
 
+  // Real-time synchronization of Stripping Steam & Tray Steam Supply with latest operator entries
+  const latestEntryWithStripSteam = [...(sheet.entries || [])]
+    .filter(e => e.strip_steam_pct_of_oil != null && !isNaN(Number(e.strip_steam_pct_of_oil)))
+    .sort((a, b) => b.slot_index - a.slot_index)[0];
+
+  const latestEntryWithTraySteam = [...(sheet.entries || [])]
+    .filter(e => e.tray_steam_supply_bar != null && !isNaN(Number(e.tray_steam_supply_bar)))
+    .sort((a, b) => b.slot_index - a.slot_index)[0];
+
+  const liveStrippingSteam = latestEntryWithStripSteam?.strip_steam_pct_of_oil ?? sheet.stripping_steam_pct ?? 1.5;
+  const liveTraySteam = latestEntryWithTraySteam?.tray_steam_supply_bar ?? sheet.set_steam_supply_bar ?? 3.0;
+  const isStripSteamSynced = latestEntryWithStripSteam != null;
+  const isTraySteamSynced = latestEntryWithTraySteam != null;
+
   return (
     <div className="space-y-6">
       {/* 1. Sheet Header Banner (RF-FR-004 Rev. 02) */}
@@ -417,13 +432,27 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                 )}
               </div>
             </div>
-            <div className="bg-slate-900/90 px-3 py-2 rounded-lg border border-slate-800">
-              <span className="text-slate-500 block text-[10px]">STRIPPING STEAM</span>
-              <span className="text-cyan-400 font-semibold">{sheet.stripping_steam_pct.toFixed(2)} % of oil</span>
+            <div className="bg-slate-900/90 px-3 py-2 rounded-lg border border-slate-800 flex flex-col justify-center">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-slate-500 block text-[10px] font-mono">STRIPPING STEAM</span>
+                {isStripSteamSynced && (
+                  <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-cyan-950/80 text-cyan-400 border border-cyan-800/60 font-semibold">
+                    SYNC
+                  </span>
+                )}
+              </div>
+              <span className="text-cyan-400 font-semibold font-mono">{Number(liveStrippingSteam).toFixed(2)} % of oil</span>
             </div>
-            <div className="bg-slate-900/90 px-3 py-2 rounded-lg border border-slate-800">
-              <span className="text-slate-500 block text-[10px]">TRAY STEAM SUPPLY</span>
-              <span className="text-amber-400 font-semibold">{sheet.set_steam_supply_bar.toFixed(2)} Bar</span>
+            <div className="bg-slate-900/90 px-3 py-2 rounded-lg border border-slate-800 flex flex-col justify-center">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-slate-500 block text-[10px] font-mono">TRAY STEAM SUPPLY</span>
+                {isTraySteamSynced && (
+                  <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-amber-950/80 text-amber-400 border border-amber-800/60 font-semibold">
+                    SYNC
+                  </span>
+                )}
+              </div>
+              <span className="text-amber-400 font-semibold font-mono">{Number(liveTraySteam).toFixed(2)} Bar</span>
             </div>
 
             {/* Supervisor Action Button */}
@@ -1033,12 +1062,33 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
 
             {/* Steam Supply Pressures */}
             <div className="rounded-xl border border-slate-800/80 bg-slate-900/40 p-4">
-              <span className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-3 font-mono">
-                Steam Supply (Bar)
-              </span>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="flex items-center justify-between mb-3">
+                <span className="block text-xs font-semibold uppercase tracking-wider text-slate-300 font-mono">
+                  Steam Supply (Bar)
+                </span>
+                <span className="text-[10px] text-amber-400/90 font-mono">
+                  Current: {Number(liveTraySteam).toFixed(2)} Bar
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 sm:gap-3">
                 <div>
-                  <label className="block text-[11px] text-slate-400 mb-1 font-mono">Booster Press</label>
+                  <label className="block text-[11px] text-slate-400 mb-1 font-mono truncate" title="Tray Steam Supply (Bar)">
+                    Tray Steam
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    placeholder={ghostData.tray_steam_supply_bar?.toString() || sheet.set_steam_supply_bar?.toString() || '3.00'}
+                    value={formData.tray_steam_supply_bar ?? ''}
+                    onChange={e => handleFieldChange('tray_steam_supply_bar', e.target.value ? Number(e.target.value) : null)}
+                    disabled={isSlotDisabled}
+                    className="w-full bg-[#090d16] border border-amber-500/30 focus:border-amber-400 rounded-lg px-2.5 py-1.5 text-xs font-mono text-white focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] text-slate-400 mb-1 font-mono truncate" title="Booster Press (Bar)">
+                    Booster Press
+                  </label>
                   <input
                     type="number"
                     step="0.01"
@@ -1050,7 +1100,9 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] text-slate-400 mb-1 font-mono">Ejector Press</label>
+                  <label className="block text-[11px] text-slate-400 mb-1 font-mono truncate" title="Ejector Press (Bar)">
+                    Ejector Press
+                  </label>
                   <input
                     type="number"
                     step="0.01"
@@ -1069,20 +1121,25 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Stripping Steam */}
             <div className="rounded-xl border border-slate-800/80 bg-slate-900/40 p-4">
-              <span className="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-3 font-mono">
-                Stripping Steam
-              </span>
+              <div className="flex items-center justify-between mb-3">
+                <span className="block text-xs font-semibold uppercase tracking-wider text-slate-300 font-mono">
+                  Stripping Steam
+                </span>
+                <span className="text-[10px] text-cyan-400/90 font-mono">
+                  Current: {Number(liveStrippingSteam).toFixed(2)} %
+                </span>
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] text-slate-400 mb-1 font-mono">% of Oil Input</label>
                   <input
                     type="number"
                     step="0.01"
-                    placeholder="1.50"
+                    placeholder={ghostData.strip_steam_pct_of_oil?.toString() || sheet.stripping_steam_pct?.toString() || '1.50'}
                     value={formData.strip_steam_pct_of_oil ?? ''}
                     onChange={e => handleFieldChange('strip_steam_pct_of_oil', e.target.value ? Number(e.target.value) : null)}
                     disabled={isSlotDisabled}
-                    className="w-full bg-[#090d16] border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full bg-[#090d16] border border-cyan-500/30 focus:border-cyan-400 rounded-lg px-2.5 py-1.5 text-xs font-mono text-white focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div>

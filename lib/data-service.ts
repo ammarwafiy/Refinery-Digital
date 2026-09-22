@@ -809,6 +809,25 @@ export function saveProcessEntry(
     memoryDeviations = currentDevs;
   }
 
+  // Auto-sync shift setpoint/display with latest actual values entered by operator
+  const latestWithStrip = [...entries]
+    .filter(e => e.strip_steam_pct_of_oil != null && !isNaN(Number(e.strip_steam_pct_of_oil)))
+    .sort((a, b) => b.slot_index - a.slot_index)[0];
+  if (latestWithStrip?.strip_steam_pct_of_oil != null) {
+    currentSheet.stripping_steam_pct = Number(latestWithStrip.strip_steam_pct_of_oil);
+  } else if (finalEntry.strip_steam_pct_of_oil != null && !isNaN(Number(finalEntry.strip_steam_pct_of_oil))) {
+    currentSheet.stripping_steam_pct = Number(finalEntry.strip_steam_pct_of_oil);
+  }
+
+  const latestWithTray = [...entries]
+    .filter(e => e.tray_steam_supply_bar != null && !isNaN(Number(e.tray_steam_supply_bar)))
+    .sort((a, b) => b.slot_index - a.slot_index)[0];
+  if (latestWithTray?.tray_steam_supply_bar != null) {
+    currentSheet.set_steam_supply_bar = Number(latestWithTray.tray_steam_supply_bar);
+  } else if (finalEntry.tray_steam_supply_bar != null && !isNaN(Number(finalEntry.tray_steam_supply_bar))) {
+    currentSheet.set_steam_supply_bar = Number(finalEntry.tray_steam_supply_bar);
+  }
+
   // Update sheet
   currentSheet.entries = entries;
   const allSheets = getAllProcessSheets();
@@ -1108,6 +1127,7 @@ export function copyPreviousHour(
     chill_water_out_c: prevEntry.chill_water_out_c,
     booster_press_bar: prevEntry.booster_press_bar,
     ejector_press_bar: prevEntry.ejector_press_bar,
+    tray_steam_supply_bar: prevEntry.tray_steam_supply_bar,
     strip_steam_pct_of_oil: prevEntry.strip_steam_pct_of_oil,
     strip_steam_flow_kghr: prevEntry.strip_steam_flow_kghr,
     fp101a_press_bar: prevEntry.fp101a_press_bar,
