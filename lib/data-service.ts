@@ -823,126 +823,217 @@ export function saveProcessEntry(
   // Add audit log
   addAuditLog('process_entries', finalEntry.id, existingIdx >= 0 ? 'update' : 'insert', null, finalEntry);
 
-  // Auto-dispatch product sample to RF-FR-001 QC Lab Analysis queue
-  if (productName && !finalEntry.no_production_reason && updatedEntry.auto_dispatch_qc !== false) {
+  // Auto-dispatch product sample to RF-FR-001 QC Lab Analysis queue (Mandatory SOP)
+  finalEntry.auto_dispatch_qc = true;
+  const defaultSpecParamIds = getDefaultParametersForProduct(finalEntry.product_id || undefined);
+  finalEntry.qc_parameter_ids = defaultSpecParamIds;
+
+  if (productName && !finalEntry.no_production_reason) {
     try {
-      const currentReports = getSampleReports();
-      const slotTimeCheck = `${slotLabel.slice(0, 2)}:00`;
-      const existingReportIdx = currentReports.findIndex(
-        r => r.sample_date === currentSheet.shift_date && (r.time_check === slotTimeCheck || r.lot_no?.endsWith(`-${slotLabel}`))
+      const qcReport = ensureAutoDispatchedQC(
+        updatedEntry.slot_index,
+        currentSheet.shift_date,
+        finalEntry.product_id || undefined
       );
+      if (qcReport && profile) {
+        const currentReports = getStored<SampleReport[]>(STORAGE_KEYS.REPORTS, memoryReports);
+        const repIdx = currentReports.findIndex(r => r.id === qcReport.id);
+        if (repIdx >= 0) {
+          currentReports[repIdx].submitted_by = profile.id;
+          currentReports[repIdx].submitted_by_name = profile.full_name;
+          setStored(STORAGE_KEYS.REPORTS, currentReports);
+          memoryReports = currentReports;
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('refinery_reports_updated', { detail: currentReports }));
+            window.dispatchEvent(new CustomEvent('refinery_sheet_updated', { detail: currentSheet }));
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('[Auto-QC] Failed to sync auto-dispatched QC sample on save:', e);
+    }
+  }
 
-      // Determine requested QC parameter IDs (default based on product specification)
-      const allParams = getParameters();
-      const defaultSpecParamIds = getDefaultParametersForProduct(finalEntry.product_id || undefined);
+  return { success: true, entry: finalEntry };
+}
 
-      finalEntry.auto_dispatch_qc = true;
-      finalEntry.qc_parameter_ids = defaultSpecParamIds;
+// Proactive Auto-Dispatch: Immediately generates & enqueues sample lot in RF-FR-001 QC Lab when timeline slot changes
+export function ensureAutoDispatchedQC(
+  slotIndex?: number,
+  shiftDate?: string,
+  explicitProductId?: string
+): SampleReport | null {
+  try {
+    const targetSlotIndex = slotIndex !== undefined ? slotIndex : getRealtimeSlotIndex();
+    const realtimeDate = getRealtimeShiftDate();
+    const targetShiftDate = shiftDate || realtimeDate;
+    const slotLabel = String(((targetSlotIndex + 7) % 24) * 100).padStart(4, '0');
+    const slotTimeCheck = `${slotLabel.slice(0, 2)}:00`;
 
-      const buildResults = (repId: string): SampleResult[] => {
-        const resultsList: SampleResult[] = [];
-        allParams.forEach(param => {
-          const isReq = defaultSpecParamIds.length > 0 ? defaultSpecParamIds.includes(param.id) : true;
-          if (param.code === 'SFC' && param.series_values) {
-            param.series_values.forEach(temp => {
-              resultsList.push({
-                id: `res-${Date.now()}-${temp}`,
-                report_id: repId,
-                parameter_id: param.id,
-                parameter_code: param.code,
-                parameter_name: `SFC @ ${temp}°C`,
-                unit: param.unit,
-                series_key: temp,
-                requested: isReq,
-              });
-            });
-          } else {
+    const currentReports = getStored<SampleReport[]>(STORAGE_KEYS.REPORTS, memoryReports);
+    const existingReportIdx = currentReports.findIndex(
+      r => r.sample_date === targetShiftDate && (r.time_check === slotTimeCheck || r.lot_no?.endsWith(`-${slotLabel}`))
+    );
+
+    // Only auto-create new dispatch for the active shift date (protect historical shifts from retroactive injections)
+    if (targetShiftDate !== realtimeDate && existingReportIdx < 0) {
+      return null;
+    }
+
+    // Determine product to use
+    let productId: string | undefined = explicitProductId;
+    const allSheets = getAllProcessSheets();
+    const targetSheet = allSheets[targetShiftDate];
+
+    if (!productId && targetSheet && targetSheet.entries) {
+      const thisEntry = targetSheet.entries.find(e => e.slot_index === targetSlotIndex);
+      if (thisEntry && thisEntry.product_id) {
+        productId = thisEntry.product_id;
+      } else {
+        // Look backward in current sheet
+        const pastEntries = [...targetSheet.entries]
+          .filter(e => e.slot_index < targetSlotIndex && !!e.product_id)
+          .sort((a, b) => b.slot_index - a.slot_index);
+        if (pastEntries.length > 0 && pastEntries[0].product_id) {
+          productId = pastEntries[0].product_id;
+        }
+      }
+    }
+
+    // If still not found, search previous date sheets
+    if (!productId) {
+      const pastDates = Object.keys(allSheets)
+        .filter(d => d < targetShiftDate)
+        .sort((a, b) => b.localeCompare(a));
+      for (const d of pastDates) {
+        const pastSheet = allSheets[d];
+        if (pastSheet.entries && pastSheet.entries.length > 0) {
+          const sorted = [...pastSheet.entries].filter(e => !!e.product_id).sort((a, b) => b.slot_index - a.slot_index);
+          if (sorted.length > 0 && sorted[0].product_id) {
+            productId = sorted[0].product_id;
+            break;
+          }
+        }
+      }
+    }
+
+    // Default fallback
+    if (!productId) {
+      productId = 'prod-26'; // PL 65 Matsuyama
+    }
+
+    const allProducts = getProducts();
+    const prodObj = allProducts.find(p => p.id === productId) || INITIAL_PRODUCTS.find(p => p.id === productId);
+    const productName = prodObj?.name || 'PL 65 Matsuyama';
+    const allParams = getParameters();
+    const defaultSpecParamIds = getDefaultParametersForProduct(productId);
+
+    const buildResults = (repId: string): SampleResult[] => {
+      const resultsList: SampleResult[] = [];
+      allParams.forEach(param => {
+        const isReq = defaultSpecParamIds.length > 0 ? defaultSpecParamIds.includes(param.id) : true;
+        if (param.code === 'SFC' && param.series_values) {
+          param.series_values.forEach(temp => {
             resultsList.push({
-              id: `res-${Date.now()}-${param.code}`,
+              id: `res-${Date.now()}-${temp}-${Math.random().toString(36).slice(2, 6)}`,
               report_id: repId,
               parameter_id: param.id,
               parameter_code: param.code,
-              parameter_name: param.name,
+              parameter_name: `SFC @ ${temp}°C`,
               unit: param.unit,
+              series_key: temp,
               requested: isReq,
             });
-          }
-        });
-        return resultsList;
-      };
+          });
+        } else {
+          resultsList.push({
+            id: `res-${Date.now()}-${param.code}-${Math.random().toString(36).slice(2, 6)}`,
+            report_id: repId,
+            parameter_id: param.id,
+            parameter_code: param.code,
+            parameter_name: param.name,
+            unit: param.unit,
+            requested: isReq,
+          });
+        }
+      });
+      return resultsList;
+    };
 
-      if (existingReportIdx >= 0) {
-        // If sample exists and is awaiting results, sync with updated product and parameter ticks
-        const existing = currentReports[existingReportIdx];
-        if (existing.status === 'awaiting_results' || !existing.decision) {
-          existing.product_id = finalEntry.product_id || prodObj?.id || 'prod-26';
+    if (existingReportIdx >= 0) {
+      const existing = currentReports[existingReportIdx];
+      // If report already exists and is awaiting results, sync product if explicit product changed
+      if (explicitProductId && (existing.status === 'awaiting_results' || !existing.decision)) {
+        if (existing.product_id !== explicitProductId) {
+          existing.product_id = explicitProductId;
           existing.product_name = productName;
-          existing.submitted_by = profile.id;
-          existing.submitted_by_name = profile.full_name;
           if (existing.status === 'awaiting_results' && (!existing.results || existing.results.every(r => r.value_numeric == null && !r.value_text))) {
             existing.results = buildResults(existing.id);
           }
           setStored(STORAGE_KEYS.REPORTS, currentReports);
           memoryReports = currentReports;
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('refinery_reports_updated', { detail: currentReports }));
+          }
         }
-      } else {
-        // Auto-create new QC sample report for this hour's product with ONLY requested parameters
-        const reportId = `rep-${Date.now()}-${slotLabel}`;
-        const cleanProdCode = (prodObj?.code || productName.split(' ')[0] || 'PL65').replace(/[^a-zA-Z0-9]/g, '');
-        const cleanDateCode = currentSheet.shift_date.replace(/-/g, '').slice(2);
-        const lotNo = `LOT-${cleanProdCode}-${cleanDateCode}-${slotLabel}`;
-        const reportNo = `SAR-2026-${String(Math.floor(100000 + Math.random() * 900000))}`;
-
-        const newQCReport: SampleReport = {
-          id: reportId,
-          plant_id: INITIAL_PLANT.id,
-          report_no: reportNo,
-          sample_date: currentSheet.shift_date,
-          time_check: slotTimeCheck,
-          lot_no: lotNo,
-          product_id: finalEntry.product_id || prodObj?.id || 'prod-26',
-          product_name: productName,
-          product_other: null,
-          feed_tank_id: 'tank-01',
-          feed_tank_code: 'TK-101A',
-          discharge_tank_id: 'tank-04',
-          discharge_tank_code: 'TK-201A',
-          crystallizer_no: 'CR-04',
-          batch_no: `B${cleanDateCode}${slotLabel.slice(0, 2)}`,
-          sampling_point_id: 'sp-01',
-          sampling_point_name: 'Deodorizer Outlet Pipe (Header 4)',
-          submitted_by: profile.id,
-          submitted_by_name: profile.full_name,
-          remark_flushing: false,
-          remark_cooling: false,
-          remark_pushover: false,
-          remarks: `Auto-dispatched from Hourly Process Log (Hour ${slotLabel} - ${productName})`,
-          status: 'awaiting_results',
-          created_by: profile.id,
-          created_at: now,
-          results: buildResults(reportId),
-        };
-
-        currentReports.unshift(newQCReport);
-        setStored(STORAGE_KEYS.REPORTS, currentReports);
-        memoryReports = currentReports;
-
-        addAuditLog('sample_reports', reportId, 'insert', null, newQCReport);
       }
-
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('refinery_reports_updated', { detail: currentReports }));
-        window.dispatchEvent(new CustomEvent('refinery_sheet_updated', { detail: currentSheet }));
-      }
-    } catch (e) {
-      console.warn('[Auto-QC] Failed to auto-dispatch QC sample:', e);
+      return existing;
     }
-  } else if (updatedEntry.auto_dispatch_qc === false) {
-    finalEntry.auto_dispatch_qc = false;
-    finalEntry.qc_parameter_ids = [];
-  }
 
-  return { success: true, entry: finalEntry };
+    // Auto-create new QC sample report immediately for this timeline slot
+    const reportId = `rep-${Date.now()}-${slotLabel}`;
+    const cleanProdCode = (prodObj?.code || productName.split(' ')[0] || 'PL65').replace(/[^a-zA-Z0-9]/g, '');
+    const cleanDateCode = targetShiftDate.replace(/-/g, '').slice(2);
+    const lotNo = `LOT-${cleanProdCode}-${cleanDateCode}-${slotLabel}`;
+    const reportNo = `SAR-2026-${String(Math.floor(100000 + Math.random() * 900000))}`;
+    const now = new Date().toISOString();
+    const profile = getCurrentProfile();
+
+    const newQCReport: SampleReport = {
+      id: reportId,
+      plant_id: INITIAL_PLANT.id,
+      report_no: reportNo,
+      sample_date: targetShiftDate,
+      time_check: slotTimeCheck,
+      lot_no: lotNo,
+      product_id: productId,
+      product_name: productName,
+      product_other: null,
+      feed_tank_id: 'tank-01',
+      feed_tank_code: 'TK-101A',
+      discharge_tank_id: 'tank-04',
+      discharge_tank_code: 'TK-201A',
+      crystallizer_no: 'CR-04',
+      batch_no: `B${cleanDateCode}${slotLabel.slice(0, 2)}`,
+      sampling_point_id: 'sp-01',
+      sampling_point_name: 'Deodorizer Outlet Pipe (Header 4)',
+      submitted_by: profile?.id || 'p-op-01',
+      submitted_by_name: profile?.full_name || 'Timeline Auto-Dispatch',
+      remark_flushing: false,
+      remark_cooling: false,
+      remark_pushover: false,
+      remarks: `Auto-dispatched on shift timeline activation (Hour ${slotLabel} - ${productName})`,
+      status: 'awaiting_results',
+      created_by: profile?.id || 'p-op-01',
+      created_at: now,
+      results: buildResults(reportId),
+    };
+
+    currentReports.unshift(newQCReport);
+    setStored(STORAGE_KEYS.REPORTS, currentReports);
+    memoryReports = currentReports;
+
+    addAuditLog('sample_reports', reportId, 'insert', null, newQCReport);
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('refinery_reports_updated', { detail: currentReports }));
+    }
+
+    return newQCReport;
+  } catch (e) {
+    console.warn('[Auto-QC] Failed to ensure auto-dispatched QC sample:', e);
+    return null;
+  }
 }
 
 // Copy Previous Hour logic

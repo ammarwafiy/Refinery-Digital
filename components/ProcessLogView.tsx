@@ -23,7 +23,8 @@ import {
   getDefaultParametersForProduct,
   getParameterLimits, 
   getCurrentRole,
-  getRealtimeSlotIndex
+  getRealtimeSlotIndex,
+  ensureAutoDispatchedQC
 } from '@/lib/data-service';
 import { 
   CheckCircle2, 
@@ -41,7 +42,8 @@ import {
   Check, 
   FileCheck2, 
   AlertCircle,
-  FlaskConical
+  FlaskConical,
+  ShieldCheck
 } from 'lucide-react';
 
 interface ProcessLogViewProps {
@@ -103,6 +105,9 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
       setCurrentTimeStr(
         mytDate.toLocaleTimeString('en-GB', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })
       );
+
+      // Proactively auto-dispatch QC sample lot to RF-FR-001 QC Lab for the active timeline hour
+      ensureAutoDispatchedQC(slot, realtimeDate);
 
       // Auto-rollover in realtime when shift date changes (e.g. 07:00 AM hits)
       setActiveShiftDate(prevDate => {
@@ -192,6 +197,10 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
 
   const handleProductChange = (newProdId: string) => {
     handleFieldChange('product_id', newProdId);
+    // Proactively sync auto-dispatched QC report with the newly selected product
+    if (isLiveShift && selectedSlotIndex === currentSlotIndex) {
+      ensureAutoDispatchedQC(selectedSlotIndex, activeShiftDate, newProdId);
+    }
   };
 
   const handleCopyPrevious = () => {
@@ -801,39 +810,31 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
             </div>
           </div>
 
-          {/* Section A.1: Auto-Dispatch to RF-FR-001 QC Lab */}
-          <div className="rounded-xl border border-cyan-900/50 bg-[#0b1329]/70 p-4 shadow-lg">
+          {/* Section A.1: Auto-Dispatch to RF-FR-001 QC Lab (Mandatory Plant SOP · Locked) */}
+          <div className="rounded-xl border border-cyan-800/60 bg-gradient-to-r from-[#0b1329]/90 to-[#081b2c]/80 p-4 shadow-lg">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <div className="rounded-lg bg-cyan-950/90 p-2.5 text-cyan-400 border border-cyan-700/50 shrink-0">
                   <FlaskConical className="h-5 w-5" />
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
-                    <label className="flex items-center gap-2 cursor-pointer select-none">
-                      <input
-                        type="checkbox"
-                        checked={autoDispatchQc}
-                        onChange={e => setAutoDispatchQc(e.target.checked)}
-                        disabled={isSlotDisabled}
-                        className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-cyan-500 focus:ring-cyan-500 cursor-pointer disabled:opacity-50"
-                      />
-                      <span className="text-sm font-bold tracking-wide text-cyan-200 font-mono">
-                        Auto-Dispatch to RF-FR-001 QC Lab
-                      </span>
-                    </label>
-                    <span className={`px-2 py-0.5 rounded text-[11px] font-mono border ${
-                      autoDispatchQc
-                        ? 'bg-cyan-950 text-cyan-400 border-cyan-800/60 font-medium'
-                        : 'bg-slate-900 text-slate-500 border-slate-800'
-                    }`}>
-                      {autoDispatchQc ? '✓ Active' : 'Disabled'}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-sm font-bold tracking-wide text-cyan-200 font-mono">
+                      Auto-Dispatch to RF-FR-001 QC Lab
+                    </span>
+                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono border bg-emerald-950/80 text-emerald-300 border-emerald-700/60 font-medium flex items-center gap-1.5 shadow-sm">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                      Mandatory Plant SOP · Always Active
                     </span>
                   </div>
                   <p className="text-xs text-slate-400 mt-1">
-                    Automatically dispatches sample lot to RF-FR-001 QC Lab queue upon saving. QC Lab analysts manage product test parameters.
+                    System automatically dispatches hourly sample lot directly into RF-FR-001 QC Lab queue as each shift timeline hour activates. Operator override disabled per quality SOP.
                   </p>
                 </div>
+              </div>
+              <div className="flex items-center gap-1.5 self-start sm:self-auto text-[11px] text-cyan-300 font-mono bg-cyan-950/50 px-3 py-1.5 rounded-lg border border-cyan-800/40">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Auto-Synced with Shift Timeline</span>
               </div>
             </div>
           </div>

@@ -24,7 +24,8 @@ import {
   getRejectionReasons, 
   getCurrentRole,
   getProductSpecs,
-  getRealtimeShiftDate
+  getRealtimeShiftDate,
+  ensureAutoDispatchedQC
 } from '@/lib/data-service';
 import { 
   FlaskConical, 
@@ -122,6 +123,7 @@ export default function SampleLabView({ currentRole, currentUser }: SampleLabVie
   }, []);
 
   const refreshReports = () => {
+    ensureAutoDispatchedQC();
     const list = getSampleReports();
     setReports(list);
     if (!selectedReportId && list.length > 0) {
