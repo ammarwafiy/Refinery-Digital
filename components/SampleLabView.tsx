@@ -85,14 +85,13 @@ export default function SampleLabView({ currentRole, currentUser }: SampleLabVie
   const [newRemarkPushover, setNewRemarkPushover] = useState(false);
   const [newRemarks, setNewRemarks] = useState('');
   const [selectedParamIds, setSelectedParamIds] = useState<string[]>([
-    'param-ffa', 'param-h2o', 'param-iv', 'param-pv', 'param-col-r', 'param-col-y', 'param-odour', 'param-cloud', 'param-sfc'
+    'param-ffa', 'param-h2o', 'param-iv', 'param-pv', 'param-col-r', 'param-col-y', 'param-odour', 'param-cloud', 'param-sfc', 'param-temp'
   ]);
 
   // Enter results state
   const [resultInputs, setResultInputs] = useState<Record<string, { num?: number; text?: string }>>({});
   const [requestedMap, setRequestedMap] = useState<Record<string, boolean>>({});
   const [resultsSuccess, setResultsSuccess] = useState<string | null>(null);
-  const [isSfcExpanded, setIsSfcExpanded] = useState<boolean>(true);
 
   // QC Decision Modal state
   const [isDecisionModalOpen, setIsDecisionModalOpen] = useState(false);
@@ -141,85 +140,35 @@ export default function SampleLabView({ currentRole, currentUser }: SampleLabVie
     if (!selectedReport) return [];
     const existing = selectedReport.results || [];
 
-    const existingParamKeys = new Set(
-      existing.map(r => r.series_key ? `${r.parameter_id}-${r.series_key}` : r.parameter_id)
-    );
-    const merged = [...existing];
+    // Filter out legacy sfc series if present
+    const cleanExisting = existing.filter(r => !r.series_key);
+    const existingParamKeys = new Set(cleanExisting.map(r => r.parameter_id));
+    const merged = [...cleanExisting];
 
     parameters.forEach(param => {
-      if (param.code === 'SFC' && param.series_values) {
-        param.series_values.forEach(temp => {
-          const key = `${param.id}-${temp}`;
-          if (!existingParamKeys.has(key)) {
-            merged.push({
-              id: `res-${selectedReport.id}-${temp}`,
-              report_id: selectedReport.id,
-              parameter_id: param.id,
-              parameter_code: param.code,
-              parameter_name: `SFC @ ${temp}°C`,
-              unit: param.unit,
-              series_key: temp,
-              requested: false,
-            });
-          }
+      if (!existingParamKeys.has(param.id)) {
+        merged.push({
+          id: `res-${selectedReport.id}-${param.code}`,
+          report_id: selectedReport.id,
+          parameter_id: param.id,
+          parameter_code: param.code,
+          parameter_name: param.name,
+          unit: param.unit,
+          requested: false,
         });
-      } else {
-        if (!existingParamKeys.has(param.id)) {
-          merged.push({
-            id: `res-${selectedReport.id}-${param.code}`,
-            report_id: selectedReport.id,
-            parameter_id: param.id,
-            parameter_code: param.code,
-            parameter_name: param.name,
-            unit: param.unit,
-            requested: false,
-          });
-        }
       }
     });
 
-    // Sort parameters based on standard catalog order (sort_order), and SFC by series_key ascending
+    // Sort parameters based on standard catalog order (sort_order)
     const paramOrderMap = new Map(parameters.map(p => [p.id, p.sort_order]));
     merged.sort((a, b) => {
       const orderA = paramOrderMap.get(a.parameter_id) ?? 99;
       const orderB = paramOrderMap.get(b.parameter_id) ?? 99;
-      if (orderA !== orderB) return orderA - orderB;
-      if (a.series_key != null && b.series_key != null) {
-        return Number(a.series_key) - Number(b.series_key);
-      }
-      return 0;
+      return orderA - orderB;
     });
 
     return merged;
   }, [selectedReport, parameters]);
-
-  // Separate non-SFC parameters and SFC temperature series
-  const nonSfcResults = useMemo(() => {
-    return displayResults.filter(r => r.parameter_code !== 'SFC');
-  }, [displayResults]);
-
-  const sfcResults = useMemo(() => {
-    return displayResults.filter(r => r.parameter_code === 'SFC');
-  }, [displayResults]);
-
-  // Master SFC tick box state: checked if any SFC temperature is currently ticked
-  const isSfcAnyTicked = useMemo(() => {
-    return sfcResults.some(r => requestedMap[r.id] !== false);
-  }, [sfcResults, requestedMap]);
-
-  // Toggle master SFC parameter: ticks/unticks all 9 temperatures together
-  const handleToggleMasterSfc = (checked: boolean) => {
-    setRequestedMap(prev => {
-      const next = { ...prev };
-      sfcResults.forEach(r => {
-        next[r.id] = checked;
-      });
-      return next;
-    });
-    if (checked) {
-      setIsSfcExpanded(true);
-    }
-  };
 
   // Initialize result inputs and active/ticked status when selected report changes
   useEffect(() => {
@@ -878,8 +827,7 @@ export default function SampleLabView({ currentRole, currentUser }: SampleLabVie
                         Lab Analysis Results Entry (RF-FR-001 Parameter Table)
                       </span>
                       <span className="rounded bg-slate-800 px-2.5 py-0.5 font-mono text-[11px] text-cyan-300 border border-slate-700">
-                        {nonSfcResults.filter(r => requestedMap[r.id] !== false).length + (isSfcAnyTicked ? 1 : 0)} / {nonSfcResults.length + (sfcResults.length > 0 ? 1 : 0)} Parameters Active
-                        {isSfcAnyTicked && ` · ${sfcResults.filter(r => requestedMap[r.id] !== false).length} Temps Active`}
+                        {displayResults.filter(r => requestedMap[r.id] !== false).length} / {displayResults.length} Parameters Active
                       </span>
                     </div>
 
@@ -925,8 +873,7 @@ export default function SampleLabView({ currentRole, currentUser }: SampleLabVie
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-800/60 font-mono">
-                        {/* 1. Standard Laboratory Parameters (Ending with Fatty Acid Composition C12:0) */}
-                        {nonSfcResults.map(res => {
+                        {displayResults.map(res => {
                           const inputVal = resultInputs[res.id] || {};
                           const isUnticked = requestedMap[res.id] === false;
                           const canEdit = (role === 'qc_analyst' || role === 'qc_manager' || role === 'admin');
@@ -981,7 +928,7 @@ export default function SampleLabView({ currentRole, currentUser }: SampleLabVie
                                 ) : (
                                   <input
                                     type="number"
-                                    step="0.001"
+                                    step={res.parameter_code === 'SFC' || res.parameter_code === 'TEMP' || res.parameter_code === 'BPP' || res.parameter_code === 'SLIP_MELT' || res.parameter_code === 'CLOUD_POINT' || res.parameter_code === 'SOAP' || res.parameter_code === 'IV' || res.parameter_code === 'COLOUR_R' || res.parameter_code === 'COLOUR_Y' ? "0.1" : "0.001"}
                                     disabled={!canEdit}
                                     placeholder="Enter value"
                                     value={inputVal.num ?? ''}
@@ -989,7 +936,7 @@ export default function SampleLabView({ currentRole, currentUser }: SampleLabVie
                                       ...prev,
                                       [res.id]: { ...prev[res.id], num: e.target.value ? Number(e.target.value) : undefined }
                                     }))}
-                                    className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white focus:border-cyan-500 disabled:opacity-50"
+                                    className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white focus:border-cyan-500 disabled:opacity-50 font-mono"
                                   />
                                 )}
                               </td>
@@ -1015,149 +962,6 @@ export default function SampleLabView({ currentRole, currentUser }: SampleLabVie
                             </tr>
                           );
                         })}
-
-                        {/* 2. Solid Fat Content (SFC) Parameter Tick Box Directly Under Fatty Acid Composition C12:0 */}
-                        {sfcResults.length > 0 && (
-                          <>
-                            <tr
-                              className={`transition-colors ${
-                                !isSfcAnyTicked
-                                  ? 'opacity-40 bg-slate-950/40'
-                                  : 'hover:bg-slate-900/30'
-                              }`}
-                            >
-                              <td className="py-2.5 px-3 text-center">
-                                <input
-                                  type="checkbox"
-                                  checked={isSfcAnyTicked}
-                                  onChange={e => handleToggleMasterSfc(e.target.checked)}
-                                  disabled={!canEdit}
-                                  className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-cyan-500 focus:ring-cyan-500 cursor-pointer disabled:opacity-50"
-                                  title={isSfcAnyTicked ? "Ticked: Active parameter" : "Unticked: Test not applicable for this product"}
-                                />
-                              </td>
-                              <td className={`py-2.5 px-3 font-sans ${!isSfcAnyTicked ? 'text-slate-500' : 'text-slate-200'}`}>
-                                Solid Fat Content (SFC)
-                              </td>
-                              <td className={`py-2.5 px-3 ${!isSfcAnyTicked ? 'text-slate-600' : 'text-slate-500'}`}>
-                                %
-                              </td>
-                              <td className="py-2.5 px-3">
-                                {!isSfcAnyTicked ? (
-                                  <input
-                                    type="text"
-                                    disabled
-                                    value="N/A - Unticked"
-                                    className="w-full bg-slate-950/80 border border-slate-800/80 rounded px-2 py-1 text-xs text-slate-500 cursor-not-allowed font-mono italic"
-                                  />
-                                ) : (
-                                  <input
-                                    type="text"
-                                    disabled
-                                    value="9 Temperatures (See Below)"
-                                    className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-300 font-mono"
-                                  />
-                                )}
-                              </td>
-                              <td className="py-2.5 px-3 text-center">
-                                {!isSfcAnyTicked ? (
-                                  <span className="inline-flex items-center text-[10px] text-slate-500 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
-                                    N/A (Unticked)
-                                  </span>
-                                ) : sfcResults.some(r => requestedMap[r.id] !== false && r.in_spec === false) ? (
-                                  <span className="inline-flex items-center gap-1 text-[10px] text-rose-400 bg-rose-950/80 px-2 py-0.5 rounded border border-rose-800/40 font-bold">
-                                    <XCircle className="h-2.5 w-2.5" /> OUT OF SPEC
-                                  </span>
-                                ) : sfcResults.every(r => requestedMap[r.id] === false || r.in_spec === true) && sfcResults.some(r => r.value_numeric != null) ? (
-                                  <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-800/40">
-                                    <Check className="h-2.5 w-2.5" /> IN SPEC
-                                  </span>
-                                ) : (
-                                  <span className="text-[10px] text-slate-500">
-                                    Pending Input
-                                  </span>
-                                )}
-                              </td>
-                            </tr>
-
-                            {/* 3. SFC Individual Temperature Rows (Separated Cleanly Under SFC) */}
-                            {isSfcAnyTicked && sfcResults.map(res => {
-                              const inputVal = resultInputs[res.id] || {};
-                              const isUnticked = requestedMap[res.id] === false;
-
-                              return (
-                                <tr
-                                  key={res.id}
-                                  className={`transition-colors ${
-                                    isUnticked
-                                      ? 'opacity-40 bg-slate-950/40'
-                                      : 'hover:bg-slate-900/30'
-                                  }`}
-                                >
-                                  <td className="py-2.5 px-3 text-center">
-                                    <input
-                                      type="checkbox"
-                                      checked={!isUnticked}
-                                      onChange={e => handleToggleResultParam(res.id, e.target.checked)}
-                                      disabled={!canEdit}
-                                      className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-cyan-500 focus:ring-cyan-500 cursor-pointer disabled:opacity-50"
-                                      title={isUnticked ? "Unticked: Test not applicable for this product" : "Ticked: Active parameter"}
-                                    />
-                                  </td>
-                                  <td className={`py-2.5 px-3 font-sans ${isUnticked ? 'text-slate-500' : 'text-slate-200'}`}>
-                                    <span className="text-slate-500 mr-2">↳</span>
-                                    <span>Temperature {res.series_key}°C</span>
-                                  </td>
-                                  <td className={`py-2.5 px-3 ${isUnticked ? 'text-slate-600' : 'text-slate-500'}`}>
-                                    %
-                                  </td>
-                                  <td className="py-2.5 px-3">
-                                    {isUnticked ? (
-                                      <input
-                                        type="text"
-                                        disabled
-                                        value="N/A - Unticked"
-                                        className="w-full bg-slate-950/80 border border-slate-800/80 rounded px-2 py-1 text-xs text-slate-500 cursor-not-allowed font-mono italic"
-                                      />
-                                    ) : (
-                                      <input
-                                        type="number"
-                                        step="0.1"
-                                        disabled={!canEdit}
-                                        placeholder="Enter value"
-                                        value={inputVal.num ?? ''}
-                                        onChange={e => setResultInputs(prev => ({
-                                          ...prev,
-                                          [res.id]: { ...prev[res.id], num: e.target.value ? Number(e.target.value) : undefined }
-                                        }))}
-                                        className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white focus:border-cyan-500 disabled:opacity-50 font-mono"
-                                      />
-                                    )}
-                                  </td>
-                                  <td className="py-2.5 px-3 text-center">
-                                    {isUnticked ? (
-                                      <span className="inline-flex items-center text-[10px] text-slate-500 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
-                                        N/A (Unticked)
-                                      </span>
-                                    ) : res.in_spec === true ? (
-                                      <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-800/40">
-                                        <Check className="h-2.5 w-2.5" /> IN SPEC
-                                      </span>
-                                    ) : res.in_spec === false ? (
-                                      <span className="inline-flex items-center gap-1 text-[10px] text-rose-400 bg-rose-950/80 px-2 py-0.5 rounded border border-rose-800/40 font-bold">
-                                        <XCircle className="h-2.5 w-2.5" /> OUT OF SPEC
-                                      </span>
-                                    ) : (
-                                      <span className="text-[10px] text-slate-500">
-                                        Pending Input
-                                      </span>
-                                    )}
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </>
-                        )}
                       </tbody>
                     </table>
                   </div>

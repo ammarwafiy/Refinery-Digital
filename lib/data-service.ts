@@ -539,7 +539,7 @@ export function getDefaultParametersForProduct(productId?: string): string[] {
     return [...standard, 'param-cloud'];
   }
   if (name.includes('stearin') || name.includes('matsuyama') || name.includes('hard') || name.includes('fat')) {
-    return [...standard, 'param-smp', 'param-cloud', 'param-sfc'];
+    return [...standard, 'param-smp', 'param-cloud', 'param-sfc', 'param-temp'];
   }
   if (name.includes('pfad') || name.includes('acid')) {
     return ['param-ffa', 'param-h2o', 'param-iv', 'param-fac'];
@@ -951,30 +951,15 @@ export function ensureAutoDispatchedQC(
       const resultsList: SampleResult[] = [];
       allParams.forEach(param => {
         const isReq = defaultSpecParamIds.length > 0 ? defaultSpecParamIds.includes(param.id) : true;
-        if (param.code === 'SFC' && param.series_values) {
-          param.series_values.forEach(temp => {
-            resultsList.push({
-              id: `res-${Date.now()}-${temp}-${Math.random().toString(36).slice(2, 6)}`,
-              report_id: repId,
-              parameter_id: param.id,
-              parameter_code: param.code,
-              parameter_name: `SFC @ ${temp}°C`,
-              unit: param.unit,
-              series_key: temp,
-              requested: isReq,
-            });
-          });
-        } else {
-          resultsList.push({
-            id: `res-${Date.now()}-${param.code}-${Math.random().toString(36).slice(2, 6)}`,
-            report_id: repId,
-            parameter_id: param.id,
-            parameter_code: param.code,
-            parameter_name: param.name,
-            unit: param.unit,
-            requested: isReq,
-          });
-        }
+        resultsList.push({
+          id: `res-${Date.now()}-${param.code}-${Math.random().toString(36).slice(2, 6)}`,
+          report_id: repId,
+          parameter_id: param.id,
+          parameter_code: param.code,
+          parameter_name: param.name,
+          unit: param.unit,
+          requested: isReq,
+        });
       });
       return resultsList;
     };
@@ -1319,30 +1304,15 @@ export function createSampleReport(data: {
   data.selected_parameter_ids.forEach(pId => {
     const param = params.find(p => p.id === pId);
     if (!param) return;
-    if (param.code === 'SFC' && param.series_values) {
-      param.series_values.forEach(temp => {
-        results.push({
-          id: `res-${Date.now()}-${temp}`,
-          report_id: reportId,
-          parameter_id: param.id,
-          parameter_code: param.code,
-          parameter_name: `SFC @ ${temp}°C`,
-          unit: param.unit,
-          series_key: temp,
-          requested: true,
-        });
-      });
-    } else {
-      results.push({
-        id: `res-${Date.now()}-${param.code}`,
-        report_id: reportId,
-        parameter_id: param.id,
-        parameter_code: param.code,
-        parameter_name: param.name,
-        unit: param.unit,
-        requested: true,
-      });
-    }
+    results.push({
+      id: `res-${Date.now()}-${param.code}`,
+      report_id: reportId,
+      parameter_id: param.id,
+      parameter_code: param.code,
+      parameter_name: param.name,
+      unit: param.unit,
+      requested: true,
+    });
   });
 
   const newReport: SampleReport = {

@@ -169,7 +169,8 @@ export const INITIAL_PARAMETERS: Parameter[] = [
   { id: 'param-cloud', code: 'CLOUD_POINT', name: 'Cloud Point', unit: '°C', decimals: 1, is_series: false, input_kind: 'numeric', sort_order: 10 },
   { id: 'param-soap', code: 'SOAP', name: 'Soap Content', unit: 'ppm', decimals: 1, is_series: false, input_kind: 'numeric', sort_order: 11 },
   { id: 'param-fac', code: 'FAC_C12', name: 'Fatty Acid Composition C12:0', unit: '%', decimals: 2, is_series: false, input_kind: 'numeric', sort_order: 12 },
-  { id: 'param-sfc', code: 'SFC', name: 'Solid Fat Content Series', unit: '%', decimals: 1, is_series: true, series_values: [10, 15, 20, 25, 30, 35, 40, 45, 50], input_kind: 'numeric', sort_order: 13 },
+  { id: 'param-sfc', code: 'SFC', name: 'Solid Fat Content (SFC)', unit: '%', decimals: 1, is_series: false, input_kind: 'numeric', sort_order: 13 },
+  { id: 'param-temp', code: 'TEMP', name: 'Temperature', unit: '°C', decimals: 1, is_series: false, input_kind: 'numeric', sort_order: 14 },
 ];
 
 export const INITIAL_LIMITS: ParameterLimit[] = [
@@ -217,11 +218,9 @@ export const INITIAL_SPECS: ProductSpec[] = [
   { id: 'spec-05', product_id: 'prod-26', parameter_id: 'param-col-r', max_value: 2.5, target_value: 2.0, effective_from: '2026-01-01' },
   { id: 'spec-06', product_id: 'prod-26', parameter_id: 'param-col-y', max_value: 25.0, target_value: 20.0, effective_from: '2026-01-01' },
   { id: 'spec-07', product_id: 'prod-26', parameter_id: 'param-cloud', max_value: 3.5, target_value: 2.8, effective_from: '2026-01-01' },
-  // SFC specs
-  { id: 'spec-sfc-10', product_id: 'prod-26', parameter_id: 'param-sfc', series_key: 10, min_value: 48.0, max_value: 56.0, target_value: 52.0, effective_from: '2026-01-01' },
-  { id: 'spec-sfc-20', product_id: 'prod-26', parameter_id: 'param-sfc', series_key: 20, min_value: 24.0, max_value: 30.0, target_value: 27.0, effective_from: '2026-01-01' },
-  { id: 'spec-sfc-30', product_id: 'prod-26', parameter_id: 'param-sfc', series_key: 30, min_value: 6.0, max_value: 10.0, target_value: 8.0, effective_from: '2026-01-01' },
-  { id: 'spec-sfc-35', product_id: 'prod-26', parameter_id: 'param-sfc', series_key: 35, max_value: 2.0, target_value: 0.5, effective_from: '2026-01-01' },
+  // SFC & Temperature specs
+  { id: 'spec-sfc', product_id: 'prod-26', parameter_id: 'param-sfc', min_value: 0.0, max_value: 60.0, target_value: 28.0, effective_from: '2026-01-01' },
+  { id: 'spec-temp', product_id: 'prod-26', parameter_id: 'param-temp', min_value: 20.0, max_value: 70.0, target_value: 25.0, effective_from: '2026-01-01' },
 ];
 
 // 24-Hour Process Sheet for Today
@@ -402,11 +401,8 @@ export const INITIAL_REPORTS: SampleReport[] = [
       { id: 'res-6', report_id: 'rep-001', parameter_id: 'param-col-y', parameter_code: 'COLOUR_Y', parameter_name: 'Colour Yellow', unit: 'Y', requested: true, value_numeric: 18.0, in_spec: true },
       { id: 'res-7', report_id: 'rep-001', parameter_id: 'param-odour', parameter_code: 'ODOUR', parameter_name: 'Odour Assessment', unit: null, requested: true, value_text: 'bland', in_spec: true },
       { id: 'res-8', report_id: 'rep-001', parameter_id: 'param-cloud', parameter_code: 'CLOUD_POINT', parameter_name: 'Cloud Point', unit: '°C', requested: true, value_numeric: 2.6, in_spec: true },
-      // SFC series
-      { id: 'res-sfc-10', report_id: 'rep-001', parameter_id: 'param-sfc', parameter_code: 'SFC', parameter_name: 'SFC @ 10°C', unit: '%', series_key: 10, requested: true, value_numeric: 51.5, in_spec: true },
-      { id: 'res-sfc-20', report_id: 'rep-001', parameter_id: 'param-sfc', parameter_code: 'SFC', parameter_name: 'SFC @ 20°C', unit: '%', series_key: 20, requested: true, value_numeric: 26.8, in_spec: true },
-      { id: 'res-sfc-30', report_id: 'rep-001', parameter_id: 'param-sfc', parameter_code: 'SFC', parameter_name: 'SFC @ 30°C', unit: '%', series_key: 30, requested: true, value_numeric: 7.9, in_spec: true },
-      { id: 'res-sfc-35', report_id: 'rep-001', parameter_id: 'param-sfc', parameter_code: 'SFC', parameter_name: 'SFC @ 35°C', unit: '%', series_key: 35, requested: true, value_numeric: 0.4, in_spec: true },
+      { id: 'res-sfc', report_id: 'rep-001', parameter_id: 'param-sfc', parameter_code: 'SFC', parameter_name: 'Solid Fat Content (SFC)', unit: '%', requested: true, value_numeric: 26.8, in_spec: true },
+      { id: 'res-temp', report_id: 'rep-001', parameter_id: 'param-temp', parameter_code: 'TEMP', parameter_name: 'Temperature', unit: '°C', requested: true, value_numeric: 25.0, in_spec: true },
     ],
     decision: {
       id: 'dec-001',
