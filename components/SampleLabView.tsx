@@ -1020,61 +1020,29 @@ export default function SampleLabView({ currentRole, currentUser }: SampleLabVie
                         {sfcResults.length > 0 && (
                           <>
                             <tr
-                              className={`transition-colors border-t-2 border-slate-800/90 ${
+                              className={`transition-colors ${
                                 !isSfcAnyTicked
-                                  ? 'opacity-40 bg-slate-950/60'
-                                  : 'bg-cyan-950/20 hover:bg-cyan-950/30'
+                                  ? 'opacity-40 bg-slate-950/40'
+                                  : 'hover:bg-slate-900/30'
                               }`}
                             >
-                              <td className="py-3 px-3 text-center">
+                              <td className="py-2.5 px-3 text-center">
                                 <input
                                   type="checkbox"
                                   checked={isSfcAnyTicked}
                                   onChange={e => handleToggleMasterSfc(e.target.checked)}
                                   disabled={!canEdit}
-                                  className="h-4 w-4 rounded border-cyan-700 bg-slate-900 text-cyan-500 focus:ring-cyan-500 cursor-pointer disabled:opacity-50"
-                                  title={isSfcAnyTicked ? "SFC Active: Untick to turn off all SFC testing" : "SFC Unticked: Tick to enable SFC testing"}
+                                  className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-cyan-500 focus:ring-cyan-500 cursor-pointer disabled:opacity-50"
+                                  title={isSfcAnyTicked ? "Ticked: Active parameter" : "Unticked: Test not applicable for this product"}
                                 />
                               </td>
-                              <td className="py-3 px-3">
-                                <div className="flex items-center justify-between gap-2">
-                                  <div className="flex items-center gap-2">
-                                    <span className={`font-sans font-semibold text-sm ${isSfcAnyTicked ? 'text-white' : 'text-slate-500'}`}>
-                                      Solid Fat Content (SFC)
-                                    </span>
-                                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950/90 text-cyan-300 border border-cyan-700/60 font-medium">
-                                      Parameter Tick Box
-                                    </span>
-                                  </div>
-                                  {isSfcAnyTicked && (
-                                    <button
-                                      type="button"
-                                      onClick={() => setIsSfcExpanded(!isSfcExpanded)}
-                                      className="flex items-center gap-1 text-[11px] text-cyan-400 hover:text-cyan-300 font-mono px-2 py-0.5 rounded bg-slate-800/80 border border-slate-700/80 transition-colors cursor-pointer"
-                                      title={isSfcExpanded ? "Hide temperature rows" : "Show temperature rows"}
-                                    >
-                                      {isSfcExpanded ? (
-                                        <>
-                                          <ChevronDown className="h-3 w-3" />
-                                          <span>Hide Temps</span>
-                                        </>
-                                      ) : (
-                                        <>
-                                          <ChevronRight className="h-3 w-3" />
-                                          <span>Show Temps ({sfcResults.filter(r => requestedMap[r.id] !== false).length})</span>
-                                        </>
-                                      )}
-                                    </button>
-                                  )}
-                                </div>
-                                <div className="text-[11px] text-slate-400 font-sans mt-0.5">
-                                  Independent temperature measurement series (10°C to 50°C)
-                                </div>
+                              <td className={`py-2.5 px-3 font-sans ${!isSfcAnyTicked ? 'text-slate-500' : 'text-slate-200'}`}>
+                                Solid Fat Content (SFC)
                               </td>
-                              <td className={`py-3 px-3 ${isSfcAnyTicked ? 'text-slate-400' : 'text-slate-600'}`}>
+                              <td className={`py-2.5 px-3 ${!isSfcAnyTicked ? 'text-slate-600' : 'text-slate-500'}`}>
                                 %
                               </td>
-                              <td className="py-3 px-3">
+                              <td className="py-2.5 px-3">
                                 {!isSfcAnyTicked ? (
                                   <input
                                     type="text"
@@ -1083,43 +1051,15 @@ export default function SampleLabView({ currentRole, currentUser }: SampleLabVie
                                     className="w-full bg-slate-950/80 border border-slate-800/80 rounded px-2 py-1 text-xs text-slate-500 cursor-not-allowed font-mono italic"
                                   />
                                 ) : (
-                                  <div className="flex items-center justify-between gap-1 text-xs">
-                                    <span className="text-[11px] font-mono text-cyan-300 font-medium">
-                                      {sfcResults.filter(r => requestedMap[r.id] !== false).length} of 9 Temps Active
-                                    </span>
-                                    <div className="flex items-center gap-1">
-                                      <button
-                                        type="button"
-                                        onClick={() => handleToggleMasterSfc(true)}
-                                        disabled={!canEdit}
-                                        className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors cursor-pointer"
-                                        title="Tick all 9 temperatures"
-                                      >
-                                        All
-                                      </button>
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          setRequestedMap(prev => {
-                                            const next = { ...prev };
-                                            sfcResults.forEach(r => {
-                                              next[r.id] = [20, 25, 30, 35].includes(Number(r.series_key));
-                                            });
-                                            return next;
-                                          });
-                                          setIsSfcExpanded(true);
-                                        }}
-                                        disabled={!canEdit}
-                                        className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors cursor-pointer"
-                                        title="Tick only ambient/body temperatures (20, 25, 30, 35°C)"
-                                      >
-                                        20–35°C
-                                      </button>
-                                    </div>
-                                  </div>
+                                  <input
+                                    type="text"
+                                    disabled
+                                    value="9 Temperatures (See Below)"
+                                    className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-slate-300 font-mono"
+                                  />
                                 )}
                               </td>
-                              <td className="py-3 px-3 text-center">
+                              <td className="py-2.5 px-3 text-center">
                                 {!isSfcAnyTicked ? (
                                   <span className="inline-flex items-center text-[10px] text-slate-500 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
                                     N/A (Unticked)
@@ -1128,58 +1068,50 @@ export default function SampleLabView({ currentRole, currentUser }: SampleLabVie
                                   <span className="inline-flex items-center gap-1 text-[10px] text-rose-400 bg-rose-950/80 px-2 py-0.5 rounded border border-rose-800/40 font-bold">
                                     <XCircle className="h-2.5 w-2.5" /> OUT OF SPEC
                                   </span>
-                                ) : sfcResults.some(r => requestedMap[r.id] !== false && r.in_spec === true) && sfcResults.every(r => requestedMap[r.id] === false || r.in_spec !== false) ? (
+                                ) : sfcResults.every(r => requestedMap[r.id] === false || r.in_spec === true) && sfcResults.some(r => r.value_numeric != null) ? (
                                   <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-800/40">
                                     <Check className="h-2.5 w-2.5" /> IN SPEC
                                   </span>
                                 ) : (
-                                  <span className="text-[10px] text-slate-400">
-                                    {isSfcExpanded ? 'See Inputs Below' : 'Active (Click Expand)'}
+                                  <span className="text-[10px] text-slate-500">
+                                    Pending Input
                                   </span>
                                 )}
                               </td>
                             </tr>
 
-                            {/* 3. Separated SFC Temperature Rows (Individually Controlled) */}
-                            {isSfcExpanded && sfcResults.map(res => {
+                            {/* 3. SFC Individual Temperature Rows (Separated Cleanly Under SFC) */}
+                            {isSfcAnyTicked && sfcResults.map(res => {
                               const inputVal = resultInputs[res.id] || {};
-                              const isUnticked = !isSfcAnyTicked || requestedMap[res.id] === false;
+                              const isUnticked = requestedMap[res.id] === false;
 
                               return (
                                 <tr
                                   key={res.id}
-                                  className={`transition-colors bg-slate-900/30 ${
+                                  className={`transition-colors ${
                                     isUnticked
-                                      ? 'opacity-35 bg-slate-950/60'
-                                      : 'hover:bg-slate-900/60'
+                                      ? 'opacity-40 bg-slate-950/40'
+                                      : 'hover:bg-slate-900/30'
                                   }`}
                                 >
-                                  <td className="py-2 px-3 text-center">
+                                  <td className="py-2.5 px-3 text-center">
                                     <input
                                       type="checkbox"
                                       checked={!isUnticked}
                                       onChange={e => handleToggleResultParam(res.id, e.target.checked)}
-                                      disabled={!canEdit || !isSfcAnyTicked}
-                                      className="h-3.5 w-3.5 rounded border-slate-700 bg-slate-900 text-cyan-500 focus:ring-cyan-500 cursor-pointer disabled:opacity-50 ml-2"
-                                      title={isUnticked ? `Unticked: ${res.series_key}°C not tested` : `Ticked: ${res.series_key}°C active`}
+                                      disabled={!canEdit}
+                                      className="h-4 w-4 rounded border-slate-700 bg-slate-900 text-cyan-500 focus:ring-cyan-500 cursor-pointer disabled:opacity-50"
+                                      title={isUnticked ? "Unticked: Test not applicable for this product" : "Ticked: Active parameter"}
                                     />
                                   </td>
-                                  <td className="py-2 px-3 font-sans">
-                                    <div className="flex items-center gap-2 pl-4 border-l-2 border-cyan-800/40 ml-2">
-                                      <span className="text-slate-500 text-xs font-mono">Temperature:</span>
-                                      <span className={`font-mono text-xs font-bold px-2 py-0.5 rounded ${
-                                        isUnticked
-                                          ? 'bg-slate-800/60 text-slate-500'
-                                          : 'bg-cyan-950/90 text-cyan-300 border border-cyan-800/60'
-                                      }`}>
-                                        {res.series_key}°C
-                                      </span>
-                                    </div>
+                                  <td className={`py-2.5 px-3 font-sans ${isUnticked ? 'text-slate-500' : 'text-slate-200'}`}>
+                                    <span className="text-slate-500 mr-2">↳</span>
+                                    <span>Temperature {res.series_key}°C</span>
                                   </td>
-                                  <td className={`py-2 px-3 ${isUnticked ? 'text-slate-600' : 'text-slate-500'}`}>
+                                  <td className={`py-2.5 px-3 ${isUnticked ? 'text-slate-600' : 'text-slate-500'}`}>
                                     %
                                   </td>
-                                  <td className="py-2 px-3">
+                                  <td className="py-2.5 px-3">
                                     {isUnticked ? (
                                       <input
                                         type="text"
@@ -1192,17 +1124,17 @@ export default function SampleLabView({ currentRole, currentUser }: SampleLabVie
                                         type="number"
                                         step="0.1"
                                         disabled={!canEdit}
-                                        placeholder={`e.g. ${res.series_key === 10 ? '55.0' : res.series_key === 20 ? '32.0' : res.series_key === 30 ? '12.0' : '0.0'}`}
+                                        placeholder="Enter value"
                                         value={inputVal.num ?? ''}
                                         onChange={e => setResultInputs(prev => ({
                                           ...prev,
                                           [res.id]: { ...prev[res.id], num: e.target.value ? Number(e.target.value) : undefined }
                                         }))}
-                                        className="w-full bg-slate-900 border border-slate-700 focus:border-cyan-500 rounded px-2 py-1 text-xs text-white disabled:opacity-50 font-mono"
+                                        className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-xs text-white focus:border-cyan-500 disabled:opacity-50 font-mono"
                                       />
                                     )}
                                   </td>
-                                  <td className="py-2 px-3 text-center">
+                                  <td className="py-2.5 px-3 text-center">
                                     {isUnticked ? (
                                       <span className="inline-flex items-center text-[10px] text-slate-500 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
                                         N/A (Unticked)
