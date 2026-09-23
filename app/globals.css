@@ -2,7 +2,7 @@
 
 @theme {
   --font-sans: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-mono: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 :root {
@@ -28,14 +28,18 @@
   --status-neutral: #64748b;
 }
 
+/* Force whole website to use clean, highly legible Inter font with solid weights */
+*, ::before, ::after {
+  font-family: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
 body {
   background-color: #070b12;
   color: #f1f5f9;
   font-family: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   overflow-x: hidden;
-  letter-spacing: -0.011em;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  font-weight: 450;
+  letter-spacing: -0.005em;
   text-rendering: optimizeLegibility;
 }
 
@@ -58,10 +62,16 @@ body {
   background: #263a54;
 }
 
-/* Precision Tabular Monospace font */
-.font-telemetry, .font-mono {
-  font-family: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-feature-settings: "tnum" 1, "zero" 1;
+/* Precision Tabular Numbers: Uses Inter with tabular figures so readings align cleanly without skinny typewriter glyphs */
+.font-telemetry, .font-mono, [class*="font-mono"] {
+  font-family: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+  font-feature-settings: "tnum" 1, "cv05" 1, "cv08" 1;
+  letter-spacing: 0.005em;
+}
+
+/* Ensure small UI badges and sub-labels have crisp, readable weights */
+.text-\[9px\], .text-\[10px\], .text-\[11px\] {
+  font-weight: 500;
 }
 
 /* Industrial Console Layered Panels */
@@ -81,7 +91,7 @@ body {
   background-color: #0b111b;
   border: 1px solid #1e2d42;
   color: #f1f5f9;
-  font-family: var(--font-jetbrains-mono), monospace;
+  font-family: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
   font-feature-settings: "tnum" 1;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
