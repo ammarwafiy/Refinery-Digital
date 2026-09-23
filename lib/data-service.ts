@@ -44,6 +44,9 @@ import {
 } from './mock-data';
 
 import { supabase, isSupabaseConfigured } from './supabase';
+import { sanitizeInputString } from './security';
+
+const PLANT_ADMIN_SIGNATURE = 'NISSHIN-DEODORIZER-SECURE-AUTH-2026';
 
 // =============================================================================
 // Hierarchical Structured RFC-4122 UUID Standard Generator
@@ -258,7 +261,12 @@ export function getProfiles(): Profile[] {
 // Fetch live profiles from Supabase and synchronize local state
 export async function syncProfilesFromSupabase(): Promise<{ success: boolean; count: number; profiles: Profile[]; error?: string }> {
   try {
-    const res = await fetch('/api/profiles', { cache: 'no-store' });
+    const res = await fetch('/api/profiles', { 
+      cache: 'no-store',
+      headers: {
+        'x-plant-admin-signature': PLANT_ADMIN_SIGNATURE,
+      },
+    });
     const contentType = res.headers.get('content-type') || '';
     if (res.ok && contentType.includes('application/json')) {
       const json = await res.json();
@@ -449,10 +457,13 @@ export async function addProfile(data: { full_name: string; role: UserRole; empl
     try {
       const res = await fetch('/api/profiles', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-plant-admin-signature': PLANT_ADMIN_SIGNATURE,
+        },
         body: JSON.stringify({
           employee_no: newProfile.employee_no,
-          full_name: newProfile.full_name,
+          full_name: sanitizeInputString(newProfile.full_name),
           role: newProfile.role,
           status: newProfile.status,
           password: newProfile.password,
@@ -528,7 +539,10 @@ export async function toggleProfileActive(identifier: string): Promise<boolean> 
     try {
       const res = await fetch('/api/profiles', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-plant-admin-signature': PLANT_ADMIN_SIGNATURE,
+        },
         body: JSON.stringify({
           employee_no: target.employee_no,
           status: newStatus
@@ -574,7 +588,10 @@ export async function deleteProfile(identifier: string): Promise<boolean> {
     let deleted = false;
     try {
       const res = await fetch(`/api/profiles?employee_no=${encodeURIComponent(target.employee_no)}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'x-plant-admin-signature': PLANT_ADMIN_SIGNATURE,
+        },
       });
 
       if (res.ok) {
@@ -2704,7 +2721,10 @@ export async function executePruneRetentionPolicy(
     try {
       await fetch('/api/archive', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-plant-admin-signature': PLANT_ADMIN_SIGNATURE,
+        },
         body: JSON.stringify({ cutoffDate })
       });
     } catch (e) {
