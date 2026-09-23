@@ -902,8 +902,9 @@ export default function OfficialFormsExportView() {
               {activeReport.results?.filter(res => res.requested !== false).map(res => (
                 <tr key={res.id}>
                   <td className="border border-slate-900 p-2 font-sans">
-                    {res.parameter_name}
-                    {res.series_key ? ` (${res.series_key}°C)` : ''}
+                    {res.parameter_name.includes('°C') || !res.series_key
+                      ? res.parameter_name
+                      : `${res.parameter_name} (${res.series_key}°C)`}
                   </td>
                   <td className="border border-slate-900 p-2 text-slate-500">{res.unit || '-'}</td>
                   <td className="border border-slate-900 p-2 font-bold">{res.value_numeric ?? res.value_text ?? '-'}</td>
