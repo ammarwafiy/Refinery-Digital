@@ -65,7 +65,7 @@ export default function Home() {
   const currentTab = allowedTabs.includes(activeTab) ? activeTab : (ROLE_DEFAULT_TAB[authUser.role] || allowedTabs[0]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#090d16] text-slate-100">
+    <div className="min-h-screen flex flex-col bg-[#080b12] text-slate-200">
       {/* Top SCADA Navigation & Role Switcher */}
       <Navbar 
         activeTab={currentTab} 
@@ -76,7 +76,7 @@ export default function Home() {
       />
 
       {/* Main Work Area - Strictly renders only the view allowed for current role */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6 lg:p-8 pb-24 lg:pb-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-5 lg:p-6 pb-24 lg:pb-8">
         {currentTab === 'process' && allowedTabs.includes('process') && (
           <ProcessLogView currentRole={authUser.role} currentUser={authUser} />
         )}
@@ -95,14 +95,14 @@ export default function Home() {
       </main>
 
       {/* Industrial Plant Footer */}
-      <footer className="w-full border-t border-slate-800/80 bg-[#070a10] py-4 px-4 text-xs text-slate-500 font-mono no-print">
+      <footer className="w-full border-t border-[#182236] bg-[#070910] py-3 px-4 text-[11px] text-slate-500 font-mono no-print">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-center gap-2 text-center">
-          <Flame className="h-4 w-4 text-amber-500 shrink-0" />
-          <span className="text-slate-300 font-semibold">
+          <Flame className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+          <span className="text-slate-300 font-semibold tracking-wide">
             Lam Soon Edible Oils Sdn. Bhd.
           </span>
           <span className="text-slate-600">·</span>
-          <span>Nisshin Deodorizer Plant Refinery Management System</span>
+          <span>Nisshin Deodorizer Plant Refinery Management System (PRD-REF-001)</span>
         </div>
       </footer>
     </div>
