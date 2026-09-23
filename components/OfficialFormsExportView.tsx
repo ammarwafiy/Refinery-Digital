@@ -894,9 +894,8 @@ export default function OfficialFormsExportView() {
             <thead>
               <tr className="bg-slate-100 border-b border-slate-900">
                 <th className="border border-slate-900 p-2">Tested Parameter</th>
-                <th className="border border-slate-900 p-2">Unit</th>
-                <th className="border border-slate-900 p-2">Analytical Result</th>
-                <th className="border border-slate-900 p-2 text-center">Quality Spec Compliance</th>
+                <th className="border border-slate-900 p-2 w-32">Unit</th>
+                <th className="border border-slate-900 p-2 w-52">Analytical Result</th>
               </tr>
             </thead>
             <tbody>
@@ -908,15 +907,6 @@ export default function OfficialFormsExportView() {
                   </td>
                   <td className="border border-slate-900 p-2 text-slate-500">{res.unit || '-'}</td>
                   <td className="border border-slate-900 p-2 font-bold">{res.value_numeric ?? res.value_text ?? '-'}</td>
-                  <td className="border border-slate-900 p-2 text-center">
-                    {res.in_spec === true ? (
-                      <span className="font-bold text-emerald-700">PASS (IN SPEC)</span>
-                    ) : res.in_spec === false ? (
-                      <span className="font-bold text-rose-700">FAIL (OUT OF SPEC)</span>
-                    ) : (
-                      <span className="text-slate-400">PENDING</span>
-                    )}
-                  </td>
                 </tr>
               ))}
             </tbody>
