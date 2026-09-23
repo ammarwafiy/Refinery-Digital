@@ -65,7 +65,7 @@ export default function Home() {
   const currentTab = allowedTabs.includes(activeTab) ? activeTab : (ROLE_DEFAULT_TAB[authUser.role] || allowedTabs[0]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f8f7fc] text-slate-800">
+    <div className="min-h-screen flex flex-col bg-[#0c121e] text-slate-200">
       {/* Top SCADA Navigation & Role Switcher */}
       <Navbar 
         activeTab={currentTab} 
@@ -76,7 +76,7 @@ export default function Home() {
       />
 
       {/* Main Work Area - Strictly renders only the view allowed for current role */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-5 lg:p-6 pb-24 lg:pb-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-4 lg:p-5 pb-20 lg:pb-6">
         {currentTab === 'process' && allowedTabs.includes('process') && (
           <ProcessLogView currentRole={authUser.role} currentUser={authUser} />
         )}
@@ -95,14 +95,14 @@ export default function Home() {
       </main>
 
       {/* Industrial Plant Footer */}
-      <footer className="w-full border-t border-purple-100 bg-white py-3.5 px-4 text-[11px] text-slate-500 font-mono no-print shadow-sm">
+      <footer className="w-full border-t border-[#23304a] bg-[#0c121e] py-3 px-4 text-[11px] text-slate-400 font-mono no-print">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-center gap-2 text-center">
-          <Flame className="h-3.5 w-3.5 text-purple-600 shrink-0" />
-          <span className="text-purple-950 font-semibold tracking-wide">
+          <Flame className="h-3.5 w-3.5 text-sky-500 shrink-0" />
+          <span className="text-slate-300 font-semibold tracking-wide">
             Lam Soon Edible Oils Sdn. Bhd.
           </span>
-          <span className="text-purple-300">·</span>
-          <span className="text-slate-600">Nisshin Deodorizer Plant Refinery Management System (PRD-REF-001)</span>
+          <span className="text-slate-600">·</span>
+          <span className="text-slate-400">Nisshin Deodorizer Plant Refinery Management System (PRD-REF-001)</span>
         </div>
       </footer>
     </div>

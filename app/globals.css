@@ -1,45 +1,45 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8f7fc;
-  --foreground: #1e1b4b;
-  --card: #ffffff;
-  --card-border: #e9e5f5;
-  --card-border-hover: #c4b5fd;
-  --primary-purple: #7c3aed;
-  --primary-purple-hover: #6d28d9;
-  --primary-purple-light: #f5f3ff;
-  --primary-purple-border: #ddd6fe;
-  --accent-amber: #d97706;
-  --accent-emerald: #059669;
-  --accent-rose: #e11d48;
+  --background: #0c121e;
+  --foreground: #e2e8f0;
+  --card: #131b2e;
+  --card-elevated: #182238;
+  --card-border: #23304a;
+  --card-border-hover: #334466;
+  --primary-blue: #0284c7;
+  --primary-blue-hover: #0369a1;
+  --accent-cyan: #0ea5e9;
+  --accent-amber: #f59e0b;
+  --accent-emerald: #10b981;
+  --accent-rose: #ef4444;
 }
 
 body {
-  background-color: #f8f7fc;
-  color: #1e1b4b;
+  background-color: #0c121e;
+  color: #e2e8f0;
   font-family: var(--font-geist-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   overflow-x: hidden;
   letter-spacing: -0.01em;
 }
 
-/* Light + Purple Scrollbar */
+/* Industrial Dark Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f0f7;
+  background: #0c121e;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c4b5fd;
+  background: #23304a;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a78bfa;
+  background: #334466;
 }
 
 /* Precision Tabular Monospace font */
@@ -48,33 +48,32 @@ body {
   font-feature-settings: "tnum" 1, "zero" 1;
 }
 
-/* Light Theme Purple Cards & Panels */
-.light-panel {
-  background: #ffffff;
-  border: 1px solid #e9e5f5;
-  box-shadow: 0 4px 16px -2px rgba(109, 40, 217, 0.05), 0 1px 3px 0 rgba(0, 0, 0, 0.03);
+/* Industrial Console Panels */
+.industrial-panel {
+  background: #131b2e;
+  border: 1px solid #23304a;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
 }
 
-.light-card {
-  background: #ffffff;
-  border: 1px solid #ede9fe;
-  box-shadow: 0 1px 4px 0 rgba(109, 40, 217, 0.04);
+.industrial-card {
+  background: #131b2e;
+  border: 1px solid #23304a;
 }
 
-.light-input {
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
-  color: #0f172a;
-  transition: all 0.15s ease;
+.industrial-input {
+  background: #0d1524;
+  border: 1px solid #23304a;
+  color: #f1f5f9;
+  transition: border-color 0.15s ease;
 }
 
-.light-input:focus {
-  border-color: #7c3aed;
+.industrial-input:focus {
+  border-color: #0284c7;
   outline: none;
-  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.15);
+  box-shadow: 0 0 0 1px rgba(2, 132, 199, 0.4);
 }
 
-/* Hardware LED indicators for Light theme */
+/* Operational LED Status Indicators */
 .led-indicator {
   display: inline-block;
   width: 7px;
@@ -82,27 +81,27 @@ body {
   border-radius: 50%;
 }
 
-.led-purple {
-  background: #7c3aed;
-  box-shadow: 0 0 6px rgba(124, 58, 237, 0.6);
+.led-blue {
+  background: #0284c7;
+  box-shadow: 0 0 4px rgba(2, 132, 199, 0.6);
 }
 
 .led-emerald {
-  background: #059669;
-  box-shadow: 0 0 6px rgba(5, 150, 105, 0.5);
+  background: #10b981;
+  box-shadow: 0 0 4px rgba(16, 185, 129, 0.6);
 }
 
 .led-amber {
-  background: #d97706;
-  box-shadow: 0 0 6px rgba(217, 119, 6, 0.5);
+  background: #f59e0b;
+  box-shadow: 0 0 4px rgba(245, 158, 11, 0.6);
 }
 
 .led-rose {
-  background: #e11d48;
-  box-shadow: 0 0 6px rgba(225, 29, 72, 0.5);
+  background: #ef4444;
+  box-shadow: 0 0 4px rgba(239, 68, 68, 0.6);
 }
 
-/* Print layout optimizations */
+/* Print layout optimizations - strictly pure black & white */
 @media print {
   body {
     background: #ffffff !important;
@@ -115,4 +114,3 @@ body {
     display: block !important;
   }
 }
-
