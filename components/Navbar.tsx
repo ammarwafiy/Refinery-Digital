@@ -97,26 +97,30 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
     <>
       <header className="sticky top-0 z-50 w-full border-b border-[#23304a] bg-[#0c121e]/95 backdrop-blur-sm">
         {/* Top SCADA Status Strip - Desktop Only */}
-        <div className="hidden lg:flex flex-wrap items-center justify-between border-b border-[#1b263b] bg-[#090e17] px-4 py-1 text-xs text-slate-400">
-          <div className="flex items-center gap-3">
+        <div className="hidden lg:flex items-center justify-between border-b border-[#1b263b] bg-[#090e17] px-3.5 py-1 text-xs text-slate-400">
+          <div className="flex items-center gap-2.5">
             <span className="flex items-center gap-2 font-semibold text-slate-200 tracking-wide">
-              <span className="flex h-5 w-5 items-center justify-center rounded bg-sky-950 border border-sky-800/80">
+              <span className="flex h-5 w-5 items-center justify-center rounded bg-sky-950 border border-sky-800/80 shrink-0">
                 <Flame className="h-3.5 w-3.5 text-sky-400" />
               </span>
-              <span className="tracking-wider uppercase text-[11px] font-bold text-slate-200">Lam Soon Edible Oils Sdn. Bhd.</span>
+              <span className="tracking-wider uppercase text-[11px] font-bold text-slate-200">
+                <span className="hidden xl:inline">Lam Soon Edible Oils Sdn. Bhd.</span>
+                <span className="xl:hidden">Lam Soon</span>
+              </span>
             </span>
             <span className="text-slate-700">|</span>
             <div className="flex items-center gap-1.5 font-mono text-[11px] text-sky-400 bg-[#131b2e] px-2 py-0.5 rounded border border-[#23304a]">
               <span className="h-1.5 w-1.5 rounded-full bg-sky-400"></span>
-              <span>NISSHIN DEODORIZER PLANT</span>
+              <span className="hidden xl:inline">NISSHIN DEODORIZER PLANT</span>
+              <span className="xl:hidden">NISSHIN PLANT</span>
             </div>
-            <span className="text-[11px] font-mono text-slate-500">
+            <span className="hidden 2xl:inline text-[11px] font-mono text-slate-500">
               Doc: PRD-REF-001 (Rev. 02)
             </span>
           </div>
 
           {/* Clock & Telemetry Status */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-950/40 border border-emerald-800/60 text-emerald-400">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -125,12 +129,12 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
               <span className="font-mono text-[11px] font-medium tracking-wider">DCS ONLINE</span>
             </div>
 
-            <div className="flex items-center gap-1.5 text-slate-300 font-mono text-[11px] px-2 py-0.5 rounded bg-[#131b2e] border border-[#23304a]">
+            <div className="hidden xl:flex items-center gap-1.5 text-slate-300 font-mono text-[11px] px-2 py-0.5 rounded bg-[#131b2e] border border-[#23304a]">
               <Wifi className="h-3 w-3 text-sky-400" />
               <span>DB Sync: Active</span>
             </div>
 
-            <div className="flex items-center gap-1.5 font-mono text-[11px] text-slate-200 bg-[#131b2e] px-2.5 py-0.5 rounded border border-[#23304a]">
+            <div className="flex items-center gap-1.5 font-mono text-[11px] text-slate-200 bg-[#131b2e] px-2 py-0.5 rounded border border-[#23304a]">
               <Clock className="h-3 w-3 text-slate-400" />
               <span className="font-medium tracking-wider">{timeString || '12:00:00 MYT'}</span>
             </div>
@@ -139,11 +143,11 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
             {onLogout && (
               <button
                 onClick={onLogout}
-                className="flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono font-semibold text-rose-300 bg-rose-950/60 border border-rose-800 hover:bg-rose-900 hover:text-white transition-colors cursor-pointer"
+                className="flex items-center gap-1 px-2.5 py-0.5 rounded text-[11px] font-mono font-bold text-white bg-rose-600 hover:bg-rose-500 border border-rose-500 transition-colors cursor-pointer shrink-0 shadow-xs"
                 title="Sign out of current session and return to login"
               >
-                <LogOut className="h-3 w-3 text-rose-400" />
-                <span>Exit Station</span>
+                <LogOut className="h-3 w-3 text-white" />
+                <span>Exit</span>
               </button>
             )}
           </div>
@@ -179,6 +183,19 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
               {role === 'viewer' && 'AUDIT'}
             </span>
 
+            {/* Quick Sign Out for Mobile */}
+            {onLogout && (
+              <button
+                type="button"
+                onClick={onLogout}
+                className="flex items-center justify-center h-8 w-8 rounded bg-rose-600/90 hover:bg-rose-500 border border-rose-500 text-white transition-colors cursor-pointer"
+                title="Sign out of session"
+                aria-label="Sign out"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
+            )}
+
             {/* Mobile Hamburger Menu Toggle Button */}
             <button
               type="button"
@@ -194,7 +211,7 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
         {/* Desktop Navigation & Role Bar (lg:flex) */}
         <div className="hidden lg:flex items-center justify-between gap-2 px-3 py-1.5 bg-[#0c121e]">
           {/* Tactile Navigation Tabs - Segmented Console Strip */}
-          <nav className="flex items-center gap-1 p-1 rounded-lg bg-[#090e17] border border-[#23304a] overflow-x-auto min-w-0">
+          <nav className="flex items-center gap-1 p-1 rounded-lg bg-[#090e17] border border-[#23304a] shrink-0">
             {visibleNavItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
@@ -207,10 +224,11 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
                       : 'text-slate-400 hover:text-slate-200 hover:bg-[#131b2e] border border-transparent'
                     }`}
                 >
-                  <Icon className={`h-3.5 w-3.5 ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-slate-300'}`} />
-                  <span>{item.label}</span>
+                  <Icon className={`h-3.5 w-3.5 shrink-0 ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-slate-300'}`} />
+                  <span className="hidden 2xl:inline">{item.label}</span>
+                  <span className="2xl:hidden">{item.shortLabel || item.label}</span>
                   {item.badge && (
-                    <span className={`text-[8px] px-1 py-0.2 rounded font-mono font-medium ${isActive ? 'bg-sky-700 text-sky-100 border border-sky-400/40' : 'bg-slate-800 text-slate-400 border border-slate-700'
+                    <span className={`hidden 2xl:inline text-[8px] px-1 py-0.2 rounded font-mono font-medium ${isActive ? 'bg-sky-700 text-sky-100 border border-sky-400/40' : 'bg-slate-800 text-slate-400 border border-slate-700'
                       }`}>
                       {item.badge}
                     </span>
@@ -227,16 +245,16 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
           <div className="flex items-center gap-1.5 bg-[#090e17] p-1.5 rounded-lg border border-[#23304a] shrink-0 ml-auto">
             {/* Dedicated Role Mode Badge */}
             <div className="flex items-center gap-1 px-1.5 py-0.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
               <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase border tracking-wider ${roleColors[role].bg} ${roleColors[role].text} ${roleColors[role].border}`}>
-                <span className="hidden xl:inline">
+                <span className="hidden 2xl:inline">
                   {role === 'operator' && 'OP · PROCESS LOG'}
                   {role === 'supervisor' && 'SV · LIVE BOARD'}
                   {(role === 'qc_analyst' || role === 'qc_manager') && 'QC · LABORATORY'}
                   {role === 'admin' && 'SYS ADMIN · CONTROL'}
                   {role === 'viewer' && 'AUDIT · ISO 22000'}
                 </span>
-                <span className="xl:hidden">
+                <span className="2xl:hidden">
                   {role === 'operator' && 'OP'}
                   {role === 'supervisor' && 'SV'}
                   {(role === 'qc_analyst' || role === 'qc_manager') && 'QC'}
@@ -249,10 +267,10 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
             {/* User Profile Badge */}
             <div className="border-l border-[#23304a] pl-2 pr-1.5 text-right">
               <div 
-                className="text-[11px] font-medium text-slate-200 leading-tight max-w-[120px] xl:max-w-[170px] truncate" 
+                className="text-[11px] font-medium text-slate-200 leading-tight max-w-[100px] xl:max-w-[140px] truncate" 
                 title={profile.full_name}
               >
-                {profile.full_name}
+                {profile.full_name.replace(/\s*\([^)]*\)/, '')}
               </div>
               <div className="text-[10px] font-mono text-sky-400 font-medium">
                 {profile.employee_no}
@@ -274,14 +292,14 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
               </button>
             )}
 
-            {/* Logout Button */}
+            {/* Logout Button - Solid Vibrant Rose for Maximum Visibility */}
             {onLogout && (
               <button
                 onClick={onLogout}
-                className="flex items-center gap-1 px-2.5 py-1 rounded text-xs font-mono font-bold text-rose-200 bg-rose-950/80 border border-rose-700 hover:bg-rose-900 hover:text-white transition-colors cursor-pointer shrink-0 shadow-xs active:scale-95"
+                className="flex items-center gap-1.5 px-3 py-1 rounded text-xs font-mono font-bold text-white bg-rose-600 hover:bg-rose-500 border border-rose-500 transition-colors cursor-pointer shrink-0 shadow-xs active:scale-95"
                 title="Sign out of current session and return to login screen"
               >
-                <LogOut className="h-3.5 w-3.5 text-rose-400" />
+                <LogOut className="h-3.5 w-3.5 text-white" />
                 <span>Sign Out</span>
               </button>
             )}
