@@ -12,20 +12,12 @@ import {
   EyeOff,
   Cpu
 } from 'lucide-react';
-import { Profile, UserRole } from '@/types/refinery';
+import { Profile } from '@/types/refinery';
 import { loginUser } from '@/lib/data-service';
 
 interface LoginViewProps {
   onLogin: (profile: Profile) => void;
 }
-
-const QUICK_ROLE_PRESETS: { role: UserRole; label: string; code: string; defaultPass: string }[] = [
-  { role: 'operator', label: 'Operator', code: 'OP-1042', defaultPass: 'operator123' },
-  { role: 'supervisor', label: 'Supervisor', code: 'SV-2014', defaultPass: 'super123' },
-  { role: 'qc_analyst', label: 'QC Analyst', code: 'QC-3201', defaultPass: 'qcpass123' },
-  { role: 'qc_manager', label: 'QC Manager', code: 'QM-4503', defaultPass: 'qmpass123' },
-  { role: 'admin', label: 'Plant Admin', code: 'AD-5011', defaultPass: 'admin123' },
-];
 
 export default function LoginView({ onLogin }: LoginViewProps) {
   const [identifier, setIdentifier] = useState('');
@@ -50,11 +42,6 @@ export default function LoginView({ onLogin }: LoginViewProps) {
     }, 350);
   };
 
-  const handleApplyPreset = (code: string, pass: string) => {
-    setIdentifier(code);
-    setPassword(pass);
-    setErrorMessage(null);
-  };
 
   return (
     <div className="min-h-screen w-full flex flex-col justify-between bg-[#0c121e] text-slate-200">
@@ -189,33 +176,6 @@ export default function LoginView({ onLogin }: LoginViewProps) {
             </button>
           </form>
 
-          {/* Quick Station Presets for Field Work */}
-          <div className="mt-5 pt-3.5 border-t border-[#23304a]">
-            <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-between">
-              <span>Quick Role Presets (Testing & Shifts):</span>
-              <span className="text-sky-400 font-medium">Tap to Autofill</span>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-              {QUICK_ROLE_PRESETS.map((p) => {
-                const isSelected = identifier === p.code;
-                return (
-                  <button
-                    key={p.code}
-                    type="button"
-                    onClick={() => handleApplyPreset(p.code, p.defaultPass)}
-                    className={`flex items-center gap-1.5 px-2 py-1.5 rounded text-[10px] font-mono transition-colors border text-left cursor-pointer ${
-                      isSelected
-                        ? 'bg-sky-600 text-white border-sky-500 font-semibold shadow-xs'
-                        : 'bg-[#0d1524] text-slate-300 border-[#23304a] hover:bg-[#182238] hover:text-white'
-                    }`}
-                  >
-                    <span className={isSelected ? 'text-white font-semibold' : 'text-sky-400 font-semibold'}>{p.code}</span>
-                    <span className={`text-[9px] truncate ${isSelected ? 'text-sky-100' : 'text-slate-400'}`}>({p.label})</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
 
           {/* Security Notice Footer on Login Card */}
           <div className="mt-4 pt-3 border-t border-[#23304a] flex items-center justify-between text-[10px] font-mono text-slate-400">
