@@ -88,10 +88,10 @@ export default function LoginView({ onLogin }: LoginViewProps) {
 
           <div className="text-left mb-5">
             <h1 className="text-xl font-bold text-slate-100 tracking-tight font-sans flex items-center gap-2">
-              <span>Operator & Personnel Sign In</span>
+              <span>Plant Personnel Sign In</span>
             </h1>
             <p className="mt-1 text-xs text-slate-400 leading-relaxed font-sans">
-              Enter authorized employee credentials to access refinery process log, supervisor live board, or QC laboratory records.
+              Please enter your Employee ID and password to access the refinery process control & QC laboratory systems.
             </p>
           </div>
 
@@ -107,7 +107,7 @@ export default function LoginView({ onLogin }: LoginViewProps) {
           <form onSubmit={handleFormSubmit} className="space-y-3.5">
             <div>
               <label className="block text-[11px] font-mono font-medium text-slate-300 mb-1">
-                Employee ID / Workstation Email:
+                Employee ID / Email:
               </label>
               <div className="relative">
                 <User className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
@@ -156,7 +156,7 @@ export default function LoginView({ onLogin }: LoginViewProps) {
                   defaultChecked
                   className="h-3.5 w-3.5 rounded border-[#23304a] bg-[#0d1524] text-sky-600 focus:ring-sky-500 cursor-pointer"
                 />
-                <span>Retain workstation session on this device</span>
+                <span>Remember login session on this device</span>
               </label>
             </div>
 
@@ -166,31 +166,27 @@ export default function LoginView({ onLogin }: LoginViewProps) {
               className="w-full flex items-center justify-center gap-2 bg-sky-600 hover:bg-sky-700 disabled:opacity-50 text-white font-medium py-2.5 px-4 rounded text-xs transition-colors shadow-xs font-mono mt-2 cursor-pointer border border-sky-500 tracking-wider uppercase"
             >
               {isLoading ? (
-                <span>Validating Plant Credentials...</span>
+                <span>Authenticating Credentials...</span>
               ) : (
                 <>
-                  <span>Sign In to Terminal</span>
+                  <span>Sign In to Plant System</span>
                   <ArrowRight className="h-4 w-4" />
                 </>
               )}
             </button>
           </form>
 
-
           {/* Security Notice Footer on Login Card */}
           <div className="mt-4 pt-3 border-t border-[#23304a] flex items-center justify-between text-[10px] font-mono text-slate-400">
-            <span className="flex items-center gap-1">
-              <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
-              <span>ISO 22000 / HACCP Protected</span>
-            </span>
-            <span className="text-sky-400 font-medium">TERMINAL: WS-DEOD-01</span>
+            <span>Authorized Plant Personnel Only</span>
+            <span className="text-slate-400">PRD-REF-001</span>
           </div>
         </div>
       </main>
 
       {/* Industrial Footer */}
       <footer className="w-full border-t border-[#23304a] bg-[#0c121e] py-3 px-6 text-center text-[11px] text-slate-500 font-mono">
-        Lam Soon Edible Oils Sdn. Bhd. · Integrated Palm Oil Refinery Process & Quality Management System
+        Lam Soon Edible Oils Sdn. Bhd. · Integrated Palm Oil Refinery Operations & Quality Management System
       </footer>
     </div>
   );

@@ -1314,7 +1314,7 @@ export default function OfficialFormsExportView() {
                       onClick={() => setExpandedLogId(null)}
                       className="px-4 py-2 rounded-lg bg-[#0d1524] hover:bg-[#162238] text-slate-200 text-xs transition-colors cursor-pointer border border-[#23304a] font-mono"
                     >
-                      Close Inspector
+                      Close
                     </button>
                   </div>
                 </div>
