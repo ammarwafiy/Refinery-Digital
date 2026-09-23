@@ -44,18 +44,18 @@ export default function LoginView({ onLogin }: LoginViewProps) {
 
 
   return (
-    <div className="min-h-screen w-full flex flex-col justify-between bg-[#0c121e] text-slate-200">
+    <div className="min-h-screen w-full flex flex-col justify-between bg-[#070b12] text-slate-200">
       {/* Top SCADA Branding Bar */}
-      <header className="w-full border-b border-[#23304a] bg-[#090e17] px-6 py-2.5 flex items-center justify-between">
+      <header className="w-full border-b border-[#1e2d42] bg-[#0b111b] px-6 py-2.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded bg-sky-950 border border-sky-800/80">
-            <Flame className="h-4 w-4 text-sky-400" />
+          <div className="flex h-8 w-8 items-center justify-center rounded bg-[#0f1724] border border-[#1e2d42]">
+            <Flame className="h-4 w-4 text-[#009fe3]" />
           </div>
           <div>
             <span className="font-bold text-xs tracking-wider uppercase text-slate-200 block">
               Lam Soon Edible Oils Sdn. Bhd.
             </span>
-            <span className="text-[10px] font-mono text-sky-400 flex items-center gap-1">
+            <span className="text-[10px] font-mono text-[#08b5f5] flex items-center gap-1">
               <span>NISSHIN DEODORIZER REFINERY</span>
               <span className="text-slate-600">·</span>
               <span className="text-slate-400">DOC: PRD-REF-001</span>
@@ -63,7 +63,7 @@ export default function LoginView({ onLogin }: LoginViewProps) {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-[10px] font-mono text-slate-300 bg-[#131b2e] px-3 py-1 rounded border border-[#23304a]">
+        <div className="flex items-center gap-2 text-[10px] font-mono text-slate-300 bg-[#0f1724] px-3 py-1 rounded border border-[#1e2d42]">
           <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
           <span className="hidden sm:inline font-medium">TERMINAL SCADA-01 · 21 CFR PART 11 COMPLIANT</span>
         </div>
@@ -71,16 +71,16 @@ export default function LoginView({ onLogin }: LoginViewProps) {
 
       {/* Main Login Card Area */}
       <main className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8">
-        <div className="w-full max-w-md rounded-lg border border-[#23304a] bg-[#131b2e] p-6 sm:p-7 shadow-lg relative">
+        <div className="w-full max-w-md rounded-lg border border-[#1e2d42] bg-[#0f1724] p-6 sm:p-7 shadow-[0_8px_32px_-4px_rgba(0,0,0,0.6),inset_0_1px_0_0_rgba(255,255,255,0.03)] relative">
           {/* Hardware Header Tag */}
-          <div className="flex items-center justify-between border-b border-[#23304a] pb-3 mb-5">
+          <div className="flex items-center justify-between border-b border-[#1e2d42] pb-3 mb-5">
             <div className="flex items-center gap-2">
-              <Cpu className="h-4 w-4 text-sky-400" />
+              <Cpu className="h-4 w-4 text-[#009fe3]" />
               <span className="text-[11px] font-mono font-medium uppercase tracking-wider text-slate-200">
                 Workstation Terminal Access
               </span>
             </div>
-            <div className="flex items-center gap-1.5 font-mono text-[10px] text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-800/60">
+            <div className="flex items-center gap-1.5 font-mono text-[10px] text-emerald-400 bg-emerald-950/30 px-2 py-0.5 rounded border border-emerald-700/50">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
               <span>SYSTEM READY</span>
             </div>
@@ -97,7 +97,7 @@ export default function LoginView({ onLogin }: LoginViewProps) {
 
           {/* Error Message */}
           {errorMessage && (
-            <div className="mb-4 flex items-start gap-2.5 rounded bg-red-950/40 p-3 text-xs text-red-300 border border-red-800/60 font-mono">
+            <div className="mb-4 flex items-start gap-2.5 rounded bg-red-950/30 p-3 text-xs text-red-300 border border-red-800/40 font-mono">
               <AlertCircle className="h-4 w-4 shrink-0 text-red-400 mt-0.5" />
               <span>{errorMessage}</span>
             </div>
@@ -110,14 +110,14 @@ export default function LoginView({ onLogin }: LoginViewProps) {
                 Employee ID / Email:
               </label>
               <div className="relative">
-                <User className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
+                <User className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                 <input
                   type="text"
                   required
                   placeholder="e.g. OP-1042, SV-2014, QC-3201"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
-                  className="w-full bg-[#0d1524] border border-[#23304a] rounded pl-9 pr-3 py-2 text-xs font-mono text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 transition-colors"
+                  className="w-full bg-[#0b111b] border border-[#1e2d42] rounded pl-9 pr-3 py-2 text-xs font-mono text-slate-100 placeholder-slate-500 focus:outline-none focus:border-[#009fe3] focus:ring-1 focus:ring-[#009fe3]/40 transition-colors"
                 />
               </div>
             </div>
@@ -129,19 +129,19 @@ export default function LoginView({ onLogin }: LoginViewProps) {
                 </label>
               </div>
               <div className="relative">
-                <KeyRound className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
+                <KeyRound className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   required
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-[#0d1524] border border-[#23304a] rounded pl-9 pr-9 py-2 text-xs font-mono text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500/30 transition-colors"
+                  className="w-full bg-[#0b111b] border border-[#1e2d42] rounded pl-9 pr-9 py-2 text-xs font-mono text-slate-100 placeholder-slate-500 focus:outline-none focus:border-[#009fe3] focus:ring-1 focus:ring-[#009fe3]/40 transition-colors"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-2.5 text-slate-500 hover:text-slate-300 transition-colors cursor-pointer"
+                  className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
                   title={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -154,7 +154,7 @@ export default function LoginView({ onLogin }: LoginViewProps) {
                 <input
                   type="checkbox"
                   defaultChecked
-                  className="h-3.5 w-3.5 rounded border-[#23304a] bg-[#0d1524] text-sky-600 focus:ring-sky-500 cursor-pointer"
+                  className="h-3.5 w-3.5 rounded border-[#1e2d42] bg-[#0b111b] text-[#009fe3] focus:ring-[#009fe3] cursor-pointer"
                 />
                 <span>Remember login session on this device</span>
               </label>
@@ -163,7 +163,7 @@ export default function LoginView({ onLogin }: LoginViewProps) {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full flex items-center justify-center gap-2 bg-sky-600 hover:bg-sky-700 disabled:opacity-50 text-white font-medium py-2.5 px-4 rounded text-xs transition-colors shadow-xs font-mono mt-2 cursor-pointer border border-sky-500 tracking-wider uppercase"
+              className="w-full flex items-center justify-center gap-2 bg-[#009fe3] hover:bg-[#08b5f5] disabled:opacity-50 text-white font-medium py-2.5 px-4 rounded text-xs transition-all shadow-[0_1px_3px_rgba(0,0,0,0.3)] font-mono mt-2 cursor-pointer border border-[#08b5f5] tracking-wider uppercase"
             >
               {isLoading ? (
                 <span>Authenticating Credentials...</span>
@@ -177,7 +177,7 @@ export default function LoginView({ onLogin }: LoginViewProps) {
           </form>
 
           {/* Security Notice Footer on Login Card */}
-          <div className="mt-4 pt-3 border-t border-[#23304a] flex items-center justify-between text-[10px] font-mono text-slate-400">
+          <div className="mt-4 pt-3 border-t border-[#1e2d42] flex items-center justify-between text-[10px] font-mono text-slate-400">
             <span>Authorized Plant Personnel Only</span>
             <span className="text-slate-400">PRD-REF-001</span>
           </div>
@@ -185,7 +185,7 @@ export default function LoginView({ onLogin }: LoginViewProps) {
       </main>
 
       {/* Industrial Footer */}
-      <footer className="w-full border-t border-[#23304a] bg-[#0c121e] py-3 px-6 text-center text-[11px] text-slate-500 font-mono">
+      <footer className="w-full border-t border-[#1e2d42] bg-[#070b12] py-3 px-6 text-center text-[11px] text-slate-400 font-mono">
         Lam Soon Edible Oils Sdn. Bhd. · Integrated Palm Oil Refinery Operations & Quality Management System
       </footer>
     </div>
