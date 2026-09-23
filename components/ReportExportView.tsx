@@ -360,22 +360,22 @@ export default function ReportExportView() {
   return (
     <div className="space-y-6">
       {/* Top Header Card */}
-      <div className="rounded-2xl border border-slate-800/80 bg-gradient-to-r from-slate-900/90 via-[#0d1527]/90 to-slate-900/90 p-6 shadow-xl backdrop-blur-md">
+      <div className="rounded-2xl border border-purple-100 bg-white p-6 shadow-sm">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className="flex items-start gap-4">
-            <div className="rounded-xl bg-emerald-500/10 p-3.5 border border-emerald-500/20 text-emerald-400">
+            <div className="rounded-xl bg-purple-50 p-3.5 border border-purple-200 text-purple-600">
               <FileSpreadsheet className="h-7 w-7" />
             </div>
             <div>
               <div className="flex items-center gap-2.5">
-                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
                   Plant Operations & Quality Report Generator
                 </h1>
-                <span className="rounded-full bg-emerald-950/80 px-2.5 py-0.5 text-[11px] font-mono font-medium text-emerald-300 border border-emerald-500/30">
+                <span className="rounded-full bg-purple-50 px-2.5 py-0.5 text-[11px] font-mono font-semibold text-purple-700 border border-purple-200">
                   CSV Export Engine
                 </span>
               </div>
-              <p className="mt-1 text-sm text-slate-400">
+              <p className="mt-1 text-sm text-slate-500">
                 Generate and download comprehensive SCADA operational records and QC laboratory results for daily shift rounds, monthly performance, or yearly audits.
               </p>
             </div>
@@ -385,17 +385,17 @@ export default function ReportExportView() {
           <div className="flex items-center gap-2.5 self-end lg:self-auto">
             <button
               onClick={handleCopyToClipboard}
-              className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-800/80 px-4 py-2.5 text-xs sm:text-sm font-mono font-semibold text-slate-200 hover:bg-slate-700/80 hover:text-white transition-all cursor-pointer shadow-sm"
+              className="flex items-center gap-2 rounded-xl border border-purple-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-mono font-semibold text-purple-700 hover:bg-purple-50 transition-all cursor-pointer shadow-xs active:scale-95"
               title="Copy filtered data directly to clipboard for instant Excel paste"
             >
               {copied ? (
                 <>
-                  <Check className="h-4 w-4 text-emerald-400" />
-                  <span className="text-emerald-300">Copied to Clipboard!</span>
+                  <Check className="h-4 w-4 text-emerald-600" />
+                  <span className="text-emerald-700">Copied to Clipboard!</span>
                 </>
               ) : (
                 <>
-                  <Copy className="h-4 w-4 text-slate-400" />
+                  <Copy className="h-4 w-4 text-purple-500" />
                   <span>Copy for Excel</span>
                 </>
               )}
@@ -403,7 +403,7 @@ export default function ReportExportView() {
 
             <button
               onClick={handleDownloadCSV}
-              className="flex items-center gap-2 rounded-xl border border-emerald-500/40 bg-gradient-to-r from-emerald-600 to-teal-600 px-5 py-2.5 text-xs sm:text-sm font-mono font-semibold text-white hover:from-emerald-500 hover:to-teal-500 transition-all cursor-pointer shadow-lg shadow-emerald-950/50"
+              className="flex items-center gap-2 rounded-xl border border-purple-600 bg-purple-600 hover:bg-purple-700 text-white px-5 py-2.5 text-xs sm:text-sm font-mono font-semibold transition-all cursor-pointer shadow-sm shadow-purple-500/20 active:scale-95"
             >
               <Download className="h-4 w-4" />
               <span>Download CSV File</span>
@@ -414,12 +414,12 @@ export default function ReportExportView() {
 
       {/* KPI Overview Strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="rounded-xl border border-slate-800/80 bg-slate-900/60 p-4">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-mono">
+        <div className="rounded-xl border border-purple-100 bg-white p-4 shadow-xs">
+          <div className="flex items-center justify-between text-slate-500 text-xs font-mono font-semibold">
             <span>FILTERED RECORDS</span>
-            <Layers className="h-4 w-4 text-cyan-400" />
+            <Layers className="h-4 w-4 text-purple-600" />
           </div>
-          <div className="mt-2 text-2xl font-bold font-mono text-white">
+          <div className="mt-2 text-2xl font-bold font-mono text-slate-900">
             {category === 'process' || category === 'master' ? stats.totalEntries : category === 'qc' ? stats.totalQC : filteredDeviations.length}
           </div>
           <div className="mt-1 text-[11px] text-slate-500">
@@ -427,12 +427,12 @@ export default function ReportExportView() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-slate-800/80 bg-slate-900/60 p-4">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-mono">
+        <div className="rounded-xl border border-purple-100 bg-white p-4 shadow-xs">
+          <div className="flex items-center justify-between text-slate-500 text-xs font-mono font-semibold">
             <span>QC PASS RATE</span>
-            <FlaskConical className="h-4 w-4 text-emerald-400" />
+            <FlaskConical className="h-4 w-4 text-emerald-600" />
           </div>
-          <div className="mt-2 text-2xl font-bold font-mono text-emerald-400">
+          <div className="mt-2 text-2xl font-bold font-mono text-emerald-600">
             {stats.passRate}%
           </div>
           <div className="mt-1 text-[11px] text-slate-500">
@@ -440,26 +440,26 @@ export default function ReportExportView() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-slate-800/80 bg-slate-900/60 p-4">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-mono">
+        <div className="rounded-xl border border-purple-100 bg-white p-4 shadow-xs">
+          <div className="flex items-center justify-between text-slate-500 text-xs font-mono font-semibold">
             <span>AVG DEOD VACUUM</span>
-            <Activity className="h-4 w-4 text-blue-400" />
+            <Activity className="h-4 w-4 text-indigo-600" />
           </div>
-          <div className="mt-2 text-2xl font-bold font-mono text-cyan-300">
-            {stats.avgVacuum} <span className="text-xs font-normal text-slate-400">Torr</span>
+          <div className="mt-2 text-2xl font-bold font-mono text-purple-700">
+            {stats.avgVacuum} <span className="text-xs font-normal text-slate-500">Torr</span>
           </div>
           <div className="mt-1 text-[11px] text-slate-500">
             Target: &lt; 4.5 Torr
           </div>
         </div>
 
-        <div className="rounded-xl border border-slate-800/80 bg-slate-900/60 p-4">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-mono">
+        <div className="rounded-xl border border-purple-100 bg-white p-4 shadow-xs">
+          <div className="flex items-center justify-between text-slate-500 text-xs font-mono font-semibold">
             <span>AVG TRAY 4 TEMP</span>
-            <BarChart3 className="h-4 w-4 text-amber-400" />
+            <BarChart3 className="h-4 w-4 text-amber-600" />
           </div>
-          <div className="mt-2 text-2xl font-bold font-mono text-amber-400">
-            {stats.avgTray4} <span className="text-xs font-normal text-slate-400">°C</span>
+          <div className="mt-2 text-2xl font-bold font-mono text-amber-600">
+            {stats.avgTray4} <span className="text-xs font-normal text-slate-500">°C</span>
           </div>
           <div className="mt-1 text-[11px] text-slate-500">
             Standard: 250 - 268°C
@@ -468,26 +468,26 @@ export default function ReportExportView() {
       </div>
 
       {/* Filter Selection Panel */}
-      <div className="rounded-2xl border border-slate-800/80 bg-slate-900/70 p-5 shadow-md">
-        <div className="flex items-center gap-2 mb-4 pb-3 border-b border-slate-800/60 text-xs font-mono text-slate-400 uppercase tracking-wider">
-          <SlidersHorizontal className="h-4 w-4 text-emerald-400" />
+      <div className="rounded-2xl border border-purple-100 bg-white p-5 shadow-sm">
+        <div className="flex items-center gap-2 mb-4 pb-3 border-b border-purple-50 text-xs font-mono text-slate-600 uppercase tracking-wider font-semibold">
+          <SlidersHorizontal className="h-4 w-4 text-purple-600" />
           <span>Report Configuration & Parameters</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {/* 1. Period Selector (Daily / Monthly / Yearly) */}
           <div>
-            <label className="block text-xs font-mono text-slate-300 mb-2">
+            <label className="block text-xs font-mono font-medium text-slate-700 mb-2">
               1. Generation Timeframe:
             </label>
-            <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-950/80 rounded-xl border border-slate-800">
+            <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-50 rounded-xl border border-purple-100">
               <button
                 type="button"
                 onClick={() => setPeriod('daily')}
-                className={`py-2 px-3 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
+                className={`py-2 px-3 rounded-lg text-xs font-mono transition-all cursor-pointer ${
                   period === 'daily'
-                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm font-semibold'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-purple-600 text-white shadow-xs font-semibold'
+                    : 'text-slate-600 hover:text-purple-700 hover:bg-purple-50/50'
                 }`}
               >
                 Daily
@@ -495,10 +495,10 @@ export default function ReportExportView() {
               <button
                 type="button"
                 onClick={() => setPeriod('monthly')}
-                className={`py-2 px-3 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
+                className={`py-2 px-3 rounded-lg text-xs font-mono transition-all cursor-pointer ${
                   period === 'monthly'
-                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm font-semibold'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-purple-600 text-white shadow-xs font-semibold'
+                    : 'text-slate-600 hover:text-purple-700 hover:bg-purple-50/50'
                 }`}
               >
                 Monthly
@@ -506,10 +506,10 @@ export default function ReportExportView() {
               <button
                 type="button"
                 onClick={() => setPeriod('yearly')}
-                className={`py-2 px-3 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer ${
+                className={`py-2 px-3 rounded-lg text-xs font-mono transition-all cursor-pointer ${
                   period === 'yearly'
-                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm font-semibold'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-purple-600 text-white shadow-xs font-semibold'
+                    : 'text-slate-600 hover:text-purple-700 hover:bg-purple-50/50'
                 }`}
               >
                 Yearly
@@ -525,12 +525,12 @@ export default function ReportExportView() {
                       type="date"
                       value={selectedDate}
                       onChange={(e) => setSelectedDate(e.target.value)}
-                      className="w-full rounded-lg border border-slate-700 bg-slate-950/90 px-3 py-2 text-xs font-mono text-slate-200 focus:border-emerald-500 focus:outline-none"
+                      className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-mono text-slate-800 focus:border-purple-600 focus:ring-1 focus:ring-purple-200 focus:outline-none shadow-xs"
                     />
                   </div>
                   <button
                     onClick={() => setSelectedDate(defaultDate)}
-                    className="px-2.5 py-2 text-[11px] font-mono rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700 cursor-pointer"
+                    className="px-2.5 py-2 text-[11px] font-mono rounded-lg bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 cursor-pointer font-semibold"
                   >
                     Today
                   </button>
@@ -543,7 +543,7 @@ export default function ReportExportView() {
                     type="month"
                     value={selectedMonth}
                     onChange={(e) => setSelectedMonth(e.target.value)}
-                    className="w-full rounded-lg border border-slate-700 bg-slate-950/90 px-3 py-2 text-xs font-mono text-slate-200 focus:border-emerald-500 focus:outline-none"
+                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-mono text-slate-800 focus:border-purple-600 focus:ring-1 focus:ring-purple-200 focus:outline-none shadow-xs"
                   />
                 </div>
               )}
@@ -552,7 +552,7 @@ export default function ReportExportView() {
                 <select
                   value={selectedYear}
                   onChange={(e) => setSelectedYear(e.target.value)}
-                  className="w-full rounded-lg border border-slate-700 bg-slate-950/90 px-3 py-2 text-xs font-mono text-slate-200 focus:border-emerald-500 focus:outline-none"
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-mono text-slate-800 focus:border-purple-600 focus:ring-1 focus:ring-purple-200 focus:outline-none shadow-xs"
                 >
                   <option value="2026">2026 (Operational Year)</option>
                   <option value="2025">2025 (Historical Archive)</option>
@@ -564,17 +564,17 @@ export default function ReportExportView() {
 
           {/* 2. Category Selector */}
           <div>
-            <label className="block text-xs font-mono text-slate-300 mb-2">
+            <label className="block text-xs font-mono font-medium text-slate-700 mb-2">
               2. Data Category:
             </label>
-            <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-950/80 rounded-xl border border-slate-800">
+            <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-50 rounded-xl border border-purple-100">
               <button
                 type="button"
                 onClick={() => setCategory('process')}
-                className={`py-2 px-2.5 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer text-left flex items-center gap-1.5 ${
+                className={`py-2 px-2.5 rounded-lg text-xs font-mono transition-all cursor-pointer text-left flex items-center gap-1.5 ${
                   category === 'process'
-                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm font-semibold'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-purple-600 text-white shadow-xs font-semibold'
+                    : 'text-slate-600 hover:text-purple-700 hover:bg-purple-50/50'
                 }`}
               >
                 <Layers className="h-3.5 w-3.5 shrink-0" />
@@ -583,10 +583,10 @@ export default function ReportExportView() {
               <button
                 type="button"
                 onClick={() => setCategory('qc')}
-                className={`py-2 px-2.5 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer text-left flex items-center gap-1.5 ${
+                className={`py-2 px-2.5 rounded-lg text-xs font-mono transition-all cursor-pointer text-left flex items-center gap-1.5 ${
                   category === 'qc'
-                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm font-semibold'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-purple-600 text-white shadow-xs font-semibold'
+                    : 'text-slate-600 hover:text-purple-700 hover:bg-purple-50/50'
                 }`}
               >
                 <FlaskConical className="h-3.5 w-3.5 shrink-0" />
@@ -595,10 +595,10 @@ export default function ReportExportView() {
               <button
                 type="button"
                 onClick={() => setCategory('deviations')}
-                className={`py-2 px-2.5 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer text-left flex items-center gap-1.5 ${
+                className={`py-2 px-2.5 rounded-lg text-xs font-mono transition-all cursor-pointer text-left flex items-center gap-1.5 ${
                   category === 'deviations'
-                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm font-semibold'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-purple-600 text-white shadow-xs font-semibold'
+                    : 'text-slate-600 hover:text-purple-700 hover:bg-purple-50/50'
                 }`}
               >
                 <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
@@ -607,10 +607,10 @@ export default function ReportExportView() {
               <button
                 type="button"
                 onClick={() => setCategory('master')}
-                className={`py-2 px-2.5 rounded-lg text-xs font-mono font-medium transition-all cursor-pointer text-left flex items-center gap-1.5 ${
+                className={`py-2 px-2.5 rounded-lg text-xs font-mono transition-all cursor-pointer text-left flex items-center gap-1.5 ${
                   category === 'master'
-                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm font-semibold'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-purple-600 text-white shadow-xs font-semibold'
+                    : 'text-slate-600 hover:text-purple-700 hover:bg-purple-50/50'
                 }`}
               >
                 <FileSpreadsheet className="h-3.5 w-3.5 shrink-0" />
@@ -622,7 +622,7 @@ export default function ReportExportView() {
               <select
                 value={selectedProductId}
                 onChange={(e) => setSelectedProductId(e.target.value)}
-                className="w-full rounded-lg border border-slate-700 bg-slate-950/90 px-3 py-2 text-xs font-mono text-slate-200 focus:border-emerald-500 focus:outline-none"
+                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-mono text-slate-800 focus:border-purple-600 focus:ring-1 focus:ring-purple-200 focus:outline-none shadow-xs"
               >
                 <option value="all">All Products (Unfiltered)</option>
                 {products.map(p => (
@@ -636,30 +636,30 @@ export default function ReportExportView() {
 
           {/* 3. Search & Quick Filters */}
           <div>
-            <label className="block text-xs font-mono text-slate-300 mb-2">
+            <label className="block text-xs font-mono font-medium text-slate-700 mb-2">
               3. Search Filter & Live Preview:
             </label>
             <div className="relative">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
               <input
                 type="text"
                 placeholder="Search slot, lot no, operator, remarks..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-lg border border-slate-700 bg-slate-950/90 pl-9 pr-3 py-2 text-xs font-mono text-slate-200 focus:border-emerald-500 focus:outline-none"
+                className="w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 py-2 text-xs font-mono text-slate-800 placeholder:text-slate-400 focus:border-purple-600 focus:ring-1 focus:ring-purple-200 focus:outline-none shadow-xs"
               />
             </div>
 
-            <div className="mt-3 rounded-lg bg-slate-950/60 p-2.5 border border-slate-800 text-[11px] font-mono text-slate-400 space-y-1">
+            <div className="mt-3 rounded-lg bg-purple-50/60 p-2.5 border border-purple-100 text-[11px] font-mono text-slate-600 space-y-1">
               <div className="flex justify-between">
                 <span>Output File:</span>
-                <span className="text-emerald-400 font-semibold truncate max-w-[170px]">
+                <span className="text-purple-700 font-semibold truncate max-w-[170px]">
                   {category === 'process' ? 'RF-FR-004' : category === 'qc' ? 'RF-FR-001' : category === 'deviations' ? 'Deviations' : 'Master'}_{period}_{period === 'daily' ? selectedDate : period === 'monthly' ? selectedMonth : selectedYear}.csv
                 </span>
               </div>
               <div className="flex justify-between">
                 <span>Matching Rows:</span>
-                <span className="text-white font-bold">
+                <span className="text-slate-900 font-bold">
                   {category === 'process' || category === 'master' ? filteredProcessEntries.length : category === 'qc' ? filteredQCReports.length : filteredDeviations.length} records
                 </span>
               </div>
@@ -669,30 +669,30 @@ export default function ReportExportView() {
       </div>
 
       {/* Live Data Table Preview */}
-      <div className="rounded-2xl border border-slate-800/80 bg-slate-900/80 shadow-xl overflow-hidden">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-5 py-3.5 border-b border-slate-800 bg-slate-950/60 gap-2">
+      <div className="rounded-2xl border border-purple-100 bg-white shadow-sm overflow-hidden">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-5 py-3.5 border-b border-purple-100 bg-purple-50/50 gap-2">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-mono font-semibold uppercase text-slate-300 tracking-wider">
+            <span className="text-xs font-mono font-semibold uppercase text-slate-700 tracking-wider">
               {category === 'process' && 'RF-FR-004 Hourly Process Log Preview'}
               {category === 'qc' && 'RF-FR-001 QC Lab Analysis Preview'}
               {category === 'deviations' && 'Plant Deviations & Excursions Preview'}
               {category === 'master' && 'Master Operations & Quality Merged Preview'}
             </span>
-            <span className="rounded bg-slate-800 px-2 py-0.5 text-[10px] font-mono text-slate-400">
+            <span className="rounded bg-purple-100 px-2 py-0.5 text-[10px] font-mono font-medium text-purple-800">
               {category === 'process' || category === 'master' ? filteredProcessEntries.length : category === 'qc' ? filteredQCReports.length : filteredDeviations.length} rows ready
             </span>
           </div>
 
           <div className="text-[11px] font-mono text-slate-500">
-            Export format: <span className="text-emerald-400">RFC-4180 CSV (Excel UTF-8 BOM Compliant)</span>
+            Export format: <span className="text-purple-700 font-semibold">RFC-4180 CSV (Excel UTF-8 BOM Compliant)</span>
           </div>
         </div>
 
-        <div className="overflow-x-auto max-h-[440px] scrollbar-thin scrollbar-thumb-slate-700">
+        <div className="overflow-x-auto max-h-[440px] scrollbar-thin">
           {/* 1. PROCESS LOG TABLE PREVIEW */}
           {(category === 'process' || category === 'master') && (
             <table className="w-full text-left text-xs font-mono">
-              <thead className="sticky top-0 z-10 border-b border-slate-800 bg-[#0c1220] text-[11px] font-semibold text-slate-400 uppercase">
+              <thead className="sticky top-0 z-10 border-b border-purple-100 bg-slate-50 text-[11px] font-semibold text-slate-600 uppercase">
                 <tr>
                   <th className="px-4 py-3">Slot</th>
                   <th className="px-4 py-3">Product</th>
@@ -706,36 +706,36 @@ export default function ReportExportView() {
                   <th className="px-4 py-3">Remarks</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60 bg-slate-900/40 text-slate-300">
+              <tbody className="divide-y divide-purple-50 bg-white text-slate-700">
                 {filteredProcessEntries.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="px-4 py-8 text-center text-slate-500">
+                    <td colSpan={10} className="px-4 py-8 text-center text-slate-400">
                       No operational process entries found matching the selected timeframe and filters.
                     </td>
                   </tr>
                 ) : (
                   filteredProcessEntries.map((e) => (
-                    <tr key={e.id || e.slot_index} className="hover:bg-slate-800/40 transition-colors">
-                      <td className="px-4 py-2.5 font-bold text-cyan-400">{e.slot_label}</td>
-                      <td className="px-4 py-2.5 font-sans font-medium text-slate-200">{e.product_name || '-'}</td>
-                      <td className="px-3 py-2.5 text-right font-mono text-slate-300">{e.oil_feed_rate_litre?.toLocaleString() || '-'}</td>
-                      <td className="px-3 py-2.5 text-right font-mono text-cyan-300">{e.vacuum_torr?.toFixed(1) || '-'}</td>
-                      <td className="px-3 py-2.5 text-right font-mono text-amber-300">{e.tray_4_temp_c?.toFixed(1) || '-'}</td>
-                      <td className="px-3 py-2.5 text-right font-mono text-slate-300">{e.tray_7_temp_c?.toFixed(1) || '-'}</td>
-                      <td className="px-3 py-2.5 text-right font-mono text-slate-300">{e.strip_steam_pct_of_oil ?? '-'}%</td>
+                    <tr key={e.id || e.slot_index} className="hover:bg-purple-50/40 transition-colors">
+                      <td className="px-4 py-2.5 font-bold text-purple-700">{e.slot_label}</td>
+                      <td className="px-4 py-2.5 font-sans font-medium text-slate-900">{e.product_name || '-'}</td>
+                      <td className="px-3 py-2.5 text-right font-mono text-slate-700">{e.oil_feed_rate_litre?.toLocaleString() || '-'}</td>
+                      <td className="px-3 py-2.5 text-right font-mono text-purple-700">{e.vacuum_torr?.toFixed(1) || '-'}</td>
+                      <td className="px-3 py-2.5 text-right font-mono text-amber-700 font-semibold">{e.tray_4_temp_c?.toFixed(1) || '-'}</td>
+                      <td className="px-3 py-2.5 text-right font-mono text-slate-700">{e.tray_7_temp_c?.toFixed(1) || '-'}</td>
+                      <td className="px-3 py-2.5 text-right font-mono text-slate-700">{e.strip_steam_pct_of_oil ?? '-'}%</td>
                       <td className="px-4 py-2.5">
                         {e.has_deviation ? (
-                          <span className="inline-flex items-center gap-1 rounded bg-amber-950/60 px-2 py-0.5 text-[10px] text-amber-400 border border-amber-800/40">
+                          <span className="inline-flex items-center gap-1 rounded bg-amber-50 px-2 py-0.5 text-[10px] text-amber-700 border border-amber-200 font-medium">
                             <AlertTriangle className="h-3 w-3" /> Deviation
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 rounded bg-emerald-950/60 px-2 py-0.5 text-[10px] text-emerald-400 border border-emerald-800/40">
+                          <span className="inline-flex items-center gap-1 rounded bg-emerald-50 px-2 py-0.5 text-[10px] text-emerald-700 border border-emerald-200 font-medium">
                             <CheckCircle2 className="h-3 w-3" /> Normal
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-2.5 font-sans text-xs text-slate-300">{e.recorded_by_name || '-'}</td>
-                      <td className="px-4 py-2.5 text-[11px] text-slate-400 max-w-[200px] truncate" title={e.remarks || undefined}>
+                      <td className="px-4 py-2.5 font-sans text-xs text-slate-700">{e.recorded_by_name || '-'}</td>
+                      <td className="px-4 py-2.5 text-[11px] text-slate-500 max-w-[200px] truncate" title={e.remarks || undefined}>
                         {e.remarks || '-'}
                       </td>
                     </tr>
@@ -748,7 +748,7 @@ export default function ReportExportView() {
           {/* 2. QC LAB TABLE PREVIEW */}
           {category === 'qc' && (
             <table className="w-full text-left text-xs font-mono">
-              <thead className="sticky top-0 z-10 border-b border-slate-800 bg-[#0c1220] text-[11px] font-semibold text-slate-400 uppercase">
+              <thead className="sticky top-0 z-10 border-b border-purple-100 bg-slate-50 text-[11px] font-semibold text-slate-600 uppercase">
                 <tr>
                   <th className="px-4 py-3">Report No</th>
                   <th className="px-3 py-3">Time</th>
@@ -762,10 +762,10 @@ export default function ReportExportView() {
                   <th className="px-4 py-3">Decided By</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60 bg-slate-900/40 text-slate-300">
+              <tbody className="divide-y divide-purple-50 bg-white text-slate-700">
                 {filteredQCReports.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="px-4 py-8 text-center text-slate-500">
+                    <td colSpan={10} className="px-4 py-8 text-center text-slate-400">
                       No QC sample laboratory reports found matching the selected timeframe and filters.
                     </td>
                   </tr>
@@ -780,35 +780,35 @@ export default function ReportExportView() {
                     const isRejected = r.decision?.decision === 'reject';
 
                     return (
-                      <tr key={r.id} className="hover:bg-slate-800/40 transition-colors">
-                        <td className="px-4 py-2.5 font-bold text-cyan-400">{r.report_no}</td>
-                        <td className="px-3 py-2.5 text-slate-400">{r.time_check}</td>
-                        <td className="px-4 py-2.5 font-semibold text-slate-200">{r.lot_no}</td>
-                        <td className="px-4 py-2.5 font-sans text-slate-300">{r.product_name}</td>
-                        <td className="px-3 py-2.5 text-right font-mono text-emerald-400">{ffa ?? '-'}%</td>
-                        <td className="px-3 py-2.5 text-right font-mono text-slate-300">{h2o ?? '-'}%</td>
-                        <td className="px-3 py-2.5 text-right font-mono text-slate-300">{iv ?? '-'}</td>
-                        <td className="px-3 py-2.5 text-right font-mono text-amber-300">
+                      <tr key={r.id} className="hover:bg-purple-50/40 transition-colors">
+                        <td className="px-4 py-2.5 font-bold text-purple-700">{r.report_no}</td>
+                        <td className="px-3 py-2.5 text-slate-500">{r.time_check}</td>
+                        <td className="px-4 py-2.5 font-semibold text-slate-900">{r.lot_no}</td>
+                        <td className="px-4 py-2.5 font-sans text-slate-700">{r.product_name}</td>
+                        <td className="px-3 py-2.5 text-right font-mono font-semibold text-emerald-700">{ffa ?? '-'}%</td>
+                        <td className="px-3 py-2.5 text-right font-mono text-slate-700">{h2o ?? '-'}%</td>
+                        <td className="px-3 py-2.5 text-right font-mono text-slate-700">{iv ?? '-'}</td>
+                        <td className="px-3 py-2.5 text-right font-mono text-amber-700">
                           {colR ?? '-'}/{colY ?? '-'}
                         </td>
                         <td className="px-4 py-2.5">
                           {isAccepted && (
-                            <span className="inline-flex items-center gap-1 rounded bg-emerald-950/70 px-2 py-0.5 text-[10px] font-bold text-emerald-300 border border-emerald-700/50">
+                            <span className="inline-flex items-center gap-1 rounded bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200">
                               <CheckCircle2 className="h-3 w-3" /> ACCEPTED
                             </span>
                           )}
                           {isRejected && (
-                            <span className="inline-flex items-center gap-1 rounded bg-rose-950/70 px-2 py-0.5 text-[10px] font-bold text-rose-300 border border-rose-700/50">
+                            <span className="inline-flex items-center gap-1 rounded bg-rose-50 px-2 py-0.5 text-[10px] font-bold text-rose-700 border border-rose-200">
                               <XCircle className="h-3 w-3" /> REJECTED
                             </span>
                           )}
                           {!isAccepted && !isRejected && (
-                            <span className="inline-flex items-center gap-1 rounded bg-amber-950/70 px-2 py-0.5 text-[10px] font-bold text-amber-300 border border-amber-700/50">
+                            <span className="inline-flex items-center gap-1 rounded bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700 border border-amber-200">
                               PENDING
                             </span>
                           )}
                         </td>
-                        <td className="px-4 py-2.5 font-sans text-xs text-slate-300">
+                        <td className="px-4 py-2.5 font-sans text-xs text-slate-700">
                           {r.decision?.decided_by_name || r.submitted_by_name || '-'}
                         </td>
                       </tr>
@@ -822,7 +822,7 @@ export default function ReportExportView() {
           {/* 3. DEVIATIONS TABLE PREVIEW */}
           {category === 'deviations' && (
             <table className="w-full text-left text-xs font-mono">
-              <thead className="sticky top-0 z-10 border-b border-slate-800 bg-[#0c1220] text-[11px] font-semibold text-slate-400 uppercase">
+              <thead className="sticky top-0 z-10 border-b border-purple-100 bg-slate-50 text-[11px] font-semibold text-slate-600 uppercase">
                 <tr>
                   <th className="px-4 py-3">Slot</th>
                   <th className="px-4 py-3">Parameter</th>
@@ -833,33 +833,33 @@ export default function ReportExportView() {
                   <th className="px-4 py-3">Action Taken</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60 bg-slate-900/40 text-slate-300">
+              <tbody className="divide-y divide-purple-50 bg-white text-slate-700">
                 {filteredDeviations.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
+                    <td colSpan={7} className="px-4 py-8 text-center text-slate-400">
                       No deviation or operational excursion records found.
                     </td>
                   </tr>
                 ) : (
                   filteredDeviations.map((d) => (
-                    <tr key={d.id} className="hover:bg-slate-800/40 transition-colors">
-                      <td className="px-4 py-2.5 font-bold text-cyan-400">{d.slot_label}</td>
-                      <td className="px-4 py-2.5 font-medium text-slate-200">{d.field_label}</td>
-                      <td className="px-3 py-2.5 text-right font-bold text-rose-400">{d.observed}</td>
-                      <td className="px-3 py-2.5 text-right text-slate-400">{d.soft_min ?? '-'} - {d.soft_max ?? '-'}</td>
-                      <td className="px-4 py-2.5 font-semibold text-slate-300">
+                    <tr key={d.id} className="hover:bg-purple-50/40 transition-colors">
+                      <td className="px-4 py-2.5 font-bold text-purple-700">{d.slot_label}</td>
+                      <td className="px-4 py-2.5 font-medium text-slate-900">{d.field_label}</td>
+                      <td className="px-3 py-2.5 text-right font-bold text-rose-600">{d.observed}</td>
+                      <td className="px-3 py-2.5 text-right text-slate-500">{d.soft_min ?? '-'} - {d.soft_max ?? '-'}</td>
+                      <td className="px-4 py-2.5 font-semibold text-slate-700">
                         {d.acknowledged_by ? (
-                          <span className="text-emerald-400 flex items-center gap-1">
+                          <span className="text-emerald-700 flex items-center gap-1 font-medium">
                             <CheckCircle2 className="h-3 w-3" /> Acknowledged
                           </span>
                         ) : (
-                          <span className="text-amber-400 flex items-center gap-1">
+                          <span className="text-amber-700 flex items-center gap-1 font-medium">
                             <AlertTriangle className="h-3 w-3" /> Open
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-2.5 text-slate-300">{d.acknowledged_by_name || '-'}</td>
-                      <td className="px-4 py-2.5 text-slate-400 max-w-[200px] truncate" title={d.action_taken || undefined}>
+                      <td className="px-4 py-2.5 text-slate-700">{d.acknowledged_by_name || '-'}</td>
+                      <td className="px-4 py-2.5 text-slate-500 max-w-[200px] truncate" title={d.action_taken || undefined}>
                         {d.action_taken || '-'}
                       </td>
                     </tr>
@@ -871,16 +871,16 @@ export default function ReportExportView() {
         </div>
 
         {/* Table Footer Download Banner */}
-        <div className="flex flex-col sm:flex-row items-center justify-between p-4 border-t border-slate-800 bg-[#080d16] text-xs font-mono text-slate-400 gap-3">
+        <div className="flex flex-col sm:flex-row items-center justify-between p-4 border-t border-purple-100 bg-slate-50 text-xs font-mono text-slate-600 gap-3">
           <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-emerald-400"></span>
+            <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
             <span>Historical record buffer ready for export into Microsoft Excel / CSV spreadsheet</span>
           </div>
 
           <div className="flex items-center gap-3">
             <button
               onClick={handleDownloadCSV}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition-all cursor-pointer shadow-md"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-semibold transition-all cursor-pointer shadow-xs active:scale-95"
             >
               <Download className="h-4 w-4" />
               <span>Export {category.toUpperCase()} to CSV</span>

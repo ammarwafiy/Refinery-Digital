@@ -476,35 +476,35 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
   return (
     <div className="space-y-6">
       {/* 1. Module Header & Sub-Navigation */}
-      <div className="rounded-xl border border-[#1a2336] bg-[#0c101c] p-4 sm:p-5 shadow-2xl">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[#161d2d] pb-4">
+      <div className="rounded-xl border border-purple-100 bg-white p-4 sm:p-5 shadow-sm">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-purple-100 pb-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-sky-500/30 bg-[#081524] text-sky-400">
+            <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-purple-200 bg-purple-50 text-purple-600 shadow-sm">
               <FlaskConical className="h-5 w-5" />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="rounded border border-[#2a3854] bg-[#121928] px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-slate-300">
+                <span className="rounded border border-purple-200 bg-purple-50 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-purple-700">
                   RF-FR-001 REV. 02
                 </span>
-                <h1 className="text-lg sm:text-xl font-bold tracking-tight text-white font-sans">
+                <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 font-sans">
                   Sample Analysis Report & Quality Control
                 </h1>
               </div>
-              <p className="text-xs text-slate-400 font-mono mt-0.5">
+              <p className="text-xs text-slate-500 font-mono mt-0.5">
                 44 Standard Products · Parameter Tick-List · 9-Point SFC Series · QC Disposition
               </p>
             </div>
           </div>
 
           {/* Sub-Tabs Actions */}
-          <div className="flex items-center gap-2 bg-[#080b12] p-1 rounded-lg border border-[#1a2336]">
+          <div className="flex items-center gap-2 bg-purple-50/60 p-1 rounded-lg border border-purple-100">
             <button
               onClick={() => setActiveSubTab('list')}
               className={`px-3 py-1.5 rounded-md text-xs font-mono font-semibold transition-all cursor-pointer ${
                 activeSubTab === 'list'
-                  ? 'bg-[#162238] text-white border border-sky-500/40 shadow-sm'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-purple-600 text-white shadow-sm'
+                  : 'text-slate-600 hover:text-purple-700'
               }`}
             >
               Lab Queue ({reports.length})
@@ -514,8 +514,8 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
               onClick={() => setActiveSubTab('new')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-mono font-semibold transition-all cursor-pointer ${
                 activeSubTab === 'new'
-                  ? 'bg-[#0284c7] text-white border border-sky-400/40 shadow-sm'
-                  : 'text-sky-300 hover:bg-[#121927]'
+                  ? 'bg-purple-600 text-white shadow-sm'
+                  : 'text-purple-700 hover:bg-purple-100/60'
               }`}
             >
               <Plus className="h-3.5 w-3.5" />
@@ -528,13 +528,13 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
         {activeSubTab !== 'new' && (
           <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
             <div className="relative w-full sm:w-80">
-              <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-500" />
+              <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
               <input
                 type="text"
                 placeholder="Search Lot No, Product, Report No..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="w-full bg-[#080b12] border border-[#1e2a3e] rounded-lg pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 font-mono"
+                className="w-full bg-white border border-slate-200 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-purple-600 focus:ring-1 focus:ring-purple-200 font-mono shadow-xs"
               />
             </div>
 
@@ -551,8 +551,8 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                   onClick={() => setFilterStatus(f.id)}
                   className={`px-2.5 py-1 rounded text-[11px] border font-mono transition-all cursor-pointer ${
                     filterStatus === f.id
-                      ? 'bg-[#162238] border-sky-500/40 text-sky-300 font-bold'
-                      : 'border-[#1a2336] bg-[#080b12] text-slate-500 hover:text-slate-300'
+                      ? 'bg-purple-600 border-purple-600 text-white font-bold shadow-xs'
+                      : 'border-slate-200 bg-white text-slate-600 hover:bg-purple-50 hover:text-purple-700 hover:border-purple-200'
                   }`}
                 >
                   {f.label}
@@ -567,8 +567,8 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
 
       {/* VIEW A: Raise New Sample Report */}
       {activeSubTab === 'new' && (
-        <div className="rounded-xl border border-[#1a2336] bg-[#0c101c] p-5 sm:p-6 shadow-2xl">
-          <h2 className="text-sm font-bold text-sky-400 mb-4 border-b border-[#161d2d] pb-3 font-mono uppercase tracking-wider">
+        <div className="rounded-xl border border-purple-100 bg-white p-5 sm:p-6 shadow-sm">
+          <h2 className="text-sm font-bold text-purple-700 mb-4 border-b border-purple-100 pb-3 font-mono uppercase tracking-wider">
             RF-FR-001 Sample Report Header & Parameter Request
           </h2>
 
@@ -576,8 +576,8 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Lot Number *</label>
-                  <span className="inline-flex items-center gap-1 text-[10px] font-mono text-sky-400 bg-sky-950/60 px-1.5 py-0.2 rounded border border-sky-800/40">
+                  <label className="text-[11px] font-mono text-slate-600 uppercase tracking-wider">Lot Number *</label>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-mono text-purple-700 bg-purple-50 px-1.5 py-0.2 rounded border border-purple-200">
                     <Sparkles className="h-3 w-3" /> Auto-Generated
                   </span>
                 </div>
@@ -588,72 +588,72 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                     placeholder="e.g. LOT-PL65-2609-04"
                     value={newLotNo}
                     onChange={e => setNewLotNo(e.target.value)}
-                    className="w-full bg-[#080b12] border border-[#222e44] rounded-lg pl-3 pr-20 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-sky-500"
+                    className="w-full bg-white border border-slate-200 rounded-lg pl-3 pr-20 py-1.5 text-xs font-mono text-slate-900 focus:outline-none focus:border-purple-600 focus:ring-1 focus:ring-purple-200 shadow-xs"
                   />
                   <button
                     type="button"
                     onClick={() => setNewLotNo(generateNextLotNo(newProductId, newDate, newProductOther))}
-                    className="absolute right-1 top-1 bottom-1 px-2.5 rounded bg-[#162238] hover:bg-[#1e2f4e] text-slate-300 hover:text-sky-300 text-[10px] font-mono transition-colors flex items-center gap-1 border border-[#2a3c5a] cursor-pointer"
+                    className="absolute right-1 top-1 bottom-1 px-2.5 rounded bg-purple-50 hover:bg-purple-100 text-purple-700 hover:text-purple-900 text-[10px] font-mono transition-colors flex items-center gap-1 border border-purple-200 cursor-pointer"
                     title="Regenerate next sequential lot number based on selected product & date"
                   >
                     <RefreshCw className="h-3 w-3" />
                     <span>Sync</span>
                   </button>
                 </div>
-                <p className="mt-1 text-[10px] text-slate-500 font-mono">
+                <p className="mt-1 text-[10px] text-slate-400 font-mono">
                   Pattern: LOT-[PROD]-[YYMM]-[SEQ]
                 </p>
               </div>
 
               <div>
-                <label className="block text-[11px] font-mono text-slate-400 mb-1 uppercase tracking-wider">Sample Date</label>
+                <label className="block text-[11px] font-mono text-slate-600 mb-1 uppercase tracking-wider">Sample Date</label>
                 <input
                   type="date"
                   value={newDate}
                   onChange={e => setNewDate(e.target.value)}
-                  className="w-full bg-[#080b12] border border-[#222e44] rounded-lg px-3 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-sky-500 cursor-pointer"
+                  className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-mono text-slate-900 focus:outline-none focus:border-purple-600 focus:ring-1 focus:ring-purple-200 cursor-pointer shadow-xs"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-mono text-slate-400 mb-1 uppercase tracking-wider">Time Check</label>
+                <label className="block text-[11px] font-mono text-slate-600 mb-1 uppercase tracking-wider">Time Check</label>
                 <input
                   type="time"
                   value={newTimeCheck}
                   onChange={e => setNewTimeCheck(e.target.value)}
-                  className="w-full bg-[#080b12] border border-[#222e44] rounded-lg px-3 py-1.5 text-xs font-mono text-white focus:outline-none focus:border-sky-500 cursor-pointer"
+                  className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-mono text-slate-900 focus:outline-none focus:border-purple-600 focus:ring-1 focus:ring-purple-200 cursor-pointer shadow-xs"
                 />
               </div>
             </div>
 
             {/* Product Picker (44 Printed Products from Appendix) */}
-            <div className="rounded-lg border border-[#1a2336] bg-[#080b12] p-4">
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-sky-400 mb-2 font-mono">
+            <div className="rounded-lg border border-purple-100 bg-purple-50/20 p-4">
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-purple-700 mb-2 font-mono">
                 Product Selection (RF-FR-001 Form 44-Product Standard List)
               </label>
               <select
                 value={newProductId}
                 onChange={e => setNewProductId(e.target.value)}
-                className="w-full bg-[#0c101c] border border-[#222e44] rounded-lg px-3 py-2 text-xs text-white font-mono font-semibold focus:outline-none focus:border-sky-500 cursor-pointer"
+                className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-900 font-mono font-semibold focus:outline-none focus:border-purple-600 focus:ring-1 focus:ring-purple-200 cursor-pointer shadow-xs"
               >
                 {products.map(p => (
-                  <option key={p.id} value={p.id} className="bg-[#0c101c]">
+                  <option key={p.id} value={p.id} className="text-slate-900">
                     {p.name}
                   </option>
                 ))}
-                <option value="others" className="bg-[#0c101c]">Others — Free Text Entry</option>
+                <option value="others" className="text-slate-900">Others — Free Text Entry</option>
               </select>
 
               {newProductId === 'others' && (
                 <div className="mt-3">
-                  <label className="block text-[11px] font-mono text-slate-400 mb-1">Enter Custom Product Name:</label>
+                  <label className="block text-[11px] font-mono text-slate-600 mb-1">Enter Custom Product Name:</label>
                   <input
                     type="text"
                     required
                     placeholder="Specify other product name..."
                     value={newProductOther}
                     onChange={e => setNewProductOther(e.target.value)}
-                    className="w-full bg-[#0c101c] border border-[#222e44] rounded-lg px-3 py-1.5 text-xs text-white font-mono focus:outline-none focus:border-sky-500"
+                    className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-900 font-mono focus:outline-none focus:border-purple-600 focus:ring-1 focus:ring-purple-200 shadow-xs"
                   />
                 </div>
               )}
@@ -662,68 +662,68 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
             {/* Tanks & Sampling Point */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               <div>
-                <label className="block text-[11px] font-mono text-slate-400 mb-1">Feed Tank</label>
+                <label className="block text-[11px] font-mono text-slate-600 mb-1">Feed Tank</label>
                 <select
                   value={newFeedTankId}
                   onChange={e => setNewFeedTankId(e.target.value)}
-                  className="w-full bg-[#080b12] border border-[#222e44] rounded-lg px-3 py-1.5 text-xs font-mono text-white cursor-pointer"
+                  className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-mono text-slate-900 cursor-pointer focus:outline-none focus:border-purple-600 shadow-xs"
                 >
                   {tanks.filter(t => t.kind === 'feed' || t.kind === 'both').map(t => (
-                    <option key={t.id} value={t.id} className="bg-[#0c101c]">{t.code}</option>
+                    <option key={t.id} value={t.id} className="text-slate-900">{t.code}</option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label className="block text-[11px] font-mono text-slate-400 mb-1">Discharge Tank</label>
+                <label className="block text-[11px] font-mono text-slate-600 mb-1">Discharge Tank</label>
                 <select
                   value={newDischargeTankId}
                   onChange={e => setNewDischargeTankId(e.target.value)}
-                  className="w-full bg-[#080b12] border border-[#222e44] rounded-lg px-3 py-1.5 text-xs font-mono text-white cursor-pointer"
+                  className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-mono text-slate-900 cursor-pointer focus:outline-none focus:border-purple-600 shadow-xs"
                 >
                   {tanks.filter(t => t.kind === 'discharge' || t.kind === 'both').map(t => (
-                    <option key={t.id} value={t.id} className="bg-[#0c101c]">{t.code}</option>
+                    <option key={t.id} value={t.id} className="text-slate-900">{t.code}</option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label className="block text-[11px] font-mono text-slate-400 mb-1">Crystallizer / Batch No</label>
+                <label className="block text-[11px] font-mono text-slate-600 mb-1">Crystallizer / Batch No</label>
                 <input
                   type="text"
                   placeholder="CR-04 / B260904"
                   value={newBatchNo}
                   onChange={e => setNewBatchNo(e.target.value)}
-                  className="w-full bg-[#080b12] border border-[#222e44] rounded-lg px-3 py-1.5 text-xs font-mono text-white"
+                  className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-mono text-slate-900 focus:outline-none focus:border-purple-600 shadow-xs"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-mono text-slate-400 mb-1">Sampling Point</label>
+                <label className="block text-[11px] font-mono text-slate-600 mb-1">Sampling Point</label>
                 <select
                   value={newSamplingPointId}
                   onChange={e => setNewSamplingPointId(e.target.value)}
-                  className="w-full bg-[#080b12] border border-[#222e44] rounded-lg px-3 py-1.5 text-xs font-mono text-white cursor-pointer"
+                  className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-mono text-slate-900 cursor-pointer focus:outline-none focus:border-purple-600 shadow-xs"
                 >
                   {samplingPoints.map(sp => (
-                    <option key={sp.id} value={sp.id} className="bg-[#0c101c]">{sp.name}</option>
+                    <option key={sp.id} value={sp.id} className="text-slate-900">{sp.name}</option>
                   ))}
                 </select>
               </div>
             </div>
 
             {/* Printed Remarks Checkboxes */}
-            <div className="rounded-lg border border-[#1a2336] bg-[#080b12] p-4">
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-300 mb-2 font-mono">
+            <div className="rounded-lg border border-purple-100 bg-purple-50/20 p-4">
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-700 mb-2 font-mono">
                 Printed Remarks Tick-List
               </label>
-              <div className="flex flex-wrap items-center gap-6 text-xs text-slate-300 font-mono">
+              <div className="flex flex-wrap items-center gap-6 text-xs text-slate-700 font-mono">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={newRemarkFlushing}
                     onChange={e => setNewRemarkFlushing(e.target.checked)}
-                    className="h-4 w-4 rounded border-[#222e44] bg-[#0c101c] text-sky-500 focus:ring-0 cursor-pointer"
+                    className="h-4 w-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
                   />
                   <span>Flushing</span>
                 </label>
@@ -733,7 +733,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                     type="checkbox"
                     checked={newRemarkCooling}
                     onChange={e => setNewRemarkCooling(e.target.checked)}
-                    className="h-4 w-4 rounded border-[#222e44] bg-[#0c101c] text-sky-500 focus:ring-0 cursor-pointer"
+                    className="h-4 w-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
                   />
                   <span>Cooling</span>
                 </label>
@@ -743,7 +743,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                     type="checkbox"
                     checked={newRemarkPushover}
                     onChange={e => setNewRemarkPushover(e.target.checked)}
-                    className="h-4 w-4 rounded border-[#222e44] bg-[#0c101c] text-sky-500 focus:ring-0 cursor-pointer"
+                    className="h-4 w-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
                   />
                   <span>Pushover</span>
                 </label>
@@ -751,9 +751,9 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
             </div>
 
             {/* Parameter Tick-List */}
-            <div className="rounded-lg border border-[#1a2336] bg-[#080b12] p-4">
+            <div className="rounded-lg border border-purple-100 bg-purple-50/20 p-4">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-sky-400 font-mono">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-purple-700 font-mono">
                   Requested Lab Parameters (Tick to include on testing sheet)
                 </span>
                 <span className="text-[10px] text-slate-500 font-mono">
@@ -770,15 +770,15 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                       onClick={() => toggleParam(param.id)}
                       className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-all ${
                         isChecked 
-                          ? 'border-sky-500/50 bg-[#0c1828] text-sky-200 font-semibold' 
-                          : 'border-[#1a2336] bg-[#0c101c] text-slate-400 hover:border-[#222e44]'
+                          ? 'border-purple-300 bg-purple-50 text-purple-900 font-semibold shadow-xs' 
+                          : 'border-slate-200 bg-white text-slate-600 hover:border-purple-200 hover:bg-purple-50/40'
                       }`}
                     >
                       <input
                         type="checkbox"
                         checked={isChecked}
                         readOnly
-                        className="h-3.5 w-3.5 rounded border-[#222e44] text-sky-500 focus:ring-0 pointer-events-none"
+                        className="h-3.5 w-3.5 rounded border-slate-300 text-purple-600 focus:ring-purple-500 pointer-events-none"
                       />
                       <span className="text-[11px] truncate">{param.name} {param.unit ? `(${param.unit})` : ''}</span>
                     </label>
@@ -787,7 +787,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
               </div>
 
               {/* Temperature Test Points Selection */}
-              <div className="mt-4 pt-3 border-t border-[#161d2d]">
+              <div className="mt-4 pt-3 border-t border-purple-100">
                 <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                   <div className="flex items-center gap-2">
                     <input
@@ -795,11 +795,11 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                       id="new-temp-master"
                       checked={selectedParamIds.includes('param-temp') && selectedTempKeys.length === 9}
                       onChange={e => handleToggleAllTempsForNew(e.target.checked)}
-                      className="h-3.5 w-3.5 rounded border-[#222e44] bg-[#0c101c] text-sky-500 focus:ring-0 cursor-pointer"
+                      className="h-3.5 w-3.5 rounded border-slate-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
                     />
-                    <label htmlFor="new-temp-master" className="text-xs font-semibold text-sky-400 font-mono cursor-pointer flex items-center gap-2">
+                    <label htmlFor="new-temp-master" className="text-xs font-semibold text-purple-800 font-mono cursor-pointer flex items-center gap-2">
                       <span>Temperature Test Points</span>
-                      <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-[#162238] text-sky-300 border border-[#2a3c5a]">
+                      <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-purple-100 text-purple-800 border border-purple-200">
                         {selectedTempKeys.length} / 9 Active
                       </span>
                     </label>
@@ -808,14 +808,14 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                     <button
                       type="button"
                       onClick={() => handleToggleAllTempsForNew(true)}
-                      className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#121927] hover:bg-[#182338] text-sky-300 border border-[#222e44] transition-colors cursor-pointer"
+                      className="text-[10px] font-mono px-2 py-0.5 rounded bg-white hover:bg-purple-50 text-purple-700 border border-purple-200 transition-colors cursor-pointer shadow-xs"
                     >
                       Select All 9
                     </button>
                     <button
                       type="button"
                       onClick={() => handleToggleAllTempsForNew(false)}
-                      className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#121927] hover:bg-[#182338] text-slate-400 border border-[#222e44] transition-colors cursor-pointer"
+                      className="text-[10px] font-mono px-2 py-0.5 rounded bg-white hover:bg-purple-50 text-slate-500 border border-slate-200 transition-colors cursor-pointer shadow-xs"
                     >
                       Deselect All
                     </button>
@@ -834,15 +834,15 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                         }}
                         className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg border text-xs font-mono cursor-pointer transition-all ${
                           isTicked
-                            ? 'border-sky-500/50 bg-[#0c1828] text-sky-300 font-bold'
-                            : 'border-[#1a2336] bg-[#0c101c] text-slate-400 hover:border-[#222e44]'
+                            ? 'border-purple-300 bg-purple-50 text-purple-900 font-bold shadow-xs'
+                            : 'border-slate-200 bg-white text-slate-600 hover:border-purple-200 hover:bg-purple-50/40'
                         }`}
                       >
                         <input
                           type="checkbox"
                           checked={isTicked}
                           readOnly
-                          className="h-3 w-3 rounded border-[#222e44] text-sky-500 focus:ring-0 pointer-events-none"
+                          className="h-3 w-3 rounded border-slate-300 text-purple-600 focus:ring-purple-500 pointer-events-none"
                         />
                         <span className="text-[11px]">{temp}°C</span>
                       </label>
@@ -852,17 +852,17 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[#1a2336]">
+            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-purple-100">
               <button
                 type="button"
                 onClick={() => setActiveSubTab('list')}
-                className="px-3.5 py-1.5 rounded-lg text-xs font-mono text-slate-400 hover:text-white cursor-pointer"
+                className="px-3.5 py-1.5 rounded-lg text-xs font-mono text-slate-500 hover:text-slate-800 cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="flex items-center gap-2 bg-[#0284c7] hover:bg-[#0369a1] text-white font-mono font-bold text-xs uppercase px-5 py-2 rounded-lg transition-all border border-sky-400/40 shadow-md cursor-pointer active:scale-95"
+                className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-mono font-bold text-xs uppercase px-5 py-2 rounded-lg transition-all border border-purple-700 shadow-sm cursor-pointer active:scale-95"
               >
                 <Save className="h-3.5 w-3.5" />
                 <span>Submit Sample to Lab Queue</span>
@@ -876,10 +876,10 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
       {activeSubTab !== 'new' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Column: Sample Reports List */}
-          <div className="lg:col-span-4 rounded-xl border border-[#1a2336] bg-[#0c101c] p-3.5 shadow-2xl space-y-2.5 max-h-[850px] overflow-y-auto">
-            <div className="flex items-center justify-between pb-2 border-b border-[#161d2d] text-[11px] font-mono text-slate-400">
-              <span className="uppercase tracking-wider">REFINERY SAMPLES</span>
-              <span>{filteredReports.length} in queue</span>
+          <div className="lg:col-span-4 rounded-xl border border-purple-100 bg-white p-3.5 shadow-sm space-y-2.5 max-h-[850px] overflow-y-auto">
+            <div className="flex items-center justify-between pb-2 border-b border-purple-100 text-[11px] font-mono text-slate-500">
+              <span className="uppercase tracking-wider font-semibold">REFINERY SAMPLES</span>
+              <span className="bg-purple-50 text-purple-700 px-2 py-0.5 rounded font-bold border border-purple-200">{filteredReports.length} in queue</span>
             </div>
 
             {filteredReports.map(rep => {
@@ -894,19 +894,19 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                   onClick={() => setSelectedReportId(rep.id)}
                   className={`w-full text-left p-3 rounded-lg border transition-all cursor-pointer ${
                     isSelected
-                      ? 'border-sky-500/80 bg-[#0a1828] shadow-md ring-1 ring-sky-500/50'
-                      : 'border-[#1a2336] bg-[#080b12] hover:bg-[#0e1422]'
+                      ? 'border-purple-500 bg-purple-50/70 shadow-sm ring-1 ring-purple-400'
+                      : 'border-slate-200 bg-white hover:bg-purple-50/30 hover:border-purple-200'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <div className="font-mono font-bold text-xs text-white flex items-center gap-1.5">
+                      <div className="font-mono font-bold text-xs text-slate-900 flex items-center gap-1.5">
                         <span>{rep.lot_no}</span>
                       </div>
-                      <div className="text-[11px] text-slate-300 mt-0.5 font-medium flex items-center gap-1.5 font-mono">
+                      <div className="text-[11px] text-slate-600 mt-0.5 font-medium flex items-center gap-1.5 font-mono">
                         <span className="truncate max-w-[140px]">{rep.product_name}</span>
                         {rep.remarks?.includes('Process Log') && (
-                          <span className="text-[8px] font-mono px-1 py-0.2 rounded border border-sky-500/40 bg-sky-950/60 text-sky-300">
+                          <span className="text-[8px] font-mono px-1 py-0.2 rounded border border-purple-200 bg-purple-50 text-purple-700">
                             AUTO
                           </span>
                         )}
@@ -915,26 +915,26 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
 
                     <div>
                       {isRejected ? (
-                        <span className="text-[9px] font-mono text-rose-300 bg-rose-950/80 px-1.5 py-0.5 rounded border border-rose-600/40 font-bold">
+                        <span className="text-[9px] font-mono text-rose-700 bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200 font-bold">
                           REJECT
                         </span>
                       ) : isAccepted ? (
-                        <span className="text-[9px] font-mono text-emerald-300 bg-emerald-950/80 px-1.5 py-0.5 rounded border border-emerald-600/40 font-bold">
+                        <span className="text-[9px] font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 font-bold">
                           ACCEPT
                         </span>
                       ) : isConcession ? (
-                        <span className="text-[9px] font-mono text-amber-300 bg-amber-950/80 px-1.5 py-0.5 rounded border border-amber-600/40 font-bold">
+                        <span className="text-[9px] font-mono text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 font-bold">
                           CONCESSION
                         </span>
                       ) : (
-                        <span className="text-[9px] font-mono text-sky-400 bg-sky-950/80 px-1.5 py-0.5 rounded border border-sky-600/40">
+                        <span className="text-[9px] font-mono text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">
                           AWAITING
                         </span>
                       )}
                     </div>
                   </div>
 
-                  <div className="mt-2 flex items-center justify-between text-[10px] font-mono text-slate-500 border-t border-[#141b27] pt-1.5">
+                  <div className="mt-2 flex items-center justify-between text-[10px] font-mono text-slate-400 border-t border-slate-100 pt-1.5">
                     <span>{rep.report_no}</span>
                     <span>{rep.sample_date} {rep.time_check}</span>
                   </div>
@@ -946,29 +946,29 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
           {/* Right Column: Active Sample Lab Result Input & QC Decision */}
           <div className="lg:col-span-8 space-y-6">
             {selectedReport ? (
-              <div className="rounded-xl border border-[#1a2336] bg-[#0c101c] p-5 sm:p-6 shadow-2xl space-y-5">
+              <div className="rounded-xl border border-purple-100 bg-white p-5 sm:p-6 shadow-sm space-y-5">
                 {/* Sample Header Summary */}
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[#161d2d] pb-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-purple-100 pb-4">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded border border-[#2a3854] bg-[#121928] text-slate-300">
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded border border-purple-200 bg-purple-50 text-purple-700 font-semibold">
                         {selectedReport.report_no}
                       </span>
-                      <h2 className="text-lg font-bold text-white font-mono">
+                      <h2 className="text-lg font-bold text-slate-900 font-mono">
                         {selectedReport.lot_no}
                       </h2>
                       {selectedReport.remarks?.includes('Process Log') && (
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-sky-950/80 text-sky-300 border border-sky-600/40 flex items-center gap-1">
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200 flex items-center gap-1 font-semibold">
                           ⚡ Auto-Dispatched ({selectedReport.time_check})
                         </span>
                       )}
                     </div>
-                    <div className="mt-1 text-xs text-slate-400 font-mono flex flex-wrap items-center gap-2.5">
-                      <span>Product: <strong className="text-white">{selectedReport.product_name}</strong></span>
+                    <div className="mt-1 text-xs text-slate-500 font-mono flex flex-wrap items-center gap-2.5">
+                      <span>Product: <strong className="text-slate-800">{selectedReport.product_name}</strong></span>
                       <span>•</span>
-                      <span>Tanks: <strong className="text-slate-200">{selectedReport.feed_tank_code || 'Feed'} → {selectedReport.discharge_tank_code || 'Discharge'}</strong></span>
+                      <span>Tanks: <strong className="text-slate-700">{selectedReport.feed_tank_code || 'Feed'} → {selectedReport.discharge_tank_code || 'Discharge'}</strong></span>
                       <span>•</span>
-                      <span>Submitted: <strong className="text-slate-200">{selectedReport.submitted_by_name}</strong></span>
+                      <span>Submitted: <strong className="text-slate-700">{selectedReport.submitted_by_name}</strong></span>
                     </div>
                   </div>
 
@@ -979,14 +979,14 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                         <div className="text-right">
                           <div className={`text-[11px] font-mono font-bold px-2.5 py-0.5 rounded border inline-block ${
                             selectedReport.decision.decision === 'reject'
-                              ? 'bg-rose-950/80 text-rose-300 border-rose-500/40'
+                              ? 'bg-rose-50 text-rose-700 border-rose-200'
                               : selectedReport.decision.decision === 'accept'
-                              ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/40'
-                              : 'bg-amber-950/80 text-amber-300 border-amber-500/40'
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                              : 'bg-amber-50 text-amber-800 border-amber-200'
                           }`}>
                             DECISION: {selectedReport.decision.decision.toUpperCase()}
                           </div>
-                          <div className="text-[9px] font-mono text-slate-500 mt-0.5">
+                          <div className="text-[9px] font-mono text-slate-400 mt-0.5">
                             By: {selectedReport.decision.decided_by_name}
                           </div>
                         </div>
@@ -998,7 +998,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                               setDecisionType(selectedReport.decision?.decision || 'accept');
                               setIsDecisionModalOpen(true);
                             }}
-                            className="flex items-center gap-1.5 bg-[#121927] hover:bg-[#182338] text-sky-300 border border-[#222e44] px-2.5 py-1.5 rounded-lg text-xs font-mono transition-colors cursor-pointer"
+                            className="flex items-center gap-1.5 bg-white hover:bg-purple-50 text-purple-700 border border-purple-200 px-2.5 py-1.5 rounded-lg text-xs font-mono transition-colors shadow-xs cursor-pointer"
                             title="Update or re-record QC Decision"
                           >
                             <ShieldCheck className="h-3.5 w-3.5" />
@@ -1010,7 +1010,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                       (role === 'qc_analyst' || role === 'qc_manager' || role === 'admin') && (
                         <button
                           onClick={() => setIsDecisionModalOpen(true)}
-                          className="flex items-center gap-1.5 bg-[#0284c7] hover:bg-[#0369a1] text-white font-mono font-bold text-xs uppercase px-3.5 py-2 rounded-lg transition-all border border-sky-400/40 shadow-md cursor-pointer active:scale-95"
+                          className="flex items-center gap-1.5 bg-purple-600 hover:bg-purple-700 text-white font-mono font-bold text-xs uppercase px-3.5 py-2 rounded-lg transition-all border border-purple-700 shadow-sm cursor-pointer active:scale-95"
                         >
                           <ShieldCheck className="h-3.5 w-3.5" />
                           <span>Record Decision</span>
@@ -1023,7 +1023,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                       <button
                         type="button"
                         onClick={() => onNavigateToCertificate(selectedReport.id)}
-                        className="flex items-center gap-1.5 bg-[#121927] hover:bg-[#182338] text-sky-300 border border-[#222e44] px-2.5 py-1.5 rounded-lg text-xs font-mono transition-colors shadow-sm cursor-pointer"
+                        className="flex items-center gap-1.5 bg-white hover:bg-purple-50 text-purple-700 border border-purple-200 px-2.5 py-1.5 rounded-lg text-xs font-mono transition-colors shadow-xs cursor-pointer"
                         title="View & export official RF-FR-001 Certificate"
                       >
                         <FileText className="h-3.5 w-3.5" />
@@ -1035,15 +1035,15 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
 
                 {/* Rejection Alert Banner if lot was rejected */}
                 {selectedReport.decision?.decision === 'reject' && (
-                  <div className="rounded-lg border border-rose-800/60 bg-[#160c0f] p-3.5 font-mono">
-                    <div className="flex items-center gap-2 text-rose-400 font-bold text-xs mb-1">
+                  <div className="rounded-lg border border-rose-200 bg-rose-50 p-3.5 font-mono">
+                    <div className="flex items-center gap-2 text-rose-700 font-bold text-xs mb-1">
                       <XCircle className="h-4 w-4" />
                       <span>LOT REJECTED: {selectedReport.decision.reason_label}</span>
                     </div>
-                    <p className="text-xs text-rose-200 leading-relaxed">
+                    <p className="text-xs text-rose-800 leading-relaxed">
                       {selectedReport.decision.reason_detail}
                     </p>
-                    <div className="mt-2 text-[10px] text-rose-400/90 flex items-center gap-3">
+                    <div className="mt-2 text-[10px] text-rose-600 flex items-center gap-3">
                       <span>Disposition: <strong className="uppercase underline">{selectedReport.decision.disposition}</strong></span>
                       <span>•</span>
                       <span>Decided: {selectedReport.decision.decided_at}</span>
@@ -1053,8 +1053,8 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
 
                 {/* Success alert on result saving */}
                 {resultsSuccess && (
-                  <div className="rounded-lg bg-emerald-950/40 p-3 text-xs text-emerald-300 border border-emerald-800/50 flex items-center gap-2 font-mono">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                  <div className="rounded-lg bg-emerald-50 p-3 text-xs text-emerald-800 border border-emerald-200 flex items-center gap-2 font-mono">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
                     <span>{resultsSuccess}</span>
                   </div>
                 )}
@@ -1063,10 +1063,10 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                 <form onSubmit={handleSaveResults} className="space-y-4">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-sky-400 font-mono">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-purple-700 font-mono">
                         Lab Analysis Results Entry (RF-FR-001 Table)
                       </span>
-                      <span className="rounded bg-[#080b12] px-2 py-0.5 font-mono text-[10px] text-sky-300 border border-[#1a2336]">
+                      <span className="rounded bg-purple-50 px-2 py-0.5 font-mono text-[10px] text-purple-800 border border-purple-200 font-medium">
                         {standardResults.filter(r => requestedMap[r.id] !== false).length + (isTempAnyTicked ? 1 : 0)} / {standardResults.length + (tempResults.length > 0 ? 1 : 0)} Active
                         {isTempAnyTicked && ` · ${activeTempCount}/9 Temps`}
                       </span>
@@ -1077,7 +1077,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                         <button
                           type="button"
                           onClick={handleApplyProductSpec}
-                          className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#121927] hover:bg-[#182338] text-sky-300 border border-[#222e44] transition-colors cursor-pointer"
+                          className="text-[10px] font-mono px-2 py-0.5 rounded bg-white hover:bg-purple-50 text-purple-700 border border-purple-200 transition-colors cursor-pointer shadow-xs"
                           title="Tick only parameters specified for this product"
                         >
                           Product Spec Only
@@ -1085,14 +1085,14 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                         <button
                           type="button"
                           onClick={handleTickAll}
-                          className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#121927] hover:bg-[#182338] text-slate-300 border border-[#222e44] transition-colors cursor-pointer"
+                          className="text-[10px] font-mono px-2 py-0.5 rounded bg-white hover:bg-purple-50 text-slate-700 border border-slate-200 transition-colors cursor-pointer shadow-xs"
                         >
                           Tick All
                         </button>
                         <button
                           type="button"
                           onClick={handleUntickAll}
-                          className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#121927] hover:bg-[#182338] text-slate-400 border border-[#222e44] transition-colors cursor-pointer"
+                          className="text-[10px] font-mono px-2 py-0.5 rounded bg-white hover:bg-purple-50 text-slate-500 border border-slate-200 transition-colors cursor-pointer shadow-xs"
                         >
                           Untick All
                         </button>
@@ -1100,9 +1100,9 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                     )}
                   </div>
 
-                  <div className="rounded-lg border border-[#1a2336] bg-[#080b12] overflow-hidden">
+                  <div className="rounded-lg border border-purple-100 bg-white overflow-hidden shadow-xs">
                     <table className="w-full text-left text-xs">
-                      <thead className="bg-[#0b101c] text-slate-400 font-mono text-[10px] uppercase tracking-wider border-b border-[#1a2336]">
+                      <thead className="bg-purple-50/70 text-slate-700 font-mono text-[10px] uppercase tracking-wider border-b border-purple-100">
                         <tr>
                           <th className="py-2 px-3 text-center w-14" title="Tick to test parameter, untick if product does not require it">
                             Test (✓)
@@ -1112,7 +1112,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                           <th className="py-2 px-3 w-56">Lab Result</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-[#141b27] font-mono text-xs">
+                      <tbody className="divide-y divide-purple-50 font-mono text-xs">
                         {/* 1. Standard Laboratory Parameters */}
                         {standardResults.map(res => {
                           const inputVal = resultInputs[res.id] || {};
@@ -1124,8 +1124,8 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                               key={res.id}
                               className={`transition-colors ${
                                 isUnticked
-                                  ? 'opacity-40 bg-[#07090e]'
-                                  : 'hover:bg-[#0c121e]'
+                                  ? 'opacity-40 bg-slate-50'
+                                  : 'hover:bg-purple-50/20'
                               }`}
                             >
                               <td className="py-2 px-3 text-center">
@@ -1134,14 +1134,14 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                                   checked={!isUnticked}
                                   onChange={e => handleToggleResultParam(res.id, e.target.checked)}
                                   disabled={!canEdit}
-                                  className="h-3.5 w-3.5 rounded border-[#222e44] bg-[#0c101c] text-sky-500 focus:ring-0 cursor-pointer disabled:opacity-50"
+                                  className="h-3.5 w-3.5 rounded border-slate-300 text-purple-600 focus:ring-purple-500 cursor-pointer disabled:opacity-50"
                                   title={isUnticked ? "Unticked: Test not applicable" : "Ticked: Active parameter"}
                                 />
                               </td>
-                              <td className={`py-2 px-3 font-sans ${isUnticked ? 'text-slate-500' : 'text-slate-200'}`}>
+                              <td className={`py-2 px-3 font-sans ${isUnticked ? 'text-slate-400' : 'text-slate-800 font-medium'}`}>
                                 {res.parameter_name}
                               </td>
-                              <td className={`py-2 px-3 ${isUnticked ? 'text-slate-600' : 'text-slate-500'}`}>
+                              <td className={`py-2 px-3 ${isUnticked ? 'text-slate-400' : 'text-slate-500'}`}>
                                 {res.unit || '-'}
                               </td>
                               <td className="py-2 px-3">
@@ -1150,7 +1150,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                                     type="text"
                                     disabled
                                     value="N/A - Unticked"
-                                    className="w-full bg-[#07090e] border border-[#161d2d] rounded px-2 py-1 text-xs text-slate-500 cursor-not-allowed font-mono italic"
+                                    className="w-full bg-slate-100 border border-slate-200 rounded px-2 py-1 text-xs text-slate-400 cursor-not-allowed font-mono italic"
                                   />
                                 ) : res.parameter_code === 'ODOUR' ? (
                                   <select
@@ -1160,11 +1160,11 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                                       ...prev,
                                       [res.id]: { ...prev[res.id], text: e.target.value }
                                     }))}
-                                    className="w-full bg-[#0c101c] border border-[#222e44] rounded px-2 py-1 text-xs text-white disabled:opacity-50"
+                                    className="w-full bg-white border border-slate-200 rounded px-2 py-1 text-xs text-slate-900 focus:border-purple-600 disabled:opacity-50 font-mono shadow-xs"
                                   >
-                                    <option value="bland" className="bg-[#0c101c]">Bland (Normal)</option>
-                                    <option value="acceptable" className="bg-[#0c101c]">Acceptable</option>
-                                    <option value="off" className="bg-[#0c101c]">Off / Burnt Odour</option>
+                                    <option value="bland" className="text-slate-900">Bland (Normal)</option>
+                                    <option value="acceptable" className="text-slate-900">Acceptable</option>
+                                    <option value="off" className="text-slate-900">Off / Burnt Odour</option>
                                   </select>
                                 ) : (
                                   <input
@@ -1177,7 +1177,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                                       ...prev,
                                       [res.id]: { ...prev[res.id], num: e.target.value ? Number(e.target.value) : undefined }
                                     }))}
-                                    className="w-full bg-[#0c101c] border border-[#222e44] rounded px-2 py-1 text-xs text-white focus:border-sky-500 disabled:opacity-50 font-mono"
+                                    className="w-full bg-white border border-slate-200 rounded px-2 py-1 text-xs text-slate-900 focus:border-purple-600 focus:ring-1 focus:ring-purple-200 disabled:opacity-50 font-mono shadow-xs"
                                   />
                                 )}
                               </td>
@@ -1187,10 +1187,10 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
 
                         {/* 2. Master Temperature Row */}
                         {tempResults.length > 0 && (
-                          <tr className={`border-t border-[#1a2336] transition-colors ${
+                          <tr className={`border-t border-purple-200 transition-colors ${
                             !isTempAnyTicked
-                              ? 'bg-[#07090e] opacity-60'
-                              : 'bg-[#081524] hover:bg-[#0a1b2e]'
+                              ? 'bg-slate-50 opacity-60'
+                              : 'bg-purple-50/60 hover:bg-purple-50/80'
                           }`}>
                             <td className="py-2 px-3 text-center">
                               <input
@@ -1198,26 +1198,26 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                                 checked={isTempAllTicked}
                                 onChange={e => handleToggleMasterTemp(e.target.checked)}
                                 disabled={!(role === 'qc_analyst' || role === 'qc_manager' || role === 'admin')}
-                                className="h-3.5 w-3.5 rounded border-[#222e44] bg-[#0c101c] text-sky-500 focus:ring-0 cursor-pointer disabled:opacity-50"
+                                className="h-3.5 w-3.5 rounded border-slate-300 text-purple-600 focus:ring-purple-500 cursor-pointer disabled:opacity-50"
                                 title={isTempAllTicked ? "Untick all 9 temperatures" : "Tick all 9 temperatures"}
                               />
                             </td>
                             <td className="py-2 px-3">
                               <div className="flex flex-wrap items-center gap-2">
-                                <span className={`font-semibold font-sans ${isTempAnyTicked ? 'text-sky-300' : 'text-slate-400'}`}>
+                                <span className={`font-semibold font-sans ${isTempAnyTicked ? 'text-purple-900' : 'text-slate-500'}`}>
                                   Temperature
                                 </span>
-                                <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-[#121927] text-sky-300 border border-[#222e44]">
+                                <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-purple-100 text-purple-800 border border-purple-200 font-medium">
                                   9 Test Points: 10, 15, 20, 25, 30, 35, 40, 45, 50°C
                                 </span>
                               </div>
                             </td>
-                            <td className="py-2 px-3 text-slate-500 font-mono">
+                            <td className="py-2 px-3 text-slate-400 font-mono">
                               -
                             </td>
                             <td className="py-2 px-3">
                               <div className="flex items-center justify-between gap-2">
-                                <span className="text-[10px] font-mono text-slate-400">
+                                <span className="text-[10px] font-mono text-slate-600 font-medium">
                                   {activeTempCount === 9
                                     ? 'All 9 Active'
                                     : activeTempCount === 0
@@ -1229,14 +1229,14 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                                     <button
                                       type="button"
                                       onClick={() => handleToggleMasterTemp(true)}
-                                      className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-[#121927] hover:bg-[#182338] text-sky-300 border border-[#222e44] transition-colors cursor-pointer"
+                                      className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-white hover:bg-purple-50 text-purple-700 border border-purple-200 transition-colors cursor-pointer shadow-xs"
                                     >
                                       All
                                     </button>
                                     <button
                                       type="button"
                                       onClick={() => handleToggleMasterTemp(false)}
-                                      className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-[#121927] hover:bg-[#182338] text-slate-400 border border-[#222e44] transition-colors cursor-pointer"
+                                      className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-white hover:bg-purple-50 text-slate-500 border border-slate-200 transition-colors cursor-pointer shadow-xs"
                                     >
                                       Clear
                                     </button>
@@ -1258,8 +1258,8 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                               key={res.id}
                               className={`transition-colors border-l-2 ${
                                 isUnticked
-                                  ? 'opacity-40 bg-[#07090e] border-l-[#1a2336]'
-                                  : 'hover:bg-[#0c121e] border-l-sky-500/60 bg-[#080d18]'
+                                  ? 'opacity-40 bg-slate-50 border-l-slate-200'
+                                  : 'hover:bg-purple-50/20 border-l-purple-600 bg-purple-50/10'
                               }`}
                             >
                               <td className="py-2 px-3 text-center">
@@ -1268,22 +1268,22 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                                   checked={!isUnticked}
                                   onChange={e => handleToggleResultParam(res.id, e.target.checked)}
                                   disabled={!canEdit}
-                                  className="h-3.5 w-3.5 rounded border-[#222e44] bg-[#0c101c] text-sky-500 focus:ring-0 cursor-pointer disabled:opacity-50"
+                                  className="h-3.5 w-3.5 rounded border-slate-300 text-purple-600 focus:ring-purple-500 cursor-pointer disabled:opacity-50"
                                   title={isUnticked ? `Unticked: Temperature ${res.series_key}°C not tested` : `Ticked: Test Temperature ${res.series_key}°C`}
                                 />
                               </td>
                               <td className="py-2 px-3 font-sans">
                                 <div className="flex items-center gap-2 pl-3">
-                                  <span className="text-sky-500 font-mono text-xs select-none">↳</span>
-                                  <span className={`font-medium ${isUnticked ? 'text-slate-500' : 'text-slate-200'}`}>
+                                  <span className="text-purple-600 font-mono text-xs select-none">↳</span>
+                                  <span className={`font-medium ${isUnticked ? 'text-slate-400' : 'text-slate-800'}`}>
                                     Temperature {res.series_key}°C
                                   </span>
-                                  <span className="text-[9px] font-mono text-slate-500 bg-[#080b12] px-1 rounded border border-[#1a2336]">
+                                  <span className="text-[9px] font-mono text-slate-500 bg-white px-1 rounded border border-purple-100">
                                     Pt {res.series_key}
                                   </span>
                                 </div>
                               </td>
-                              <td className={`py-2 px-3 ${isUnticked ? 'text-slate-600' : 'text-slate-500'}`}>
+                              <td className={`py-2 px-3 ${isUnticked ? 'text-slate-400' : 'text-slate-500'}`}>
                                 {res.parameter_code === 'TEMP' ? '-' : (res.unit || '-')}
                               </td>
                               <td className="py-2 px-3">
@@ -1292,7 +1292,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                                     type="text"
                                     disabled
                                     value="N/A - Unticked"
-                                    className="w-full bg-[#07090e] border border-[#161d2d] rounded px-2 py-1 text-xs text-slate-500 cursor-not-allowed font-mono italic"
+                                    className="w-full bg-slate-100 border border-slate-200 rounded px-2 py-1 text-xs text-slate-400 cursor-not-allowed font-mono italic"
                                   />
                                 ) : (
                                   <input
@@ -1311,7 +1311,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                                         }
                                       }));
                                     }}
-                                    className="w-full bg-[#0c101c] border border-[#222e44] rounded px-2 py-1 text-xs text-white focus:border-sky-500 disabled:opacity-50 font-mono"
+                                    className="w-full bg-white border border-slate-200 rounded px-2 py-1 text-xs text-slate-900 focus:border-purple-600 focus:ring-1 focus:ring-purple-200 disabled:opacity-50 font-mono shadow-xs"
                                   />
                                 )}
                               </td>
@@ -1323,11 +1323,11 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                   </div>
 
                   {/* QC Operating Conditions & Remarks Section */}
-                  <div className="rounded-lg border border-[#1a2336] bg-[#080b12] p-4 space-y-3">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#161d2d] pb-2">
+                  <div className="rounded-lg border border-purple-100 bg-purple-50/20 p-4 space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-purple-100 pb-2">
                       <div className="flex items-center gap-2">
-                        <FileText className="h-3.5 w-3.5 text-sky-400" />
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-sky-400 font-mono">
+                        <FileText className="h-3.5 w-3.5 text-purple-700" />
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-purple-700 font-mono">
                           QC OPERATING CONDITIONS & REMARKS (RF-FR-001)
                         </span>
                       </div>
@@ -1340,54 +1340,54 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <label className={`flex items-start gap-2.5 p-2.5 rounded-lg border transition-all cursor-pointer select-none ${
                         qcRemarkFlushing 
-                          ? 'bg-[#161208] border-amber-500/50 text-amber-300' 
-                          : 'bg-[#0c101c] border-[#1a2336] text-slate-400 hover:border-[#222e44]'
+                          ? 'bg-amber-50 border-amber-300 text-amber-900 shadow-xs' 
+                          : 'bg-white border-slate-200 text-slate-600 hover:border-purple-200'
                       }`}>
                         <input
                           type="checkbox"
                           disabled={!canEdit}
                           checked={qcRemarkFlushing}
                           onChange={e => setQcRemarkFlushing(e.target.checked)}
-                          className="mt-0.5 h-3.5 w-3.5 rounded bg-[#080b12] border-[#222e44] text-amber-500 focus:ring-0 cursor-pointer"
+                          className="mt-0.5 h-3.5 w-3.5 rounded border-slate-300 text-amber-600 focus:ring-amber-500 cursor-pointer"
                         />
                         <div className="font-mono text-xs">
-                          <div className="font-semibold text-white text-xs">Flushing</div>
+                          <div className="font-semibold text-slate-900 text-xs">Flushing</div>
                           <div className="text-[10px] text-slate-500">Sampling line flushed</div>
                         </div>
                       </label>
 
                       <label className={`flex items-start gap-2.5 p-2.5 rounded-lg border transition-all cursor-pointer select-none ${
                         qcRemarkCooling 
-                          ? 'bg-[#081524] border-sky-500/50 text-sky-300' 
-                          : 'bg-[#0c101c] border-[#1a2336] text-slate-400 hover:border-[#222e44]'
+                          ? 'bg-purple-50 border-purple-300 text-purple-900 shadow-xs' 
+                          : 'bg-white border-slate-200 text-slate-600 hover:border-purple-200'
                       }`}>
                         <input
                           type="checkbox"
                           disabled={!canEdit}
                           checked={qcRemarkCooling}
                           onChange={e => setQcRemarkCooling(e.target.checked)}
-                          className="mt-0.5 h-3.5 w-3.5 rounded bg-[#080b12] border-[#222e44] text-sky-500 focus:ring-0 cursor-pointer"
+                          className="mt-0.5 h-3.5 w-3.5 rounded border-slate-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
                         />
                         <div className="font-mono text-xs">
-                          <div className="font-semibold text-white text-xs">Cooling</div>
+                          <div className="font-semibold text-slate-900 text-xs">Cooling</div>
                           <div className="text-[10px] text-slate-500">Crystallizer active cooling</div>
                         </div>
                       </label>
 
                       <label className={`flex items-start gap-2.5 p-2.5 rounded-lg border transition-all cursor-pointer select-none ${
                         qcRemarkPushover 
-                          ? 'bg-[#150d22] border-purple-500/50 text-purple-300' 
-                          : 'bg-[#0c101c] border-[#1a2336] text-slate-400 hover:border-[#222e44]'
+                          ? 'bg-purple-50 border-purple-300 text-purple-900 shadow-xs' 
+                          : 'bg-white border-slate-200 text-slate-600 hover:border-purple-200'
                       }`}>
                         <input
                           type="checkbox"
                           disabled={!canEdit}
                           checked={qcRemarkPushover}
                           onChange={e => setQcRemarkPushover(e.target.checked)}
-                          className="mt-0.5 h-3.5 w-3.5 rounded bg-[#080b12] border-[#222e44] text-purple-500 focus:ring-0 cursor-pointer"
+                          className="mt-0.5 h-3.5 w-3.5 rounded border-slate-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
                         />
                         <div className="font-mono text-xs">
-                          <div className="font-semibold text-white text-xs">Push over</div>
+                          <div className="font-semibold text-slate-900 text-xs">Push over</div>
                           <div className="text-[10px] text-slate-500">Pushover transfer operation</div>
                         </div>
                       </label>
@@ -1395,7 +1395,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
 
                     {/* Blank Remarks Box for QC to Type */}
                     <div>
-                      <label className="block text-[11px] font-mono text-slate-400 mb-1">
+                      <label className="block text-[11px] font-mono text-slate-600 mb-1">
                         Remarks & Observations:
                       </label>
                       <textarea
@@ -1404,7 +1404,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                         placeholder="Type remarks here (appearance, clarity, moisture haze, process deviations)..."
                         value={qcRemarksText}
                         onChange={e => setQcRemarksText(e.target.value)}
-                        className="w-full bg-[#0c101c] border border-[#222e44] rounded-lg px-3 py-2 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-sky-500 disabled:opacity-50 resize-none"
+                        className="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono text-slate-900 placeholder-slate-400 focus:outline-none focus:border-purple-600 focus:ring-1 focus:ring-purple-200 disabled:opacity-50 resize-none shadow-xs"
                       />
                     </div>
                   </div>
@@ -1413,7 +1413,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                     <div className="flex items-center justify-end pt-2">
                       <button
                         type="submit"
-                        className="flex items-center gap-2 bg-[#0284c7] hover:bg-[#0369a1] text-white font-mono font-bold text-xs uppercase px-5 py-2 rounded-lg transition-all border border-sky-400/40 shadow cursor-pointer active:scale-95"
+                        className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-mono font-bold text-xs uppercase px-5 py-2 rounded-lg transition-all border border-purple-700 shadow-sm cursor-pointer active:scale-95"
                       >
                         <Save className="h-3.5 w-3.5" />
                         <span>Commit Lab Results</span>
@@ -1423,7 +1423,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                 </form>
               </div>
             ) : (
-              <div className="rounded-xl border border-[#1a2336] bg-[#0c101c] p-12 text-center text-slate-500 text-xs font-mono">
+              <div className="rounded-xl border border-purple-100 bg-white p-12 text-center text-slate-400 text-xs font-mono shadow-sm">
                 Select a sample report from the queue on the left.
               </div>
             )}
@@ -1433,22 +1433,22 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
 
       {/* 3. QC Decision Modal with Electronic Signature */}
       {isDecisionModalOpen && selectedReport && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg rounded-xl border border-[#1a2b3c] bg-[#0a121c] p-6 shadow-2xl space-y-4">
-            <div className="flex items-center gap-3 text-sky-400 border-b border-[#161d2d] pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-lg rounded-xl border border-purple-100 bg-white p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3 text-purple-600 border-b border-purple-100 pb-3">
               <ShieldCheck className="h-5 w-5" />
               <div>
-                <h3 className="text-base font-bold text-white font-sans">
+                <h3 className="text-base font-bold text-slate-900 font-sans">
                   QC Formal Decision: {selectedReport.lot_no}
                 </h3>
-                <p className="text-xs text-slate-400 font-mono">
+                <p className="text-xs text-slate-500 font-mono">
                   {selectedReport.product_name} · Report {selectedReport.report_no}
                 </p>
               </div>
             </div>
 
             {decisionError && (
-              <div className="rounded bg-rose-950/60 p-2.5 text-xs text-rose-300 border border-rose-800/60 font-mono">
+              <div className="rounded bg-rose-50 p-2.5 text-xs text-rose-800 border border-rose-200 font-mono">
                 {decisionError}
               </div>
             )}
@@ -1456,7 +1456,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
             <form onSubmit={handleSubmitDecision} className="space-y-4">
               {/* Decision Type Buttons */}
               <div>
-                <label className="block text-[11px] font-mono text-slate-400 mb-1.5 uppercase tracking-wider">
+                <label className="block text-[11px] font-mono text-slate-600 mb-1.5 uppercase tracking-wider">
                   Select QC Disposition:
                 </label>
                 <div className="grid grid-cols-3 gap-2">
@@ -1465,8 +1465,8 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                     onClick={() => setDecisionType('accept')}
                     className={`py-2 px-3 rounded-lg border text-xs font-mono font-bold transition-all cursor-pointer ${
                       decisionType === 'accept'
-                        ? 'bg-[#061a12] border-emerald-500 text-emerald-300 shadow-md'
-                        : 'border-[#1a2336] text-slate-400 hover:bg-[#0c121e]'
+                        ? 'bg-emerald-50 border-emerald-500 text-emerald-800 shadow-xs'
+                        : 'border-slate-200 text-slate-600 hover:bg-slate-50'
                     }`}
                   >
                     ACCEPT
@@ -1477,8 +1477,8 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                     onClick={() => setDecisionType('accept_concession')}
                     className={`py-2 px-3 rounded-lg border text-xs font-mono font-bold transition-all cursor-pointer ${
                       decisionType === 'accept_concession'
-                        ? 'bg-[#161208] border-amber-500 text-amber-300 shadow-md'
-                        : 'border-[#1a2336] text-slate-400 hover:bg-[#0c121e]'
+                        ? 'bg-amber-50 border-amber-500 text-amber-800 shadow-xs'
+                        : 'border-slate-200 text-slate-600 hover:bg-slate-50'
                     }`}
                   >
                     CONCESSION
@@ -1489,8 +1489,8 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                     onClick={() => setDecisionType('reject')}
                     className={`py-2 px-3 rounded-lg border text-xs font-mono font-bold transition-all cursor-pointer ${
                       decisionType === 'reject'
-                        ? 'bg-[#160c0f] border-rose-500 text-rose-300 shadow-md'
-                        : 'border-[#1a2336] text-slate-400 hover:bg-[#0c121e]'
+                        ? 'bg-rose-50 border-rose-500 text-rose-800 shadow-xs'
+                        : 'border-slate-200 text-slate-600 hover:bg-slate-50'
                     }`}
                   >
                     REJECT
@@ -1502,43 +1502,43 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
               {decisionType !== 'accept' && (
                 <>
                   <div>
-                    <label className="block text-[11px] font-mono text-slate-400 mb-1">
+                    <label className="block text-[11px] font-mono text-slate-600 mb-1">
                       Rejection Reason Code (Pareto categorized) *
                     </label>
                     <select
                       required
                       value={decisionReasonId}
                       onChange={e => setDecisionReasonId(e.target.value)}
-                      className="w-full bg-[#080b12] border border-[#222e44] rounded-lg px-3 py-1.5 text-xs font-mono text-white cursor-pointer"
+                      className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-mono text-slate-900 cursor-pointer focus:border-purple-600 focus:ring-1 focus:ring-purple-200 shadow-xs"
                     >
-                      <option value="" className="bg-[#0c101c]">-- Choose Reason Code --</option>
+                      <option value="" className="text-slate-900">-- Choose Reason Code --</option>
                       {reasons.map(r => (
-                        <option key={r.id} value={r.id} className="bg-[#0c101c]">{r.label}</option>
+                        <option key={r.id} value={r.id} className="text-slate-900">{r.label}</option>
                       ))}
                     </select>
                   </div>
 
                   {decisionType === 'reject' && (
                     <div>
-                      <label className="block text-[11px] font-mono text-slate-400 mb-1">
+                      <label className="block text-[11px] font-mono text-slate-600 mb-1">
                         Mandatory Product Disposition *
                       </label>
                       <select
                         value={decisionDisposition}
                         onChange={e => setDecisionDisposition(e.target.value as Disposition)}
-                        className="w-full bg-[#080b12] border border-[#222e44] rounded-lg px-3 py-1.5 text-xs font-mono text-amber-300 cursor-pointer"
+                        className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-mono text-amber-800 font-semibold cursor-pointer focus:border-purple-600 focus:ring-1 focus:ring-purple-200 shadow-xs"
                       >
-                        <option value="reprocess" className="bg-[#0c101c]">Reprocess (Return to Deodorizer)</option>
-                        <option value="rework" className="bg-[#0c101c]">Rework (Bleaching/Pre-treatment)</option>
-                        <option value="downgrade" className="bg-[#0c101c]">Downgrade to Lower Grade Product</option>
-                        <option value="hold" className="bg-[#0c101c]">Quality Hold (Quarantine Tank)</option>
-                        <option value="scrap" className="bg-[#0c101c]">Scrap / By-product Tank</option>
+                        <option value="reprocess" className="text-slate-900">Reprocess (Return to Deodorizer)</option>
+                        <option value="rework" className="text-slate-900">Rework (Bleaching/Pre-treatment)</option>
+                        <option value="downgrade" className="text-slate-900">Downgrade to Lower Grade Product</option>
+                        <option value="hold" className="text-slate-900">Quality Hold (Quarantine Tank)</option>
+                        <option value="scrap" className="text-slate-900">Scrap / By-product Tank</option>
                       </select>
                     </div>
                   )}
 
                   <div>
-                    <label className="block text-[11px] font-mono text-slate-400 mb-1">
+                    <label className="block text-[11px] font-mono text-slate-600 mb-1">
                       Reason Narrative (Audit explanation, min 10 chars) *
                     </label>
                     <textarea
@@ -1547,15 +1547,15 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                       placeholder="Detailed explanation of failure mode and analytical findings..."
                       value={decisionNarrative}
                       onChange={e => setDecisionNarrative(e.target.value)}
-                      className="w-full bg-[#080b12] border border-[#222e44] rounded-lg px-3 py-1.5 text-xs font-mono text-white resize-none"
+                      className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-mono text-slate-900 placeholder-slate-400 focus:border-purple-600 focus:ring-1 focus:ring-purple-200 resize-none shadow-xs"
                     />
                   </div>
                 </>
               )}
 
               {/* Electronic Signature Password Confirmation */}
-              <div className="border-t border-[#1a2336] pt-3">
-                <label className="block text-[11px] font-mono text-slate-400 mb-1">
+              <div className="border-t border-purple-100 pt-3">
+                <label className="block text-[11px] font-mono text-slate-600 mb-1">
                   Electronic Signature: Enter QC Password *
                 </label>
                 <input
@@ -1564,7 +1564,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                   placeholder="••••••••"
                   value={decisionPassword}
                   onChange={e => setDecisionPassword(e.target.value)}
-                  className="w-full bg-[#080b12] border border-[#222e44] rounded-lg px-3 py-1.5 text-xs font-mono text-white focus:border-sky-500"
+                  className="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-mono text-slate-900 focus:border-purple-600 focus:ring-1 focus:ring-purple-200 shadow-xs"
                 />
               </div>
 
@@ -1572,13 +1572,13 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                 <button
                   type="button"
                   onClick={() => setIsDecisionModalOpen(false)}
-                  className="px-3.5 py-1.5 rounded-lg text-xs font-mono text-slate-400 hover:text-white cursor-pointer"
+                  className="px-3.5 py-1.5 rounded-lg text-xs font-mono text-slate-500 hover:text-slate-800 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="bg-[#0284c7] hover:bg-[#0369a1] text-white font-mono font-bold text-xs uppercase px-4 py-1.5 rounded-lg transition-all border border-sky-400/40 cursor-pointer active:scale-95"
+                  className="bg-purple-600 hover:bg-purple-700 text-white font-mono font-bold text-xs uppercase px-4 py-1.5 rounded-lg transition-all border border-purple-700 shadow-sm cursor-pointer active:scale-95"
                 >
                   Sign & Commit Decision
                 </button>

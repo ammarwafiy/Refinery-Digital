@@ -1,78 +1,80 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0a0d14;
-  --foreground: #e2e8f0;
-  --console-surface: #0f1420;
-  --console-card: #121826;
-  --console-border: #1a2336;
-  --console-divider: #243048;
-  --accent-amber: #f59e0b;
-  --accent-cyan: #0ea5e9;
-  --accent-emerald: #10b981;
-  --accent-rose: #f43f5e;
+  --background: #f8f7fc;
+  --foreground: #1e1b4b;
+  --card: #ffffff;
+  --card-border: #e9e5f5;
+  --card-border-hover: #c4b5fd;
+  --primary-purple: #7c3aed;
+  --primary-purple-hover: #6d28d9;
+  --primary-purple-light: #f5f3ff;
+  --primary-purple-border: #ddd6fe;
+  --accent-amber: #d97706;
+  --accent-emerald: #059669;
+  --accent-rose: #e11d48;
 }
 
 body {
-  background-color: var(--background);
-  color: var(--foreground);
+  background-color: #f8f7fc;
+  color: #1e1b4b;
   font-family: var(--font-geist-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   overflow-x: hidden;
   letter-spacing: -0.01em;
 }
 
-/* Authentic Industrial Thin Scrollbar */
+/* Light + Purple Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #090c13;
+  background: #f1f0f7;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1e283d;
+  background: #c4b5fd;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: #a78bfa;
 }
 
-/* Precision Tabular Monospace font for industrial instruments */
+/* Precision Tabular Monospace font */
 .font-telemetry, .font-mono {
   font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-feature-settings: "tnum" 1, "zero" 1;
 }
 
-/* Tactile Industrial Button & Panel Inset Highlights */
-.industrial-panel {
-  background: #0e1320;
-  border: 1px solid #1a2336;
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.04), 0 4px 16px -2px rgba(0, 0, 0, 0.5);
+/* Light Theme Purple Cards & Panels */
+.light-panel {
+  background: #ffffff;
+  border: 1px solid #e9e5f5;
+  box-shadow: 0 4px 16px -2px rgba(109, 40, 217, 0.05), 0 1px 3px 0 rgba(0, 0, 0, 0.03);
 }
 
-.industrial-card {
-  background: #121726;
-  border: 1px solid #1d273c;
-  box-shadow: 0 2px 8px -1px rgba(0, 0, 0, 0.4);
+.light-card {
+  background: #ffffff;
+  border: 1px solid #ede9fe;
+  box-shadow: 0 1px 4px 0 rgba(109, 40, 217, 0.04);
 }
 
-.industrial-input {
-  background: #0a0d16;
-  border: 1px solid #222d44;
-  color: #f8fafc;
+.light-input {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
   transition: all 0.15s ease;
 }
 
-.industrial-input:focus {
-  border-color: #0284c7;
+.light-input:focus {
+  border-color: #7c3aed;
   outline: none;
-  box-shadow: 0 0 0 1px #0284c7, 0 0 8px rgba(2, 132, 199, 0.25);
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.15);
 }
 
-/* Authentic Hardware LED indicators */
+/* Hardware LED indicators for Light theme */
 .led-indicator {
   display: inline-block;
   width: 7px;
@@ -80,44 +82,27 @@ body {
   border-radius: 50%;
 }
 
+.led-purple {
+  background: #7c3aed;
+  box-shadow: 0 0 6px rgba(124, 58, 237, 0.6);
+}
+
 .led-emerald {
-  background: #10b981;
-  box-shadow: 0 0 6px #10b981;
+  background: #059669;
+  box-shadow: 0 0 6px rgba(5, 150, 105, 0.5);
 }
 
 .led-amber {
-  background: #f59e0b;
-  box-shadow: 0 0 6px #f59e0b;
+  background: #d97706;
+  box-shadow: 0 0 6px rgba(217, 119, 6, 0.5);
 }
 
 .led-rose {
-  background: #f43f5e;
-  box-shadow: 0 0 6px #f43f5e;
+  background: #e11d48;
+  box-shadow: 0 0 6px rgba(225, 29, 72, 0.5);
 }
 
-.led-cyan {
-  background: #0ea5e9;
-  box-shadow: 0 0 6px #0ea5e9;
-}
-
-/* Glow effects for active DCS indicators */
-.glow-emerald {
-  box-shadow: 0 0 8px rgba(16, 185, 129, 0.35);
-}
-
-.glow-amber {
-  box-shadow: 0 0 8px rgba(245, 158, 11, 0.35);
-}
-
-.glow-rose {
-  box-shadow: 0 0 8px rgba(244, 63, 94, 0.35);
-}
-
-.glow-cyan {
-  box-shadow: 0 0 8px rgba(14, 165, 233, 0.35);
-}
-
-/* Print layout optimizations for official RF-FR-004 and RF-FR-001 */
+/* Print layout optimizations */
 @media print {
   body {
     background: #ffffff !important;
@@ -130,3 +115,4 @@ body {
     display: block !important;
   }
 }
+

@@ -59,61 +59,61 @@ export default function LoginView({ onLogin }: LoginViewProps) {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col justify-between bg-[#080b12] text-slate-200 selection:bg-sky-500/30 selection:text-sky-200">
+    <div className="min-h-screen w-full flex flex-col justify-between bg-[#f8f7fc] text-slate-800 selection:bg-purple-500/20 selection:text-purple-900">
       {/* Top SCADA Branding Bar */}
-      <header className="w-full border-b border-[#182236] bg-[#0b0f1a] px-6 py-2.5 flex items-center justify-between">
+      <header className="w-full border-b border-purple-100 bg-white/90 px-6 py-2.5 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded bg-amber-500/15 border border-amber-500/40 shadow-sm">
-            <Flame className="h-4 w-4 text-amber-400" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-100 border border-purple-200 shadow-sm">
+            <Flame className="h-4 w-4 text-purple-600 animate-pulse" />
           </div>
           <div>
-            <span className="font-bold text-xs tracking-wider uppercase text-slate-100 block">
+            <span className="font-bold text-xs tracking-wider uppercase text-purple-950 block">
               Lam Soon Edible Oils Sdn. Bhd.
             </span>
-            <span className="text-[10px] font-mono text-sky-400 flex items-center gap-1">
+            <span className="text-[10px] font-mono text-purple-700 flex items-center gap-1">
               <span>NISSHIN DEODORIZER REFINERY</span>
-              <span className="text-slate-600">·</span>
-              <span className="text-slate-400">DOC: PRD-REF-001</span>
+              <span className="text-slate-300">·</span>
+              <span className="text-slate-500">DOC: PRD-REF-001</span>
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400 bg-[#070a12] px-3 py-1 rounded border border-[#1e2a42]">
-          <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <div className="flex items-center gap-2 text-[10px] font-mono text-purple-700 bg-purple-50 px-3 py-1 rounded-md border border-purple-200/80">
+          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
           <span className="hidden sm:inline font-medium">TERMINAL SCADA-01 · 21 CFR PART 11 COMPLIANT</span>
         </div>
       </header>
 
       {/* Main Login Card Area */}
       <main className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8">
-        <div className="w-full max-w-md rounded-xl border border-[#1d273e] bg-[#0c101c] p-6 sm:p-7 shadow-2xl relative">
+        <div className="w-full max-w-md rounded-2xl border border-purple-100 bg-white p-6 sm:p-7 shadow-xl shadow-purple-950/5 relative">
           {/* Hardware Header Tag */}
-          <div className="flex items-center justify-between border-b border-[#182338] pb-3 mb-5">
+          <div className="flex items-center justify-between border-b border-purple-100 pb-3 mb-5">
             <div className="flex items-center gap-2">
-              <Cpu className="h-4 w-4 text-sky-400" />
-              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-slate-300">
+              <Cpu className="h-4 w-4 text-purple-600" />
+              <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-purple-950">
                 Workstation Terminal Access
               </span>
             </div>
-            <div className="flex items-center gap-1.5 font-mono text-[10px] text-emerald-400">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+            <div className="flex items-center gap-1.5 font-mono text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
               <span>SYSTEM READY</span>
             </div>
           </div>
 
           <div className="text-left mb-5">
-            <h1 className="text-lg font-bold text-white tracking-tight font-sans flex items-center gap-2">
+            <h1 className="text-xl font-bold text-slate-900 tracking-tight font-sans flex items-center gap-2">
               <span>Operator & Personnel Sign In</span>
             </h1>
-            <p className="mt-1 text-xs text-slate-400 leading-relaxed font-sans">
+            <p className="mt-1 text-xs text-slate-500 leading-relaxed font-sans">
               Enter authorized employee credentials to access refinery process log, supervisor live board, or QC laboratory records.
             </p>
           </div>
 
           {/* Error Message */}
           {errorMessage && (
-            <div className="mb-4 flex items-start gap-2.5 rounded-lg bg-rose-950/60 p-3 text-xs text-rose-300 border border-rose-800/60 font-mono">
-              <AlertCircle className="h-4 w-4 shrink-0 text-rose-400 mt-0.5" />
+            <div className="mb-4 flex items-start gap-2.5 rounded-xl bg-rose-50 p-3 text-xs text-rose-700 border border-rose-200 font-mono">
+              <AlertCircle className="h-4 w-4 shrink-0 text-rose-600 mt-0.5" />
               <span>{errorMessage}</span>
             </div>
           )}
@@ -121,42 +121,42 @@ export default function LoginView({ onLogin }: LoginViewProps) {
           {/* Login Form */}
           <form onSubmit={handleFormSubmit} className="space-y-3.5">
             <div>
-              <label className="block text-[11px] font-mono font-semibold text-slate-300 mb-1">
+              <label className="block text-[11px] font-mono font-semibold text-slate-700 mb-1">
                 Employee ID / Workstation Email:
               </label>
               <div className="relative">
-                <User className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
+                <User className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                 <input
                   type="text"
                   required
                   placeholder="e.g. OP-1042, SV-2014, QC-3201"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
-                  className="w-full bg-[#070a12] border border-[#1e2a40] rounded-lg pl-9 pr-3 py-2 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-sky-500 transition-colors"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-xs font-mono text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-100 transition-colors"
                 />
               </div>
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="block text-[11px] font-mono font-semibold text-slate-300">
+                <label className="block text-[11px] font-mono font-semibold text-slate-700">
                   Password:
                 </label>
               </div>
               <div className="relative">
-                <KeyRound className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
+                <KeyRound className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   required
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-[#070a12] border border-[#1e2a40] rounded-lg pl-9 pr-9 py-2 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-sky-500 transition-colors"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-9 py-2 text-xs font-mono text-slate-900 placeholder-slate-400 focus:bg-white focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-100 transition-colors"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-2.5 text-slate-500 hover:text-slate-300 transition-colors cursor-pointer"
+                  className="absolute right-3 top-2.5 text-slate-400 hover:text-purple-600 transition-colors cursor-pointer"
                   title={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -164,12 +164,12 @@ export default function LoginView({ onLogin }: LoginViewProps) {
               </div>
             </div>
 
-            <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 pt-0.5">
+            <div className="flex items-center justify-between text-[11px] font-mono text-slate-600 pt-0.5">
               <label className="flex items-center gap-2 cursor-pointer select-none">
                 <input
                   type="checkbox"
                   defaultChecked
-                  className="h-3.5 w-3.5 rounded border-slate-700 bg-[#070a12] text-sky-500 focus:ring-0 cursor-pointer"
+                  className="h-3.5 w-3.5 rounded border-slate-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
                 />
                 <span>Retain workstation session on this device</span>
               </label>
@@ -178,7 +178,7 @@ export default function LoginView({ onLogin }: LoginViewProps) {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full flex items-center justify-center gap-2 bg-[#0284c7] hover:bg-[#0369a1] disabled:opacity-50 text-white font-bold py-2.5 px-4 rounded-lg text-xs transition-all shadow-md font-mono mt-2 cursor-pointer border border-sky-400/30 active:scale-[0.99] tracking-wider uppercase"
+              className="w-full flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-all shadow-md shadow-purple-600/25 font-mono mt-2 cursor-pointer border border-purple-700 active:scale-[0.99] tracking-wider uppercase"
             >
               {isLoading ? (
                 <span>Validating Plant Credentials...</span>
@@ -192,10 +192,10 @@ export default function LoginView({ onLogin }: LoginViewProps) {
           </form>
 
           {/* Quick Station Presets for Field Work */}
-          <div className="mt-5 pt-3.5 border-t border-[#182338]">
+          <div className="mt-5 pt-3.5 border-t border-purple-100">
             <div className="text-[10px] font-mono text-slate-500 uppercase tracking-wider mb-2 flex items-center justify-between">
               <span>Quick Role Presets (Testing & Shifts):</span>
-              <span className="text-slate-600">Tap to Autofill</span>
+              <span className="text-purple-700 font-semibold">Tap to Autofill</span>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
               {QUICK_ROLE_PRESETS.map((p) => {
@@ -205,14 +205,14 @@ export default function LoginView({ onLogin }: LoginViewProps) {
                     key={p.code}
                     type="button"
                     onClick={() => handleApplyPreset(p.code, p.defaultPass)}
-                    className={`flex items-center gap-1.5 px-2 py-1.5 rounded text-[10px] font-mono transition-all border text-left cursor-pointer ${
+                    className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-[10px] font-mono transition-all border text-left cursor-pointer ${
                       isSelected
-                        ? 'bg-[#18263e] text-sky-300 border-sky-500/60 font-bold'
-                        : 'bg-[#090d16] text-slate-400 border-[#182338] hover:bg-[#101726] hover:text-slate-200'
+                        ? 'bg-purple-600 text-white border-purple-600 font-bold shadow-sm'
+                        : 'bg-purple-50/50 text-slate-700 border-purple-100 hover:bg-purple-100/70 hover:text-purple-950'
                     }`}
                   >
-                    <span className="text-sky-400 font-bold">{p.code}</span>
-                    <span className="text-slate-500 text-[9px] truncate">({p.label})</span>
+                    <span className={isSelected ? 'text-white font-bold' : 'text-purple-700 font-bold'}>{p.code}</span>
+                    <span className={`text-[9px] truncate ${isSelected ? 'text-purple-100' : 'text-slate-500'}`}>({p.label})</span>
                   </button>
                 );
               })}
@@ -220,18 +220,18 @@ export default function LoginView({ onLogin }: LoginViewProps) {
           </div>
 
           {/* Security Notice Footer on Login Card */}
-          <div className="mt-4 pt-3 border-t border-[#182338] flex items-center justify-between text-[10px] font-mono text-slate-500">
+          <div className="mt-4 pt-3 border-t border-purple-100 flex items-center justify-between text-[10px] font-mono text-slate-500">
             <span className="flex items-center gap-1">
-              <ShieldCheck className="h-3 w-3 text-emerald-400" />
+              <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
               <span>ISO 22000 / HACCP Protected</span>
             </span>
-            <span className="text-slate-600">TERMINAL: WS-DEOD-01</span>
+            <span className="text-purple-700 font-medium">TERMINAL: WS-DEOD-01</span>
           </div>
         </div>
       </main>
 
       {/* Industrial Footer */}
-      <footer className="w-full border-t border-[#182236] bg-[#0b0f1a] py-3 px-6 text-center text-[11px] text-slate-500 font-mono">
+      <footer className="w-full border-t border-purple-100 bg-white py-3.5 px-6 text-center text-[11px] text-slate-500 font-mono shadow-sm">
         Lam Soon Edible Oils Sdn. Bhd. · Integrated Palm Oil Refinery Process & Quality Management System
       </footer>
     </div>

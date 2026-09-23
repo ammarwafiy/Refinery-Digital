@@ -572,32 +572,32 @@ export default function AdminUserManagementView() {
   const adminCount = profiles.filter(p => p.role === 'admin').length;
 
   const roleStyles: Record<UserRole, { bg: string; text: string; border: string }> = {
-    operator: { bg: 'bg-emerald-950/60', text: 'text-emerald-400', border: 'border-emerald-600/40' },
-    supervisor: { bg: 'bg-amber-950/60', text: 'text-amber-400', border: 'border-amber-600/40' },
-    qc_analyst: { bg: 'bg-cyan-950/60', text: 'text-cyan-400', border: 'border-cyan-600/40' },
-    qc_manager: { bg: 'bg-purple-950/60', text: 'text-purple-400', border: 'border-purple-600/40' },
-    admin: { bg: 'bg-blue-950/60', text: 'text-blue-400', border: 'border-blue-600/40' },
-    viewer: { bg: 'bg-slate-900', text: 'text-slate-400', border: 'border-slate-700' },
+    operator: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
+    supervisor: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
+    qc_analyst: { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
+    qc_manager: { bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200' },
+    admin: { bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-300' },
+    viewer: { bg: 'bg-slate-100', text: 'text-slate-700', border: 'border-slate-300' },
   };
 
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-2xl bg-gradient-to-r from-slate-900 via-[#0b1329] to-slate-900 border border-slate-800 shadow-xl">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-2xl bg-white border border-purple-100 shadow-sm">
         <div className="flex items-center gap-3.5">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-400 shadow-lg shadow-blue-950/50">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-50 border border-purple-200 text-purple-600 shadow-xs">
             <ShieldCheck className="h-6 w-6" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-lg sm:text-xl font-bold text-white tracking-wide">
+              <h1 className="text-lg sm:text-xl font-bold text-slate-900 tracking-wide">
                 Plant Administration & User Management
               </h1>
-              <span className="rounded-full bg-blue-950/80 px-2.5 py-0.5 text-[10px] font-mono text-blue-300 border border-blue-500/30 font-semibold">
+              <span className="rounded-full bg-purple-50 px-2.5 py-0.5 text-[10px] font-mono text-purple-700 border border-purple-200 font-semibold">
                 ADMIN ACCESS ONLY
               </span>
             </div>
-            <p className="text-xs text-slate-400 font-sans mt-0.5">
+            <p className="text-xs text-slate-500 font-sans mt-0.5">
               Role-Based Access Control (RBAC), Consistent Sequential ID Generation & Nisshin Deodorizer Personnel Directory
             </p>
           </div>
@@ -609,16 +609,16 @@ export default function AdminUserManagementView() {
             type="button"
             onClick={handleManualSync}
             disabled={isSyncing}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-950/80 hover:bg-emerald-900/90 text-emerald-300 border border-emerald-500/40 text-xs font-mono transition-all shadow-sm cursor-pointer disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 text-xs font-mono font-semibold transition-all shadow-xs cursor-pointer disabled:opacity-50"
             title="Fetch and synchronize latest user profiles directly with Supabase"
           >
-            <RefreshCw className={`h-3.5 w-3.5 text-emerald-400 ${isSyncing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-3.5 w-3.5 text-purple-600 ${isSyncing ? 'animate-spin' : ''}`} />
             <span>{isSyncing ? 'Syncing...' : 'Sync Supabase'}</span>
           </button>
 
           <div className="text-right">
-            <span className="text-[10px] font-mono uppercase text-slate-400 block">Current User:</span>
-            <span className="text-xs font-semibold text-white font-mono">
+            <span className="text-[10px] font-mono uppercase text-slate-400 block font-medium">Current User:</span>
+            <span className="text-xs font-semibold text-slate-900 font-mono">
               {currentProfile.full_name} ({currentProfile.employee_no})
             </span>
           </div>
@@ -629,17 +629,17 @@ export default function AdminUserManagementView() {
       </div>
 
       {/* Admin Section Navigation Sub-Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-800 pb-3 flex-wrap">
+      <div className="flex items-center gap-2 border-b border-purple-100 pb-3 flex-wrap">
         <button
           type="button"
           onClick={() => setActiveAdminSubTab('personnel')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-semibold transition-all cursor-pointer ${
             activeAdminSubTab === 'personnel'
-              ? 'bg-blue-600 text-white shadow-md shadow-blue-950/60 border border-blue-400/40'
-              : 'bg-slate-900/80 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-800'
+              ? 'bg-purple-600 text-white shadow-xs border border-purple-700'
+              : 'bg-white text-slate-600 hover:text-purple-700 hover:bg-purple-50/50 border border-purple-100'
           }`}
         >
-          <Users className="h-4 w-4 text-cyan-400" />
+          <Users className="h-4 w-4 text-purple-300" />
           <span>Personnel & Access Control</span>
         </button>
 
@@ -651,13 +651,13 @@ export default function AdminUserManagementView() {
           }}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-mono font-semibold transition-all cursor-pointer ${
             activeAdminSubTab === 'retention'
-              ? 'bg-gradient-to-r from-amber-600 to-emerald-600 text-white shadow-md shadow-emerald-950/60 border border-emerald-400/40'
-              : 'bg-slate-900/80 text-slate-400 hover:text-white hover:bg-slate-800 border border-slate-800'
+              ? 'bg-purple-600 text-white shadow-xs border border-purple-700'
+              : 'bg-white text-slate-600 hover:text-purple-700 hover:bg-purple-50/50 border border-purple-100'
           }`}
         >
-          <HardDrive className="h-4 w-4 text-emerald-300" />
+          <HardDrive className="h-4 w-4 text-purple-300" />
           <span>Data Retention & Supabase Prune Policy</span>
-          <span className="px-1.5 py-0.5 text-[9px] bg-emerald-950 text-emerald-300 border border-emerald-600/40 rounded font-mono font-bold">
+          <span className="px-1.5 py-0.5 text-[9px] bg-purple-100 text-purple-800 border border-purple-200 rounded font-mono font-bold">
             500 MB PROTECT
           </span>
         </button>
@@ -667,16 +667,16 @@ export default function AdminUserManagementView() {
         <>
           {/* RBAC Warning Banner if not Admin */}
       {!isAdmin && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-amber-950/40 border border-amber-600/50 text-amber-200 text-xs font-mono">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-mono">
           <div className="flex items-center gap-2.5">
-            <ShieldAlert className="h-5 w-5 text-amber-400 shrink-0" />
+            <ShieldAlert className="h-5 w-5 text-amber-600 shrink-0" />
             <div>
-              <span className="font-bold">RESTRICTED VIEW MODE:</span> You are logged in with role <span className="uppercase text-amber-300 font-bold">[{currentRole}]</span>. Staff registration and status modification are restricted to the Plant Administrator (*Admin*).
+              <span className="font-bold">RESTRICTED VIEW MODE:</span> You are logged in with role <span className="uppercase text-amber-700 font-bold">[{currentRole}]</span>. Staff registration and status modification are restricted to the Plant Administrator (*Admin*).
             </div>
           </div>
           <button
             onClick={handleSwitchToAdmin}
-            className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold whitespace-nowrap transition-colors shadow-md shadow-blue-950/50 cursor-pointer text-xs"
+            className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-semibold whitespace-nowrap transition-colors shadow-xs cursor-pointer text-xs"
           >
             Switch to Admin Profile (AD-5010)
           </button>
@@ -687,20 +687,20 @@ export default function AdminUserManagementView() {
       {statusMessage && (
         <div className={`flex items-center justify-between p-3.5 rounded-xl border text-xs font-mono ${
           statusMessage.type === 'success' 
-            ? 'bg-emerald-950/60 border-emerald-700 text-emerald-300' 
-            : 'bg-rose-950/60 border-rose-700 text-rose-300'
+            ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
+            : 'bg-rose-50 border-rose-200 text-rose-800'
         }`}>
           <div className="flex items-center gap-2">
             {statusMessage.type === 'success' ? (
-              <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+              <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
             ) : (
-              <AlertTriangle className="h-4 w-4 text-rose-400 shrink-0" />
+              <AlertTriangle className="h-4 w-4 text-rose-600 shrink-0" />
             )}
             <span>{statusMessage.text}</span>
           </div>
           <button 
             onClick={() => setStatusMessage(null)}
-            className="text-slate-400 hover:text-white font-bold ml-2 cursor-pointer"
+            className="text-slate-400 hover:text-slate-700 font-bold ml-2 cursor-pointer"
           >
             ×
           </button>
@@ -709,34 +709,34 @@ export default function AdminUserManagementView() {
 
       {/* KPI Stats Strip */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800">
-          <div className="text-[11px] font-mono text-slate-400 uppercase">Total Staff</div>
-          <div className="text-xl font-bold font-mono text-white mt-1">{totalCount}</div>
-          <div className="text-[10px] text-slate-500 mt-0.5">Registered in plant</div>
+        <div className="p-3.5 rounded-xl bg-white border border-purple-100 shadow-xs">
+          <div className="text-[11px] font-mono text-slate-500 uppercase font-medium">Total Staff</div>
+          <div className="text-xl font-bold font-mono text-slate-900 mt-1">{totalCount}</div>
+          <div className="text-[10px] text-slate-400 mt-0.5">Registered in plant</div>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800">
-          <div className="text-[11px] font-mono text-emerald-400 uppercase">Operator (OP)</div>
-          <div className="text-xl font-bold font-mono text-emerald-400 mt-1">{operatorCount}</div>
-          <div className="text-[10px] text-slate-500 mt-0.5">Series OP-1xxx</div>
+        <div className="p-3.5 rounded-xl bg-white border border-purple-100 shadow-xs">
+          <div className="text-[11px] font-mono text-emerald-700 uppercase font-semibold">Operator (OP)</div>
+          <div className="text-xl font-bold font-mono text-emerald-700 mt-1">{operatorCount}</div>
+          <div className="text-[10px] text-slate-400 mt-0.5">Series OP-1xxx</div>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800">
-          <div className="text-[11px] font-mono text-amber-400 uppercase">Supervisor (SV)</div>
-          <div className="text-xl font-bold font-mono text-amber-400 mt-1">{supervisorCount}</div>
-          <div className="text-[10px] text-slate-500 mt-0.5">Series SV-2xxx</div>
+        <div className="p-3.5 rounded-xl bg-white border border-purple-100 shadow-xs">
+          <div className="text-[11px] font-mono text-amber-700 uppercase font-semibold">Supervisor (SV)</div>
+          <div className="text-xl font-bold font-mono text-amber-700 mt-1">{supervisorCount}</div>
+          <div className="text-[10px] text-slate-400 mt-0.5">Series SV-2xxx</div>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800">
-          <div className="text-[11px] font-mono text-cyan-400 uppercase">QC Laboratory (QC/QM)</div>
-          <div className="text-xl font-bold font-mono text-cyan-400 mt-1">{qcCount}</div>
-          <div className="text-[10px] text-slate-500 mt-0.5">Series QC-3xxx / QM-4xxx</div>
+        <div className="p-3.5 rounded-xl bg-white border border-purple-100 shadow-xs">
+          <div className="text-[11px] font-mono text-purple-700 uppercase font-semibold">QC Laboratory (QC/QM)</div>
+          <div className="text-xl font-bold font-mono text-purple-700 mt-1">{qcCount}</div>
+          <div className="text-[10px] text-slate-400 mt-0.5">Series QC-3xxx / QM-4xxx</div>
         </div>
 
-        <div className="p-3.5 rounded-xl bg-slate-900/80 border border-slate-800">
-          <div className="text-[11px] font-mono text-blue-400 uppercase">Admin & Audit (AD/AU)</div>
-          <div className="text-xl font-bold font-mono text-blue-400 mt-1">{adminCount}</div>
-          <div className="text-[10px] text-slate-500 mt-0.5">Series AD-5xxx / AU-9xxx</div>
+        <div className="p-3.5 rounded-xl bg-white border border-purple-100 shadow-xs">
+          <div className="text-[11px] font-mono text-indigo-700 uppercase font-semibold">Admin & Audit (AD/AU)</div>
+          <div className="text-xl font-bold font-mono text-indigo-700 mt-1">{adminCount}</div>
+          <div className="text-[10px] text-slate-400 mt-0.5">Series AD-5xxx / AU-9xxx</div>
         </div>
       </div>
 
@@ -744,11 +744,11 @@ export default function AdminUserManagementView() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Left Column: Add User Form (Admin Exclusive) */}
-        <div className="lg:col-span-1 rounded-2xl border border-slate-800 bg-[#0f172a]/90 p-5 shadow-xl backdrop-blur-sm">
-          <div className="flex items-center gap-2 mb-4 border-b border-slate-800 pb-3">
-            <UserPlus className="h-5 w-5 text-cyan-400" />
+        <div className="lg:col-span-1 rounded-2xl border border-purple-100 bg-white p-5 shadow-sm">
+          <div className="flex items-center gap-2 mb-4 border-b border-purple-100 pb-3">
+            <UserPlus className="h-5 w-5 text-purple-600" />
             <div>
-              <h2 className="text-sm font-bold text-white tracking-wide">
+              <h2 className="text-sm font-bold text-slate-900 tracking-wide">
                 Register New Staff Member
               </h2>
               <span className="text-[10px] font-mono text-slate-500">
@@ -760,14 +760,14 @@ export default function AdminUserManagementView() {
           <form onSubmit={handleAddUserSubmit} className="space-y-4 text-xs font-mono">
             {/* Role Select */}
             <div>
-              <label className="block text-slate-300 mb-1 font-semibold">
+              <label className="block text-slate-700 mb-1 font-semibold">
                 Assigned Role / Department:
               </label>
               <select
                 disabled={!isAdmin}
                 value={selectedRole}
                 onChange={(e) => handleRoleSelectChange(e.target.value as UserRole)}
-                className="w-full bg-[#090d16] border border-slate-700 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-cyan-500 disabled:opacity-50 cursor-pointer"
+                className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:border-purple-600 focus:ring-1 focus:ring-purple-200 disabled:opacity-50 cursor-pointer shadow-xs"
               >
                 <option value="operator">Plant Operator (RF-FR-004 · Series OP-1xxx)</option>
                 <option value="supervisor">Shift Supervisor (Series SV-2xxx)</option>
@@ -780,7 +780,7 @@ export default function AdminUserManagementView() {
 
             {/* Auto Generated Consistent ID Preview */}
             <div>
-              <label className="block text-slate-300 mb-1 font-semibold">
+              <label className="block text-slate-700 mb-1 font-semibold">
                 Auto-Generated Sequential Employee ID (Plant Standard):
               </label>
               <div className="flex items-center gap-2">
@@ -788,9 +788,9 @@ export default function AdminUserManagementView() {
                   type="text"
                   readOnly
                   value={autoId}
-                  className="w-full bg-slate-900 border border-cyan-500/60 rounded-xl px-3 py-2 text-cyan-300 font-bold tracking-wider cursor-not-allowed"
+                  className="w-full bg-purple-50/60 border border-purple-200 rounded-xl px-3 py-2 text-purple-900 font-bold tracking-wider cursor-not-allowed"
                 />
-                <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/60 px-2.5 py-2 rounded-xl border border-emerald-800 whitespace-nowrap">
+                <span className="text-[10px] font-mono text-purple-700 bg-purple-100 px-2.5 py-2 rounded-xl border border-purple-200 whitespace-nowrap font-semibold">
                   Auto-Sequential
                 </span>
               </div>
@@ -801,7 +801,7 @@ export default function AdminUserManagementView() {
 
             {/* Full Name */}
             <div>
-              <label className="block text-slate-300 mb-1 font-semibold">
+              <label className="block text-slate-700 mb-1 font-semibold">
                 Staff Full Name:
               </label>
               <input
@@ -811,23 +811,23 @@ export default function AdminUserManagementView() {
                 placeholder="e.g. Muhammad Faizal bin Roslan"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="w-full bg-[#090d16] border border-slate-700 rounded-xl px-3 py-2 text-sm font-sans text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 disabled:opacity-50"
+                className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm font-sans text-slate-900 placeholder-slate-400 focus:outline-none focus:border-purple-600 focus:ring-1 focus:ring-purple-200 disabled:opacity-50 shadow-xs"
               />
             </div>
 
             {/* Temporary Initial Password */}
             <div>
-              <label className="block text-slate-300 mb-1 font-semibold">
+              <label className="block text-slate-700 mb-1 font-semibold">
                 Initial Default Password:
               </label>
               <div className="relative">
-                <KeyRound className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-500" />
+                <KeyRound className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
                 <input
                   type="text"
                   disabled={!isAdmin}
                   value={customPassword}
                   onChange={(e) => setCustomPassword(e.target.value)}
-                  className="w-full bg-[#090d16] border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-slate-300 placeholder-slate-500 focus:outline-none focus:border-cyan-500 disabled:opacity-50"
+                  className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-purple-600 focus:ring-1 focus:ring-purple-200 disabled:opacity-50 shadow-xs"
                 />
               </div>
               <span className="text-[10px] text-slate-500 mt-1 block">
@@ -838,7 +838,7 @@ export default function AdminUserManagementView() {
             <button
               type="submit"
               disabled={!isAdmin || isSubmitting}
-              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 disabled:opacity-50 text-white font-semibold py-2.5 px-4 rounded-xl text-xs transition-all shadow-lg shadow-blue-950/60 mt-2 cursor-pointer disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-semibold py-2.5 px-4 rounded-xl text-xs transition-all shadow-xs mt-2 cursor-pointer disabled:cursor-not-allowed active:scale-95"
             >
               <UserPlus className="h-4 w-4" />
               <span>{isSubmitting ? 'Registering...' : 'Register Staff & Generate Credentials'}</span>
@@ -846,30 +846,30 @@ export default function AdminUserManagementView() {
           </form>
 
           {/* Standards Summary Card */}
-          <div className="mt-5 p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 text-[11px] font-mono">
-            <div className="flex items-center gap-1.5 text-cyan-400 font-bold mb-2">
+          <div className="mt-5 p-3.5 rounded-xl bg-purple-50/60 border border-purple-100 text-[11px] font-mono">
+            <div className="flex items-center gap-1.5 text-purple-700 font-bold mb-2">
               <Sparkles className="h-3.5 w-3.5" />
               <span>CONSISTENT NUMBERING SCHEME:</span>
             </div>
-            <ul className="space-y-1 text-slate-400 text-[10px]">
-              <li>• <b className="text-emerald-400">OP-1xxx</b>: Plant Shift Operator (Morning/Evening/Night)</li>
-              <li>• <b className="text-amber-400">SV-2xxx</b>: Shift Supervisor (Sheet Verification)</li>
-              <li>• <b className="text-cyan-400">QC-3xxx</b>: Lab Analyst (FFA/IV/Colour/SFC Testing)</li>
-              <li>• <b className="text-purple-400">QM-4xxx</b>: Quality Manager (Product Disposition)</li>
-              <li>• <b className="text-blue-400">AD-5xxx</b>: Plant Administrator & Specification Config</li>
-              <li>• <b className="text-slate-300">AU-9xxx</b>: External Auditor (ISO Record Audits)</li>
+            <ul className="space-y-1 text-slate-600 text-[10px]">
+              <li>• <b className="text-emerald-700 font-semibold">OP-1xxx</b>: Plant Shift Operator (Morning/Evening/Night)</li>
+              <li>• <b className="text-amber-700 font-semibold">SV-2xxx</b>: Shift Supervisor (Sheet Verification)</li>
+              <li>• <b className="text-purple-700 font-semibold">QC-3xxx</b>: Lab Analyst (FFA/IV/Colour/SFC Testing)</li>
+              <li>• <b className="text-indigo-700 font-semibold">QM-4xxx</b>: Quality Manager (Product Disposition)</li>
+              <li>• <b className="text-purple-800 font-semibold">AD-5xxx</b>: Plant Administrator & Specification Config</li>
+              <li>• <b className="text-slate-700 font-semibold">AU-9xxx</b>: External Auditor (ISO Record Audits)</li>
             </ul>
           </div>
         </div>
 
         {/* Right Column: Plant Staff Directory Table */}
-        <div className="lg:col-span-2 rounded-2xl border border-slate-800 bg-[#0f172a]/90 p-5 shadow-xl backdrop-blur-sm flex flex-col justify-between">
+        <div className="lg:col-span-2 rounded-2xl border border-purple-100 bg-white p-5 shadow-sm flex flex-col justify-between">
           <div>
             {/* Table Controls */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
               <div>
-                <h2 className="text-sm font-bold text-white tracking-wide flex items-center gap-2">
-                  <Users className="h-4 w-4 text-cyan-400" />
+                <h2 className="text-sm font-bold text-slate-900 tracking-wide flex items-center gap-2">
+                  <Users className="h-4 w-4 text-purple-600" />
                   <span>Active Plant Personnel Directory ({filteredProfiles.length})</span>
                 </h2>
                 <span className="text-[10px] font-mono text-slate-500">
@@ -881,13 +881,13 @@ export default function AdminUserManagementView() {
               <div className="flex items-center gap-2">
                 {/* Search */}
                 <div className="relative">
-                  <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-slate-500" />
+                  <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-slate-400" />
                   <input
                     type="text"
                     placeholder="Search ID or name..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="bg-[#090d16] border border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500 w-36 sm:w-48 font-mono"
+                    className="bg-white border border-slate-200 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:border-purple-600 focus:ring-1 focus:ring-purple-200 w-36 sm:w-48 font-mono shadow-xs"
                   />
                 </div>
 
@@ -895,7 +895,7 @@ export default function AdminUserManagementView() {
                 <select
                   value={roleFilter}
                   onChange={(e) => setRoleFilter(e.target.value)}
-                  className="bg-[#090d16] border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-cyan-500 font-mono cursor-pointer"
+                  className="bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none focus:border-purple-600 focus:ring-1 focus:ring-purple-200 font-mono cursor-pointer shadow-xs"
                 >
                   <option value="all">All Roles</option>
                   <option value="operator">Operator (OP)</option>
@@ -909,9 +909,9 @@ export default function AdminUserManagementView() {
             </div>
 
             {/* Table Container */}
-            <div className="rounded-xl border border-slate-800 overflow-x-auto bg-slate-900/40">
+            <div className="rounded-xl border border-purple-100 overflow-x-auto bg-white">
               <table className="w-full text-left text-xs font-mono min-w-[700px]">
-                <thead className="bg-[#090d16] border-b border-slate-800 text-slate-400 text-[11px]">
+                <thead className="bg-slate-50 border-b border-purple-100 text-slate-600 text-[11px] font-semibold">
                   <tr>
                     <th className="py-2.5 px-3.5">Employee ID (employee_no)</th>
                     <th className="py-2.5 px-3.5 font-sans font-semibold">Staff Name (full_name)</th>
@@ -922,10 +922,10 @@ export default function AdminUserManagementView() {
                     <th className="py-2.5 px-3.5 text-right">Admin Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800/60">
+                <tbody className="divide-y divide-purple-50">
                   {filteredProfiles.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="py-6 text-center text-slate-500">
+                      <td colSpan={7} className="py-6 text-center text-slate-400">
                         No personnel found matching search criteria.
                       </td>
                     </tr>
@@ -936,15 +936,15 @@ export default function AdminUserManagementView() {
                       const isActive = p.status === 'active' || (p.status !== 'unactive' && p.active !== false);
 
                       return (
-                        <tr key={p.employee_no || p.id} className="hover:bg-slate-800/40 transition-colors">
-                          <td className="py-2.5 px-3.5 font-bold text-cyan-400">
+                        <tr key={p.employee_no || p.id} className="hover:bg-purple-50/40 transition-colors">
+                          <td className="py-2.5 px-3.5 font-bold text-purple-700">
                             {p.employee_no}
                           </td>
-                          <td className="py-2.5 px-3.5 text-white font-sans font-medium">
+                          <td className="py-2.5 px-3.5 text-slate-900 font-sans font-medium">
                             <div className="flex items-center gap-1.5">
                               <span>{p.full_name}</span>
                               {isCurrent && (
-                                <span className="text-[9px] bg-cyan-950 text-cyan-300 border border-cyan-800 px-1.5 py-0.2 rounded font-mono">
+                                <span className="text-[9px] bg-purple-100 text-purple-800 border border-purple-200 px-1.5 py-0.2 rounded font-mono font-semibold">
                                   You
                                 </span>
                               )}
@@ -957,23 +957,23 @@ export default function AdminUserManagementView() {
                           </td>
                           <td className="py-2.5 px-3.5">
                             {isActive ? (
-                              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-950/60 border border-emerald-800/40 text-emerald-400 text-[10px] font-semibold">
-                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-semibold">
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                                 active
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-rose-950/60 border border-rose-800/40 text-rose-400 text-[10px] font-semibold">
-                                <span className="h-1.5 w-1.5 rounded-full bg-rose-400"></span>
+                              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-rose-50 border border-rose-200 text-rose-700 text-[10px] font-semibold">
+                                <span className="h-1.5 w-1.5 rounded-full bg-rose-500"></span>
                                 unactive
                               </span>
                             )}
                           </td>
                           <td className="py-2.5 px-3.5">
-                            <span className="inline-block px-2 py-0.5 rounded bg-[#0b111e] border border-slate-700/60 text-slate-300 text-[11px] font-mono">
+                            <span className="inline-block px-2 py-0.5 rounded bg-slate-50 border border-slate-200 text-slate-700 text-[11px] font-mono">
                               {p.password || 'password123'}
                             </span>
                           </td>
-                          <td className="py-2.5 px-3.5 text-slate-400 text-[11px]">
+                          <td className="py-2.5 px-3.5 text-slate-500 text-[11px]">
                             {p.created_at ? new Date(p.created_at).toLocaleDateString('en-GB', {
                               day: '2-digit',
                               month: 'short',
@@ -988,10 +988,10 @@ export default function AdminUserManagementView() {
                                   disabled={isCurrent}
                                   className={`text-[10px] px-2 py-1 rounded transition-colors font-semibold ${
                                     isCurrent
-                                      ? 'opacity-30 cursor-not-allowed text-slate-500'
+                                      ? 'opacity-30 cursor-not-allowed text-slate-400'
                                       : isActive
-                                        ? 'text-rose-400 hover:bg-rose-950/60 hover:text-rose-200 border border-rose-800/40 cursor-pointer'
-                                        : 'text-emerald-400 hover:bg-emerald-950/60 hover:text-emerald-200 border border-emerald-800/40 cursor-pointer'
+                                        ? 'text-rose-600 hover:bg-rose-50 border border-rose-200 cursor-pointer'
+                                        : 'text-emerald-700 hover:bg-emerald-50 border border-emerald-200 cursor-pointer'
                                   }`}
                                   title={isCurrent ? 'Cannot deactivate your own active account' : undefined}
                                 >
@@ -1002,8 +1002,8 @@ export default function AdminUserManagementView() {
                                   disabled={isCurrent}
                                   className={`text-[10px] px-2 py-1 rounded transition-colors font-semibold flex items-center gap-1 ${
                                     isCurrent
-                                      ? 'opacity-30 cursor-not-allowed text-slate-500'
-                                      : 'text-red-400 hover:bg-red-950/80 hover:text-red-200 border border-red-900/60 hover:border-red-600/70 cursor-pointer shadow-sm'
+                                      ? 'opacity-30 cursor-not-allowed text-slate-400'
+                                      : 'text-rose-700 hover:bg-rose-50 border border-rose-200 cursor-pointer shadow-xs'
                                   }`}
                                   title={isCurrent ? 'Cannot delete your own active administrator account' : `Permanently delete ${p.full_name} (${p.employee_no})`}
                                 >
@@ -1012,7 +1012,7 @@ export default function AdminUserManagementView() {
                                 </button>
                               </div>
                             ) : (
-                              <span className="text-[10px] text-slate-600">Admin Only</span>
+                              <span className="text-[10px] text-slate-400">Admin Only</span>
                             )}
                           </td>
                         </tr>
@@ -1025,9 +1025,9 @@ export default function AdminUserManagementView() {
           </div>
 
           {/* Security Footer Note */}
-          <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-[11px] font-mono text-slate-500">
+          <div className="mt-4 pt-3 border-t border-purple-100 flex items-center justify-between text-[11px] font-mono text-slate-400">
             <span>21 CFR Part 11 Audit Trail: All personnel additions and status modifications are permanently logged.</span>
-            <span className="text-slate-400">Nisshin Deodorizer · Lam Soon</span>
+            <span className="text-slate-500 font-medium">Nisshin Deodorizer · Lam Soon</span>
           </div>
         </div>
 
@@ -1038,16 +1038,16 @@ export default function AdminUserManagementView() {
         <div className="space-y-6">
           {/* RBAC Warning if not Admin */}
           {!isAdmin && (
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-amber-950/40 border border-amber-600/50 text-amber-200 text-xs font-mono">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-mono">
               <div className="flex items-center gap-2.5">
-                <ShieldAlert className="h-5 w-5 text-amber-400 shrink-0" />
+                <ShieldAlert className="h-5 w-5 text-amber-600 shrink-0" />
                 <div>
                   <span className="font-bold">RESTRICTED ACCESS:</span> Data retention archiving and database pruning are restricted exclusively to the Plant Administrator (*Admin*).
                 </div>
               </div>
               <button
                 onClick={handleSwitchToAdmin}
-                className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold whitespace-nowrap transition-colors shadow-md shadow-blue-950/50 cursor-pointer text-xs"
+                className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-semibold whitespace-nowrap transition-colors shadow-xs cursor-pointer text-xs"
               >
                 Switch to Admin Profile (AD-5010)
               </button>
@@ -1058,20 +1058,20 @@ export default function AdminUserManagementView() {
           {pruneStatusMessage && (
             <div className={`flex items-center justify-between p-4 rounded-xl border text-xs font-mono ${
               pruneStatusMessage.type === 'success' 
-                ? 'bg-emerald-950/60 border-emerald-700 text-emerald-300' 
-                : 'bg-rose-950/60 border-rose-700 text-rose-300'
+                ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
+                : 'bg-rose-50 border-rose-200 text-rose-800'
             }`}>
               <div className="flex items-center gap-2.5">
                 {pruneStatusMessage.type === 'success' ? (
-                  <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
                 ) : (
-                  <AlertTriangle className="h-4 w-4 text-rose-400 shrink-0" />
+                  <AlertTriangle className="h-4 w-4 text-rose-600 shrink-0" />
                 )}
                 <span>{pruneStatusMessage.text}</span>
               </div>
               <button 
                 onClick={() => setPruneStatusMessage(null)}
-                className="text-slate-400 hover:text-white font-bold ml-2 cursor-pointer"
+                className="text-slate-400 hover:text-slate-700 font-bold ml-2 cursor-pointer"
               >
                 ×
               </button>
@@ -1079,23 +1079,23 @@ export default function AdminUserManagementView() {
           )}
 
           {/* Database Health & Capacity Meter */}
-          <div className="p-5 rounded-2xl bg-gradient-to-r from-slate-900 via-[#0b1528] to-slate-900 border border-slate-800 shadow-xl space-y-4">
+          <div className="p-5 rounded-2xl bg-white border border-purple-100 shadow-sm space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 shadow-lg shadow-emerald-950/50">
+                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-purple-50 border border-purple-200 text-purple-600 shadow-xs">
                   <Database className="h-5 w-5" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h2 className="text-base font-bold text-white tracking-wide">
+                    <h2 className="text-base font-bold text-slate-900 tracking-wide">
                       Supabase PostgreSQL Storage Capacity & Health
                     </h2>
-                    <span className="rounded-full bg-emerald-950/90 px-2.5 py-0.5 text-[10px] font-mono text-emerald-400 border border-emerald-500/40 font-semibold flex items-center gap-1.5">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[10px] font-mono text-emerald-700 border border-emerald-200 font-semibold flex items-center gap-1.5">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                       OPTIMAL SAFE ZONE
                     </span>
                   </div>
-                  <p className="text-xs text-slate-400 font-sans mt-0.5">
+                  <p className="text-xs text-slate-500 font-sans mt-0.5">
                     Continuous monitoring against Supabase Free Tier cap (500.0 MB). Tabular refinery data generates ~8.7 MB/year.
                   </p>
                 </div>
@@ -1103,23 +1103,23 @@ export default function AdminUserManagementView() {
 
               <div className="text-right font-mono">
                 <div className="text-xs text-slate-400">Total Quota Cap:</div>
-                <div className="text-sm font-bold text-white">500.0 MB <span className="text-slate-500 text-xs font-normal">(Supabase Limit)</span></div>
+                <div className="text-sm font-bold text-slate-900">500.0 MB <span className="text-slate-400 text-xs font-normal">(Supabase Limit)</span></div>
               </div>
             </div>
 
             {/* Capacity Progress Bar */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between text-xs font-mono">
-                <span className="text-slate-400">
-                  Storage Used: <b className="text-cyan-400 font-bold">{((storageMetrics?.estimatedStorageUsedKB || 28672) / 1024).toFixed(2)} MB</b> / 500.0 MB
+                <span className="text-slate-600">
+                  Storage Used: <b className="text-purple-700 font-bold">{((storageMetrics?.estimatedStorageUsedKB || 28672) / 1024).toFixed(2)} MB</b> / 500.0 MB
                 </span>
-                <span className="text-emerald-400 font-bold">
+                <span className="text-emerald-700 font-bold">
                   {storageMetrics?.safeLimitPercentage || 5.72}% Used · {(500 - ((storageMetrics?.estimatedStorageUsedKB || 28672) / 1024)).toFixed(1)} MB Safe Headroom
                 </span>
               </div>
-              <div className="w-full bg-slate-950/80 rounded-full h-3.5 border border-slate-800 p-0.5 overflow-hidden">
+              <div className="w-full bg-slate-100 rounded-full h-3.5 border border-slate-200 p-0.5 overflow-hidden">
                 <div 
-                  className="h-full rounded-full bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-500 transition-all duration-500 shadow-sm shadow-emerald-500/50"
+                  className="h-full rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 transition-all duration-500 shadow-xs"
                   style={{ width: `${Math.max(storageMetrics?.safeLimitPercentage || 5.72, 3)}%` }}
                 />
               </div>
@@ -1127,9 +1127,9 @@ export default function AdminUserManagementView() {
 
             {/* Storage Item Breakdown Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-2">
-              <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80">
-                <div className="text-[10px] font-mono text-slate-400 uppercase">QC Sample Reports</div>
-                <div className="text-lg font-bold font-mono text-cyan-400 mt-0.5">
+              <div className="p-3 rounded-xl bg-purple-50/50 border border-purple-100">
+                <div className="text-[10px] font-mono text-slate-500 uppercase font-semibold">QC Sample Reports</div>
+                <div className="text-lg font-bold font-mono text-purple-700 mt-0.5">
                   {storageMetrics?.totalReports || 0}
                 </div>
                 <div className="text-[10px] text-slate-500 mt-0.5">
@@ -1137,19 +1137,19 @@ export default function AdminUserManagementView() {
                 </div>
               </div>
 
-              <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80">
-                <div className="text-[10px] font-mono text-emerald-400 uppercase">Active Shift Sheet</div>
-                <div className="text-lg font-bold font-mono text-emerald-400 mt-0.5">
+              <div className="p-3 rounded-xl bg-purple-50/50 border border-purple-100">
+                <div className="text-[10px] font-mono text-emerald-700 uppercase font-semibold">Active Shift Sheet</div>
+                <div className="text-lg font-bold font-mono text-emerald-700 mt-0.5">
                   {storageMetrics?.activeSheetEntries || 0}
                 </div>
-                <div className="text-[10px] text-emerald-500/80 mt-0.5 font-mono">
+                <div className="text-[10px] text-emerald-600 mt-0.5 font-mono">
                   🛡️ Always Protected
                 </div>
               </div>
 
-              <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80">
-                <div className="text-[10px] font-mono text-amber-400 uppercase">Quality Deviations</div>
-                <div className="text-lg font-bold font-mono text-amber-400 mt-0.5">
+              <div className="p-3 rounded-xl bg-purple-50/50 border border-purple-100">
+                <div className="text-[10px] font-mono text-amber-700 uppercase font-semibold">Quality Deviations</div>
+                <div className="text-lg font-bold font-mono text-amber-700 mt-0.5">
                   {storageMetrics?.deviationsCount || 0}
                 </div>
                 <div className="text-[10px] text-slate-500 mt-0.5">
@@ -1157,9 +1157,9 @@ export default function AdminUserManagementView() {
                 </div>
               </div>
 
-              <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80">
-                <div className="text-[10px] font-mono text-purple-400 uppercase">Audit Trail (CFR 21)</div>
-                <div className="text-lg font-bold font-mono text-purple-400 mt-0.5">
+              <div className="p-3 rounded-xl bg-purple-50/50 border border-purple-100">
+                <div className="text-[10px] font-mono text-indigo-700 uppercase font-semibold">Audit Trail (CFR 21)</div>
+                <div className="text-lg font-bold font-mono text-indigo-700 mt-0.5">
                   {storageMetrics?.auditLogsCount || 0}
                 </div>
                 <div className="text-[10px] text-slate-500 mt-0.5">
@@ -1167,12 +1167,12 @@ export default function AdminUserManagementView() {
                 </div>
               </div>
 
-              <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/80">
-                <div className="text-[10px] font-mono text-blue-400 uppercase">Staff Accounts</div>
-                <div className="text-lg font-bold font-mono text-blue-400 mt-0.5">
+              <div className="p-3 rounded-xl bg-purple-50/50 border border-purple-100">
+                <div className="text-[10px] font-mono text-purple-800 uppercase font-semibold">Staff Accounts</div>
+                <div className="text-lg font-bold font-mono text-purple-800 mt-0.5">
                   {storageMetrics?.profilesCount || 0}
                 </div>
-                <div className="text-[10px] text-blue-400/70 mt-0.5 font-mono">
+                <div className="text-[10px] text-purple-600 mt-0.5 font-mono">
                   🔒 Master Data (Permanent)
                 </div>
               </div>
@@ -1180,21 +1180,21 @@ export default function AdminUserManagementView() {
           </div>
 
           {/* 1-Click Fast-Track Auto Banner */}
-          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-emerald-950/90 via-[#0d2218] to-slate-900 border border-emerald-500/50 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-purple-50 via-purple-50/60 to-white border border-purple-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3.5">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 shadow-md shrink-0">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-purple-100 border border-purple-300 text-purple-700 shadow-xs shrink-0">
                 <Zap className="h-5 w-5" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-bold text-white tracking-wide">
+                  <h3 className="text-sm font-bold text-slate-900 tracking-wide">
                     1-Click Auto Archive & Prune (Automatik 2 Langkah Sekaligus)
                   </h3>
-                  <span className="px-2 py-0.5 text-[9px] font-mono bg-emerald-900/80 text-emerald-300 border border-emerald-500/40 rounded font-bold">
+                  <span className="px-2 py-0.5 text-[9px] font-mono bg-purple-100 text-purple-800 border border-purple-200 rounded font-bold">
                     FAST TRACK
                   </span>
                 </div>
-                <p className="text-xs text-slate-300 font-sans mt-0.5">
+                <p className="text-xs text-slate-600 font-sans mt-0.5">
                   Sistem akan menjana & memuat turun sandaran (.json & .csv), terus membersihkan rekod lama di Supabase, dan membuka Google Drive secara automatik.
                 </p>
               </div>
@@ -1204,7 +1204,7 @@ export default function AdminUserManagementView() {
               type="button"
               disabled={!isAdmin || isPruning}
               onClick={handleOneClickAutoPrune}
-              className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold text-xs font-mono transition-all shadow-lg shadow-emerald-950/60 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+              className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-semibold text-xs font-mono transition-all shadow-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap active:scale-95"
             >
               <Zap className="h-4 w-4" />
               <span>{isPruning ? 'Memproses...' : '⚡ Jalankan Auto Archive & Prune (1-Click)'}</span>
@@ -1215,33 +1215,33 @@ export default function AdminUserManagementView() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
             {/* STEP 1: Cold Storage Export (Google Drive Archive) */}
-            <div className="rounded-2xl border border-slate-800 bg-[#0f172a]/90 p-5 shadow-xl backdrop-blur-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div className="rounded-2xl border border-purple-100 bg-white p-5 shadow-sm space-y-4">
+              <div className="flex items-center justify-between border-b border-purple-100 pb-3">
                 <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 font-bold text-xs">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-50 border border-purple-200 text-purple-700 font-bold text-xs">
                     1
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-white tracking-wide">
+                    <h3 className="text-sm font-bold text-slate-900 tracking-wide">
                       STEP 1: Export to Cold Storage (Google Drive)
                     </h3>
-                    <span className="text-[10px] font-mono text-cyan-400">
+                    <span className="text-[10px] font-mono text-purple-700 font-medium">
                       Mandatory Pre-Prune Backup · Zero Data Loss Guarantee
                     </span>
                   </div>
                 </div>
-                <span className="px-2 py-0.5 text-[10px] font-mono bg-cyan-950 text-cyan-300 border border-cyan-800 rounded font-semibold">
+                <span className="px-2 py-0.5 text-[10px] font-mono bg-purple-50 text-purple-700 border border-purple-200 rounded font-semibold">
                   SAFETY LOCK
                 </span>
               </div>
 
-              <p className="text-xs text-slate-300 leading-relaxed font-sans">
+              <p className="text-xs text-slate-600 leading-relaxed font-sans">
                 Sebelum rekod lama dibersihkan daripada Supabase, muat turun salinan sandaran (backup). Pakej ini mengandungi fail JSON data mentah lengkap beserta ringkasan CSV untuk disimpan ke dalam <b>Google Drive</b> atau simpanan awan syarikat anda.
               </p>
 
               {/* Retention Policy Period Selector */}
               <div className="space-y-2 text-xs font-mono">
-                <label className="block text-slate-300 font-semibold">
+                <label className="block text-slate-700 font-semibold">
                   Select Retention Cutoff Policy:
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -1258,12 +1258,12 @@ export default function AdminUserManagementView() {
                       onClick={() => setRetentionPreset(preset.id as any)}
                       className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
                         retentionPreset === preset.id
-                          ? 'bg-cyan-950/80 border-cyan-500 text-cyan-300 shadow-md shadow-cyan-950/50'
-                          : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                          ? 'bg-purple-600 border-purple-700 text-white shadow-xs font-semibold'
+                          : 'bg-slate-50 border-purple-100 text-slate-600 hover:text-purple-700 hover:bg-purple-50/50'
                       }`}
                     >
                       <div className="font-bold text-xs">{preset.label}</div>
-                      <div className="text-[10px] text-slate-500">{preset.desc}</div>
+                      <div className={`text-[10px] ${retentionPreset === preset.id ? 'text-purple-100' : 'text-slate-400'}`}>{preset.desc}</div>
                     </button>
                   ))}
                   <button
@@ -1271,33 +1271,33 @@ export default function AdminUserManagementView() {
                     onClick={() => setRetentionPreset('custom')}
                     className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
                       retentionPreset === 'custom'
-                        ? 'bg-cyan-950/80 border-cyan-500 text-cyan-300 shadow-md shadow-cyan-950/50'
-                        : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                        ? 'bg-purple-600 border-purple-700 text-white shadow-xs font-semibold'
+                        : 'bg-slate-50 border-purple-100 text-slate-600 hover:text-purple-700 hover:bg-purple-50/50'
                     }`}
                   >
                     <div className="font-bold text-xs">Tarikh Custom</div>
-                    <div className="text-[10px] text-slate-500">Pilih Sendiri</div>
+                    <div className={`text-[10px] ${retentionPreset === 'custom' ? 'text-purple-100' : 'text-slate-400'}`}>Pilih Sendiri</div>
                   </button>
                 </div>
 
                 {/* Custom Date Picker */}
                 {retentionPreset === 'custom' && (
                   <div className="pt-2 flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-cyan-400" />
+                    <Calendar className="h-4 w-4 text-purple-600" />
                     <input
                       type="date"
                       value={customCutoffDate}
                       onChange={(e) => setCustomCutoffDate(e.target.value)}
-                      className="bg-[#090d16] border border-cyan-500/60 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none font-mono"
+                      className="bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 focus:border-purple-600 focus:ring-1 focus:ring-purple-200 focus:outline-none font-mono shadow-xs"
                     />
                   </div>
                 )}
               </div>
 
               {/* Effective Cutoff Date Banner */}
-              <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center justify-between text-xs font-mono">
-                <span className="text-slate-400">Effective Prune Cutoff Date:</span>
-                <span className="text-cyan-400 font-bold bg-[#090d16] px-2.5 py-1 rounded border border-slate-700">
+              <div className="p-3 rounded-xl bg-purple-50/60 border border-purple-100 flex items-center justify-between text-xs font-mono">
+                <span className="text-slate-600">Effective Prune Cutoff Date:</span>
+                <span className="text-purple-800 font-bold bg-white px-2.5 py-1 rounded border border-purple-200">
                   {retentionPreset === 'all' ? 'SEMUA REKOD (TIADA HAD TARIKH)' : getEffectiveCutoffDate()}
                 </span>
               </div>
@@ -1307,41 +1307,41 @@ export default function AdminUserManagementView() {
                 const effectiveCutoff = getEffectiveCutoffDate();
                 const preview = getArchivePreviewCounts(effectiveCutoff, retentionPreset === 'all');
                 return (
-                  <div className="p-3.5 rounded-xl bg-[#090d16] border border-slate-800 space-y-2.5">
+                  <div className="p-3.5 rounded-xl bg-slate-50 border border-purple-100 space-y-2.5">
                     <div className="flex items-center justify-between text-xs font-mono">
-                      <span className="text-slate-400">Kandungan Rekod Untuk Dieksport:</span>
-                      <span className={`px-2.5 py-0.5 rounded font-bold ${preview.total > 0 ? 'bg-cyan-950 text-cyan-300 border border-cyan-800' : 'bg-amber-950 text-amber-300 border border-amber-800'}`}>
+                      <span className="text-slate-600 font-medium">Kandungan Rekod Untuk Dieksport:</span>
+                      <span className={`px-2.5 py-0.5 rounded font-bold ${preview.total > 0 ? 'bg-purple-100 text-purple-800 border border-purple-200' : 'bg-amber-100 text-amber-800 border border-amber-200'}`}>
                         {preview.total} Rekod Ditemui
                       </span>
                     </div>
                     <div className="grid grid-cols-4 gap-2 text-[10px] font-mono text-center">
-                      <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800">
-                        <div className="text-cyan-400 font-bold text-xs">{preview.reports}</div>
-                        <div className="text-slate-400 text-[9px] mt-0.5">QC Reports</div>
+                      <div className="p-2 rounded-lg bg-white border border-purple-100 shadow-xs">
+                        <div className="text-purple-700 font-bold text-xs">{preview.reports}</div>
+                        <div className="text-slate-500 text-[9px] mt-0.5">QC Reports</div>
                       </div>
-                      <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800">
-                        <div className="text-emerald-400 font-bold text-xs">{preview.sheets}</div>
-                        <div className="text-slate-400 text-[9px] mt-0.5">Shift Sheets</div>
+                      <div className="p-2 rounded-lg bg-white border border-purple-100 shadow-xs">
+                        <div className="text-emerald-700 font-bold text-xs">{preview.sheets}</div>
+                        <div className="text-slate-500 text-[9px] mt-0.5">Shift Sheets</div>
                       </div>
-                      <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800">
-                        <div className="text-amber-400 font-bold text-xs">{preview.deviations}</div>
-                        <div className="text-slate-400 text-[9px] mt-0.5">Deviations</div>
+                      <div className="p-2 rounded-lg bg-white border border-purple-100 shadow-xs">
+                        <div className="text-amber-700 font-bold text-xs">{preview.deviations}</div>
+                        <div className="text-slate-500 text-[9px] mt-0.5">Deviations</div>
                       </div>
-                      <div className="p-2 rounded-lg bg-slate-900/80 border border-slate-800">
-                        <div className="text-purple-400 font-bold text-xs">{preview.auditLogs}</div>
-                        <div className="text-slate-400 text-[9px] mt-0.5">Audit Logs</div>
+                      <div className="p-2 rounded-lg bg-white border border-purple-100 shadow-xs">
+                        <div className="text-indigo-700 font-bold text-xs">{preview.auditLogs}</div>
+                        <div className="text-slate-500 text-[9px] mt-0.5">Audit Logs</div>
                       </div>
                     </div>
                     {preview.total === 0 ? (
-                      <div className="p-2.5 rounded-lg bg-amber-950/40 border border-amber-800/60 text-amber-300 text-[11px] font-sans flex items-start gap-2">
-                        <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+                      <div className="p-2.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-[11px] font-sans flex items-start gap-2">
+                        <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
                         <span>
                           <b>Kenapa 0 Rekod?</b> Semua data loji dalam sistem sekarang bertarikh <b>September 2026</b>. Dasar had tarikh yang dipilih ({effectiveCutoff}) hanya mencari rekod lama sebelum tarikh tersebut. Sila pilih preset <b>"Semua Rekod"</b> atau <b>"Hari Ini"</b> di atas untuk memuat turun semua rekod ke dalam fail Excel & JSON anda.
                         </span>
                       </div>
                     ) : (
-                      <div className="text-[10px] font-mono text-emerald-400/90 flex items-center gap-1.5">
-                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                      <div className="text-[10px] font-mono text-emerald-700 flex items-center gap-1.5 font-medium">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
                         <span>Fail Excel (.csv) & .json akan mengandungi kesemua {preview.total} rekod ini secara lengkap.</span>
                       </div>
                     )}
@@ -1354,7 +1354,7 @@ export default function AdminUserManagementView() {
                 <button
                   type="button"
                   onClick={() => handleDownloadArchive(true)}
-                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold py-3 px-4 rounded-xl text-xs font-mono transition-all shadow-lg shadow-emerald-950/60 cursor-pointer"
+                  className="w-full flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-xl text-xs font-mono transition-all shadow-xs cursor-pointer active:scale-95"
                 >
                   <Download className="h-4 w-4" />
                   <span>📥 Muat Turun Full Plant Backup (.JSON + .CSV) — Semua Rekod Semasa</span>
@@ -1364,7 +1364,7 @@ export default function AdminUserManagementView() {
                   <button
                     type="button"
                     onClick={() => handleDownloadArchive(false)}
-                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-semibold py-2.5 px-4 rounded-xl text-xs font-mono transition-all shadow-lg shadow-cyan-950/60 cursor-pointer"
+                    className="w-full flex items-center justify-center gap-2 border border-purple-200 bg-white text-purple-700 hover:bg-purple-50 font-semibold py-2.5 px-4 rounded-xl text-xs font-mono transition-all shadow-xs cursor-pointer active:scale-95"
                   >
                     <Download className="h-4 w-4" />
                     <span>Muat Turun Sandaran Mengikut Had ({getEffectiveCutoffDate()})</span>
@@ -1372,16 +1372,16 @@ export default function AdminUserManagementView() {
                 )}
 
                 {/* Google Drive Direct Link */}
-                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-900/40 border border-slate-800/80 text-xs font-mono">
-                  <div className="flex items-center gap-2 text-slate-300">
-                    <Archive className="h-4 w-4 text-amber-400" />
+                <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-mono">
+                  <div className="flex items-center gap-2 text-slate-700">
+                    <Archive className="h-4 w-4 text-purple-600" />
                     <span>Upload downloaded file to Google Drive:</span>
                   </div>
                   <a
                     href="https://drive.google.com"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 text-[11px] font-semibold transition-colors border border-slate-700"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white hover:bg-purple-50 text-purple-700 text-[11px] font-semibold transition-colors border border-purple-200 shadow-xs"
                   >
                     <span>Open Google Drive</span>
                     <ExternalLink className="h-3 w-3" />
@@ -1389,8 +1389,8 @@ export default function AdminUserManagementView() {
                 </div>
 
                 {hasDownloadedBackup && downloadedPackageInfo && (
-                  <div className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-700/60 text-emerald-300 text-xs font-mono flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                  <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-mono flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
                     <span>
                       Archive generated: <b>{downloadedPackageInfo.filename}.json</b> ({downloadedPackageInfo.count} records). Step 2 is now unlocked!
                     </span>
@@ -1401,40 +1401,40 @@ export default function AdminUserManagementView() {
 
             {/* STEP 2: Prune Supabase Database (Protected) */}
             <div className={`rounded-2xl border ${
-              hasDownloadedBackup ? 'border-amber-600/70 bg-[#121524]' : 'border-slate-800 bg-[#0f172a]/50'
-            } p-5 shadow-xl backdrop-blur-sm space-y-4`}>
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              hasDownloadedBackup ? 'border-amber-300 bg-amber-50/20' : 'border-purple-100 bg-white'
+            } p-5 shadow-sm space-y-4`}>
+              <div className="flex items-center justify-between border-b border-purple-100 pb-3">
                 <div className="flex items-center gap-2">
                   <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${
                     hasDownloadedBackup 
-                      ? 'bg-amber-500/20 border border-amber-500/50 text-amber-400' 
-                      : 'bg-slate-800 border border-slate-700 text-slate-500'
+                      ? 'bg-amber-100 border border-amber-300 text-amber-800' 
+                      : 'bg-slate-100 border border-slate-200 text-slate-400'
                   } font-bold text-xs`}>
                     2
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-white tracking-wide">
+                    <h3 className="text-sm font-bold text-slate-900 tracking-wide">
                       STEP 2: Execute Supabase Database Prune
                     </h3>
-                    <span className="text-[10px] font-mono text-slate-400">
+                    <span className="text-[10px] font-mono text-slate-500">
                       Admin Electronic Signature & 21 CFR Part 11 Audit Trail
                     </span>
                   </div>
                 </div>
                 {hasDownloadedBackup ? (
-                  <span className="px-2 py-0.5 text-[10px] font-mono bg-amber-950 text-amber-300 border border-amber-700 rounded font-bold animate-pulse">
+                  <span className="px-2 py-0.5 text-[10px] font-mono bg-amber-100 text-amber-800 border border-amber-300 rounded font-bold animate-pulse">
                     UNLOCKED
                   </span>
                 ) : (
-                  <span className="px-2 py-0.5 text-[10px] font-mono bg-slate-900 text-slate-500 border border-slate-800 rounded font-bold">
+                  <span className="px-2 py-0.5 text-[10px] font-mono bg-slate-100 text-slate-500 border border-slate-200 rounded font-bold">
                     LOCKED
                   </span>
                 )}
               </div>
 
               {!hasDownloadedBackup ? (
-                <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 text-slate-400 text-xs font-mono space-y-2">
-                  <div className="flex items-center gap-2 text-amber-400 font-semibold">
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-600 text-xs font-mono space-y-2">
+                  <div className="flex items-center gap-2 text-amber-700 font-semibold">
                     <Lock className="h-4 w-4" />
                     <span>Safety Protection Active</span>
                   </div>
@@ -1443,12 +1443,12 @@ export default function AdminUserManagementView() {
                   </p>
                 </div>
               ) : (
-                <div className="p-3.5 rounded-xl bg-amber-950/30 border border-amber-800/40 text-amber-300 text-xs font-mono space-y-1">
+                <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs font-mono space-y-1">
                   <div className="font-bold flex items-center gap-1.5">
-                    <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0" />
+                    <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
                     <span>Pengesahan Pembersihan Data:</span>
                   </div>
-                  <p className="text-[11px] text-amber-200/80 leading-relaxed font-sans">
+                  <p className="text-[11px] text-amber-800 leading-relaxed font-sans">
                     Semua rekod Sample Reports (berstatus <i>decided</i>) dan Deviations sebelum <b>{getEffectiveCutoffDate()}</b> akan dipadam daripada Supabase. Shift Sheet aktif, profil pengguna, dan spesifikasi produk KEKAL selamat.
                   </p>
                 </div>
@@ -1457,11 +1457,11 @@ export default function AdminUserManagementView() {
               {/* Prune Form */}
               <form onSubmit={handleExecutePrune} className="space-y-4 text-xs font-mono">
                 <div>
-                  <label className="block text-slate-300 mb-1 font-semibold">
+                  <label className="block text-slate-700 mb-1 font-semibold">
                     Administrator Electronic Signature Password:
                   </label>
                   <div className="relative">
-                    <KeyRound className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-500" />
+                    <KeyRound className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
                     <input
                       type="password"
                       disabled={!hasDownloadedBackup || !isAdmin || isPruning}
@@ -1469,7 +1469,7 @@ export default function AdminUserManagementView() {
                       placeholder={hasDownloadedBackup ? "Enter administrator password..." : "Complete Step 1 first..."}
                       value={prunePassword}
                       onChange={(e) => setPrunePassword(e.target.value)}
-                      className="w-full bg-[#090d16] border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-white placeholder-slate-600 focus:outline-none focus:border-amber-500 disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-slate-900 placeholder-slate-400 focus:outline-none focus:border-purple-600 focus:ring-1 focus:ring-purple-200 disabled:opacity-40 disabled:cursor-not-allowed shadow-xs"
                     />
                   </div>
                   <span className="text-[10px] text-slate-500 mt-1 block">
@@ -1480,7 +1480,7 @@ export default function AdminUserManagementView() {
                 <button
                   type="submit"
                   disabled={!hasDownloadedBackup || !isAdmin || isPruning || !prunePassword.trim()}
-                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-red-700 via-rose-700 to-amber-700 hover:from-red-600 hover:to-amber-600 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-xl text-xs font-mono transition-all shadow-lg shadow-red-950/60 cursor-pointer"
+                  className="w-full flex items-center justify-center gap-2 bg-rose-600 hover:bg-rose-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-xl text-xs font-mono transition-all shadow-xs cursor-pointer active:scale-95"
                 >
                   <Trash2 className="h-4 w-4" />
                   <span>
@@ -1490,12 +1490,12 @@ export default function AdminUserManagementView() {
               </form>
 
               {/* Audit & Compliance Standards Card */}
-              <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 text-[11px] font-mono text-slate-400 space-y-1.5">
-                <div className="flex items-center gap-1.5 text-cyan-400 font-bold">
+              <div className="p-3.5 rounded-xl bg-purple-50/50 border border-purple-100 text-[11px] font-mono text-slate-600 space-y-1.5">
+                <div className="flex items-center gap-1.5 text-purple-700 font-bold">
                   <ShieldCheck className="h-3.5 w-3.5" />
                   <span>REGULATORY COMPLIANCE SAFEGUARDS:</span>
                 </div>
-                <ul className="space-y-1 text-[10px] text-slate-400">
+                <ul className="space-y-1 text-[10px] text-slate-600">
                   <li>• <b>Zero Data Loss:</b> Complete cold backup is always downloaded before prune execution.</li>
                   <li>• <b>Immutable Audit Trail:</b> Every prune execution is stamped with Admin ID & timestamp in <code>audit_log</code>.</li>
                   <li>• <b>Protected Active Shift:</b> The active shift sheet and running tanks are excluded from pruning.</li>
@@ -1518,21 +1518,21 @@ export default function AdminUserManagementView() {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`pointer-events-auto rounded-2xl border p-4 shadow-2xl backdrop-blur-xl transition-all duration-300 animate-in slide-in-from-top-3 flex items-start gap-3 ${
+            className={`pointer-events-auto rounded-2xl border p-4 shadow-xl backdrop-blur-md transition-all duration-300 animate-in slide-in-from-top-3 flex items-start gap-3 ${
               t.type === 'success'
-                ? 'bg-[#061e16]/95 border-emerald-500/40 text-emerald-100 shadow-emerald-950/60'
+                ? 'bg-white/95 border-emerald-200 text-emerald-950 shadow-emerald-500/10'
                 : t.type === 'warning'
-                ? 'bg-[#261704]/95 border-amber-500/40 text-amber-100 shadow-amber-950/60'
+                ? 'bg-white/95 border-amber-200 text-amber-950 shadow-amber-500/10'
                 : t.type === 'error'
-                ? 'bg-[#27080c]/95 border-rose-500/40 text-rose-100 shadow-rose-950/60'
-                : 'bg-[#081726]/95 border-cyan-500/40 text-cyan-100 shadow-cyan-950/60'
+                ? 'bg-white/95 border-rose-200 text-rose-950 shadow-rose-500/10'
+                : 'bg-white/95 border-purple-200 text-purple-950 shadow-purple-500/10'
             }`}
           >
             <div className="shrink-0 mt-0.5">
-              {t.type === 'success' && <CheckCircle2 className="h-5 w-5 text-emerald-400" />}
-              {t.type === 'warning' && <AlertTriangle className="h-5 w-5 text-amber-400" />}
-              {t.type === 'error' && <AlertCircle className="h-5 w-5 text-rose-400" />}
-              {t.type === 'info' && <Info className="h-5 w-5 text-cyan-400" />}
+              {t.type === 'success' && <CheckCircle2 className="h-5 w-5 text-emerald-600" />}
+              {t.type === 'warning' && <AlertTriangle className="h-5 w-5 text-amber-600" />}
+              {t.type === 'error' && <AlertCircle className="h-5 w-5 text-rose-600" />}
+              {t.type === 'info' && <Info className="h-5 w-5 text-purple-600" />}
             </div>
             <div className="flex-1 min-w-0 pr-1">
               <div className="flex items-center gap-2 mb-0.5">
@@ -1540,14 +1540,14 @@ export default function AdminUserManagementView() {
                   {t.title}
                 </span>
               </div>
-              <p className="text-xs text-slate-200 leading-relaxed font-sans">
+              <p className="text-xs text-slate-700 leading-relaxed font-sans">
                 {t.message}
               </p>
             </div>
             <button
               type="button"
               onClick={() => dismissToast(t.id)}
-              className="shrink-0 p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              className="shrink-0 p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
               title="Tutup Notifikasi"
             >
               <X className="h-4 w-4" />
@@ -1561,7 +1561,7 @@ export default function AdminUserManagementView() {
       {/* ========================================================================= */}
       {confirmModal && confirmModal.isOpen && (
         <div 
-          className="fixed inset-0 z-[9998] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
+          className="fixed inset-0 z-[9998] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200"
           onClick={() => {
             if (!modalIsSubmitting) {
               setConfirmModal(null);
@@ -1570,7 +1570,7 @@ export default function AdminUserManagementView() {
           }}
         >
           <div 
-            className="relative max-w-md w-full bg-[#0a0f1d] border border-slate-700/80 rounded-2xl shadow-2xl shadow-black/90 overflow-hidden animate-in zoom-in-95 duration-200"
+            className="relative max-w-md w-full bg-white border border-purple-100 rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Top gradient highlight strip */}
@@ -1580,7 +1580,7 @@ export default function AdminUserManagementView() {
                   ? 'bg-gradient-to-r from-red-500 via-rose-500 to-amber-500'
                   : confirmModal.type === 'warning'
                   ? 'bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500'
-                  : 'bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500'
+                  : 'bg-gradient-to-r from-purple-500 via-indigo-500 to-purple-600'
               }`} 
             />
 
@@ -1588,12 +1588,12 @@ export default function AdminUserManagementView() {
               {/* Header with icon and title */}
               <div className="flex items-start gap-3.5">
                 <div 
-                  className={`p-3 rounded-2xl shrink-0 shadow-lg ${
+                  className={`p-3 rounded-2xl shrink-0 shadow-xs ${
                     confirmModal.type === 'danger'
-                      ? 'bg-red-500/15 border border-red-500/30 text-red-400 shadow-red-950/50'
+                      ? 'bg-rose-50 border border-rose-200 text-rose-600'
                       : confirmModal.type === 'warning'
-                      ? 'bg-amber-500/15 border border-amber-500/30 text-amber-400 shadow-amber-950/50'
-                      : 'bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 shadow-cyan-950/50'
+                      ? 'bg-amber-50 border border-amber-200 text-amber-600'
+                      : 'bg-purple-50 border border-purple-200 text-purple-600'
                   }`}
                 >
                   {confirmModal.type === 'danger' && <Trash2 className="h-6 w-6" />}
@@ -1606,19 +1606,19 @@ export default function AdminUserManagementView() {
                     <span 
                       className={`inline-block text-[10px] font-mono font-bold px-2 py-0.5 rounded-full mb-1.5 border uppercase ${
                         confirmModal.type === 'danger'
-                          ? 'bg-red-950/60 text-red-300 border-red-800/60'
+                          ? 'bg-rose-50 text-rose-700 border-rose-200'
                           : confirmModal.type === 'warning'
-                          ? 'bg-amber-950/60 text-amber-300 border-amber-800/60'
-                          : 'bg-cyan-950/60 text-cyan-300 border-cyan-800/60'
+                          ? 'bg-amber-50 text-amber-700 border-amber-200'
+                          : 'bg-purple-50 text-purple-700 border-purple-200'
                       }`}
                     >
                       {confirmModal.badgeText}
                     </span>
                   )}
-                  <h3 className="text-base font-bold text-white tracking-wide">
+                  <h3 className="text-base font-bold text-slate-900 tracking-wide">
                     {confirmModal.title}
                   </h3>
-                  <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+                  <p className="text-xs text-slate-600 mt-1 leading-relaxed">
                     {confirmModal.description}
                   </p>
                 </div>
@@ -1626,16 +1626,16 @@ export default function AdminUserManagementView() {
 
               {/* Staff details card if available */}
               {confirmModal.details?.name && (
-                <div className="bg-[#060b14] border border-slate-800/80 rounded-xl p-3.5 space-y-2">
-                  <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2">
+                  <div className="text-[11px] font-mono text-slate-500 uppercase tracking-wider font-semibold">
                     Maklumat Kakitangan Terlibat:
                   </div>
                   <div className="flex items-center justify-between">
-                    <div className="text-sm font-semibold text-slate-100">
+                    <div className="text-sm font-semibold text-slate-800">
                       {confirmModal.details.name}
                     </div>
                     {confirmModal.details.employeeNo && (
-                      <span className="text-xs font-mono font-bold text-cyan-400 bg-cyan-950/60 border border-cyan-800/50 px-2.5 py-0.5 rounded-lg">
+                      <span className="text-xs font-mono font-bold text-purple-700 bg-purple-100 border border-purple-200 px-2.5 py-0.5 rounded-lg">
                         {confirmModal.details.employeeNo}
                       </span>
                     )}
@@ -1648,10 +1648,10 @@ export default function AdminUserManagementView() {
                 <div 
                   className={`p-3 rounded-xl border text-xs leading-relaxed ${
                     confirmModal.type === 'danger'
-                      ? 'bg-red-950/30 border-red-900/50 text-red-200'
+                      ? 'bg-rose-50 border-rose-200 text-rose-800'
                       : confirmModal.type === 'warning'
-                      ? 'bg-amber-950/30 border-amber-900/50 text-amber-200'
-                      : 'bg-slate-900/60 border-slate-800 text-slate-300'
+                      ? 'bg-amber-50 border-amber-200 text-amber-900'
+                      : 'bg-slate-50 border-slate-200 text-slate-700'
                   }`}
                 >
                   <p className="whitespace-pre-line font-sans">
@@ -1663,17 +1663,17 @@ export default function AdminUserManagementView() {
               {/* Password Input for Secure Actions (e.g. 1-Click Prune) */}
               {confirmModal.requiresPassword && (
                 <div className="space-y-1.5 pt-1">
-                  <label className="text-[11px] font-mono text-slate-400 block font-semibold">
+                  <label className="text-[11px] font-mono text-slate-600 block font-semibold">
                     Kata Laluan Pentadbir (Admin Authorization):
                   </label>
                   <div className="relative">
-                    <Lock className="h-4 w-4 text-slate-500 absolute left-3 top-3" />
+                    <Lock className="h-4 w-4 text-slate-400 absolute left-3 top-3" />
                     <input
                       type="password"
                       value={modalPasswordInput}
                       onChange={(e) => setModalPasswordInput(e.target.value)}
                       placeholder={confirmModal.passwordPlaceholder || 'Kata laluan pentadbir...'}
-                      className="w-full bg-[#060b14] border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs font-mono text-white placeholder-slate-600 focus:outline-none focus:border-amber-500"
+                      className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-xs font-mono text-slate-900 placeholder-slate-400 focus:outline-none focus:border-purple-600 focus:ring-1 focus:ring-purple-200 shadow-xs"
                       autoFocus
                     />
                   </div>
@@ -1681,7 +1681,7 @@ export default function AdminUserManagementView() {
               )}
 
               {/* Action Buttons */}
-              <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-800/80">
+              <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
                 <button
                   type="button"
                   disabled={modalIsSubmitting}
@@ -1689,7 +1689,7 @@ export default function AdminUserManagementView() {
                     setConfirmModal(null);
                     setModalPasswordInput('');
                   }}
-                  className="px-4 py-2.5 rounded-xl border border-slate-700 bg-slate-800/70 hover:bg-slate-800 text-slate-300 hover:text-white font-mono text-xs transition-colors cursor-pointer disabled:opacity-50"
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-mono text-xs transition-colors cursor-pointer disabled:opacity-50 shadow-xs"
                 >
                   Batal / Cancel
                 </button>
@@ -1707,12 +1707,12 @@ export default function AdminUserManagementView() {
                       setModalIsSubmitting(false);
                     }
                   }}
-                  className={`px-5 py-2.5 rounded-xl font-mono text-xs font-bold text-white shadow-lg flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+                  className={`px-5 py-2.5 rounded-xl font-mono text-xs font-bold text-white shadow-xs flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 ${
                     confirmModal.confirmButtonVariant === 'danger'
-                      ? 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 shadow-red-950/60'
+                      ? 'bg-rose-600 hover:bg-rose-700'
                       : confirmModal.confirmButtonVariant === 'warning'
-                      ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 shadow-amber-950/60'
-                      : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 shadow-cyan-950/60'
+                      ? 'bg-amber-600 hover:bg-amber-700'
+                      : 'bg-purple-600 hover:bg-purple-700'
                   }`}
                 >
                   {modalIsSubmitting ? (
