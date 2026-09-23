@@ -164,6 +164,16 @@ export default function OfficialFormsExportView() {
   }, [selectedShiftDate]);
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const navTarget = sessionStorage.getItem('refinery_selected_export_report_id');
+      if (navTarget && reports.some(r => r.id === navTarget)) {
+        setActiveFormType('rf_fr_001');
+        setSelectedReportId(navTarget);
+        sessionStorage.removeItem('refinery_selected_export_report_id');
+        return;
+      }
+    }
+
     if (reports.length > 0) {
       if (!selectedReportId || !reports.some(r => r.id === selectedReportId)) {
         setSelectedReportId(reports[0].id);
@@ -890,9 +900,12 @@ export default function OfficialFormsExportView() {
               </tr>
             </thead>
             <tbody>
-              {activeReport.results?.map(res => (
+              {activeReport.results?.filter(res => res.requested !== false).map(res => (
                 <tr key={res.id}>
-                  <td className="border border-slate-900 p-2 font-sans">{res.parameter_name}</td>
+                  <td className="border border-slate-900 p-2 font-sans">
+                    {res.parameter_name}
+                    {res.series_key ? ` (${res.series_key}°C)` : ''}
+                  </td>
                   <td className="border border-slate-900 p-2 text-slate-500">{res.unit || '-'}</td>
                   <td className="border border-slate-900 p-2 font-bold">{res.value_numeric ?? res.value_text ?? '-'}</td>
                   <td className="border border-slate-900 p-2 text-center">

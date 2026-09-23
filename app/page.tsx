@@ -48,6 +48,13 @@ export default function Home() {
     setAuthUserState(null);
   };
 
+  const handleNavigateToCertificate = (reportId?: string) => {
+    if (reportId && typeof window !== 'undefined') {
+      sessionStorage.setItem('refinery_selected_export_report_id', reportId);
+    }
+    setActiveTab('export');
+  };
+
   // If not logged in, render the dedicated industrial Login View
   if (!authUser) {
     return <LoginView onLogin={handleLogin} />;
@@ -76,7 +83,11 @@ export default function Home() {
         {currentTab === 'supervisor' && allowedTabs.includes('supervisor') && <SupervisorBoardView />}
         {currentTab === 'report' && allowedTabs.includes('report') && <ReportExportView />}
         {currentTab === 'qc' && allowedTabs.includes('qc') && (
-          <SampleLabView currentRole={authUser.role} currentUser={authUser} />
+          <SampleLabView 
+            currentRole={authUser.role} 
+            currentUser={authUser} 
+            onNavigateToCertificate={handleNavigateToCertificate}
+          />
         )}
         {currentTab === 'analytics' && allowedTabs.includes('analytics') && <AnalyticsTrendsView />}
         {currentTab === 'export' && allowedTabs.includes('export') && <OfficialFormsExportView />}

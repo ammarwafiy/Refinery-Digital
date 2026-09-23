@@ -60,9 +60,10 @@ import { formatNumber } from '@/lib/utils';
 interface SampleLabViewProps {
   currentRole?: UserRole;
   currentUser?: Profile | null;
+  onNavigateToCertificate?: (reportId: string) => void;
 }
 
-export default function SampleLabView({ currentRole, currentUser }: SampleLabViewProps = {}) {
+export default function SampleLabView({ currentRole, currentUser, onNavigateToCertificate }: SampleLabViewProps = {}) {
   const [reports, setReports] = useState<SampleReport[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [tanks, setTanks] = useState<Tank[]>([]);
@@ -1016,6 +1017,19 @@ export default function SampleLabView({ currentRole, currentUser }: SampleLabVie
                         </button>
                       )
                     )}
+
+                    {/* Direct Navigation to RF-FR-001 Certificate */}
+                    {onNavigateToCertificate && (
+                      <button
+                        type="button"
+                        onClick={() => onNavigateToCertificate(selectedReport.id)}
+                        className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 px-3 py-1.5 rounded-xl text-xs font-mono transition-colors shadow-sm"
+                        title="View & export official RF-FR-001 Sample Analysis Certificate"
+                      >
+                        <FileText className="h-3.5 w-3.5" />
+                        <span>View Certificate</span>
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -1094,9 +1108,8 @@ export default function SampleLabView({ currentRole, currentUser }: SampleLabVie
                             Test (✓)
                           </th>
                           <th className="py-2.5 px-3">Parameter Name</th>
-                          <th className="py-2.5 px-3">Unit</th>
-                          <th className="py-2.5 px-3 w-44">Lab Result</th>
-                          <th className="py-2.5 px-3 text-center">Spec Status</th>
+                          <th className="py-2.5 px-3 w-20">Unit</th>
+                          <th className="py-2.5 px-3 w-56">Lab Result</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-800/60 font-mono">
@@ -1168,25 +1181,6 @@ export default function SampleLabView({ currentRole, currentUser }: SampleLabVie
                                   />
                                 )}
                               </td>
-                              <td className="py-2.5 px-3 text-center">
-                                {isUnticked ? (
-                                  <span className="inline-flex items-center text-[10px] text-slate-500 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
-                                    N/A (Unticked)
-                                  </span>
-                                ) : res.in_spec === true ? (
-                                  <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-800/40">
-                                    <Check className="h-2.5 w-2.5" /> IN SPEC
-                                  </span>
-                                ) : res.in_spec === false ? (
-                                  <span className="inline-flex items-center gap-1 text-[10px] text-rose-400 bg-rose-950/80 px-2 py-0.5 rounded border border-rose-800/40 font-bold">
-                                    <XCircle className="h-2.5 w-2.5" /> OUT OF SPEC
-                                  </span>
-                                ) : (
-                                  <span className="text-[10px] text-slate-500">
-                                    Pending Input
-                                  </span>
-                                )}
-                              </td>
                             </tr>
                           );
                         })}
@@ -1249,25 +1243,6 @@ export default function SampleLabView({ currentRole, currentUser }: SampleLabVie
                                   </div>
                                 )}
                               </div>
-                            </td>
-                            <td className="py-2.5 px-3 text-center">
-                              {!isTempAnyTicked ? (
-                                <span className="inline-flex items-center text-[10px] text-slate-500 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
-                                  N/A (Unticked)
-                                </span>
-                              ) : tempResults.some(r => requestedMap[r.id] !== false && r.in_spec === false) ? (
-                                <span className="inline-flex items-center gap-1 text-[10px] text-rose-400 bg-rose-950/80 px-2 py-0.5 rounded border border-rose-800/40 font-bold">
-                                  <XCircle className="h-2.5 w-2.5" /> OUT OF SPEC
-                                </span>
-                              ) : tempResults.filter(r => requestedMap[r.id] !== false).every(r => r.in_spec === true) ? (
-                                <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-800/40">
-                                  <Check className="h-2.5 w-2.5" /> ALL IN SPEC
-                                </span>
-                              ) : (
-                                <span className="text-[10px] text-slate-500">
-                                  Pending Input
-                                </span>
-                              )}
                             </td>
                           </tr>
                         )}
@@ -1338,25 +1313,6 @@ export default function SampleLabView({ currentRole, currentUser }: SampleLabVie
                                     }}
                                     className="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1 text-xs text-white focus:border-cyan-500 disabled:opacity-50 font-mono"
                                   />
-                                )}
-                              </td>
-                              <td className="py-2.5 px-3 text-center">
-                                {isUnticked ? (
-                                  <span className="inline-flex items-center text-[10px] text-slate-500 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
-                                    N/A (Unticked)
-                                  </span>
-                                ) : res.in_spec === true ? (
-                                  <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-800/40">
-                                    <Check className="h-2.5 w-2.5" /> IN SPEC
-                                  </span>
-                                ) : res.in_spec === false ? (
-                                  <span className="inline-flex items-center gap-1 text-[10px] text-rose-400 bg-rose-950/80 px-2 py-0.5 rounded border border-rose-800/40 font-bold">
-                                    <XCircle className="h-2.5 w-2.5" /> OUT OF SPEC
-                                  </span>
-                                ) : (
-                                  <span className="text-[10px] text-slate-500">
-                                    Pending Input
-                                  </span>
                                 )}
                               </td>
                             </tr>
