@@ -44,5 +44,6 @@ next-env.d.ts
 scripts/
 
 # agent & ide config
-.agents/
+.agents/*
+!.agents/skills/
 
