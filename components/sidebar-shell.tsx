@@ -223,7 +223,7 @@ export function SidebarShell({ profile, children }: { profile: Profile; children
           {!collapsed ? (
             <div className="flex items-center gap-3 p-2 rounded-lg bg-[#101927] border border-[#1F2E43]">
               <div className="w-8 h-8 rounded-lg bg-[#009FE3]/15 border border-[#009FE3]/30 flex items-center justify-center text-sm font-bold text-[#009FE3] shrink-0 font-mono">
-                {profile.full_name.charAt(0).toUpperCase()}
+                {(profile?.full_name || 'U').charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
                 <div className="text-xs font-semibold text-slate-200 truncate">{profile.full_name}</div>
@@ -238,7 +238,7 @@ export function SidebarShell({ profile, children }: { profile: Profile; children
           ) : (
             <div className="flex justify-center">
               <div className="w-8 h-8 rounded-lg bg-[#009FE3]/15 border border-[#009FE3]/30 flex items-center justify-center text-sm font-bold text-[#009FE3] font-mono" title={profile.full_name}>
-                {profile.full_name.charAt(0).toUpperCase()}
+                {(profile?.full_name || 'U').charAt(0).toUpperCase()}
               </div>
             </div>
           )}

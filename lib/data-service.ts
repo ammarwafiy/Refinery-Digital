@@ -165,9 +165,9 @@ export function generateNextEmployeeId(role: UserRole): string {
   const meta = ROLE_ID_SERIES[role] || { prefix: 'ST', start: 1000 };
   const all = getProfiles();
   const existingNums = all
-    .filter(p => p.employee_no.toUpperCase().startsWith(`${meta.prefix}-`))
+    .filter(p => (p?.employee_no || '').toUpperCase().startsWith(`${meta.prefix}-`))
     .map(p => {
-      const parts = p.employee_no.split('-');
+      const parts = (p?.employee_no || '').split('-');
       return parseInt(parts[1], 10);
     })
     .filter(n => !isNaN(n));

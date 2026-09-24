@@ -997,7 +997,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                                 ? 'bg-emerald-500/10 text-green-600 border-emerald-500/30'
                                 : 'bg-amber-500/10 text-amber-600 border-amber-500/30'
                             }`}>
-                              DECISION: {selectedReport.decision.decision.toUpperCase()}
+                              DECISION: {String(selectedReport.decision?.decision || 'PENDING').toUpperCase()}
                             </div>
                             <div className="text-[9px] font-mono text-slate-500 mt-0.5">
                               By: {selectedReport.decision.decided_by_name}

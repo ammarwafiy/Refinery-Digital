@@ -952,7 +952,7 @@ export default function AdminUserManagementView() {
                           </td>
                           <td className="py-2.5 px-3.5">
                             <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${badge.bg} ${badge.text} ${badge.border}`}>
-                              {p.role.toUpperCase()}
+                              {String(p.role || '').toUpperCase()}
                             </span>
                           </td>
                           <td className="py-2.5 px-3.5">

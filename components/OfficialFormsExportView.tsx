@@ -318,7 +318,7 @@ export default function OfficialFormsExportView() {
       const rows = filteredAuditLogs.map(log => [
         `"${formatDateTime(log.occurred_at)}"`,
         log.table_name,
-        log.action.toUpperCase(),
+        String(log.action || '').toUpperCase(),
         `"${(log.actor_name || 'System / DB Trigger').replace(/"/g, '""')}"`,
         `"${String(log.record_id || log.id || '-').replace(/"/g, '""')}"`,
         `"${JSON.stringify(log.new_row || log.old_row || {}).replace(/"/g, '""')}"`
@@ -540,7 +540,7 @@ export default function OfficialFormsExportView() {
               >
                 {reports.map(r => (
                   <option key={r.id} value={r.id} className="bg-[#101927] text-slate-200">
-                    {r.lot_no} — {r.product_name} ({r.time_check} · {r.status.toUpperCase()})
+                    {r.lot_no} — {r.product_name} ({r.time_check} · {String(r.status || 'draft').toUpperCase()})
                   </option>
                 ))}
               </select>
@@ -1120,7 +1120,7 @@ export default function OfficialFormsExportView() {
 
               {auditActionFilter !== 'all' && (
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-amber-950/40 text-amber-600 border border-amber-800/60 text-[11px] font-medium">
-                  Action: {auditActionFilter.toUpperCase()}
+                  Action: {String(auditActionFilter || '').toUpperCase()}
                   <button
                     type="button"
                     onClick={() => setAuditActionFilter('all')}

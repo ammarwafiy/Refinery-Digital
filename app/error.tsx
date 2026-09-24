@@ -16,6 +16,10 @@ export default function ErrorBoundary({
 
   const handleHardReset = () => {
     if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem('refinery_auth_user');
+        sessionStorage.clear();
+      } catch {}
       window.location.href = '/';
     }
   };

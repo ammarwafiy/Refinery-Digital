@@ -129,15 +129,26 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
     viewer: { bg: 'bg-slate-700/30', text: 'text-slate-300', border: 'border-slate-600' },
   };
 
-  const userInitials = profile.full_name
-    ? profile.full_name
+  const safeRole: UserRole = role || 'operator';
+  const safeRoleColor = roleColors[safeRole] || roleColors.operator;
+  const safeFullName = profile?.full_name || '';
+  const userInitials = safeFullName
+    ? safeFullName
         .split(' ')
-        .map((n) => n[0])
+        .map((n) => (n ? n[0] : ''))
         .filter(Boolean)
         .slice(0, 2)
         .join('')
-        .toUpperCase()
-    : 'AH';
+        .toUpperCase() || 'OP'
+    : 'OP';
+
+  const roleBadgeLabel = safeRole === 'operator'
+    ? 'OP'
+    : safeRole === 'supervisor'
+    ? 'SV'
+    : safeRole.startsWith('qc')
+    ? 'QC'
+    : (safeRole || '').toUpperCase();
 
   const handleMobileTabSelect = (tabId: string) => {
     setActiveTab(tabId);
@@ -166,16 +177,16 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
               </div>
               <div className="text-[10px] text-slate-400 flex items-center gap-1 font-mono">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#10B981] animate-pulse"></span>
-                <span>{currentShiftName} · {profile.employee_no}</span>
+                <span>{currentShiftName} · {profile?.employee_no || 'OP-1042'}</span>
               </div>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
             <span
-              className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase border font-mono ${roleColors[role].bg} ${roleColors[role].text} ${roleColors[role].border}`}
+              className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase border font-mono ${safeRoleColor.bg} ${safeRoleColor.text} ${safeRoleColor.border}`}
             >
-              {role === 'operator' ? 'OP' : role === 'supervisor' ? 'SV' : role.startsWith('qc') ? 'QC' : role.toUpperCase()}
+              {roleBadgeLabel}
             </span>
 
             {/* Mobile Hamburger Menu Toggle Button (Button #0) */}
@@ -339,9 +350,9 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
               </div>
             </div>
             <span
-              className={`px-2 py-0.5 rounded text-[9px] font-semibold uppercase border font-mono ${roleColors[role].bg} ${roleColors[role].text} ${roleColors[role].border}`}
+              className={`px-2 py-0.5 rounded text-[9px] font-semibold uppercase border font-mono ${safeRoleColor.bg} ${safeRoleColor.text} ${safeRoleColor.border}`}
             >
-              {role === 'operator' ? 'OP' : role === 'supervisor' ? 'SV' : role.startsWith('qc') ? 'QC' : role.toUpperCase()}
+              {roleBadgeLabel}
             </span>
           </div>
 
