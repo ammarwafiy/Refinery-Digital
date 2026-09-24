@@ -682,15 +682,15 @@ export default function ReportExportView() {
 
       {/* Live Data Table Preview */}
       <div className="rounded-xl border border-[#1F2E43] bg-[#101927] shadow-xl shadow-black/20 overflow-hidden">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-5 py-3.5 border-b border-[#1F2E43] bg-white gap-2">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-5 py-3.5 border-b border-[#1F2E43] bg-[#0A1018] gap-2">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-mono font-semibold uppercase text-slate-500 tracking-wider">
+            <span className="text-xs font-mono font-semibold uppercase text-slate-200 tracking-wider">
               {category === 'process' && 'RF-FR-004 Hourly Process Log Preview'}
               {category === 'qc' && 'RF-FR-001 QC Lab Analysis Preview'}
               {category === 'deviations' && 'Plant Deviations & Excursions Preview'}
               {category === 'master' && 'Master Operations & Quality Merged Preview'}
             </span>
-            <span className="rounded bg-white px-2 py-0.5 text-[10px] font-mono font-medium text-[#009FE3] border border-slate-200">
+            <span className="rounded bg-[#009FE3]/15 px-2 py-0.5 text-[10px] font-mono font-semibold text-[#009FE3] border border-[#009FE3]/30">
               {category === 'process' || category === 'master' ? filteredProcessEntries.length : category === 'qc' ? filteredQCReports.length : filteredDeviations.length} rows ready
             </span>
           </div>
@@ -704,7 +704,7 @@ export default function ReportExportView() {
           {/* 1. PROCESS LOG TABLE PREVIEW */}
           {(category === 'process' || category === 'master') && (
             <table className="w-full text-left text-xs font-mono">
-              <thead className="sticky top-0 z-10 border-b border-[#1F2E43] bg-white text-[11px] font-semibold text-slate-400 uppercase">
+              <thead className="sticky top-0 z-10 border-b border-[#1F2E43] bg-[#070B12] text-[11px] font-semibold text-slate-400 uppercase">
                 <tr>
                   <th className="px-4 py-3">Slot</th>
                   <th className="px-4 py-3">Product</th>
@@ -760,7 +760,7 @@ export default function ReportExportView() {
           {/* 2. QC LAB TABLE PREVIEW */}
           {category === 'qc' && (
             <table className="w-full text-left text-xs font-mono">
-              <thead className="sticky top-0 z-10 border-b border-[#1F2E43] bg-white text-[11px] font-semibold text-slate-400 uppercase">
+              <thead className="sticky top-0 z-10 border-b border-[#1F2E43] bg-[#070B12] text-[11px] font-semibold text-slate-400 uppercase">
                 <tr>
                   <th className="px-4 py-3">Report No</th>
                   <th className="px-3 py-3">Time</th>
@@ -834,7 +834,7 @@ export default function ReportExportView() {
           {/* 3. DEVIATIONS TABLE PREVIEW */}
           {category === 'deviations' && (
             <table className="w-full text-left text-xs font-mono">
-              <thead className="sticky top-0 z-10 border-b border-[#1F2E43] bg-white text-[11px] font-semibold text-slate-400 uppercase">
+              <thead className="sticky top-0 z-10 border-b border-[#1F2E43] bg-[#070B12] text-[11px] font-semibold text-slate-400 uppercase">
                 <tr>
                   <th className="px-4 py-3">Slot</th>
                   <th className="px-4 py-3">Parameter</th>
