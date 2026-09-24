@@ -22,7 +22,8 @@ import {
   getParameterLimits, 
   getCurrentRole,
   getRealtimeSlotIndex,
-  ensureAutoDispatchedQC
+  ensureAutoDispatchedQC,
+  syncAllProcessEntriesToQC
 } from '@/lib/data-service';
 import { DEFAULT_PRODUCT_ID } from '@/lib/mock-data';
 import { 
@@ -101,8 +102,8 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
         mytDate.toLocaleTimeString('en-GB', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })
       );
 
-      // Proactively auto-dispatch QC sample lot to RF-FR-001 QC Lab for the active timeline hour
-      ensureAutoDispatchedQC(slot, realtimeDate);
+      // Proactively auto-dispatch QC sample lot to RF-FR-001 QC Lab for the active timeline hour and recorded entries
+      syncAllProcessEntriesToQC(activeShiftDate);
 
       // Auto-rollover in realtime when shift date changes (e.g. 07:00 AM hits)
       setActiveShiftDate(prevDate => {
@@ -143,6 +144,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
   const refreshSheet = (preserveSuccess = false) => {
     const s = getProcessSheetByDate(activeShiftDate);
     setSheet(s);
+    syncAllProcessEntriesToQC(activeShiftDate);
     loadSlot(selectedSlotIndex, s, preserveSuccess);
     setAvailableDates(getAvailableShiftDates());
   };
@@ -194,9 +196,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
   const handleProductChange = (newProdId: string) => {
     handleFieldChange('product_id', newProdId);
     // Proactively sync auto-dispatched QC report with the newly selected product
-    if (isLiveShift && selectedSlotIndex === currentSlotIndex) {
-      ensureAutoDispatchedQC(selectedSlotIndex, activeShiftDate, newProdId);
-    }
+    ensureAutoDispatchedQC(selectedSlotIndex, activeShiftDate, newProdId);
   };
 
   const handleCopyPrevious = () => {
@@ -318,7 +318,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
   const isFutureSlot = isLiveShift ? selectedSlotIndex > currentSlotIndex : false;
 
   // Strict realtime lock rule
-  const isSlotDisabled = sheet.status === 'verified' || !isLiveShift || !isLiveSlot;
+  const isSlotDisabled = sheet.status === 'verified' || (role !== 'admin' && (!isLiveShift || !isLiveSlot));
 
   // Real-time synchronization of Stripping Steam & Tray Steam Supply
   const latestEntryWithStripSteam = [...(sheet.entries || [])]

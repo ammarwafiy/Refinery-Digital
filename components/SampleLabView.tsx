@@ -26,6 +26,7 @@ import {
   getProductSpecs,
   getRealtimeShiftDate,
   ensureAutoDispatchedQC,
+  syncAllProcessEntriesToQC,
   generateNextLotNo
 } from '@/lib/data-service';
 import {
@@ -143,7 +144,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
   }, []);
 
   const refreshReports = () => {
-    ensureAutoDispatchedQC();
+    syncAllProcessEntriesToQC();
     const list = getSampleReports();
     setReports(list);
     if (!selectedReportId && list.length > 0) {
@@ -916,7 +917,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                       </div>
                       <div className="text-[11px] text-slate-400 mt-0.5 font-medium flex items-center gap-1.5 font-mono">
                         <span className="truncate max-w-[140px]">{rep.product_name}</span>
-                        {rep.remarks?.includes('Process Log') && (
+                        {(rep.remarks?.toLowerCase().includes('auto-dispatched') || rep.remarks?.includes('Process Log')) && (
                           <span className="text-[8px] font-mono px-1.5 py-0.2 rounded border border-[#1F2E43] bg-[#0A1018] text-[#009FE3] font-semibold">
                             AUTO
                           </span>
@@ -969,7 +970,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                         <h2 className="text-lg font-bold text-slate-100 font-mono">
                           {selectedReport.lot_no}
                         </h2>
-                        {selectedReport.remarks?.includes('Process Log') && (
+                        {(selectedReport.remarks?.toLowerCase().includes('auto-dispatched') || selectedReport.remarks?.includes('Process Log')) && (
                           <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#009FE3]/10 text-[#009FE3] border border-[#009FE3]/30 flex items-center gap-1 font-semibold">
                             ⚡ Auto-Dispatched ({selectedReport.time_check})
                           </span>

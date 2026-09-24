@@ -870,7 +870,8 @@ export function saveProcessEntry(
 
   // Real-time window enforcement: Readings can only be recorded during the active live window slot
   const currentSlot = getRealtimeSlotIndex();
-  if (updatedEntry.slot_index !== currentSlot) {
+  const isCurrentLiveShift = shiftDate === getRealtimeShiftDate();
+  if (isCurrentLiveShift && updatedEntry.slot_index !== currentSlot && role !== 'admin') {
     const slotLabel = String(((updatedEntry.slot_index + 7) % 24) * 100).padStart(4, '0');
     const curLabel = String(((currentSlot + 7) % 24) * 100).padStart(4, '0');
     return {
@@ -1014,23 +1015,25 @@ export function saveProcessEntry(
   addAuditLog('process_entries', finalEntry.id, existingIdx >= 0 ? 'update' : 'insert', null, finalEntry);
 
   // Auto-dispatch product sample to RF-FR-001 QC Lab Analysis queue (Mandatory SOP)
-  finalEntry.auto_dispatch_qc = true;
+  finalEntry.auto_dispatch_qc = updatedEntry.auto_dispatch_qc !== undefined ? updatedEntry.auto_dispatch_qc : true;
   const defaultSpecParamIds = getDefaultParametersForProduct(finalEntry.product_id || undefined);
   finalEntry.qc_parameter_ids = defaultSpecParamIds;
 
-  if (productName && !finalEntry.no_production_reason) {
+  if (finalEntry.auto_dispatch_qc && productName && !finalEntry.no_production_reason) {
     try {
       const qcReport = ensureAutoDispatchedQC(
         updatedEntry.slot_index,
         currentSheet.shift_date,
         finalEntry.product_id || undefined
       );
-      if (qcReport && profile) {
+      if (qcReport) {
         const currentReports = getStored<SampleReport[]>(STORAGE_KEYS.REPORTS, memoryReports);
         const repIdx = currentReports.findIndex(r => r.id === qcReport.id);
         if (repIdx >= 0) {
-          currentReports[repIdx].submitted_by = profile.id;
-          currentReports[repIdx].submitted_by_name = profile.full_name;
+          if (profile) {
+            currentReports[repIdx].submitted_by = profile.id;
+            currentReports[repIdx].submitted_by_name = profile.full_name;
+          }
           setStored(STORAGE_KEYS.REPORTS, currentReports);
           memoryReports = currentReports;
           if (typeof window !== 'undefined') {
@@ -1054,7 +1057,7 @@ export function saveProcessEntry(
   return { success: true, entry: finalEntry };
 }
 
-// Proactive Auto-Dispatch: Immediately generates & enqueues sample lot in RF-FR-001 QC Lab when timeline slot changes
+// Proactive Auto-Dispatch: Immediately generates & enqueues sample lot in RF-FR-001 QC Lab when timeline slot changes or process entry recorded
 export function ensureAutoDispatchedQC(
   slotIndex?: number,
   shiftDate?: string,
@@ -1071,11 +1074,6 @@ export function ensureAutoDispatchedQC(
     const existingReportIdx = currentReports.findIndex(
       r => r.sample_date === targetShiftDate && (r.time_check === slotTimeCheck || r.lot_no?.endsWith(`-${slotLabel}`))
     );
-
-    // Only auto-create new dispatch for the active shift date (protect historical shifts from retroactive injections)
-    if (targetShiftDate !== realtimeDate && existingReportIdx < 0) {
-      return null;
-    }
 
     // Determine product to use
     let productId: string | undefined = explicitProductId;
@@ -1188,6 +1186,11 @@ export function ensureAutoDispatchedQC(
     const now = new Date().toISOString();
     const profile = getCurrentProfile();
 
+    const targetSheetForEntry = allSheets[targetShiftDate];
+    const matchingEntry = targetSheetForEntry?.entries?.find(e => e.slot_index === targetSlotIndex);
+    const submitterId = matchingEntry?.recorded_by || profile?.id || 'OP-1042';
+    const submitterName = matchingEntry?.recorded_by_name || profile?.full_name || 'Process Log Auto-Dispatch';
+
     const newQCReport: SampleReport = {
       id: reportId,
       plant_id: INITIAL_PLANT.id,
@@ -1206,14 +1209,14 @@ export function ensureAutoDispatchedQC(
       batch_no: `B${cleanDateCode}${slotLabel.slice(0, 2)}`,
       sampling_point_id: DEFAULT_SAMPLING_POINT_ID,
       sampling_point_name: 'Deodorizer Outlet Pipe (Header 4)',
-      submitted_by: profile?.id || 'OP-1042',
-      submitted_by_name: profile?.full_name || 'Timeline Auto-Dispatch',
+      submitted_by: submitterId,
+      submitted_by_name: submitterName,
       remark_flushing: false,
       remark_cooling: false,
       remark_pushover: false,
-      remarks: `Auto-dispatched on shift timeline activation (Hour ${slotLabel} - ${productName})`,
+      remarks: `Auto-dispatched from Process Log (Hour ${slotLabel} - ${productName})`,
       status: 'awaiting_results',
-      created_by: profile?.id || 'OP-1042',
+      created_by: submitterId,
       created_at: now,
       results: buildResults(reportId),
     };
@@ -1224,6 +1227,12 @@ export function ensureAutoDispatchedQC(
 
     addAuditLog('sample_reports', reportId, 'insert', null, newQCReport);
 
+    if (supabase) {
+      syncSampleReportToSupabase(newQCReport).catch(e => {
+        console.warn('[Auto-QC] Background sync warning:', e);
+      });
+    }
+
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('refinery_reports_updated', { detail: currentReports }));
     }
@@ -1232,6 +1241,69 @@ export function ensureAutoDispatchedQC(
   } catch (e) {
     console.warn('[Auto-QC] Failed to ensure auto-dispatched QC sample:', e);
     return null;
+  }
+}
+
+/**
+ * Comprehensive Auto-Dispatch Sync:
+ * Scans all process entries in the active process sheet(s) that have recorded production readings
+ * and ensures that an awaiting sample lot exists in RF-FR-001 QC Lab for every single recorded hour.
+ */
+export function syncAllProcessEntriesToQC(targetShiftDate?: string): number {
+  try {
+    const allSheets = getAllProcessSheets();
+    const realtimeDate = getRealtimeShiftDate();
+    const datesToSync = new Set<string>();
+
+    if (targetShiftDate) {
+      datesToSync.add(targetShiftDate);
+    }
+    datesToSync.add(realtimeDate);
+
+    // Also include any sheets stored in allSheets that have entries
+    Object.keys(allSheets).forEach(d => {
+      const s = allSheets[d];
+      if (s && s.entries && s.entries.length > 0) {
+        datesToSync.add(d);
+      }
+    });
+
+    let dispatchedCount = 0;
+
+    datesToSync.forEach(dateStr => {
+      const sheet = allSheets[dateStr] || getProcessSheetByDate(dateStr);
+      if (!sheet || !Array.isArray(sheet.entries)) return;
+
+      sheet.entries.forEach(entry => {
+        // Only dispatch entries that represent production (not shut down / no production)
+        if (entry.no_production_reason) return;
+        if (entry.auto_dispatch_qc === false) return;
+
+        // An entry has data if product_id is set or any operational readings are logged
+        const hasData = Boolean(
+          entry.product_id ||
+          entry.oil_feed_rate_litre != null ||
+          entry.vacuum_torr != null ||
+          entry.tray_1_temp_c != null ||
+          entry.strip_steam_pct_of_oil != null ||
+          entry.recorded_by != null
+        );
+
+        if (hasData) {
+          const res = ensureAutoDispatchedQC(entry.slot_index, dateStr, entry.product_id || undefined);
+          if (res) dispatchedCount++;
+        }
+      });
+    });
+
+    // Also ensure active realtime slot for live shift
+    const currentSlot = getRealtimeSlotIndex();
+    ensureAutoDispatchedQC(currentSlot, realtimeDate);
+
+    return dispatchedCount;
+  } catch (e) {
+    console.warn('[Auto-QC] syncAllProcessEntriesToQC error:', e);
+    return 0;
   }
 }
 
@@ -1455,6 +1527,9 @@ export function acknowledgeDeviation(deviationId: string, actionTaken: string): 
 
 // 4. Sample Reports & Lab (RF-FR-001)
 export function getSampleReports(): SampleReport[] {
+  // Automatically sync all recorded process entries to QC Lab queue so all hours are present
+  syncAllProcessEntriesToQC();
+
   const reports = getStored<SampleReport[]>(STORAGE_KEYS.REPORTS, memoryReports);
   let migrated = false;
   reports.forEach(rep => {
@@ -1728,7 +1803,7 @@ export async function syncSampleReportToSupabase(report: SampleReport): Promise<
             value_numeric: res.value_numeric != null ? Number(res.value_numeric) : null,
             value_text: res.value_text || null,
             in_spec: res.in_spec != null ? res.in_spec : null,
-            entered_by_name: res.entered_by_name || null,
+            entered_by: res.entered_by || null,
           });
         }
       });
