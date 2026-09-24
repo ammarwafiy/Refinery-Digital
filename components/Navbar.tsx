@@ -14,7 +14,10 @@ import {
   Users,
   FileSpreadsheet,
   Menu,
-  X
+  X,
+  Search,
+  Settings,
+  HelpCircle
 } from 'lucide-react';
 import { UserRole, Profile } from '@/types/refinery';
 import {
@@ -35,6 +38,9 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
   const [role, setRole] = useState<UserRole>(currentUser?.role || 'operator');
   const [profile, setProfile] = useState<Profile>(currentUser || getCurrentProfile());
   const [timeString, setTimeString] = useState<string>('');
+  const [formattedDateTime, setFormattedDateTime] = useState<string>('');
+  const [currentShiftName, setCurrentShiftName] = useState<string>('SHIFT B');
+  const [currentShiftHours, setCurrentShiftHours] = useState<string>('14:00 – 22:00');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
 
   useEffect(() => {
@@ -57,6 +63,41 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
           second: '2-digit',
         }) + ' MYT'
       );
+
+      const datePart = now.toLocaleDateString('en-GB', {
+        timeZone: 'Asia/Kuala_Lumpur',
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      });
+      const timePart = now.toLocaleTimeString('en-GB', {
+        timeZone: 'Asia/Kuala_Lumpur',
+        hour12: false,
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+      setFormattedDateTime(`${datePart} ${timePart}`);
+
+      // Shift Calculation based on Malaysia local hour
+      const klHour = parseInt(
+        now.toLocaleTimeString('en-GB', {
+          timeZone: 'Asia/Kuala_Lumpur',
+          hour12: false,
+          hour: '2-digit',
+        }),
+        10
+      );
+
+      if (klHour >= 6 && klHour < 14) {
+        setCurrentShiftName('SHIFT A');
+        setCurrentShiftHours('06:00 – 14:00');
+      } else if (klHour >= 14 && klHour < 22) {
+        setCurrentShiftName('SHIFT B');
+        setCurrentShiftHours('14:00 – 22:00');
+      } else {
+        setCurrentShiftName('SHIFT C');
+        setCurrentShiftHours('22:00 – 06:00');
+      }
     };
 
     updateClock();
@@ -65,12 +106,12 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
   }, [currentUser]);
 
   const navItems = [
-    { id: 'process', label: 'RF-FR-004 Process Log', shortLabel: 'Process Log', icon: Layers, badge: '24-Hour' },
-    { id: 'supervisor', label: 'Supervisor Live Board', shortLabel: 'Live Board', icon: Activity, badge: 'Realtime' },
-    { id: 'report', label: 'Report', shortLabel: 'Report', icon: FileSpreadsheet, badge: 'CSV' },
-    { id: 'qc', label: 'RF-FR-001 QC Lab', shortLabel: 'QC Lab', icon: FlaskConical, badge: 'Quality' },
-    { id: 'analytics', label: 'Process Trends & Pareto', shortLabel: 'Trends', icon: BarChart3, badge: 'Analytics' },
-    { id: 'export', label: 'Official Forms & Audit', shortLabel: 'Forms & Audit', icon: FileText, badge: 'ISO' },
+    { id: 'process', label: 'Process Control Log', shortLabel: 'Process Log', icon: Layers, badge: '24-Hour' },
+    { id: 'qc', label: 'QC Management', shortLabel: 'QC Lab', icon: FlaskConical, badge: 'Quality' },
+    { id: 'supervisor', label: 'Abnormality Log', shortLabel: 'Live Board', icon: Activity, badge: 'Realtime' },
+    { id: 'report', label: 'Reports', shortLabel: 'Report', icon: FileSpreadsheet, badge: 'CSV' },
+    { id: 'export', label: 'Certificates', shortLabel: 'Forms & Audit', icon: FileText, badge: 'ISO' },
+    { id: 'analytics', label: 'Master Data', shortLabel: 'Trends', icon: BarChart3, badge: 'Analytics' },
   ];
 
   // RBAC Filter: Only show allowed navigation tabs for current role
@@ -88,6 +129,16 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
     viewer: { bg: 'bg-slate-700/30', text: 'text-slate-300', border: 'border-slate-600' },
   };
 
+  const userInitials = profile.full_name
+    ? profile.full_name
+        .split(' ')
+        .map((n) => n[0])
+        .filter(Boolean)
+        .slice(0, 2)
+        .join('')
+        .toUpperCase()
+    : 'AH';
+
   const handleMobileTabSelect = (tabId: string) => {
     setActiveTab(tabId);
     setIsMobileMenuOpen(false);
@@ -95,83 +146,34 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b border-[#1F2E43] bg-[#0A1018] shadow-md">
-        {/* Top Status Strip - Desktop Only */}
-        <div className="hidden lg:flex items-center justify-between border-b border-[#1F2E43] bg-[#070B12] px-3.5 py-1 text-xs text-slate-400">
+      {/* ========================================================================= */}
+      {/* 1. MOBILE TOP HEADER (lg:hidden) - Contains Button #0                     */}
+      {/* ========================================================================= */}
+      <header className="lg:hidden sticky top-0 z-50 w-full border-b border-[#1F2E43] bg-[#0A1018] shadow-md">
+        <div className="flex items-center justify-between px-3.5 py-2.5">
           <div className="flex items-center gap-2.5">
-            <span className="flex items-center gap-2 font-semibold text-slate-100">
-              <span className="flex h-5 w-5 items-center justify-center rounded bg-[#101927] border border-[#1F2E43] shrink-0">
-                <Flame className="h-3.5 w-3.5 text-[#009FE3]" />
-              </span>
-              <span className="text-[11px] font-semibold text-slate-200">
-                <span className="hidden xl:inline">Lam Soon Edible Oils Sdn. Bhd.</span>
-                <span className="xl:hidden">Lam Soon</span>
-              </span>
-            </span>
-            <span className="text-[#1F2E43]">|</span>
-            <div className="flex items-center gap-1.5 text-[11px] text-[#009FE3] bg-[#009FE3]/10 px-2 py-0.5 rounded-md border border-[#009FE3]/30">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#009FE3]"></span>
-              <span className="hidden xl:inline font-mono">NISSHIN DEODORIZER PLANT</span>
-              <span className="xl:hidden font-mono">NISSHIN PLANT</span>
-            </div>
-            <span className="hidden 2xl:inline text-[11px] text-slate-500 font-mono">
-              Doc: PRD-REF-001 (Rev. 02)
-            </span>
-          </div>
-
-          {/* Clock & Status */}
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[#10B981]/10 border border-[#10B981]/30 text-[#10B981]">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10B981] opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#10B981]"></span>
-              </span>
-              <span className="text-[11px] font-medium font-mono">DCS ONLINE</span>
-            </div>
-
-            <div className="hidden xl:flex items-center gap-1.5 text-slate-300 text-[11px] px-2 py-0.5 rounded-md bg-[#101927] border border-[#1F2E43]">
-              <Wifi className="h-3 w-3 text-[#009FE3]" />
-              <span className="font-mono">DB Sync: Active</span>
-            </div>
-
-            <div className="flex items-center gap-1.5 text-[11px] text-slate-200 bg-[#101927] px-2.5 py-0.5 rounded-md border border-[#1F2E43]">
-              <Clock className="h-3 w-3 text-slate-400" />
-              <span className="font-medium font-mono">{timeString || '12:00:00 MYT'}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile Header Bar (Screen width < 1024px) */}
-        <div className="flex lg:hidden items-center justify-between px-3.5 py-2 border-b border-[#1F2E43] bg-[#0A1018]">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#101927] border border-[#1F2E43]">
-              <Flame className="h-4 w-4 text-[#009FE3]" />
+            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center text-white font-bold text-xs">
+              LS
             </div>
             <div>
-              <div className="font-semibold text-xs text-slate-100 flex items-center gap-1.5">
-                <span>Lam Soon</span>
-                <span className="text-[10px] text-[#009FE3] bg-[#009FE3]/10 px-1.5 py-0.5 rounded border border-[#009FE3]/30 font-mono">
-                  NISSHIN
-                </span>
+              <div className="font-semibold text-xs text-slate-100">
+                Lam Soon Refinery
               </div>
               <div className="text-[10px] text-slate-400 flex items-center gap-1 font-mono">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#10B981] animate-pulse"></span>
-                <span>DCS ONLINE · {profile.employee_no}</span>
+                <span>{currentShiftName} · {profile.employee_no}</span>
               </div>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase border font-mono ${roleColors[role].bg} ${roleColors[role].text} ${roleColors[role].border}`}>
-              {role === 'operator' && 'OP'}
-              {role === 'supervisor' && 'SV'}
-              {role === 'qc_analyst' && 'QC'}
-              {role === 'qc_manager' && 'QM'}
-              {role === 'admin' && 'ADMIN'}
-              {role === 'viewer' && 'AUDIT'}
+            <span
+              className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase border font-mono ${roleColors[role].bg} ${roleColors[role].text} ${roleColors[role].border}`}
+            >
+              {role === 'operator' ? 'OP' : role === 'supervisor' ? 'SV' : role.startsWith('qc') ? 'QC' : role.toUpperCase()}
             </span>
 
-            {/* Mobile Hamburger Menu Toggle Button */}
+            {/* Mobile Hamburger Menu Toggle Button (Button #0) */}
             <button
               type="button"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -182,11 +184,39 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
             </button>
           </div>
         </div>
+      </header>
 
-        {/* Desktop Navigation & Role Bar (lg:flex) */}
-        <div className="hidden lg:flex items-center justify-between gap-2 px-3 py-1.5 bg-[#101927]">
-          {/* Navigation Tabs */}
-          <nav className="flex items-center gap-1 p-1 rounded-lg bg-[#0A1018] border border-[#1F2E43] overflow-x-auto min-w-0">
+      {/* ========================================================================= */}
+      {/* 2. DESKTOP LEFT SIDEBAR (Fixed left, width 256px / 280px)                 */}
+      {/* ========================================================================= */}
+      <aside className="hidden lg:flex fixed inset-y-0 left-0 w-64 xl:w-72 bg-[#080E18] border-r border-[#1F2E43] flex-col justify-between z-40 select-none">
+        {/* Brand Header */}
+        <div className="p-4 border-b border-[#1F2E43]/60 bg-[#060A10]/40">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center shadow-lg shadow-red-900/30 border border-red-400/40 shrink-0">
+              <span className="text-white font-extrabold text-sm tracking-tight font-sans">
+                LS
+              </span>
+            </div>
+            <div className="min-w-0">
+              <div className="font-bold text-xs xl:text-sm text-white tracking-wider truncate uppercase">
+                Lam Soon Refinery
+              </div>
+              <div className="text-[9px] xl:text-[10px] text-slate-400 font-mono tracking-widest truncate uppercase">
+                Process Management System
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Navigation Items List */}
+        <div className="flex-1 px-3 py-3 space-y-1 overflow-y-auto">
+          <div className="text-[10px] uppercase font-mono tracking-wider text-slate-400 px-3 py-1">
+            Menu Navigation
+          </div>
+
+          <nav className="space-y-1">
+            {/* Desktop Navigation Tab Button (Button #1) */}
             {visibleNavItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
@@ -194,190 +224,337 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`group relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium font-sans transition-all whitespace-nowrap cursor-pointer ${isActive
-                      ? 'bg-[#009FE3] text-white shadow-sm border border-[#009FE3]'
-                      : 'text-slate-400 hover:text-slate-100 hover:bg-[#172235] border border-transparent'
-                    }`}
+                  className={`group relative flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-medium font-sans transition-all w-full cursor-pointer ${
+                    isActive
+                      ? 'bg-[#1D8CF8] text-white shadow-md shadow-blue-500/20 font-semibold'
+                      : 'text-slate-400 hover:text-slate-100 hover:bg-[#121D2C]'
+                  }`}
                 >
-                  <Icon className={`h-3.5 w-3.5 shrink-0 ${isActive ? 'text-white' : 'text-slate-500 group-hover:text-slate-300'}`} />
-                  <span>{item.label}</span>
+                  <Icon
+                    className={`h-4 w-4 shrink-0 transition-colors ${
+                      isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'
+                    }`}
+                  />
+                  <span className="truncate flex-1 text-left">{item.label}</span>
                   {item.badge && (
-                    <span className={`text-[8px] px-1 py-0.5 rounded font-medium font-mono ${isActive ? 'bg-black/25 text-white' : 'bg-[#101927] text-slate-400 border border-[#1F2E43]'
-                      }`}>
+                    <span
+                      className={`text-[8px] px-1.5 py-0.5 rounded font-medium font-mono ${
+                        isActive ? 'bg-black/25 text-white' : 'bg-[#101927] text-slate-400 border border-[#1F2E43]'
+                      }`}
+                    >
                       {item.badge}
                     </span>
                   )}
                 </button>
               );
             })}
-          </nav>
 
-          {/* User Info & Role Bar - Always visible, zero overflow */}
-          <div className="flex items-center gap-1.5 bg-[#0A1018] p-1.5 rounded-lg border border-[#1F2E43] shrink-0 ml-auto">
-            {/* Dedicated Role Mode Badge */}
-            <div className="flex items-center gap-1 px-1.5 py-0.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#10B981] animate-pulse shrink-0"></span>
-              <span className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase border font-mono ${roleColors[role].bg} ${roleColors[role].text} ${roleColors[role].border}`}>
-                <span className="hidden xl:inline">
-                  {role === 'operator' && 'OP · PROCESS LOG'}
-                  {role === 'supervisor' && 'SV · LIVE BOARD'}
-                  {(role === 'qc_analyst' || role === 'qc_manager') && 'QC · LABORATORY'}
-                  {role === 'admin' && 'SYS ADMIN · CONTROL'}
-                  {role === 'viewer' && 'AUDIT · ISO 22000'}
-                </span>
-                <span className="xl:hidden">
-                  {role === 'operator' && 'OP'}
-                  {role === 'supervisor' && 'SV'}
-                  {(role === 'qc_analyst' || role === 'qc_manager') && 'QC'}
-                  {role === 'admin' && 'ADMIN'}
-                  {role === 'viewer' && 'AUDIT'}
-                </span>
-              </span>
-            </div>
-
-            {/* User Profile Badge */}
-            <div className="border-l border-[#1F2E43] pl-2 pr-1.5 text-right">
-              <div 
-                className="text-[11px] font-medium text-slate-200 leading-tight" 
-                title={profile.full_name}
-              >
-                {profile.full_name}
-              </div>
-              <div className="text-[10px] font-mono text-[#009FE3] font-medium">
-                {profile.employee_no}
-              </div>
-            </div>
-
-            {/* Admin Management Button - Admin Only */}
+            {/* Admin Management Tab Button (Button #2) - Admin Only */}
             {role === 'admin' && (
               <button
                 onClick={() => setActiveTab('admin')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all ml-1 cursor-pointer border shrink-0 ${activeTab === 'admin'
-                    ? 'bg-[#009FE3] text-white border-[#009FE3] shadow-sm'
-                    : 'text-slate-300 bg-[#172235] border-[#1F2E43] hover:bg-[#1E2D42] hover:text-white'
-                  }`}
+                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-medium transition-all w-full cursor-pointer ${
+                  activeTab === 'admin'
+                    ? 'bg-[#1D8CF8] text-white shadow-md shadow-blue-500/20 font-semibold'
+                    : 'text-slate-400 hover:text-slate-100 hover:bg-[#121D2C]'
+                }`}
                 title="Plant Administration & User Management Panel"
               >
-                <Users className="h-3.5 w-3.5 text-[#009FE3]" />
-                <span>Admin & Users</span>
+                <Users className={`h-4 w-4 shrink-0 ${activeTab === 'admin' ? 'text-white' : 'text-slate-400'}`} />
+                <span className="truncate flex-1 text-left">User Management</span>
+                <span className="text-[8px] px-1.5 py-0.5 rounded font-medium font-mono bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                  ADMIN
+                </span>
               </button>
             )}
+          </nav>
 
-            {/* Logout Button */}
-            {onLogout && (
-              <button
-                onClick={onLogout}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium text-[#EF4444] bg-[#EF4444]/10 border border-[#EF4444]/30 hover:bg-[#EF4444]/20 hover:text-red-300 transition-colors ml-1 cursor-pointer shrink-0"
-                title="Sign out of current session and return to login screen"
-              >
-                <LogOut className="h-3.5 w-3.5" />
-                <span className="hidden md:inline">Sign Out</span>
-              </button>
-            )}
+          {/* Divider */}
+          <div className="pt-3 pb-2">
+            <div className="h-px bg-[#1F2E43]/60 w-full" />
+          </div>
+
+          {/* Auxiliary Menu Items */}
+          <div className="space-y-1">
+            <div
+              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-slate-200 hover:bg-[#121D2C] cursor-pointer transition-colors"
+              title="System Settings"
+            >
+              <Settings className="h-4 w-4 text-slate-400" />
+              <span>Settings</span>
+            </div>
+            <div
+              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-slate-200 hover:bg-[#121D2C] cursor-pointer transition-colors"
+              title="Help & Support Documentation"
+            >
+              <HelpCircle className="h-4 w-4 text-slate-400" />
+              <span>Help & Support</span>
+            </div>
           </div>
         </div>
 
-        {/* Mobile Expandable Drawer Menu (lg:hidden) */}
-        {isMobileMenuOpen && (
-          <div className="lg:hidden bg-[#101927] border-b border-[#1F2E43] p-4 space-y-3">
-            {/* User Profile Card on Mobile */}
-            <div className="flex items-center justify-between p-3 rounded-lg bg-[#0A1018] border border-[#1F2E43]">
-              <div>
-                <div className="text-[10px] text-slate-500 uppercase tracking-wider font-medium font-mono">Signed in Operator</div>
-                <div className="text-sm font-semibold text-slate-100 mt-0.5">{profile.full_name}</div>
-                <div className="text-xs text-[#009FE3] font-medium font-mono">{profile.employee_no}</div>
-              </div>
-              <span className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase border font-mono ${roleColors[role].bg} ${roleColors[role].text} ${roleColors[role].border}`}>
-                {role}
+        {/* ===================================================================== */}
+        {/* BOTTOM LEFT OF SIDEBAR: REFINERY PLANT IMAGE & SHIFT BADGE CARD       */}
+        {/* ===================================================================== */}
+        <div className="p-3 border-t border-[#1F2E43] bg-[#060A10]/70">
+          {/* Refinery Plant Night Image */}
+          <div className="relative rounded-xl overflow-hidden border border-[#1F2E43] shadow-lg group">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/refinery-plant.jpg"
+              alt="Lam Soon Refinery Plant"
+              className="w-full h-28 object-cover object-center brightness-95 group-hover:scale-105 transition-transform duration-500"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#060A10] via-transparent to-transparent opacity-85" />
+            <div className="absolute bottom-2 left-2.5 right-2.5 flex items-center justify-between text-[10px]">
+              <span className="font-mono text-white/90 bg-black/60 backdrop-blur-xs px-2 py-0.5 rounded border border-white/10 flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#10B981] animate-pulse"></span>
+                Nisshin Plant
+              </span>
+              <span className="text-white/70 font-mono text-[9px] bg-black/50 px-1.5 py-0.5 rounded">
+                24/7 Ops
               </span>
             </div>
-
-            {/* Plant Clock & Status Bar on Mobile */}
-            <div className="flex items-center justify-between p-2 rounded-md bg-[#0A1018] border border-[#1F2E43] text-xs text-slate-400">
-              <div className="flex items-center gap-1.5 text-[#10B981]">
-                <span className="h-2 w-2 rounded-full bg-[#10B981] animate-pulse"></span>
-                <span className="font-medium text-[11px] font-mono">DCS Live Feed</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-slate-200">
-                <Clock className="h-3 w-3 text-slate-400" />
-                <span className="text-[11px] font-medium font-mono">{timeString || '12:00:00 MYT'}</span>
-              </div>
-            </div>
-
-            {/* Navigation Tabs List for Mobile */}
-            <div className="space-y-1">
-              <div className="text-[10px] uppercase text-slate-500 px-1 font-medium tracking-wider font-mono">
-                Views ({visibleNavItems.length}):
-              </div>
-              {visibleNavItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = activeTab === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => handleMobileTabSelect(item.id)}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-medium font-sans transition-colors border cursor-pointer ${
-                      isActive
-                        ? 'bg-[#009FE3] text-white border-[#009FE3] shadow-sm'
-                        : 'bg-[#172235] text-slate-200 hover:bg-[#1E2D42] border-[#1F2E43]'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <Icon className={`h-4 w-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
-                      <span className="font-medium">{item.label}</span>
-                    </div>
-                    {item.badge && (
-                      <span className={`text-[9px] px-1.5 py-0.5 rounded font-medium font-mono ${
-                        isActive ? 'bg-black/25 text-white' : 'bg-[#101927] text-slate-400 border border-[#1F2E43]'
-                      }`}>
-                        {item.badge}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Admin Management Button for Mobile */}
-            {role === 'admin' && (
-              <div className="pt-2 border-t border-[#1F2E43]">
-                <button
-                  onClick={() => {
-                    setActiveTab('admin');
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-medium transition-colors cursor-pointer border ${activeTab === 'admin'
-                      ? 'bg-[#009FE3] text-white border-[#009FE3]'
-                      : 'text-slate-200 bg-[#172235] border-[#1F2E43] hover:bg-[#1E2D42]'
-                    }`}
-                >
-                  <Users className="h-4 w-4 text-[#009FE3]" />
-                  <span>Admin & Users Panel</span>
-                </button>
-              </div>
-            )}
-
-            {/* Mobile Actions: Sign Out */}
-            {onLogout && (
-              <div className="pt-2 border-t border-[#1F2E43]">
-                <button
-                  onClick={() => {
-                    setIsMobileMenuOpen(false);
-                    onLogout();
-                  }}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-medium text-[#EF4444] bg-[#EF4444]/10 border border-[#EF4444]/30 hover:bg-[#EF4444]/20 transition-colors cursor-pointer"
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span>Sign Out of Session</span>
-                </button>
-              </div>
-            )}
           </div>
-        )}
+
+          {/* Shift Badge Card */}
+          <div className="mt-2.5 p-2 rounded-lg bg-[#0C1523] border border-[#1F2E43] flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10B981] opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#10B981]"></span>
+              </span>
+              <div>
+                <div className="text-[10px] font-bold text-white font-mono tracking-wider">
+                  {currentShiftName}
+                </div>
+                <div className="text-[9px] text-slate-400 font-mono">
+                  {currentShiftHours}
+                </div>
+              </div>
+            </div>
+            <span
+              className={`px-2 py-0.5 rounded text-[9px] font-semibold uppercase border font-mono ${roleColors[role].bg} ${roleColors[role].text} ${roleColors[role].border}`}
+            >
+              {role === 'operator' ? 'OP' : role === 'supervisor' ? 'SV' : role.startsWith('qc') ? 'QC' : role.toUpperCase()}
+            </span>
+          </div>
+
+          {/* Plant Footer Details */}
+          <div className="mt-2 text-center">
+            <div className="text-[10px] font-medium text-slate-300">
+              Lam Soon Edible Oils Sdn Bhd
+            </div>
+            <div className="text-[9px] text-slate-400 font-mono mt-0.5">
+              Version 1.0.0
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      {/* ========================================================================= */}
+      {/* 3. DESKTOP TOP HEADER BAR (Spans content area, offset by sidebar width)   */}
+      {/* ========================================================================= */}
+      <header className="hidden lg:flex fixed top-0 right-0 left-64 xl:left-72 h-14 bg-[#080E18]/95 backdrop-blur-md border-b border-[#1F2E43] z-30 items-center justify-between px-6">
+        {/* Global Search Bar */}
+        <div className="relative w-80 xl:w-96">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="h-4 w-4 text-slate-400" />
+          </div>
+          <input
+            type="text"
+            placeholder="Search process, batch, equipment..."
+            className="w-full pl-9 pr-12 py-1.5 bg-[#0C1523] border border-[#1F2E43] rounded-lg text-xs text-slate-200 placeholder-slate-400 focus:outline-none focus:border-[#1D8CF8] focus:ring-1 focus:ring-[#1D8CF8] transition-all"
+            readOnly
+          />
+          <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none">
+            <kbd className="px-1.5 py-0.5 text-[10px] font-mono text-slate-400 bg-[#142032] border border-[#1F2E43] rounded">
+              ⌘K
+            </kbd>
+          </div>
+        </div>
+
+        {/* Status, Clock, User Profile & Sign Out */}
+        <div className="flex items-center gap-4">
+          {/* DCS Online Indicator */}
+          <div className="flex items-center gap-1.5 text-xs text-[#10B981] font-medium font-mono">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10B981] opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#10B981]"></span>
+            </span>
+            <span>System Online</span>
+          </div>
+
+          <span className="text-[#1F2E43]">|</span>
+
+          {/* Formatted Date & Time */}
+          <div className="flex items-center gap-1.5 text-xs text-slate-300 font-mono">
+            <Clock className="h-3.5 w-3.5 text-slate-400" />
+            <span>{formattedDateTime || '08 Dec 2024 14:25'}</span>
+          </div>
+
+          <span className="text-[#1F2E43]">|</span>
+
+          {/* User Profile Chip */}
+          <div className="flex items-center gap-2.5 pl-1">
+            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#1E2D42] to-[#121B29] border border-[#2D415E] flex items-center justify-center font-bold text-xs text-[#009FE3] shadow-sm">
+              {userInitials}
+            </div>
+            <div className="text-left">
+              <div className="text-xs font-semibold text-slate-100 leading-tight">
+                {profile.full_name}
+              </div>
+              <div className="text-[10px] text-slate-400 font-mono capitalize">
+                {role === 'operator' ? 'Operator' : role === 'supervisor' ? 'Supervisor' : role.startsWith('qc') ? 'QC Analyst' : role}
+              </div>
+            </div>
+          </div>
+
+          {/* Sign Out Button (Button #3) */}
+          {onLogout && (
+            <button
+              onClick={onLogout}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium text-[#EF4444] bg-[#EF4444]/10 border border-[#EF4444]/30 hover:bg-[#EF4444]/20 hover:text-red-300 transition-colors ml-1 cursor-pointer shrink-0"
+              title="Sign out of current session and return to login screen"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              <span className="hidden md:inline">Sign Out</span>
+            </button>
+          )}
+        </div>
       </header>
 
-      {/* Mobile Bottom Quick-Navigation Dock (Fixed for phone thumbs) */}
+      {/* ========================================================================= */}
+      {/* 4. MOBILE EXPANDABLE DRAWER MENU (lg:hidden)                              */}
+      {/* ========================================================================= */}
+      {isMobileMenuOpen && (
+        <div className="lg:hidden fixed inset-x-0 top-14 z-50 bg-[#101927] border-b border-[#1F2E43] p-4 space-y-3 max-h-[80vh] overflow-y-auto shadow-2xl">
+          {/* User Profile Card on Mobile */}
+          <div className="flex items-center justify-between p-3 rounded-lg bg-[#0A1018] border border-[#1F2E43]">
+            <div>
+              <div className="text-[10px] text-slate-400 uppercase tracking-wider font-medium font-mono">
+                Signed in Personnel
+              </div>
+              <div className="text-sm font-semibold text-slate-100 mt-0.5">
+                {profile.full_name}
+              </div>
+              <div className="text-xs text-[#009FE3] font-medium font-mono">
+                {profile.employee_no}
+              </div>
+            </div>
+            <span
+              className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase border font-mono ${roleColors[role].bg} ${roleColors[role].text} ${roleColors[role].border}`}
+            >
+              {role}
+            </span>
+          </div>
+
+          {/* Plant Clock & Status Bar on Mobile */}
+          <div className="flex items-center justify-between p-2 rounded-md bg-[#0A1018] border border-[#1F2E43] text-xs text-slate-400">
+            <div className="flex items-center gap-1.5 text-[#10B981]">
+              <span className="h-2 w-2 rounded-full bg-[#10B981] animate-pulse"></span>
+              <span className="font-medium text-[11px] font-mono">System Online</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-slate-200">
+              <Clock className="h-3 w-3 text-slate-400" />
+              <span className="text-[11px] font-medium font-mono">{formattedDateTime}</span>
+            </div>
+          </div>
+
+          {/* Mobile Navigation Tabs List (Button #4) */}
+          <div className="space-y-1">
+            <div className="text-[10px] uppercase text-slate-400 px-1 font-medium tracking-wider font-mono">
+              Views ({visibleNavItems.length}):
+            </div>
+            {visibleNavItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => handleMobileTabSelect(item.id)}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-medium font-sans transition-colors border cursor-pointer ${
+                    isActive
+                      ? 'bg-[#1D8CF8] text-white border-[#1D8CF8] shadow-sm'
+                      : 'bg-[#172235] text-slate-200 hover:bg-[#1E2D42] border-[#1F2E43]'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Icon className={`h-4 w-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                    <span className="font-medium">{item.label}</span>
+                  </div>
+                  {item.badge && (
+                    <span
+                      className={`text-[9px] px-1.5 py-0.5 rounded font-medium font-mono ${
+                        isActive ? 'bg-black/25 text-white' : 'bg-[#101927] text-slate-400 border border-[#1F2E43]'
+                      }`}
+                    >
+                      {item.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Admin Management Button for Mobile (Button #5) */}
+          {role === 'admin' && (
+            <div className="pt-2 border-t border-[#1F2E43]">
+              <button
+                onClick={() => {
+                  setActiveTab('admin');
+                  setIsMobileMenuOpen(false);
+                }}
+                className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-medium transition-colors cursor-pointer border ${
+                  activeTab === 'admin'
+                    ? 'bg-[#1D8CF8] text-white border-[#1D8CF8]'
+                    : 'text-slate-200 bg-[#172235] border-[#1F2E43] hover:bg-[#1E2D42]'
+                }`}
+              >
+                <Users className="h-4 w-4 text-[#009FE3]" />
+                <span>Admin & Users Panel</span>
+              </button>
+            </div>
+          )}
+
+          {/* Mobile Refinery Image & Info */}
+          <div className="pt-2 border-t border-[#1F2E43]">
+            <div className="relative rounded-lg overflow-hidden border border-[#1F2E43]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/refinery-plant.jpg"
+                alt="Refinery Plant"
+                className="w-full h-24 object-cover"
+              />
+              <div className="absolute bottom-1 left-2 text-[9px] font-mono text-white/90 bg-black/60 px-1.5 py-0.5 rounded">
+                {currentShiftName} · 14:00 - 22:00
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile Actions: Sign Out (Button #6) */}
+          {onLogout && (
+            <div className="pt-2 border-t border-[#1F2E43]">
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  onLogout();
+                }}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-medium text-[#EF4444] bg-[#EF4444]/10 border border-[#EF4444]/30 hover:bg-[#EF4444]/20 transition-colors cursor-pointer"
+              >
+                <LogOut className="h-4 w-4" />
+                <span>Sign Out of Session</span>
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 5. MOBILE BOTTOM QUICK NAVIGATION DOCK (lg:hidden)                        */}
+      {/* ========================================================================= */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0A1018]/95 backdrop-blur-sm border-t border-[#1F2E43] px-1 py-1 flex items-center justify-around">
+        {/* Mobile bottom dock tab items (Button #7) */}
         {visibleNavItems.slice(0, 4).map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
@@ -389,10 +566,14 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
                 setIsMobileMenuOpen(false);
               }}
               className={`flex flex-col items-center justify-center py-1 px-2 rounded-md transition-colors cursor-pointer min-w-[54px] ${
-                isActive ? 'text-[#009FE3] font-medium' : 'text-slate-400 hover:text-slate-200'
+                isActive ? 'text-[#1D8CF8] font-medium' : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              <div className={`p-1 rounded-md ${isActive ? 'bg-[#009FE3]/15 text-[#009FE3] border border-[#009FE3]/30' : ''}`}>
+              <div
+                className={`p-1 rounded-md ${
+                  isActive ? 'bg-[#1D8CF8]/15 text-[#1D8CF8] border border-[#1D8CF8]/30' : ''
+                }`}
+              >
                 <Icon className="h-4 w-4" />
               </div>
               <span className="text-[9px] tracking-tight mt-0.5 truncate max-w-[64px]">
@@ -402,14 +583,18 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
           );
         })}
 
-        {/* Toggle Menu Button in Bottom Dock */}
+        {/* Toggle Menu Button in Bottom Dock (Button #8) */}
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           className={`flex flex-col items-center justify-center py-1 px-2 rounded-md transition-colors cursor-pointer min-w-[54px] ${
-            isMobileMenuOpen ? 'text-[#009FE3] font-medium' : 'text-slate-400 hover:text-slate-200'
+            isMobileMenuOpen ? 'text-[#1D8CF8] font-medium' : 'text-slate-400 hover:text-slate-200'
           }`}
         >
-          <div className={`p-1 rounded-md ${isMobileMenuOpen ? 'bg-[#009FE3]/15 text-[#009FE3] border border-[#009FE3]/30' : ''}`}>
+          <div
+            className={`p-1 rounded-md ${
+              isMobileMenuOpen ? 'bg-[#1D8CF8]/15 text-[#1D8CF8] border border-[#1D8CF8]/30' : ''
+            }`}
+          >
             {isMobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </div>
           <span className="text-[9px] tracking-tight mt-0.5">
