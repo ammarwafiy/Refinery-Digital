@@ -152,12 +152,12 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
       <header className="lg:hidden sticky top-0 z-50 w-full border-b border-[#1F2E43] bg-[#0A1018] shadow-md">
         <div className="flex items-center justify-between px-3.5 py-2.5">
           <div className="flex items-center gap-2.5">
-            <div className="h-8 w-10 rounded-lg bg-white p-0.5 flex items-center justify-center shrink-0 border border-slate-600/40 shadow-sm overflow-hidden">
+            <div className="h-8 w-10 flex items-center justify-center shrink-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/lam-soon-logo.png"
                 alt="Lam Soon Logo"
-                className="w-full h-full object-contain"
+                className="w-full h-full object-contain drop-shadow-md"
               />
             </div>
             <div>
@@ -198,12 +198,12 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
         {/* Brand Header */}
         <div className="p-4 border-b border-[#1F2E43]/60 bg-[#060A10]/40 relative z-10">
           <div className="flex items-center gap-3">
-            <div className="h-11 w-12 rounded-xl bg-white p-1 flex items-center justify-center shadow-md shadow-black/40 border border-slate-600/40 shrink-0 overflow-hidden">
+            <div className="h-11 w-12 flex items-center justify-center shrink-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/lam-soon-logo.png"
                 alt="Lam Soon Logo"
-                className="w-full h-full object-contain"
+                className="w-full h-full object-contain drop-shadow-lg"
               />
             </div>
             <div className="min-w-0">
