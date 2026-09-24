@@ -46,8 +46,13 @@ export default function LoginView({ onLogin }: LoginViewProps) {
       {/* Top Branding Bar */}
       <header className="w-full border-b border-[#1F2E43] bg-[#0A1018] px-6 py-2.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#101927] border border-[#1F2E43]">
-            <Flame className="h-4 w-4 text-[#009FE3]" />
+          <div className="flex h-9 w-11 items-center justify-center rounded-lg bg-white p-0.5 border border-slate-600/40 shadow-sm overflow-hidden shrink-0">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/lam-soon-logo.png"
+              alt="Lam Soon Logo"
+              className="w-full h-full object-contain"
+            />
           </div>
           <div>
             <span className="font-semibold text-sm text-slate-100 block">
