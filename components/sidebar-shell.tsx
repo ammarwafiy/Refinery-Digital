@@ -24,8 +24,6 @@ import {
   Clock,
   Wifi,
   Menu,
-  X,
-  Upload,
 } from 'lucide-react'
 
 type UserRole = 'operator' | 'supervisor' | 'qc_analyst' | 'qc_manager' | 'admin' | 'viewer'
@@ -68,12 +66,12 @@ const adminItems: NavItem[] = [
 ]
 
 const roleColors: Record<UserRole, string> = {
-  operator: 'text-green-700 bg-green-50 border-green-200',
-  supervisor: 'text-amber-700 bg-amber-50 border-amber-200',
-  qc_analyst: 'text-blue-700 bg-blue-50 border-blue-200',
-  qc_manager: 'text-purple-700 bg-purple-50 border-purple-200',
-  admin: 'text-blue-700 bg-blue-50 border-blue-200',
-  viewer: 'text-slate-600 bg-slate-100 border-slate-300',
+  operator: 'text-[#10B981] bg-[#10B981]/15 border-[#10B981]/40',
+  supervisor: 'text-[#F59E0B] bg-[#F59E0B]/15 border-[#F59E0B]/40',
+  qc_analyst: 'text-[#009FE3] bg-[#009FE3]/15 border-[#009FE3]/40',
+  qc_manager: 'text-purple-400 bg-purple-500/15 border-purple-500/40',
+  admin: 'text-[#009FE3] bg-[#009FE3]/15 border-[#009FE3]/40',
+  viewer: 'text-slate-400 bg-slate-800 border-slate-700',
 }
 
 const roleLabels: Record<UserRole, string> = {
@@ -117,17 +115,17 @@ export function SidebarShell({ profile, children }: { profile: Profile; children
   }
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-[#101927]">
       {/* Logo */}
-      <div className="p-4 border-b border-slate-200">
+      <div className="p-4 border-b border-[#1F2E43]">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center shrink-0">
-            <Flame className="h-5 w-5 text-blue-600" />
+          <div className="w-9 h-9 rounded-xl bg-[#0A1018] border border-[#1F2E43] flex items-center justify-center shrink-0">
+            <Flame className="h-5 w-5 text-[#009FE3]" />
           </div>
           {!collapsed && (
             <div className="min-w-0">
-              <div className="text-sm font-bold text-slate-900 truncate">Refinery System</div>
-              <div className="text-[10px] text-slate-500 truncate">NISSHIN DEOD PLANT</div>
+              <div className="text-sm font-bold text-slate-100 truncate">Refinery System</div>
+              <div className="text-[10px] text-slate-400 font-mono truncate">NISSHIN DEOD PLANT</div>
             </div>
           )}
         </div>
@@ -135,13 +133,13 @@ export function SidebarShell({ profile, children }: { profile: Profile; children
 
       {/* Status Bar */}
       {!collapsed && (
-        <div className="px-4 py-2 border-b border-slate-200 flex items-center justify-between text-[10px] text-slate-500">
+        <div className="px-4 py-2 border-b border-[#1F2E43] flex items-center justify-between text-[10px] text-slate-400 bg-[#0A1018]">
           <span className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-green-600 font-mono">ONLINE</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse" />
+            <span className="text-[#10B981] font-mono">ONLINE</span>
           </span>
-          <span className="flex items-center gap-1 font-mono text-slate-600">
-            <Clock className="h-3 w-3" />
+          <span className="flex items-center gap-1 font-mono text-slate-300">
+            <Clock className="h-3 w-3 text-slate-500" />
             {timeString || '--:--:--'} MYT
           </span>
         </div>
@@ -150,7 +148,7 @@ export function SidebarShell({ profile, children }: { profile: Profile; children
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
         {!collapsed && (
-          <div className="px-3 pb-1.5 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+          <div className="px-3 pb-1.5 text-[10px] font-semibold text-slate-500 uppercase tracking-wider font-mono">
             Workflows
           </div>
         )}
@@ -164,18 +162,18 @@ export function SidebarShell({ profile, children }: { profile: Profile; children
               onClick={() => setMobileOpen(false)}
               className={`group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                 active
-                  ? 'bg-blue-50 text-blue-700 border border-blue-200 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
+                  ? 'bg-[#009FE3] text-white border border-[#009FE3] shadow-sm'
+                  : 'text-slate-400 hover:text-slate-100 hover:bg-[#172235] border border-transparent'
               }`}
               title={collapsed ? item.label : undefined}
             >
-              <Icon className={`h-4.5 w-4.5 shrink-0 ${active ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-600'}`} />
+              <Icon className={`h-4.5 w-4.5 shrink-0 ${active ? 'text-white' : 'text-slate-500 group-hover:text-slate-300'}`} />
               {!collapsed && (
                 <>
                   <span className="truncate">{item.label}</span>
                   {item.badge && (
                     <span className={`ml-auto text-[9px] px-1.5 py-0.5 rounded font-mono shrink-0 ${
-                      active ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'
+                      active ? 'bg-black/25 text-white' : 'bg-[#0A1018] text-slate-400 border border-[#1F2E43]'
                     }`}>
                       {item.badge}
                     </span>
@@ -189,11 +187,11 @@ export function SidebarShell({ profile, children }: { profile: Profile; children
         {filteredAdmin.length > 0 && (
           <>
             {!collapsed && (
-              <div className="px-3 pt-4 pb-1.5 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+              <div className="px-3 pt-4 pb-1.5 text-[10px] font-semibold text-slate-500 uppercase tracking-wider font-mono">
                 Administration
               </div>
             )}
-            {collapsed && <div className="my-2 mx-3 border-t border-slate-200" />}
+            {collapsed && <div className="my-2 mx-3 border-t border-[#1F2E43]" />}
             {filteredAdmin.map(item => {
               const Icon = item.icon
               const active = isActive(item.href)
@@ -204,12 +202,12 @@ export function SidebarShell({ profile, children }: { profile: Profile; children
                   onClick={() => setMobileOpen(false)}
                   className={`group flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                     active
-                      ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
+                      ? 'bg-[#009FE3] text-white border border-[#009FE3]'
+                      : 'text-slate-400 hover:text-slate-100 hover:bg-[#172235] border border-transparent'
                   }`}
                   title={collapsed ? item.label : undefined}
                 >
-                  <Icon className={`h-4 w-4 shrink-0 ${active ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-600'}`} />
+                  <Icon className={`h-4 w-4 shrink-0 ${active ? 'text-white' : 'text-slate-500 group-hover:text-slate-300'}`} />
                   {!collapsed && <span className="truncate">{item.label}</span>}
                 </Link>
               )
@@ -219,27 +217,27 @@ export function SidebarShell({ profile, children }: { profile: Profile; children
       </nav>
 
       {/* User Profile + Collapse */}
-      <div className="mt-auto border-t border-slate-200">
+      <div className="mt-auto border-t border-[#1F2E43] bg-[#0A1018]">
         {/* User Info */}
         <div className="p-3">
           {!collapsed ? (
-            <div className="flex items-center gap-3 p-2 rounded-lg bg-slate-100">
-              <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center text-sm font-bold text-blue-700 shrink-0">
+            <div className="flex items-center gap-3 p-2 rounded-lg bg-[#101927] border border-[#1F2E43]">
+              <div className="w-8 h-8 rounded-lg bg-[#009FE3]/15 border border-[#009FE3]/30 flex items-center justify-center text-sm font-bold text-[#009FE3] shrink-0 font-mono">
                 {profile.full_name.charAt(0).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-xs font-semibold text-slate-800 truncate">{profile.full_name}</div>
+                <div className="text-xs font-semibold text-slate-200 truncate">{profile.full_name}</div>
                 <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className={`text-[9px] px-1.5 py-0.5 rounded border font-medium ${roleColors[profile.role]}`}>
+                  <span className={`text-[9px] px-1.5 py-0.5 rounded border font-medium font-mono ${roleColors[profile.role]}`}>
                     {roleLabels[profile.role]}
                   </span>
-                  <span className="text-[10px] text-slate-500 font-mono">{profile.employee_no}</span>
+                  <span className="text-[10px] text-slate-400 font-mono">{profile.employee_no}</span>
                 </div>
               </div>
             </div>
           ) : (
             <div className="flex justify-center">
-              <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center text-sm font-bold text-blue-700" title={profile.full_name}>
+              <div className="w-8 h-8 rounded-lg bg-[#009FE3]/15 border border-[#009FE3]/30 flex items-center justify-center text-sm font-bold text-[#009FE3] font-mono" title={profile.full_name}>
                 {profile.full_name.charAt(0).toUpperCase()}
               </div>
             </div>
@@ -251,7 +249,7 @@ export function SidebarShell({ profile, children }: { profile: Profile; children
           <form action={signOut} className="flex-1">
             <button
               type="submit"
-              className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 border border-transparent hover:border-red-200 transition-all`}
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium text-slate-400 hover:text-[#EF4444] hover:bg-[#EF4444]/10 border border-transparent hover:border-[#EF4444]/30 transition-all cursor-pointer"
             >
               <LogOut className="h-3.5 w-3.5" />
               {!collapsed && <span>Sign Out</span>}
@@ -259,7 +257,7 @@ export function SidebarShell({ profile, children }: { profile: Profile; children
           </form>
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="hidden lg:flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all"
+            className="hidden lg:flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-[#172235] transition-all cursor-pointer"
             title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
@@ -270,51 +268,51 @@ export function SidebarShell({ profile, children }: { profile: Profile; children
   )
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50">
+    <div className="flex h-screen overflow-hidden bg-[#070B12]">
       {/* Mobile overlay */}
       {mobileOpen && (
         <div className="fixed inset-0 bg-black/60 z-40 lg:hidden" onClick={() => setMobileOpen(false)} />
       )}
 
       {/* Mobile sidebar */}
-      <aside className={`fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200 transform transition-transform duration-200 lg:hidden ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed inset-y-0 left-0 z-50 w-72 bg-[#101927] border-r border-[#1F2E43] transform transition-transform duration-200 lg:hidden ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <SidebarContent />
       </aside>
 
       {/* Desktop sidebar */}
-      <aside className={`hidden lg:flex flex-col shrink-0 bg-white border-r border-slate-200 transition-all duration-200 ${collapsed ? 'w-[68px]' : 'w-64'}`}>
+      <aside className={`hidden lg:flex flex-col shrink-0 bg-[#101927] border-r border-[#1F2E43] transition-all duration-200 ${collapsed ? 'w-[68px]' : 'w-64'}`}>
         <SidebarContent />
       </aside>
 
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Top bar */}
-        <header className="h-12 shrink-0 border-b border-slate-200 bg-white flex items-center justify-between px-4">
+        <header className="h-12 shrink-0 border-b border-[#1F2E43] bg-[#0A1018] flex items-center justify-between px-4">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileOpen(true)}
-              className="lg:hidden text-slate-400 hover:text-white transition-colors"
+              className="lg:hidden text-slate-400 hover:text-white transition-colors cursor-pointer"
             >
               <Menu className="h-5 w-5" />
             </button>
-            <span className="text-xs text-slate-500 hidden sm:inline">
+            <span className="text-xs text-slate-400 hidden sm:inline">
               Nisshin Deodorizer Plant — Lam Soon Edible Oils
             </span>
           </div>
           <div className="flex items-center gap-3 text-xs">
-            <span className="flex items-center gap-1.5 text-green-600">
+            <span className="flex items-center gap-1.5 text-[#10B981]">
               <Wifi className="h-3.5 w-3.5" />
               <span className="font-mono hidden sm:inline">Connected</span>
             </span>
-            <span className="text-slate-300 hidden sm:inline">|</span>
-            <span className="font-mono text-slate-700 bg-slate-50 px-2 py-0.5 rounded border border-slate-200">
+            <span className="text-[#1F2E43] hidden sm:inline">|</span>
+            <span className="font-mono text-slate-200 bg-[#101927] px-2 py-0.5 rounded border border-[#1F2E43]">
               {timeString || '--:--:--'} MYT
             </span>
           </div>
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-auto p-4 sm:p-6">
+        <main className="flex-1 overflow-auto p-4 sm:p-6 bg-[#070B12]">
           {children}
         </main>
       </div>

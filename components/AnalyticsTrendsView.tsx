@@ -17,7 +17,7 @@ import {
   ReferenceLine
 } from 'recharts';
 import { getActiveProcessSheet, getSampleReports } from '@/lib/data-service';
-import { BarChart3, TrendingUp, AlertOctagon, Activity, Layers } from 'lucide-react';
+import { BarChart3, TrendingUp, AlertOctagon, Layers } from 'lucide-react';
 
 export default function AnalyticsTrendsView() {
   const sheet = getActiveProcessSheet();
@@ -60,14 +60,14 @@ export default function AnalyticsTrendsView() {
   return (
     <div className="space-y-6">
       {/* 1. Header */}
-      <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
+      <div className="rounded-xl border border-[#1F2E43] bg-[#101927] p-4 sm:p-5 shadow-sm">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-blue-500/40 bg-blue-600/10 text-blue-600 shadow-sm">
+            <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-[#009FE3]/40 bg-[#009FE3]/10 text-[#009FE3] shadow-sm">
               <BarChart3 className="h-5 w-5" />
             </div>
             <div>
-              <h1 className="text-base sm:text-lg font-bold tracking-tight text-slate-900 flex items-center gap-2">
+              <h1 className="text-base sm:text-lg font-bold tracking-tight text-slate-100 flex items-center gap-2">
                 <span>Process Trends & Quality Pareto Analytics</span>
               </h1>
               <p className="text-xs text-slate-400 font-mono mt-1">
@@ -77,11 +77,11 @@ export default function AnalyticsTrendsView() {
           </div>
 
           {/* Metric Selector Buttons */}
-          <div className="flex items-center gap-1.5 bg-slate-50 p-1 rounded-lg border border-slate-200 font-mono text-xs">
+          <div className="flex items-center gap-1.5 bg-[#0A1018] p-1 rounded-lg border border-[#1F2E43] font-mono text-xs">
             <button
               onClick={() => setActiveMetric('trays')}
               className={`px-3 py-1.5 rounded-md font-medium transition-all cursor-pointer ${
-                activeMetric === 'trays' ? 'bg-blue-600 text-white shadow-xs font-semibold border border-blue-600/40' : 'text-slate-400 hover:text-slate-800 hover:bg-slate-100/60'
+                activeMetric === 'trays' ? 'bg-[#009FE3] text-white shadow-xs font-semibold border border-[#009FE3]' : 'text-slate-400 hover:text-slate-200 hover:bg-[#172235]'
               }`}
             >
               Tray Temps (1, 4, 7)
@@ -89,7 +89,7 @@ export default function AnalyticsTrendsView() {
             <button
               onClick={() => setActiveMetric('vacuum')}
               className={`px-3 py-1.5 rounded-md font-medium transition-all cursor-pointer ${
-                activeMetric === 'vacuum' ? 'bg-blue-600 text-white shadow-xs font-semibold border border-blue-600/40' : 'text-slate-400 hover:text-slate-800 hover:bg-slate-100/60'
+                activeMetric === 'vacuum' ? 'bg-[#009FE3] text-white shadow-xs font-semibold border border-[#009FE3]' : 'text-slate-400 hover:text-slate-200 hover:bg-[#172235]'
               }`}
             >
               Deodorizer Vacuum
@@ -97,7 +97,7 @@ export default function AnalyticsTrendsView() {
             <button
               onClick={() => setActiveMetric('steam')}
               className={`px-3 py-1.5 rounded-md font-medium transition-all cursor-pointer ${
-                activeMetric === 'steam' ? 'bg-blue-600 text-white shadow-xs font-semibold border border-blue-600/40' : 'text-slate-400 hover:text-slate-800 hover:bg-slate-100/60'
+                activeMetric === 'steam' ? 'bg-[#009FE3] text-white shadow-xs font-semibold border border-[#009FE3]' : 'text-slate-400 hover:text-slate-200 hover:bg-[#172235]'
               }`}
             >
               Steam Pressures
@@ -107,10 +107,10 @@ export default function AnalyticsTrendsView() {
       </div>
 
       {/* 2. Banded Time-Series Chart */}
-      <div className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm">
-        <div className="flex items-center justify-between mb-4 border-b border-slate-200 pb-3">
-          <div className="flex items-center gap-2 text-slate-800 font-semibold text-sm">
-            <TrendingUp className="h-4 w-4 text-blue-600" />
+      <div className="rounded-xl border border-[#1F2E43] bg-[#101927] p-5 sm:p-6 shadow-sm">
+        <div className="flex items-center justify-between mb-4 border-b border-[#1F2E43] pb-3">
+          <div className="flex items-center gap-2 text-slate-100 font-semibold text-sm">
+            <TrendingUp className="h-4 w-4 text-[#009FE3]" />
             <span>
               {activeMetric === 'trays' && 'Deodorizer Tray Temperatures (°C) with Configured Operating Bands'}
               {activeMetric === 'vacuum' && 'Processing Vacuum Reach (Torr) — Soft Alert Threshold: 4.5 Torr'}
@@ -118,7 +118,7 @@ export default function AnalyticsTrendsView() {
             </span>
           </div>
           <span className="text-xs font-mono text-slate-400">
-            Shift: <strong className="text-blue-600">{sheet.shift_date}</strong>
+            Shift: <strong className="text-[#009FE3]">{sheet.shift_date}</strong>
           </span>
         </div>
 
@@ -126,42 +126,42 @@ export default function AnalyticsTrendsView() {
           <ResponsiveContainer width="100%" height="100%">
             {activeMetric === 'trays' ? (
               <LineChart data={timeSeriesData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis dataKey="time" stroke="#64748b" tick={{ fontSize: 11, fontFamily: 'monospace' }} />
-                <YAxis domain={[180, 280]} stroke="#64748b" tick={{ fontSize: 11, fontFamily: 'monospace' }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#1F2E43" />
+                <XAxis dataKey="time" stroke="#64748B" tick={{ fontSize: 11, fontFamily: 'monospace', fill: '#94A3B8' }} />
+                <YAxis domain={[180, 280]} stroke="#64748B" tick={{ fontSize: 11, fontFamily: 'monospace', fill: '#94A3B8' }} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: '0.5rem', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', color: '#0f172a' }}
-                  itemStyle={{ fontSize: 12, fontFamily: 'monospace', color: '#0f172a' }}
+                  contentStyle={{ backgroundColor: '#0A1018', borderColor: '#1F2E43', borderRadius: '0.5rem', boxShadow: '0 4px 20px rgba(0,0,0,0.5)', color: '#F8FAFC' }}
+                  itemStyle={{ fontSize: 12, fontFamily: 'monospace', color: '#F8FAFC' }}
                 />
                 <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
-                <Line type="monotone" dataKey="tray1" name="Tray 1 (°C)" stroke="#2563eb" strokeWidth={2} dot={{ r: 3 }} />
-                <Line type="monotone" dataKey="tray4" name="Tray 4 Peak (°C)" stroke="#f59e0b" strokeWidth={2.5} dot={{ r: 4 }} />
-                <Line type="monotone" dataKey="tray7" name="Tray 7 Final (°C)" stroke="#10b981" strokeWidth={2} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="tray1" name="Tray 1 (°C)" stroke="#009FE3" strokeWidth={2} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="tray4" name="Tray 4 Peak (°C)" stroke="#F59E0B" strokeWidth={2.5} dot={{ r: 4 }} />
+                <Line type="monotone" dataKey="tray7" name="Tray 7 Final (°C)" stroke="#10B981" strokeWidth={2} dot={{ r: 3 }} />
               </LineChart>
             ) : activeMetric === 'vacuum' ? (
               <AreaChart data={timeSeriesData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis dataKey="time" stroke="#64748b" tick={{ fontSize: 11, fontFamily: 'monospace' }} />
-                <YAxis domain={[0, 8]} stroke="#64748b" tick={{ fontSize: 11, fontFamily: 'monospace' }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#1F2E43" />
+                <XAxis dataKey="time" stroke="#64748B" tick={{ fontSize: 11, fontFamily: 'monospace', fill: '#94A3B8' }} />
+                <YAxis domain={[0, 8]} stroke="#64748B" tick={{ fontSize: 11, fontFamily: 'monospace', fill: '#94A3B8' }} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: '0.5rem', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', color: '#0f172a' }}
-                  itemStyle={{ fontSize: 12, fontFamily: 'monospace', color: '#0f172a' }}
+                  contentStyle={{ backgroundColor: '#0A1018', borderColor: '#1F2E43', borderRadius: '0.5rem', boxShadow: '0 4px 20px rgba(0,0,0,0.5)', color: '#F8FAFC' }}
+                  itemStyle={{ fontSize: 12, fontFamily: 'monospace', color: '#F8FAFC' }}
                 />
-                <ReferenceLine y={4.5} label={{ value: 'Soft Max: 4.5 Torr', fill: '#f59e0b', fontSize: 10 }} stroke="#f59e0b" strokeDasharray="4 4" />
-                <Area type="monotone" dataKey="vacuum" name="Vacuum (Torr)" stroke="#2563eb" fill="#2563eb" fillOpacity={0.2} strokeWidth={2} />
+                <ReferenceLine y={4.5} label={{ value: 'Soft Max: 4.5 Torr', fill: '#F59E0B', fontSize: 10 }} stroke="#F59E0B" strokeDasharray="4 4" />
+                <Area type="monotone" dataKey="vacuum" name="Vacuum (Torr)" stroke="#009FE3" fill="#009FE3" fillOpacity={0.15} strokeWidth={2} />
               </AreaChart>
             ) : (
               <LineChart data={timeSeriesData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis dataKey="time" stroke="#64748b" tick={{ fontSize: 11, fontFamily: 'monospace' }} />
-                <YAxis domain={[6, 14]} stroke="#64748b" tick={{ fontSize: 11, fontFamily: 'monospace' }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#1F2E43" />
+                <XAxis dataKey="time" stroke="#64748B" tick={{ fontSize: 11, fontFamily: 'monospace', fill: '#94A3B8' }} />
+                <YAxis domain={[6, 14]} stroke="#64748B" tick={{ fontSize: 11, fontFamily: 'monospace', fill: '#94A3B8' }} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: '0.5rem', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', color: '#0f172a' }}
-                  itemStyle={{ fontSize: 12, fontFamily: 'monospace', color: '#0f172a' }}
+                  contentStyle={{ backgroundColor: '#0A1018', borderColor: '#1F2E43', borderRadius: '0.5rem', boxShadow: '0 4px 20px rgba(0,0,0,0.5)', color: '#F8FAFC' }}
+                  itemStyle={{ fontSize: 12, fontFamily: 'monospace', color: '#F8FAFC' }}
                 />
                 <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
-                <Line type="monotone" dataKey="boosterPress" name="Booster Pressure (Bar)" stroke="#2563eb" strokeWidth={2} dot={{ r: 3 }} />
-                <Line type="monotone" dataKey="ejectorPress" name="Ejector Pressure (Bar)" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="boosterPress" name="Booster Pressure (Bar)" stroke="#009FE3" strokeWidth={2} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="ejectorPress" name="Ejector Pressure (Bar)" stroke="#08B5F5" strokeWidth={2} dot={{ r: 3 }} />
               </LineChart>
             )}
           </ResponsiveContainer>
@@ -171,10 +171,10 @@ export default function AnalyticsTrendsView() {
       {/* 3. QC Pareto Analysis Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Pareto Defect Reasons Bar Chart */}
-        <div className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-4 border-b border-slate-200 pb-3">
-            <div className="flex items-center gap-2 text-slate-800 font-semibold text-sm">
-              <AlertOctagon className="h-4 w-4 text-red-600" />
+        <div className="rounded-xl border border-[#1F2E43] bg-[#101927] p-5 sm:p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-4 border-b border-[#1F2E43] pb-3">
+            <div className="flex items-center gap-2 text-slate-100 font-semibold text-sm">
+              <AlertOctagon className="h-4 w-4 text-[#EF4444]" />
               <span>Monthly QC Rejection Pareto (Reason Codes)</span>
             </div>
             <span className="text-[11px] font-mono text-slate-400">
@@ -185,35 +185,35 @@ export default function AnalyticsTrendsView() {
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={paretoData} margin={{ top: 10, right: 10, bottom: 25, left: -10 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#1F2E43" />
                 <XAxis 
                   dataKey="reason" 
-                  stroke="#64748b" 
+                  stroke="#64748B" 
                   interval={0} 
                   angle={-15} 
                   textAnchor="end" 
-                  tick={{ fontSize: 9, fontFamily: 'sans-serif', fill: '#94a3b8' }} 
+                  tick={{ fontSize: 9, fontFamily: 'sans-serif', fill: '#94A3B8' }} 
                 />
-                <YAxis stroke="#64748b" tick={{ fontSize: 10, fontFamily: 'monospace', fill: '#94a3b8' }} />
+                <YAxis stroke="#64748B" tick={{ fontSize: 10, fontFamily: 'monospace', fill: '#94A3B8' }} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: '0.5rem', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', color: '#0f172a' }}
-                  itemStyle={{ fontSize: 12, fontFamily: 'monospace', color: '#0f172a' }}
+                  contentStyle={{ backgroundColor: '#0A1018', borderColor: '#1F2E43', borderRadius: '0.5rem', boxShadow: '0 4px 20px rgba(0,0,0,0.5)', color: '#F8FAFC' }}
+                  itemStyle={{ fontSize: 12, fontFamily: 'monospace', color: '#F8FAFC' }}
                 />
-                <Bar dataKey="count" name="Rejection Count" fill="#f43f5e" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="count" name="Rejection Count" fill="#EF4444" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
 
-          <div className="mt-3 text-xs text-slate-500 bg-slate-50 p-3 rounded-lg border border-slate-200 font-mono">
-            <strong>Key Insight:</strong> 80% of lot failures stem from <span className="text-red-600 font-semibold">Colour Lovibond drift</span> and <span className="text-amber-600 font-semibold">FFA excursions</span> following vacuum dips.
+          <div className="mt-3 text-xs text-slate-300 bg-[#0A1018] p-3 rounded-lg border border-[#1F2E43] font-mono">
+            <strong>Key Insight:</strong> 80% of lot failures stem from <span className="text-[#EF4444] font-semibold">Colour Lovibond drift</span> and <span className="text-[#F59E0B] font-semibold">FFA excursions</span> following vacuum dips.
           </div>
         </div>
 
         {/* Rejection Rate by Product */}
-        <div className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-4 border-b border-slate-200 pb-3">
-            <div className="flex items-center gap-2 text-slate-800 font-semibold text-sm">
-              <Layers className="h-4 w-4 text-blue-600" />
+        <div className="rounded-xl border border-[#1F2E43] bg-[#101927] p-5 sm:p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-4 border-b border-[#1F2E43] pb-3">
+            <div className="flex items-center gap-2 text-slate-100 font-semibold text-sm">
+              <Layers className="h-4 w-4 text-[#009FE3]" />
               <span>Lot Rejection Frequency by Product</span>
             </div>
             <span className="text-[11px] font-mono text-slate-400">
@@ -224,21 +224,21 @@ export default function AnalyticsTrendsView() {
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={productRejections} margin={{ top: 10, right: 10, bottom: 20, left: -10 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis dataKey="product" stroke="#64748b" tick={{ fontSize: 10, fontFamily: 'sans-serif', fill: '#94a3b8' }} />
-                <YAxis stroke="#64748b" tick={{ fontSize: 10, fontFamily: 'monospace', fill: '#94a3b8' }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#1F2E43" />
+                <XAxis dataKey="product" stroke="#64748B" tick={{ fontSize: 10, fontFamily: 'sans-serif', fill: '#94A3B8' }} />
+                <YAxis stroke="#64748B" tick={{ fontSize: 10, fontFamily: 'monospace', fill: '#94A3B8' }} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: '0.5rem', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', color: '#0f172a' }}
-                  itemStyle={{ fontSize: 12, fontFamily: 'monospace', color: '#0f172a' }}
+                  contentStyle={{ backgroundColor: '#0A1018', borderColor: '#1F2E43', borderRadius: '0.5rem', boxShadow: '0 4px 20px rgba(0,0,0,0.5)', color: '#F8FAFC' }}
+                  itemStyle={{ fontSize: 12, fontFamily: 'monospace', color: '#F8FAFC' }}
                 />
-                <Bar dataKey="lots" name="Total Lots Produced" fill="#1e293b" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="rejects" name="Rejected Lots" fill="#f43f5e" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="lots" name="Total Lots Produced" fill="#172235" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="rejects" name="Rejected Lots" fill="#EF4444" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
 
-          <div className="mt-3 text-xs text-slate-500 bg-slate-50 p-3 rounded-lg border border-slate-200 font-mono">
-            <strong>Corrective Target:</strong> Highest attention needed during grade switchovers to <span className="text-blue-600 font-semibold">PL 65 Matsuyama</span>.
+          <div className="mt-3 text-xs text-slate-300 bg-[#0A1018] p-3 rounded-lg border border-[#1F2E43] font-mono">
+            <strong>Corrective Target:</strong> Highest attention needed during grade switchovers to <span className="text-[#009FE3] font-semibold">PL 65 Matsuyama</span>.
           </div>
         </div>
       </div>

@@ -26,7 +26,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   userScalable: true,
-  themeColor: "#ffffff",
+  themeColor: "#070B12",
 };
 
 export default function RootLayout({
@@ -37,9 +37,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} h-full`}
+      className={`dark ${inter.variable} h-full`}
     >
-      <body className="min-h-full flex flex-col bg-white text-slate-900 selection:bg-blue-600/20 selection:text-blue-900">
+      <body className="min-h-full flex flex-col bg-[#070B12] text-slate-100 selection:bg-[#009FE3]/25 selection:text-[#08B5F5] antialiased">
         {children}
       </body>
     </html>

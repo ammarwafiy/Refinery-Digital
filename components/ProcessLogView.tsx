@@ -337,11 +337,11 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
   return (
     <div className="space-y-6">
       {/* 1. Sheet Header Banner (RF-FR-004 Rev. 02) */}
-      <div className="rounded-lg border border-slate-200 bg-white p-4 sm:p-5 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.45),inset_0_1px_0_0_rgba(255,255,255,0.03)]">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+      <div className="rounded-lg border border-[#1F2E43] bg-[#101927] p-4 sm:p-5 shadow-lg">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#1F2E43] pb-4">
           <div>
             <div className="flex items-center gap-2.5 flex-wrap">
-              <span className="rounded border border-slate-200 bg-slate-50 px-2.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-blue-600">
+              <span className="rounded border border-[#1F2E43] bg-[#131E2D] px-2.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-[#009FE3]">
                 RF-FR-004 REV. 02
               </span>
               <h1 className="text-lg sm:text-xl font-bold tracking-tight text-white font-sans">
@@ -349,7 +349,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
               </h1>
               {sheet.status === 'verified' ? (
                 <div className="flex items-center gap-2">
-                  <span className="flex items-center gap-1.5 text-[11px] font-mono px-2 py-0.5 rounded border border-green-200 bg-green-50 text-green-600 font-medium">
+                  <span className="flex items-center gap-1.5 text-[11px] font-mono px-2 py-0.5 rounded border border-[#10B981]/40 bg-[#10B981]/15 text-green-600 font-medium">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span> VERIFIED & LOCKED
                   </span>
                   {role === 'admin' && (
@@ -360,7 +360,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                         setUnlockReason('');
                         setUnlockPassword('');
                       }}
-                      className="flex items-center gap-1.5 text-[11px] font-mono px-2.5 py-0.5 rounded border border-amber-200 bg-amber-50 text-amber-300 hover:bg-amber-900/40 transition-colors cursor-pointer font-medium"
+                      className="flex items-center gap-1.5 text-[11px] font-mono px-2.5 py-0.5 rounded border border-[#F59E0B]/40 bg-[#F59E0B]/15 text-amber-300 hover:bg-amber-900/40 transition-colors cursor-pointer font-medium"
                       title="Unlock this process sheet"
                     >
                       <Unlock className="h-3 w-3 text-amber-600" />
@@ -369,8 +369,8 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                   )}
                 </div>
               ) : (
-                <span className="flex items-center gap-1.5 text-[11px] font-mono px-2 py-0.5 rounded border border-blue-500/40 bg-blue-600/10 text-blue-600 font-medium">
-                  <span className="h-1.5 w-1.5 rounded-full bg-blue-600 animate-pulse"></span> ACTIVE LOGGING
+                <span className="flex items-center gap-1.5 text-[11px] font-mono px-2 py-0.5 rounded border border-[#009FE3]/40 bg-[#009FE3]/10 text-[#009FE3] font-medium">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#009FE3] animate-pulse"></span> ACTIVE LOGGING
                 </span>
               )}
             </div>
@@ -387,15 +387,15 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
           {/* Header Setpoints */}
           <div className="flex flex-wrap items-center gap-2.5 text-xs font-mono">
             {/* Shift Date Selector */}
-            <div className="bg-slate-50 px-3 py-2 rounded border border-slate-200 min-w-[190px]">
+            <div className="bg-[#0A1018] px-3 py-2 rounded border border-[#1F2E43] min-w-[190px]">
               <div className="flex items-center justify-between gap-2">
                 <span className="text-slate-500 block text-[9px] uppercase tracking-wider font-mono">LOG DATE</span>
                 {isLiveShift ? (
-                  <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded border border-green-200 bg-green-50 text-green-600 text-[9px] font-medium">
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded border border-[#10B981]/40 bg-[#10B981]/15 text-green-600 text-[9px] font-medium">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span> LIVE
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded border border-amber-200 bg-amber-50 text-amber-600 text-[9px] font-medium">
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded border border-[#F59E0B]/40 bg-[#F59E0B]/15 text-amber-600 text-[9px] font-medium">
                     ARCHIVED
                   </span>
                 )}
@@ -404,16 +404,16 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                 <select
                   value={activeShiftDate}
                   onChange={(e) => handleDateChange(e.target.value)}
-                  className="bg-transparent text-slate-800 font-medium font-mono text-xs border-0 focus:ring-0 p-0 cursor-pointer hover:text-blue-600"
+                  className="bg-transparent text-slate-100 font-medium font-mono text-xs border-0 focus:ring-0 p-0 cursor-pointer hover:text-[#009FE3]"
                   title="Select Shift Date to view log"
                 >
                   {availableDates.map(d => (
-                    <option key={d} value={d} className="bg-slate-50 text-slate-800">
+                    <option key={d} value={d} className="bg-[#0A1018] text-slate-100">
                       {d} {d === getRealtimeShiftDate() ? '(Today · Live)' : ''}
                     </option>
                   ))}
                   {!availableDates.includes(activeShiftDate) && (
-                    <option value={activeShiftDate} className="bg-slate-50 text-slate-800">
+                    <option value={activeShiftDate} className="bg-[#0A1018] text-slate-100">
                       {activeShiftDate} (Custom)
                     </option>
                   )}
@@ -423,7 +423,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                   type="date"
                   value={activeShiftDate}
                   onChange={(e) => e.target.value && handleDateChange(e.target.value)}
-                  className="bg-white border border-slate-200 text-slate-500 rounded px-1.5 py-0.5 text-[10px] font-mono focus:border-blue-500 focus:outline-none cursor-pointer"
+                  className="bg-[#0A1018] border border-[#1F2E43] text-slate-300 rounded px-1.5 py-0.5 text-[10px] font-mono focus:border-[#009FE3] focus:outline-none cursor-pointer"
                   title="Pick historical date"
                 />
 
@@ -431,7 +431,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                   <button
                     type="button"
                     onClick={() => handleDateChange(getRealtimeShiftDate())}
-                    className="text-[9px] font-mono font-medium uppercase tracking-wider px-1.5 py-0.5 rounded border border-blue-500/40 bg-blue-600/15 hover:bg-blue-600/25 text-blue-700 transition-colors cursor-pointer"
+                    className="text-[9px] font-mono font-medium uppercase tracking-wider px-1.5 py-0.5 rounded border border-[#009FE3]/40 bg-[#009FE3]/15 hover:bg-[#009FE3]/25 text-[#08B5F5] transition-colors cursor-pointer"
                     title="Return to today's active live shift"
                   >
                     Go Live
@@ -441,31 +441,31 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
             </div>
 
             {/* Stripping Steam Setpoint Tile */}
-            <div className="bg-slate-50 px-3 py-2 rounded border border-slate-200 flex flex-col justify-center min-w-[130px]">
+            <div className="bg-[#0A1018] px-3 py-2 rounded border border-[#1F2E43] flex flex-col justify-center min-w-[130px]">
               <div className="flex items-center justify-between gap-1.5">
                 <span className="text-slate-500 block text-[9px] uppercase tracking-wider font-mono">STRIPPING STEAM</span>
                 {isStripSteamSynced && (
-                  <span className="text-[8px] font-mono px-1 rounded border border-blue-500/40 bg-blue-600/15 text-blue-600 font-medium">
+                  <span className="text-[8px] font-mono px-1 rounded border border-[#009FE3]/40 bg-[#009FE3]/15 text-[#009FE3] font-medium">
                     SYNC
                   </span>
                 )}
               </div>
-              <span className="text-slate-900 font-semibold font-mono text-xs mt-0.5">
+              <span className="text-slate-100 font-semibold font-mono text-xs mt-0.5">
                 {Number(liveStrippingSteam).toFixed(2)} <span className="text-slate-400 font-normal">% oil</span>
               </span>
             </div>
 
             {/* Tray Steam Supply Tile */}
-            <div className="bg-slate-50 px-3 py-2 rounded border border-slate-200 flex flex-col justify-center min-w-[130px]">
+            <div className="bg-[#0A1018] px-3 py-2 rounded border border-[#1F2E43] flex flex-col justify-center min-w-[130px]">
               <div className="flex items-center justify-between gap-1.5">
                 <span className="text-slate-500 block text-[9px] uppercase tracking-wider font-mono">TRAY STEAM</span>
                 {isTraySteamSynced && (
-                  <span className="text-[8px] font-mono px-1 rounded border border-amber-200 bg-amber-50 text-amber-600 font-medium">
+                  <span className="text-[8px] font-mono px-1 rounded border border-[#F59E0B]/40 bg-[#F59E0B]/15 text-amber-600 font-medium">
                     SYNC
                   </span>
                 )}
               </div>
-              <span className="text-slate-900 font-semibold font-mono text-xs mt-0.5">
+              <span className="text-slate-100 font-semibold font-mono text-xs mt-0.5">
                 {Number(liveTraySteam).toFixed(2)} <span className="text-slate-400 font-normal">Bar</span>
               </span>
             </div>
@@ -490,7 +490,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                   setUnlockReason('');
                   setUnlockPassword('');
                 }}
-                className="flex items-center gap-1.5 bg-amber-600 hover:bg-amber-500 text-white font-mono font-medium text-xs uppercase tracking-wider px-3.5 py-2 rounded transition-all border border-amber-500 shadow-sm cursor-pointer"
+                className="flex items-center gap-1.5 bg-amber-600 hover:bg-[#F59E0B]/150 text-white font-mono font-medium text-xs uppercase tracking-wider px-3.5 py-2 rounded transition-all border border-amber-500 shadow-sm cursor-pointer"
                 title="Unlock process sheet for corrections"
               >
                 <Unlock className="h-3.5 w-3.5" />
@@ -508,30 +508,30 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                 24-HOUR TIMELINE RIBBON:
               </span>
               {isLiveShift ? (
-                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded border border-slate-200 bg-slate-50 text-slate-500 text-[11px] font-mono">
-                  <span className="h-1.5 w-1.5 rounded-full bg-blue-600 animate-pulse"></span>
+                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded border border-[#1F2E43] bg-[#131E2D] text-slate-500 text-[11px] font-mono">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#009FE3] animate-pulse"></span>
                   PLANT: {currentTimeStr || '09:00'} MYT · Slot {String(((currentSlotIndex + 7) % 24) * 100).padStart(4, '0')} ({String(((currentSlotIndex + 7) % 24)).padStart(2, '0')}:00 - {String(((currentSlotIndex + 8) % 24)).padStart(2, '0')}:00)
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded border border-amber-200 bg-amber-50 text-amber-600 text-[11px] font-mono">
+                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded border border-[#F59E0B]/40 bg-[#F59E0B]/15 text-amber-600 text-[11px] font-mono">
                   <span>HISTORICAL: {activeShiftDate} (AUDIT VIEW)</span>
                   <button
                     type="button"
                     onClick={() => handleDateChange(getRealtimeShiftDate())}
-                    className="text-blue-600 hover:text-blue-700 underline cursor-pointer ml-1 font-medium"
+                    className="text-[#009FE3] hover:text-[#08B5F5] underline cursor-pointer ml-1 font-medium"
                   >
                     Switch to Live
                   </button>
                 </span>
               )}
               {role === 'operator' && isLiveShift && (
-                <span className="text-[9px] font-mono text-blue-600 bg-slate-50 px-2 py-0.5 rounded border border-slate-200">
+                <span className="text-[9px] font-mono text-[#009FE3] bg-[#101927] px-2 py-0.5 rounded border border-[#1F2E43]">
                   Operator Lock: Restricted to active live slot
                 </span>
               )}
             </div>
             <div className="flex items-center gap-3 text-[10px] font-mono text-slate-400">
-              <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-blue-600"></span> Live</span>
+              <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-[#009FE3]"></span> Live</span>
               <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-[#10b981]"></span> Recorded</span>
               <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-[#f59e0b]"></span> Deviation</span>
               <span className="flex items-center gap-1"><Lock className="h-2.5 w-2.5 text-slate-500" /> Locked</span>
@@ -549,27 +549,27 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
               const hasDev = Boolean(entry?.has_deviation);
               const isFilled = Boolean(entry && (entry.recorded_by || entry.product_id || entry.vacuum_torr != null || entry.oil_feed_rate_litre != null || entry.no_production_reason != null));
 
-              let slotColor = 'border-slate-200 bg-slate-50 text-slate-400 hover:border-slate-300 hover:text-slate-800';
+              let slotColor = 'border-[#1F2E43] bg-[#101927] text-slate-400 hover:border-slate-300 hover:text-slate-200';
               if (isLive) {
                 if (isFilled) {
-                  slotColor = 'border-emerald-500/70 bg-green-50 text-emerald-300 font-medium shadow-[0_0_8px_rgba(16,185,129,0.3)]';
+                  slotColor = 'border-emerald-500/70 bg-[#10B981]/15 text-emerald-300 font-medium shadow-[0_0_8px_rgba(16,185,129,0.3)]';
                 } else {
-                  slotColor = 'border-blue-600 bg-blue-600/15 text-blue-700 font-semibold shadow-[0_0_12px_rgba(0,159,227,0.35)]';
+                  slotColor = 'border-blue-600 bg-[#009FE3]/15 text-[#08B5F5] font-semibold shadow-[0_0_12px_rgba(0,159,227,0.35)]';
                 }
               } else if (isFuture) {
-                slotColor = 'border-dashed border-slate-200/60 bg-white text-slate-500';
+                slotColor = 'border-dashed border-[#1F2E43]/60 bg-[#101927] text-slate-500';
               } else if (hasDev) {
-                slotColor = 'border-amber-600/70 bg-amber-50 text-amber-300 font-medium';
+                slotColor = 'border-[#F59E0B]/70 bg-[#F59E0B]/15 text-amber-300 font-medium';
               } else if (isFilled) {
-                slotColor = 'border-slate-200 bg-slate-50 text-slate-800 hover:border-slate-300 hover:bg-slate-50';
+                slotColor = 'border-[#1F2E43] bg-[#0A1018] text-slate-100 hover:border-slate-300 hover:bg-[#101927]';
               } else if (isPast) {
-                slotColor = 'border-slate-200/60 bg-white text-slate-500';
+                slotColor = 'border-[#1F2E43]/60 bg-[#101927] text-slate-500';
               } else {
-                slotColor = 'border-dashed border-slate-200/60 bg-white text-slate-500';
+                slotColor = 'border-dashed border-[#1F2E43]/60 bg-[#101927] text-slate-500';
               }
 
               if (isSelected) {
-                slotColor = 'border-2 border-blue-600 bg-blue-600 text-white font-bold shadow-sm ring-2 ring-blue-300';
+                slotColor = 'border-2 border-blue-600 bg-[#009FE3] text-white font-bold shadow-sm ring-2 ring-blue-300';
               }
 
               const isShiftBoundary = idx === 8 || idx === 16;
@@ -587,25 +587,25 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                   <div className="mt-0.5 flex items-center justify-center">
                     {isLive ? (
                       isFilled ? (
-                        <span className={`text-[7.5px] px-1 py-0.2 rounded font-medium leading-none flex items-center gap-0.5 ${isSelected ? 'bg-white text-slate-900' : 'bg-emerald-600 text-white'}`}>
+                        <span className={`text-[7.5px] px-1 py-0.2 rounded font-medium leading-none flex items-center gap-0.5 ${isSelected ? 'bg-[#101927] text-slate-100' : 'bg-emerald-600 text-white'}`}>
                           <Check className="h-2 w-2 stroke-[3]" />
                           LIVE
                         </span>
                       ) : (
-                        <span className={`text-[7.5px] px-1 py-0.2 rounded font-medium leading-none animate-pulse ${isSelected ? 'bg-white text-slate-900' : 'bg-blue-600 text-white'}`}>
+                        <span className={`text-[7.5px] px-1 py-0.2 rounded font-medium leading-none animate-pulse ${isSelected ? 'bg-[#101927] text-slate-100' : 'bg-[#009FE3] text-white'}`}>
                           LIVE
                         </span>
                       )
                     ) : isFuture ? (
-                      <span className={`h-1 w-1 rounded-full inline-block ${isSelected ? 'bg-white' : 'bg-slate-600'}`} />
+                      <span className={`h-1 w-1 rounded-full inline-block ${isSelected ? 'bg-[#101927]' : 'bg-slate-600'}`} />
                     ) : hasDev ? (
                       <span className="h-1.5 w-1.5 rounded-full bg-amber-400 inline-block" />
                     ) : isFilled ? (
                       <Check className={`h-2.5 w-2.5 ${isSelected ? 'text-white' : 'text-green-600'}`} />
                     ) : isPast ? (
-                      <Lock className={`h-2 w-2 ${isSelected ? 'text-slate-800' : 'text-slate-500'}`} />
+                      <Lock className={`h-2 w-2 ${isSelected ? 'text-slate-200' : 'text-slate-500'}`} />
                     ) : (
-                      <span className={`h-1 w-1 rounded-full inline-block ${isSelected ? 'bg-white' : 'bg-slate-600'}`} />
+                      <span className={`h-1 w-1 rounded-full inline-block ${isSelected ? 'bg-[#101927]' : 'bg-slate-600'}`} />
                     )}
                   </div>
                 </button>
@@ -616,30 +616,30 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
       </div>
 
       {/* 3. Hourly Data Entry Form Panel */}
-      <div className="rounded-lg border border-slate-200 bg-white p-5 sm:p-6 shadow-[0_4px_20px_-2px_rgba(0,0,0,0.45),inset_0_1px_0_0_rgba(255,255,255,0.03)]">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200 pb-4 mb-6">
+      <div className="rounded-lg border border-[#1F2E43] bg-[#101927] p-5 sm:p-6 shadow-lg">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[#1F2E43] pb-4 mb-6">
           <div className="flex items-center gap-3.5">
-            <div className="flex h-12 w-14 items-center justify-center rounded border border-slate-200 bg-slate-50 text-blue-600 font-mono text-lg font-bold tracking-tight shadow-inner">
+            <div className="flex h-12 w-14 items-center justify-center rounded border border-[#1F2E43] bg-[#131E2D] text-[#009FE3] font-mono text-lg font-bold tracking-tight shadow-inner">
               {selectedSlotLabel}
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2 flex-wrap font-sans">
                 <span>Hourly Readings for {currentSlotTimeStr} hrs</span>
                 {isLiveSlot ? (
-                  <span className="inline-flex items-center gap-1.5 rounded border border-blue-500/40 bg-blue-600/10 px-2 py-0.5 text-[11px] font-mono text-blue-600">
-                    <span className="h-1.5 w-1.5 rounded-full bg-blue-600 animate-pulse"></span> LIVE WINDOW ({currentSlotTimeStr} - {nextSlotTimeStr})
+                  <span className="inline-flex items-center gap-1.5 rounded border border-[#009FE3]/40 bg-[#009FE3]/10 px-2 py-0.5 text-[11px] font-mono text-[#009FE3]">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#009FE3] animate-pulse"></span> LIVE WINDOW ({currentSlotTimeStr} - {nextSlotTimeStr})
                   </span>
                 ) : isPastSlot ? (
-                  <span className="inline-flex items-center gap-1 rounded border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-mono text-slate-400">
+                  <span className="inline-flex items-center gap-1 rounded border border-[#1F2E43] bg-[#131E2D] px-2 py-0.5 text-[11px] font-mono text-slate-400">
                     <Lock className="h-3 w-3 text-slate-500" /> CLOSED (READ-ONLY)
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 rounded border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-mono text-slate-400">
+                  <span className="inline-flex items-center gap-1 rounded border border-[#1F2E43] bg-[#131E2D] px-2 py-0.5 text-[11px] font-mono text-slate-400">
                     <Clock className="h-3 w-3 text-slate-500" /> AWAITING SHIFT HOUR
                   </span>
                 )}
                 {formData.has_deviation && (
-                  <span className="inline-flex items-center gap-1 rounded border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-mono text-amber-300">
+                  <span className="inline-flex items-center gap-1 rounded border border-[#F59E0B]/40 bg-[#F59E0B]/15 px-2 py-0.5 text-[11px] font-mono text-amber-300">
                     <AlertTriangle className="h-3 w-3 text-amber-600" /> Soft Deviation
                   </span>
                 )}
@@ -659,7 +659,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
               className={`flex items-center gap-2 px-3 py-2 rounded text-xs font-mono font-medium transition-colors border cursor-pointer disabled:cursor-not-allowed ${
                 copiedSlotLabel
                   ? 'bg-emerald-600 text-white border-emerald-500'
-                  : 'bg-slate-50 hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-slate-50 text-slate-800 border-slate-200'
+                  : 'bg-[#101927] hover:bg-[#101927] disabled:opacity-40 disabled:hover:bg-[#0A1018] text-slate-100 border-[#1F2E43]'
               }`}
               title={isSlotDisabled ? "Slot locked from copying" : "Copy readings from previous recorded hour"}
             >
@@ -670,7 +670,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                 </>
               ) : (
                 <>
-                  <Copy className="h-3.5 w-3.5 text-blue-600" />
+                  <Copy className="h-3.5 w-3.5 text-[#009FE3]" />
                   <span>Copy Prev Hour ({String((((selectedSlotIndex - 1 + 24) % 24) + 7) % 24 * 100).padStart(4, '0')})</span>
                 </>
               )}
@@ -680,14 +680,14 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
 
         {/* Validation & Alert feedback banners */}
         {validationError && (
-          <div className="mb-5 flex items-center gap-2.5 rounded bg-red-50 p-3.5 text-xs text-red-300 border border-red-200 font-mono">
+          <div className="mb-5 flex items-center gap-2.5 rounded bg-[#EF4444]/15 p-3.5 text-xs text-red-300 border border-[#EF4444]/40 font-mono">
             <AlertCircle className="h-4 w-4 shrink-0 text-red-400" />
             <span>{validationError}</span>
           </div>
         )}
 
         {successMessage && (
-          <div className="mb-5 flex items-center gap-2.5 rounded bg-green-50 p-3.5 text-xs text-emerald-300 border border-green-200 font-mono">
+          <div className="mb-5 flex items-center gap-2.5 rounded bg-[#10B981]/15 p-3.5 text-xs text-emerald-300 border border-[#10B981]/40 font-mono">
             <CheckCircle2 className="h-4 w-4 shrink-0 text-green-600" />
             <span>{successMessage}</span>
           </div>
@@ -695,13 +695,13 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
 
         {/* Historical Shift Read-Only Notification Banner */}
         {!isLiveShift && (
-          <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded bg-slate-50 p-3.5 text-xs text-slate-500 border border-slate-200">
+          <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded bg-[#101927] p-3.5 text-xs text-slate-500 border border-[#1F2E43]">
             <div className="flex items-start gap-3">
-              <div className="rounded border border-slate-200 bg-white p-2 text-blue-600 shrink-0">
+              <div className="rounded border border-[#1F2E43] bg-[#101927] p-2 text-[#009FE3] shrink-0">
                 <Clock className="h-4 w-4" />
               </div>
               <div>
-                <span className="font-semibold text-slate-900 text-xs block font-mono">
+                <span className="font-semibold text-slate-100 text-xs block font-mono">
                   HISTORICAL SHIFT ARCHIVE ({activeShiftDate}) · READ-ONLY
                 </span>
                 <span className="text-slate-400 block text-[11px] mt-0.5">
@@ -712,7 +712,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
             <button
               type="button"
               onClick={() => handleDateChange(getRealtimeShiftDate())}
-              className="bg-blue-600 hover:bg-blue-500 text-white font-mono font-medium text-xs uppercase px-3 py-1.5 rounded transition-all shrink-0 border border-blue-500 cursor-pointer"
+              className="bg-[#009FE3] hover:bg-[#08B5F5] text-white font-mono font-medium text-xs uppercase px-3 py-1.5 rounded transition-all shrink-0 border border-[#009FE3] cursor-pointer"
             >
               Switch to Live Shift
             </button>
@@ -723,7 +723,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
         {isLiveShift && isPastSlot && sheet.status !== 'verified' && (
           <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded bg-amber-950/25 p-3.5 text-xs text-amber-200 border border-amber-800/40">
             <div className="flex items-start gap-3">
-              <div className="rounded border border-amber-200 bg-white p-2 text-amber-600 shrink-0">
+              <div className="rounded border border-[#F59E0B]/40 bg-[#101927] p-2 text-amber-600 shrink-0">
                 <Lock className="h-4 w-4" />
               </div>
               <div>
@@ -738,22 +738,22 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
             <button
               type="button"
               onClick={() => loadSlot(currentSlotIndex)}
-              className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded bg-white text-slate-800 border border-slate-200 hover:bg-slate-100 text-xs font-mono font-medium transition-colors cursor-pointer"
+              className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded bg-[#101927] text-slate-200 border border-[#1F2E43] hover:bg-slate-100 text-xs font-mono font-medium transition-colors cursor-pointer"
             >
-              <Clock className="h-3.5 w-3.5 text-blue-600" />
+              <Clock className="h-3.5 w-3.5 text-[#009FE3]" />
               <span>Go to Active Slot ({String(((currentSlotIndex + 7) % 24) * 100).padStart(4, '0')})</span>
             </button>
           </div>
         )}
 
         {isFutureSlot && sheet.status !== 'verified' && (
-          <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded bg-slate-50 p-3.5 text-xs text-slate-500 border border-slate-200">
+          <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded bg-[#101927] p-3.5 text-xs text-slate-500 border border-[#1F2E43]">
             <div className="flex items-start gap-3">
-              <div className="rounded border border-slate-200 bg-white p-2 text-blue-600 shrink-0">
+              <div className="rounded border border-[#1F2E43] bg-[#101927] p-2 text-[#009FE3] shrink-0">
                 <Clock className="h-4 w-4" />
               </div>
               <div>
-                <span className="font-semibold text-slate-900 text-xs block font-mono">
+                <span className="font-semibold text-slate-100 text-xs block font-mono">
                   PENDING SHIFT HOUR: Slot {selectedSlotLabel}
                 </span>
                 <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed font-mono">
@@ -764,21 +764,21 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
             <button
               type="button"
               onClick={() => loadSlot(currentSlotIndex)}
-              className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded bg-white text-slate-800 border border-slate-200 hover:bg-slate-100 text-xs font-mono font-medium transition-colors cursor-pointer"
+              className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded bg-[#101927] text-slate-200 border border-[#1F2E43] hover:bg-slate-100 text-xs font-mono font-medium transition-colors cursor-pointer"
             >
-              <Clock className="h-3.5 w-3.5 text-blue-600" />
+              <Clock className="h-3.5 w-3.5 text-[#009FE3]" />
               <span>Go to Active Slot ({String(((currentSlotIndex + 7) % 24) * 100).padStart(4, '0')})</span>
             </button>
           </div>
         )}
 
         {isLiveShift && isLiveSlot && sheet.status !== 'verified' && (
-          <div className="mb-5 flex items-start sm:items-center justify-between gap-3 rounded bg-blue-600/10 p-3.5 text-xs text-sky-200 border border-blue-500/30">
+          <div className="mb-5 flex items-start sm:items-center justify-between gap-3 rounded bg-[#009FE3]/10 p-3.5 text-xs text-sky-200 border border-[#009FE3]/30">
             <div className="flex items-center gap-3">
-              <div className="rounded border border-blue-500/40 bg-white p-2 text-blue-600 shrink-0">
+              <div className="rounded border border-[#009FE3]/40 bg-[#101927] p-2 text-[#009FE3] shrink-0">
                 <span className="relative flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-600 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-600"></span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#009FE3] opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#009FE3]"></span>
                 </span>
               </div>
               <div>
@@ -795,7 +795,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
 
         {/* Informative Locked Sheet Banner */}
         {sheet.status === 'verified' && (
-          <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded bg-green-50 p-3.5 text-xs text-emerald-200 border border-green-200">
+          <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded bg-[#10B981]/15 p-3.5 text-xs text-emerald-200 border border-[#10B981]/40">
             <div className="flex items-start sm:items-center gap-2.5">
               <Lock className="h-4 w-4 shrink-0 text-green-600 mt-0.5 sm:mt-0" />
               <div>
@@ -816,7 +816,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                   setUnlockReason('');
                   setUnlockPassword('');
                 }}
-                className="shrink-0 flex items-center gap-1.5 bg-amber-600 hover:bg-amber-500 text-white font-mono font-medium text-xs uppercase px-3 py-1.5 rounded transition-all border border-amber-500 cursor-pointer shadow-xs"
+                className="shrink-0 flex items-center gap-1.5 bg-amber-600 hover:bg-[#F59E0B]/150 text-white font-mono font-medium text-xs uppercase px-3 py-1.5 rounded transition-all border border-amber-500 cursor-pointer shadow-xs"
               >
                 <Unlock className="h-3 w-3" />
                 <span>Admin Unlock</span>
@@ -828,7 +828,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
         {/* Form Inputs Grid */}
         <form onSubmit={handleSaveEntry} className="space-y-5">
           {/* Section A: Product Picker */}
-          <div className="rounded border border-slate-200 bg-slate-50 p-4">
+          <div className="rounded border border-[#1F2E43] bg-[#131E2D] p-4">
             <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5 font-mono">
               SECTION 1: PRODUCT SPECIFICATION & OIL TYPE
             </label>
@@ -837,10 +837,10 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                 value={formData.product_id || ''}
                 onChange={e => handleProductChange(e.target.value)}
                 disabled={isSlotDisabled}
-                className="col-span-2 bg-white border border-slate-200 rounded px-3 py-2 text-xs text-slate-900 font-mono font-medium focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 disabled:opacity-50 disabled:bg-white"
+                className="col-span-2 bg-[#0A1018] border border-[#1F2E43] rounded px-3 py-2 text-xs text-slate-100 font-mono font-medium focus:outline-none focus:border-[#009FE3] focus:ring-1 focus:ring-[#009FE3]/30 disabled:opacity-50 disabled:bg-[#070B12]"
               >
                 {products.map(p => (
-                  <option key={p.id} value={p.id} className="bg-slate-50 text-slate-900">
+                  <option key={p.id} value={p.id} className="bg-[#0A1018] text-slate-100">
                     {p.name}
                   </option>
                 ))}
@@ -852,10 +852,10 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
           </div>
 
           {/* Section A.1: Auto-Dispatch to RF-FR-001 QC Lab (Mandatory Plant SOP · Locked) */}
-          <div className="rounded border border-slate-200 bg-slate-50 p-3.5">
+          <div className="rounded border border-[#1F2E43] bg-[#131E2D] p-3.5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="rounded border border-slate-200 bg-white p-2 text-blue-600 shrink-0">
+                <div className="rounded border border-[#1F2E43] bg-[#101927] p-2 text-[#009FE3] shrink-0">
                   <FlaskConical className="h-4 w-4" />
                 </div>
                 <div>
@@ -863,7 +863,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     <span className="text-xs font-bold tracking-tight text-white font-mono">
                       AUTO-DISPATCH SAMPLE LOT → RF-FR-001 QC LAB
                     </span>
-                    <span className="px-2 py-0.2 rounded text-[10px] font-mono border border-green-200 bg-green-50 text-green-600 font-medium flex items-center gap-1">
+                    <span className="px-2 py-0.2 rounded text-[10px] font-mono border border-[#10B981]/40 bg-[#10B981]/15 text-green-600 font-medium flex items-center gap-1">
                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
                       MANDATORY SOP · ACTIVE
                     </span>
@@ -873,7 +873,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-1.5 self-start sm:self-auto text-[10px] text-slate-500 font-mono bg-white px-2.5 py-1 rounded border border-slate-200">
+              <div className="flex items-center gap-1.5 self-start sm:self-auto text-[10px] text-slate-500 font-mono bg-[#101927] px-2.5 py-1 rounded border border-[#1F2E43]">
                 <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
                 <span>SYNCED WITH SHIFT TIMELINE</span>
               </div>
@@ -881,9 +881,9 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
           </div>
 
           {/* Section B: Processing Conditions (Feed Rate, Deod Time, Vacuum) */}
-          <div className="rounded border border-slate-200 bg-slate-50 p-4">
+          <div className="rounded border border-[#1F2E43] bg-[#131E2D] p-4">
             <div className="flex items-center gap-2 mb-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 font-mono">
-              <Gauge className="h-3.5 w-3.5 text-blue-600" />
+              <Gauge className="h-3.5 w-3.5 text-[#009FE3]" />
               <span>SECTION 2: PROCESSING CONTROLS (RF-FR-004 COL 2 - 4)</span>
             </div>
 
@@ -901,7 +901,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     value={formData.oil_feed_rate_litre ?? ''}
                     onChange={e => handleFieldChange('oil_feed_rate_litre', e.target.value ? Number(e.target.value) : null)}
                     disabled={isSlotDisabled}
-                    className="w-full bg-white border border-slate-200 rounded px-3 py-1.5 text-xs font-mono text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 disabled:opacity-50 disabled:bg-white disabled:cursor-not-allowed"
+                    className="w-full bg-[#0A1018] border border-[#1F2E43] rounded px-3 py-1.5 text-xs font-mono text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-[#009FE3] focus:ring-1 focus:ring-[#009FE3]/30 disabled:opacity-50 disabled:bg-[#070B12] disabled:cursor-not-allowed"
                   />
                   {ghostData.oil_feed_rate_litre !== undefined && (
                     <span className="absolute right-2.5 top-1.5 text-[10px] font-mono text-slate-500 pointer-events-none">
@@ -923,7 +923,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                   value={formData.deod_time_set_hr ?? ''}
                   onChange={e => handleFieldChange('deod_time_set_hr', e.target.value ? Number(e.target.value) : null)}
                   disabled={isSlotDisabled}
-                  className="w-full bg-white border border-slate-200 rounded px-3 py-1.5 text-xs font-mono text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 disabled:opacity-50 disabled:bg-white disabled:cursor-not-allowed"
+                  className="w-full bg-[#0A1018] border border-[#1F2E43] rounded px-3 py-1.5 text-xs font-mono text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-[#009FE3] focus:ring-1 focus:ring-[#009FE3]/30 disabled:opacity-50 disabled:bg-[#070B12] disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -931,7 +931,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
               <div>
                 <label className="block text-[11px] text-slate-500 mb-1 flex items-center justify-between font-mono">
                   <span>Vacuum Reach <span className="text-slate-500">(Torr)</span></span>
-                  <span className="text-[10px] text-blue-600 font-medium">Band: 1.0 - 4.5</span>
+                  <span className="text-[10px] text-[#009FE3] font-medium">Band: 1.0 - 4.5</span>
                 </label>
                 <div className="relative">
                   <input
@@ -941,12 +941,12 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     value={formData.vacuum_torr ?? ''}
                     onChange={e => handleFieldChange('vacuum_torr', e.target.value ? Number(e.target.value) : null)}
                     disabled={isSlotDisabled}
-                    className={`w-full bg-white border rounded px-3 py-1.5 text-xs font-mono text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500/20 disabled:opacity-50 disabled:bg-white disabled:cursor-not-allowed ${
+                    className={`w-full bg-[#101927] border rounded px-3 py-1.5 text-xs font-mono text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500/20 disabled:opacity-50 disabled:bg-[#101927] disabled:cursor-not-allowed ${
                       checkLimit('vacuum_torr', formData.vacuum_torr) === 'soft_warn'
-                        ? 'border-amber-500/70 bg-amber-50 text-amber-200'
+                        ? 'border-amber-500/70 bg-[#F59E0B]/15 text-amber-200'
                         : checkLimit('vacuum_torr', formData.vacuum_torr) === 'hard_error'
-                        ? 'border-red-500/70 bg-red-50 text-red-200'
-                        : 'border-slate-200 focus:border-blue-500'
+                        ? 'border-red-500/70 bg-[#EF4444]/15 text-red-200'
+                        : 'border-[#1F2E43] focus:border-[#009FE3]'
                     }`}
                   />
                   {ghostData.vacuum_torr !== undefined && (
@@ -960,10 +960,10 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
           </div>
 
           {/* Section C: Temperature Recorder — Trays 1 to 7 (°C) */}
-          <div className="rounded border border-slate-200 bg-slate-50 p-4">
+          <div className="rounded border border-[#1F2E43] bg-[#131E2D] p-4">
             <div className="flex items-center justify-between mb-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 font-mono">
               <div className="flex items-center gap-2">
-                <Thermometer className="h-3.5 w-3.5 text-blue-600" />
+                <Thermometer className="h-3.5 w-3.5 text-[#009FE3]" />
                 <span>SECTION 3: DEODORIZER TEMPERATURE PROFILE — TRAYS 1 TO 7 (°C)</span>
               </div>
               <span className="text-[10px] text-slate-400 font-mono">TAB to cycle left → right</span>
@@ -989,12 +989,12 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                         value={val ?? ''}
                         onChange={e => handleFieldChange(key, e.target.value ? Number(e.target.value) : null)}
                         disabled={isSlotDisabled}
-                        className={`w-full bg-white border rounded px-2.5 py-1.5 text-xs font-mono text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500/20 disabled:opacity-50 disabled:bg-white disabled:cursor-not-allowed ${
+                        className={`w-full bg-[#101927] border rounded px-2.5 py-1.5 text-xs font-mono text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500/20 disabled:opacity-50 disabled:bg-[#101927] disabled:cursor-not-allowed ${
                           status === 'soft_warn'
-                            ? 'border-amber-500/70 text-amber-200 bg-amber-50'
+                            ? 'border-amber-500/70 text-amber-200 bg-[#F59E0B]/15'
                             : status === 'hard_error'
-                            ? 'border-red-500/70 text-red-200 bg-red-50'
-                            : 'border-slate-200 focus:border-blue-500'
+                            ? 'border-red-500/70 text-red-200 bg-[#EF4444]/15'
+                            : 'border-[#1F2E43] focus:border-[#009FE3]'
                         }`}
                       />
                     </div>
@@ -1007,7 +1007,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
           {/* Section D: Cooling, Steam Supply & Stripping Steam */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* BC 101 Water Temperatures */}
-            <div className="rounded border border-slate-200 bg-slate-50 p-4">
+            <div className="rounded border border-[#1F2E43] bg-[#131E2D] p-4">
               <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-3 font-mono">
                 BC 101 CONDENSER (°C)
               </span>
@@ -1021,7 +1021,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     value={formData.bc101_water_in_c ?? ''}
                     onChange={e => handleFieldChange('bc101_water_in_c', e.target.value ? Number(e.target.value) : null)}
                     disabled={isSlotDisabled}
-                    className="w-full bg-white border border-slate-200 rounded px-2.5 py-1.5 text-xs font-mono text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 disabled:opacity-50 disabled:bg-white disabled:cursor-not-allowed"
+                    className="w-full bg-[#0A1018] border border-[#1F2E43] rounded px-2.5 py-1.5 text-xs font-mono text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-[#009FE3] focus:ring-1 focus:ring-[#009FE3]/30 disabled:opacity-50 disabled:bg-[#070B12] disabled:cursor-not-allowed"
                   />
                 </div>
                 <div>
@@ -1033,14 +1033,14 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     value={formData.bc101_water_out_c ?? ''}
                     onChange={e => handleFieldChange('bc101_water_out_c', e.target.value ? Number(e.target.value) : null)}
                     disabled={isSlotDisabled}
-                    className="w-full bg-white border border-slate-200 rounded px-2.5 py-1.5 text-xs font-mono text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 disabled:opacity-50 disabled:bg-white disabled:cursor-not-allowed"
+                    className="w-full bg-[#0A1018] border border-[#1F2E43] rounded px-2.5 py-1.5 text-xs font-mono text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-[#009FE3] focus:ring-1 focus:ring-[#009FE3]/30 disabled:opacity-50 disabled:bg-[#070B12] disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
             </div>
 
             {/* Chilling Water */}
-            <div className="rounded border border-slate-200 bg-slate-50 p-4">
+            <div className="rounded border border-[#1F2E43] bg-[#131E2D] p-4">
               <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-3 font-mono">
                 CHILLING WATER (°C)
               </span>
@@ -1054,7 +1054,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     value={formData.chill_water_in_c ?? ''}
                     onChange={e => handleFieldChange('chill_water_in_c', e.target.value ? Number(e.target.value) : null)}
                     disabled={isSlotDisabled}
-                    className="w-full bg-white border border-slate-200 rounded px-2.5 py-1.5 text-xs font-mono text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 disabled:opacity-50 disabled:bg-white disabled:cursor-not-allowed"
+                    className="w-full bg-[#0A1018] border border-[#1F2E43] rounded px-2.5 py-1.5 text-xs font-mono text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-[#009FE3] focus:ring-1 focus:ring-[#009FE3]/30 disabled:opacity-50 disabled:bg-[#070B12] disabled:cursor-not-allowed"
                   />
                 </div>
                 <div>
@@ -1066,14 +1066,14 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     value={formData.chill_water_out_c ?? ''}
                     onChange={e => handleFieldChange('chill_water_out_c', e.target.value ? Number(e.target.value) : null)}
                     disabled={isSlotDisabled}
-                    className="w-full bg-white border border-slate-200 rounded px-2.5 py-1.5 text-xs font-mono text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 disabled:opacity-50 disabled:bg-white disabled:cursor-not-allowed"
+                    className="w-full bg-[#0A1018] border border-[#1F2E43] rounded px-2.5 py-1.5 text-xs font-mono text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-[#009FE3] focus:ring-1 focus:ring-[#009FE3]/30 disabled:opacity-50 disabled:bg-[#070B12] disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
             </div>
 
             {/* Steam Supply Pressures */}
-            <div className="rounded border border-slate-200 bg-slate-50 p-4">
+            <div className="rounded border border-[#1F2E43] bg-[#131E2D] p-4">
               <div className="flex items-center justify-between mb-3">
                 <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 font-mono">
                   STEAM SUPPLY (BAR)
@@ -1094,7 +1094,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     value={formData.tray_steam_supply_bar ?? ''}
                     onChange={e => handleFieldChange('tray_steam_supply_bar', e.target.value ? Number(e.target.value) : null)}
                     disabled={isSlotDisabled}
-                    className="w-full bg-white border border-amber-700/60 focus:border-amber-500 rounded px-2 py-1.5 text-xs font-mono text-slate-900 focus:outline-none focus:ring-1 focus:ring-amber-500/30 disabled:opacity-50 disabled:bg-white disabled:cursor-not-allowed"
+                    className="w-full bg-[#101927] border border-amber-700/60 focus:border-amber-500 rounded px-2 py-1.5 text-xs font-mono text-slate-100 focus:outline-none focus:ring-1 focus:ring-amber-500/30 disabled:opacity-50 disabled:bg-[#101927] disabled:cursor-not-allowed"
                   />
                 </div>
                 <div>
@@ -1108,7 +1108,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     value={formData.booster_press_bar ?? ''}
                     onChange={e => handleFieldChange('booster_press_bar', e.target.value ? Number(e.target.value) : null)}
                     disabled={isSlotDisabled}
-                    className="w-full bg-white border border-slate-200 rounded px-2 py-1.5 text-xs font-mono text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 disabled:opacity-50 disabled:bg-white disabled:cursor-not-allowed"
+                    className="w-full bg-[#0A1018] border border-[#1F2E43] rounded px-2 py-1.5 text-xs font-mono text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-[#009FE3] focus:ring-1 focus:ring-[#009FE3]/30 disabled:opacity-50 disabled:bg-[#070B12] disabled:cursor-not-allowed"
                   />
                 </div>
                 <div>
@@ -1122,7 +1122,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     value={formData.ejector_press_bar ?? ''}
                     onChange={e => handleFieldChange('ejector_press_bar', e.target.value ? Number(e.target.value) : null)}
                     disabled={isSlotDisabled}
-                    className="w-full bg-white border border-slate-200 rounded px-2 py-1.5 text-xs font-mono text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 disabled:opacity-50 disabled:bg-white disabled:cursor-not-allowed"
+                    className="w-full bg-[#0A1018] border border-[#1F2E43] rounded px-2 py-1.5 text-xs font-mono text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-[#009FE3] focus:ring-1 focus:ring-[#009FE3]/30 disabled:opacity-50 disabled:bg-[#070B12] disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -1132,12 +1132,12 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
           {/* Section E: Stripping Steam & Filtration Pressures */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Stripping Steam */}
-            <div className="rounded border border-slate-200 bg-slate-50 p-4">
+            <div className="rounded border border-[#1F2E43] bg-[#131E2D] p-4">
               <div className="flex items-center justify-between mb-3">
                 <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 font-mono">
                   STRIPPING STEAM RATIO
                 </span>
-                <span className="text-[10px] text-blue-600 font-medium font-mono">
+                <span className="text-[10px] text-[#009FE3] font-medium font-mono">
                   Set: {Number(liveStrippingSteam).toFixed(2)} %
                 </span>
               </div>
@@ -1151,7 +1151,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     value={formData.strip_steam_pct_of_oil ?? ''}
                     onChange={e => handleFieldChange('strip_steam_pct_of_oil', e.target.value ? Number(e.target.value) : null)}
                     disabled={isSlotDisabled}
-                    className="w-full bg-white border border-slate-200 focus:border-blue-500 rounded px-2.5 py-1.5 text-xs font-mono text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500/20 disabled:opacity-50 disabled:bg-white disabled:cursor-not-allowed"
+                    className="w-full bg-[#101927] border border-[#1F2E43] focus:border-[#009FE3] rounded px-2.5 py-1.5 text-xs font-mono text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500/20 disabled:opacity-50 disabled:bg-[#101927] disabled:cursor-not-allowed"
                   />
                 </div>
                 <div>
@@ -1163,14 +1163,14 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     value={formData.strip_steam_flow_kghr ?? ''}
                     onChange={e => handleFieldChange('strip_steam_flow_kghr', e.target.value ? Number(e.target.value) : null)}
                     disabled={isSlotDisabled}
-                    className="w-full bg-white border border-slate-200 rounded px-2.5 py-1.5 text-xs font-mono text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 disabled:opacity-50 disabled:bg-white disabled:cursor-not-allowed"
+                    className="w-full bg-[#0A1018] border border-[#1F2E43] rounded px-2.5 py-1.5 text-xs font-mono text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-[#009FE3] focus:ring-1 focus:ring-[#009FE3]/30 disabled:opacity-50 disabled:bg-[#070B12] disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
             </div>
 
             {/* Filtration FP 101A/B Pressures */}
-            <div className="rounded border border-slate-200 bg-slate-50 p-4">
+            <div className="rounded border border-[#1F2E43] bg-[#131E2D] p-4">
               <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-3 font-mono">
                 POLISHING FILTRATION FP-101 (BAR)
               </span>
@@ -1184,7 +1184,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     value={formData.fp101a_press_bar ?? ''}
                     onChange={e => handleFieldChange('fp101a_press_bar', e.target.value ? Number(e.target.value) : null)}
                     disabled={isSlotDisabled}
-                    className="w-full bg-white border border-slate-200 rounded px-2.5 py-1.5 text-xs font-mono text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 disabled:opacity-50 disabled:bg-white disabled:cursor-not-allowed"
+                    className="w-full bg-[#0A1018] border border-[#1F2E43] rounded px-2.5 py-1.5 text-xs font-mono text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-[#009FE3] focus:ring-1 focus:ring-[#009FE3]/30 disabled:opacity-50 disabled:bg-[#070B12] disabled:cursor-not-allowed"
                   />
                 </div>
                 <div>
@@ -1196,7 +1196,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     value={formData.fp101b_press_bar ?? ''}
                     onChange={e => handleFieldChange('fp101b_press_bar', e.target.value ? Number(e.target.value) : null)}
                     disabled={isSlotDisabled}
-                    className="w-full bg-white border border-slate-200 rounded px-2.5 py-1.5 text-xs font-mono text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 disabled:opacity-50 disabled:bg-white disabled:cursor-not-allowed"
+                    className="w-full bg-[#0A1018] border border-[#1F2E43] rounded px-2.5 py-1.5 text-xs font-mono text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-[#009FE3] focus:ring-1 focus:ring-[#009FE3]/30 disabled:opacity-50 disabled:bg-[#070B12] disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -1204,7 +1204,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
           </div>
 
           {/* Section F: Remarks & Shift Notes */}
-          <div className="rounded border border-slate-200 bg-slate-50 p-4">
+          <div className="rounded border border-[#1F2E43] bg-[#131E2D] p-4">
             <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5 font-mono">
               REMARKS & PROCESS DEVIATION NOTES (MANDATORY IF OUT-OF-BAND EVENT)
             </label>
@@ -1214,12 +1214,12 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
               value={formData.remarks || ''}
               onChange={e => handleFieldChange('remarks', e.target.value)}
               disabled={isSlotDisabled}
-              className="w-full bg-white border border-slate-200 rounded px-3 py-2 text-xs font-mono text-slate-900 placeholder:text-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 disabled:opacity-50 disabled:bg-white disabled:cursor-not-allowed resize-none"
+              className="w-full bg-[#0A1018] border border-[#1F2E43] rounded px-3 py-2 text-xs font-mono text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-[#009FE3] focus:ring-1 focus:ring-[#009FE3]/30 disabled:opacity-50 disabled:bg-[#070B12] disabled:cursor-not-allowed resize-none"
             />
           </div>
 
           {/* Submit Save Button */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-3 border-t border-slate-200">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-3 border-t border-[#1F2E43]">
             <div className="text-[11px] text-slate-400 font-mono">
               {isJustSaved ? (
                 <span className="flex items-center gap-1.5 text-green-600 font-medium">
@@ -1249,8 +1249,8 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                   isJustSaved
                     ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-500 cursor-pointer'
                     : isSlotDisabled
-                    ? 'bg-white text-slate-500 border-slate-200 cursor-not-allowed opacity-60'
-                    : 'bg-blue-600 hover:bg-blue-500 text-white border-blue-500 cursor-pointer shadow-xs'
+                    ? 'bg-[#101927] text-slate-500 border-[#1F2E43] cursor-not-allowed opacity-60'
+                    : 'bg-[#009FE3] hover:bg-[#08B5F5] text-white border-[#009FE3] cursor-pointer shadow-xs'
                 }`}
               >
                 {isJustSaved ? (
@@ -1293,7 +1293,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
       {/* Supervisor Verification Modal */}
       {isVerifyModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
-          <div className="w-full max-w-md rounded-lg border border-slate-200 bg-white p-6 shadow-2xl">
+          <div className="w-full max-w-md rounded-lg border border-[#1F2E43] bg-[#101927] p-6 shadow-2xl">
             <div className="flex items-center gap-3 text-green-600 mb-3">
               <FileCheck2 className="h-5 w-5" />
               <h3 className="text-base font-bold text-white font-sans">
@@ -1306,7 +1306,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
             </p>
 
             {verifyError && (
-              <div className="mb-4 rounded bg-red-50 p-2.5 text-xs text-red-300 border border-red-200 font-mono">
+              <div className="mb-4 rounded bg-[#EF4444]/15 p-2.5 text-xs text-red-300 border border-[#EF4444]/40 font-mono">
                 {verifyError}
               </div>
             )}
@@ -1322,7 +1322,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                   placeholder="••••••••"
                   value={signaturePassword}
                   onChange={e => setSignaturePassword(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded px-3 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:border-emerald-500"
+                  className="w-full bg-[#0A1018] border border-[#1F2E43] rounded px-3 py-2 text-xs font-mono text-slate-100 focus:outline-none focus:border-emerald-500"
                 />
               </div>
 
@@ -1330,7 +1330,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                 <button
                   type="button"
                   onClick={() => setIsVerifyModalOpen(false)}
-                  className="px-3.5 py-1.5 rounded text-xs font-mono text-slate-400 hover:text-slate-800 cursor-pointer"
+                  className="px-3.5 py-1.5 rounded text-xs font-mono text-slate-400 hover:text-slate-200 cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -1349,9 +1349,9 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
       {/* Admin Unlock Modal */}
       {isUnlockModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
-          <div className="w-full max-w-md rounded-lg border border-slate-200 bg-white p-6 shadow-2xl">
+          <div className="w-full max-w-md rounded-lg border border-[#1F2E43] bg-[#101927] p-6 shadow-2xl">
             <div className="flex items-center gap-3 text-amber-600 mb-3">
-              <div className="rounded border border-amber-200 bg-amber-50 p-2">
+              <div className="rounded border border-[#F59E0B]/40 bg-[#F59E0B]/15 p-2">
                 <Unlock className="h-5 w-5" />
               </div>
               <div>
@@ -1369,7 +1369,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
             </p>
 
             {unlockError && (
-              <div className="mb-4 rounded bg-red-50 p-2.5 text-xs text-red-300 border border-red-200 font-mono">
+              <div className="mb-4 rounded bg-[#EF4444]/15 p-2.5 text-xs text-red-300 border border-[#EF4444]/40 font-mono">
                 {unlockError}
               </div>
             )}
@@ -1385,7 +1385,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                   placeholder="e.g. Correcting Tray 3 temperature reading due to erroneous keyboard input..."
                   value={unlockReason}
                   onChange={e => setUnlockReason(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded px-3 py-2 text-xs font-mono text-slate-900 placeholder:text-slate-500 focus:outline-none focus:border-amber-500 resize-none"
+                  className="w-full bg-[#0A1018] border border-[#1F2E43] rounded px-3 py-2 text-xs font-mono text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-amber-500 resize-none"
                 />
               </div>
 
@@ -1399,7 +1399,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                   placeholder="Enter Admin password..."
                   value={unlockPassword}
                   onChange={e => setUnlockPassword(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded px-3 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:border-amber-500"
+                  className="w-full bg-[#0A1018] border border-[#1F2E43] rounded px-3 py-2 text-xs font-mono text-slate-100 focus:outline-none focus:border-amber-500"
                 />
               </div>
 
@@ -1407,13 +1407,13 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                 <button
                   type="button"
                   onClick={() => setIsUnlockModalOpen(false)}
-                  className="px-3.5 py-1.5 rounded text-xs font-mono text-slate-400 hover:text-slate-800 cursor-pointer"
+                  className="px-3.5 py-1.5 rounded text-xs font-mono text-slate-400 hover:text-slate-200 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="bg-amber-600 hover:bg-amber-500 text-white font-mono font-medium text-xs uppercase px-4 py-1.5 rounded transition-all flex items-center gap-1.5 border border-amber-500 cursor-pointer shadow-xs"
+                  className="bg-amber-600 hover:bg-[#F59E0B]/150 text-white font-mono font-medium text-xs uppercase px-4 py-1.5 rounded transition-all flex items-center gap-1.5 border border-amber-500 cursor-pointer shadow-xs"
                 >
                   <Unlock className="h-3.5 w-3.5" />
                   <span>Confirm & Unlock</span>

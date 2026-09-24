@@ -6,23 +6,25 @@
 }
 
 :root {
-  --background: #ffffff;
-  --foreground: #0f172a;
-  --surface: #f8fafc;
-  --surface-raised: #ffffff;
+  --background: #070B12;
+  --background-secondary: #0A1018;
+  --foreground: #F8FAFC;
+  --surface: #101927;
+  --surface-raised: #131E2D;
+  --surface-secondary: #172235;
 
-  --border: #e2e8f0;
-  --border-strong: #cbd5e1;
-  --border-focus: #2563eb;
+  --border: #1F2E43;
+  --border-strong: #263A52;
+  --border-focus: #009FE3;
 
-  --accent: #2563eb;
-  --accent-hover: #1d4ed8;
-  --accent-light: #eff6ff;
+  --accent: #009FE3;
+  --accent-hover: #08B5F5;
+  --accent-muted: rgba(0, 159, 227, 0.15);
 
-  --status-success: #16a34a;
-  --status-warning: #d97706;
-  --status-critical: #dc2626;
-  --status-neutral: #64748b;
+  --status-success: #10B981;
+  --status-warning: #F59E0B;
+  --status-critical: #EF4444;
+  --status-neutral: #64748B;
 }
 
 /* Force whole website to use clean, highly legible Inter font with solid weights */
@@ -31,8 +33,8 @@
 }
 
 body {
-  background-color: #ffffff;
-  color: #0f172a;
+  background-color: #070B12;
+  color: #F1F5F9;
   font-family: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   overflow-x: hidden;
   font-weight: 450;
@@ -40,76 +42,81 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* Clean Scrollbar */
+/* Industrial Precision Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f8fafc;
+  background: #0A1018;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #1F2E43;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #263A52;
 }
 
-/* Precision Tabular Numbers: Uses Inter with tabular figures so readings align cleanly without skinny typewriter glyphs */
+/* Precision Tabular Numbers: Uses Inter with tabular figures so readings align cleanly without typewriter jitter */
 .font-telemetry, .font-mono, [class*="font-mono"] {
   font-family: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
   font-feature-settings: "tnum" 1, "cv05" 1, "cv08" 1;
   letter-spacing: 0.005em;
 }
 
-/* Ensure small UI badges and sub-labels have crisp, readable weights */
+/* Small UI badges and sub-labels have crisp, readable weights */
 .text-\[9px\], .text-\[10px\], .text-\[11px\] {
   font-weight: 500;
 }
 
-/* Clean Card Panels */
+/* Industrial Card Panels */
 .industrial-panel {
-  background-color: #ffffff;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  background-color: #101927;
+  border: 1px solid #1F2E43;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.35);
 }
 
 .industrial-card {
-  background-color: #f8fafc;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  background-color: #131E2D;
+  border: 1px solid #1F2E43;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.25);
+}
+
+.industrial-well {
+  background-color: #0A1018;
+  border: 1px solid #1F2E43;
 }
 
 .industrial-input {
-  background-color: #ffffff;
-  border: 1px solid #e2e8f0;
-  color: #0f172a;
+  background-color: #0A1018;
+  border: 1px solid #1F2E43;
+  color: #F8FAFC;
   font-family: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
   font-feature-settings: "tnum" 1;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .industrial-input:hover:not(:disabled) {
-  border-color: #cbd5e1;
+  border-color: #263A52;
 }
 
 .industrial-input:focus {
-  border-color: #2563eb;
+  border-color: #009FE3;
   outline: none;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 0 0 2px rgba(0, 159, 227, 0.2);
 }
 
 .industrial-input:disabled {
   opacity: 0.55;
-  background-color: #f1f5f9;
+  background-color: #070B12;
   cursor: not-allowed;
 }
 
-/* Status Indicators (no glow) */
+/* Status Indicators (Restrained, no AI-slop excess glow) */
 .led-indicator {
   display: inline-block;
   width: 7px;
@@ -118,24 +125,19 @@ body {
 }
 
 .led-blue, .led-cyan {
-  background: #2563eb;
+  background: #009FE3;
 }
 
 .led-emerald {
-  background: #16a34a;
+  background: #10B981;
 }
 
 .led-amber {
-  background: #d97706;
+  background: #F59E0B;
 }
 
 .led-rose {
-  background: #dc2626;
-}
-
-/* Subtle Focus Helper */
-.refinery-glow {
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+  background: #EF4444;
 }
 
 /* Print layout optimizations - strictly pure black & white */

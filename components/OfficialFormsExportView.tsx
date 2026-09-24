@@ -338,23 +338,23 @@ export default function OfficialFormsExportView() {
   return (
     <div className="space-y-6">
       {/* Top SCADA Control Masthead & Document Console */}
-      <div className="rounded-lg border border-slate-200 bg-white p-4 sm:p-5 shadow-sm no-print">
+      <div className="rounded-lg border border-[#1F2E43] bg-[#101927] p-4 sm:p-5 no-print">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-50 border border-slate-200 text-sky-400 shadow-sm">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#0A1018] border border-[#1F2E43] text-[#009FE3]">
               <FileText className="h-5 w-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-mono text-[10px] text-sky-400 uppercase tracking-widest bg-slate-50 border border-sky-800/60 px-1.5 py-0.5 rounded font-semibold">
+                <span className="font-mono text-[10px] text-[#009FE3] uppercase tracking-widest bg-[#0A1018] border border-[#009FE3]/30 px-1.5 py-0.5 rounded font-semibold">
                   DOC-SYS-04
                 </span>
-                <span className="flex items-center gap-1 font-mono text-[10px] text-green-600 font-semibold bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-800/60">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span className="flex items-center gap-1 font-mono text-[10px] text-emerald-400 font-semibold bg-emerald-950/50 px-2 py-0.5 rounded border border-emerald-800/60">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                   CONTROLLED REPOSITORY
                 </span>
               </div>
-              <h1 className="text-base sm:text-lg font-bold tracking-tight text-slate-900 mt-0.5">
+              <h1 className="text-base sm:text-lg font-bold tracking-tight text-slate-100 mt-0.5">
                 Official Controlled Forms & Regulatory Audit Trail
               </h1>
               <p className="text-xs text-slate-400">
@@ -366,15 +366,15 @@ export default function OfficialFormsExportView() {
           <div className="flex items-center gap-2 font-mono text-xs w-full sm:w-auto justify-end">
             <button
               onClick={handlePrint}
-              className="flex items-center gap-1.5 bg-slate-50 hover:bg-slate-100 text-slate-800 px-3.5 py-2 rounded-lg transition-all border border-slate-200 shadow-xs hover:border-sky-500/50 active:scale-95 cursor-pointer font-mono"
+              className="flex items-center gap-1.5 bg-[#0A1018] hover:bg-[#172235] text-slate-200 px-3.5 py-2 rounded-lg transition-all border border-[#1F2E43] hover:border-[#009FE3]/50 cursor-pointer font-mono"
             >
-              <Printer className="h-4 w-4 text-sky-400" />
+              <Printer className="h-4 w-4 text-[#009FE3]" />
               <span>Print Official PDF</span>
             </button>
 
             <button
               onClick={handleExportCSV}
-              className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-lg transition-all border border-emerald-500 shadow-xs active:scale-95 cursor-pointer font-mono font-semibold"
+              className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-lg transition-all border border-emerald-500/60 cursor-pointer font-mono font-semibold"
             >
               <Download className="h-4 w-4" />
               <span>Export CSV</span>
@@ -383,13 +383,13 @@ export default function OfficialFormsExportView() {
         </div>
 
         {/* Industrial Segmented Document Switcher */}
-        <div className="mt-4 flex items-center gap-1.5 border-t border-slate-200 pt-3 text-xs font-mono flex-wrap">
+        <div className="mt-4 flex items-center gap-1.5 border-t border-[#1F2E43] pt-3 text-xs font-mono flex-wrap">
           <button
             onClick={() => setActiveFormType('rf_fr_004')}
             className={`px-3.5 py-1.5 rounded-lg border transition-all cursor-pointer font-mono text-xs flex items-center gap-2 ${
               activeFormType === 'rf_fr_004'
-                ? 'bg-sky-600 text-white border-sky-500 shadow-xs font-semibold'
-                : 'bg-slate-50 border-slate-200 text-slate-400 hover:text-slate-800 hover:bg-slate-100 hover:border-slate-300'
+                ? 'bg-[#009FE3] text-white border-[#009FE3] font-semibold'
+                : 'bg-[#0A1018] border-[#1F2E43] text-slate-400 hover:text-slate-200 hover:bg-[#172235]'
             }`}
           >
             <span className={`h-1.5 w-1.5 rounded-full ${activeFormType === 'rf_fr_004' ? 'bg-white' : 'bg-slate-500'}`}></span>
@@ -400,8 +400,8 @@ export default function OfficialFormsExportView() {
             onClick={() => setActiveFormType('rf_fr_001')}
             className={`px-3.5 py-1.5 rounded-lg border transition-all cursor-pointer font-mono text-xs flex items-center gap-2 ${
               activeFormType === 'rf_fr_001'
-                ? 'bg-sky-600 text-white border-sky-500 shadow-xs font-semibold'
-                : 'bg-slate-50 border-slate-200 text-slate-400 hover:text-slate-800 hover:bg-slate-100 hover:border-slate-300'
+                ? 'bg-[#009FE3] text-white border-[#009FE3] font-semibold'
+                : 'bg-[#0A1018] border-[#1F2E43] text-slate-400 hover:text-slate-200 hover:bg-[#172235]'
             }`}
           >
             <span className={`h-1.5 w-1.5 rounded-full ${activeFormType === 'rf_fr_001' ? 'bg-white' : 'bg-slate-500'}`}></span>
@@ -415,8 +415,8 @@ export default function OfficialFormsExportView() {
             }}
             className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg border transition-all cursor-pointer font-mono text-xs ${
               activeFormType === 'audit'
-                ? 'bg-sky-600 text-white border-sky-500 shadow-xs font-semibold'
-                : 'bg-slate-50 border-slate-200 text-slate-400 hover:text-slate-800 hover:bg-slate-100 hover:border-slate-300'
+                ? 'bg-[#009FE3] text-white border-[#009FE3] font-semibold'
+                : 'bg-[#0A1018] border-[#1F2E43] text-slate-400 hover:text-slate-200 hover:bg-[#172235]'
             }`}
           >
             <History className="h-3.5 w-3.5" />
@@ -428,19 +428,19 @@ export default function OfficialFormsExportView() {
 
         {/* When activeFormType === 'rf_fr_004', show Shift Date Selector */}
         {activeFormType === 'rf_fr_004' && (
-          <div className="mt-3 pt-3 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+          <div className="mt-3 pt-3 border-t border-[#1F2E43] flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
             <div className="flex items-center gap-2.5 flex-wrap">
               <span className="text-slate-400 font-semibold uppercase flex items-center gap-1.5 text-[11px] tracking-wider">
-                <Calendar className="h-3.5 w-3.5 text-sky-400" />
+                <Calendar className="h-3.5 w-3.5 text-[#009FE3]" />
                 Shift Date:
               </span>
 
               {/* Quick prev/next day buttons and dropdown */}
-              <div className="flex items-center bg-slate-50 border border-slate-200 rounded-lg overflow-hidden shadow-xs">
+              <div className="flex items-center bg-[#0A1018] border border-[#1F2E43] rounded-lg overflow-hidden">
                 <button
                   type="button"
                   onClick={() => handleStepDay(-1)}
-                  className="px-2.5 py-1 text-slate-400 hover:text-sky-400 hover:bg-slate-100 transition-colors border-r border-slate-200 cursor-pointer"
+                  className="px-2.5 py-1 text-slate-400 hover:text-white hover:bg-[#172235] transition-colors border-r border-[#1F2E43] cursor-pointer"
                   title="Previous Day (Hari Sebelumnya)"
                 >
                   <ChevronLeft className="h-3.5 w-3.5" />
@@ -448,15 +448,15 @@ export default function OfficialFormsExportView() {
                 <select
                   value={selectedShiftDate}
                   onChange={e => handleShiftDateChange(e.target.value)}
-                  className="bg-transparent text-slate-800 px-2.5 py-1 text-xs font-mono focus:outline-none cursor-pointer"
+                  className="bg-transparent text-slate-200 px-2.5 py-1 text-xs font-mono focus:outline-none cursor-pointer"
                 >
                   {availableShiftDates.map(d => (
-                    <option key={d} value={d} className="bg-white text-slate-800">
+                    <option key={d} value={d} className="bg-[#101927] text-slate-200">
                       {d} {d === getRealtimeShiftDate() ? '(Today · Live)' : '(Past Sheet)'}
                     </option>
                   ))}
                   {!availableShiftDates.includes(selectedShiftDate) && (
-                    <option value={selectedShiftDate} className="bg-white text-slate-800">
+                    <option value={selectedShiftDate} className="bg-[#101927] text-slate-200">
                       {selectedShiftDate} (Custom Date)
                     </option>
                   )}
@@ -464,7 +464,7 @@ export default function OfficialFormsExportView() {
                 <button
                   type="button"
                   onClick={() => handleStepDay(1)}
-                  className="px-2.5 py-1 text-slate-400 hover:text-sky-400 hover:bg-slate-100 transition-colors border-l border-slate-200 cursor-pointer"
+                  className="px-2.5 py-1 text-slate-400 hover:text-white hover:bg-[#172235] transition-colors border-l border-[#1F2E43] cursor-pointer"
                   title="Next Day (Hari Berikutnya)"
                 >
                   <ChevronRight className="h-3.5 w-3.5" />
@@ -482,7 +482,7 @@ export default function OfficialFormsExportView() {
                       handleShiftDateChange(e.target.value);
                     }
                   }}
-                  className="bg-slate-50 border border-slate-200 text-slate-800 rounded-lg px-2 py-0.5 text-xs font-mono focus:border-sky-500 focus:outline-none cursor-pointer shadow-xs"
+                  className="bg-[#0A1018] border border-[#1F2E43] text-slate-200 rounded-lg px-2 py-0.5 text-xs font-mono focus:border-[#009FE3] focus:outline-none cursor-pointer"
                 />
               </div>
 
@@ -490,7 +490,7 @@ export default function OfficialFormsExportView() {
                 <button
                   type="button"
                   onClick={() => handleShiftDateChange(getRealtimeShiftDate())}
-                  className="px-2.5 py-1 rounded-lg bg-slate-50 hover:bg-slate-100 text-sky-400 border border-sky-800/60 text-[11px] font-mono transition-all cursor-pointer shadow-xs active:scale-95 font-semibold"
+                  className="px-2.5 py-1 rounded-lg bg-[#0A1018] hover:bg-[#172235] text-[#009FE3] border border-[#009FE3]/40 text-[11px] font-mono transition-all cursor-pointer font-semibold"
                 >
                   Jump to Today (Live)
                 </button>
@@ -527,19 +527,19 @@ export default function OfficialFormsExportView() {
 
         {/* When activeFormType === 'rf_fr_001', show Lot selector and Quick Edit Remarks button */}
         {activeFormType === 'rf_fr_001' && (
-          <div className="mt-3 pt-3 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+          <div className="mt-3 pt-3 border-t border-[#1F2E43] flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
             <div className="flex items-center gap-2.5 flex-wrap">
               <span className="text-slate-400 font-semibold uppercase flex items-center gap-1.5 text-[11px] tracking-wider">
-                <FileText className="h-3.5 w-3.5 text-sky-400" />
+                <FileText className="h-3.5 w-3.5 text-[#009FE3]" />
                 Select Sample Lot / Certificate:
               </span>
               <select
                 value={selectedReportId}
                 onChange={e => setSelectedReportId(e.target.value)}
-                className="bg-slate-50 border border-slate-200 text-slate-800 rounded-lg px-3 py-1.5 focus:border-sky-500 focus:outline-none max-w-sm md:max-w-md shadow-xs text-xs font-mono"
+                className="bg-[#0A1018] border border-[#1F2E43] text-slate-200 rounded-lg px-3 py-1.5 focus:border-[#009FE3] focus:outline-none max-w-sm md:max-w-md text-xs font-mono"
               >
                 {reports.map(r => (
-                  <option key={r.id} value={r.id} className="bg-white text-slate-800">
+                  <option key={r.id} value={r.id} className="bg-[#101927] text-slate-200">
                     {r.lot_no} — {r.product_name} ({r.time_check} · {r.status.toUpperCase()})
                   </option>
                 ))}
@@ -550,7 +550,7 @@ export default function OfficialFormsExportView() {
               <button
                 type="button"
                 onClick={openEditRemarks}
-                className="flex items-center gap-1.5 bg-slate-50 hover:bg-slate-100 text-sky-400 px-3.5 py-1.5 rounded-lg border border-slate-200 hover:border-sky-500/50 shadow-xs transition-all active:scale-95 cursor-pointer font-mono text-xs font-medium"
+                className="flex items-center gap-1.5 bg-[#0A1018] hover:bg-[#172235] text-[#009FE3] px-3.5 py-1.5 rounded-lg border border-[#1F2E43] hover:border-[#009FE3]/50 transition-all cursor-pointer font-mono text-xs font-medium"
               >
                 <Edit3 className="h-3.5 w-3.5" />
                 <span>Edit Remarks & Operating Flags</span>
@@ -561,19 +561,19 @@ export default function OfficialFormsExportView() {
 
         {/* When activeFormType === 'audit', show Audit Trail Date Selector & Filters */}
         {activeFormType === 'audit' && (
-          <div className="mt-3 pt-3 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+          <div className="mt-3 pt-3 border-t border-[#1F2E43] flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
             <div className="flex items-center gap-2.5 flex-wrap">
               <span className="text-slate-400 font-semibold uppercase flex items-center gap-1.5 text-[11px] tracking-wider">
-                <Calendar className="h-3.5 w-3.5 text-sky-400" />
+                <Calendar className="h-3.5 w-3.5 text-[#009FE3]" />
                 Filter Date:
               </span>
 
               {/* Quick prev/next day buttons and dropdown */}
-              <div className="flex items-center bg-slate-50 border border-slate-200 rounded-lg overflow-hidden shadow-xs">
+              <div className="flex items-center bg-[#0A1018] border border-[#1F2E43] rounded-lg overflow-hidden">
                 <button
                   type="button"
                   onClick={() => handleAuditStepDay(-1)}
-                  className="px-2.5 py-1 text-slate-400 hover:text-sky-400 hover:bg-slate-100 transition-colors border-r border-slate-200 cursor-pointer"
+                  className="px-2.5 py-1 text-slate-400 hover:text-white hover:bg-[#172235] transition-colors border-r border-[#1F2E43] cursor-pointer"
                   title="Previous Day (Hari Sebelumnya)"
                 >
                   <ChevronLeft className="h-3.5 w-3.5" />
@@ -581,21 +581,21 @@ export default function OfficialFormsExportView() {
                 <select
                   value={auditDateFilter}
                   onChange={e => setAuditDateFilter(e.target.value)}
-                  className="bg-transparent text-slate-800 px-2.5 py-1 text-xs font-mono focus:outline-none cursor-pointer"
+                  className="bg-transparent text-slate-200 px-2.5 py-1 text-xs font-mono focus:outline-none cursor-pointer"
                 >
-                  <option value="all" className="bg-white text-slate-800">
+                  <option value="all" className="bg-[#101927] text-slate-200">
                     All Recorded Dates ({auditLogs.length} logs)
                   </option>
                   {availableAuditDates.map(d => {
                     const count = auditLogs.filter(l => l.occurred_at?.startsWith(d)).length;
                     return (
-                      <option key={d} value={d} className="bg-white text-slate-800">
+                      <option key={d} value={d} className="bg-[#101927] text-slate-200">
                         {d} {d === getRealtimeShiftDate() ? '(Today)' : ''} — ({count} logs)
                       </option>
                     );
                   })}
                   {auditDateFilter !== 'all' && !availableAuditDates.includes(auditDateFilter) && (
-                    <option value={auditDateFilter} className="bg-white text-slate-800">
+                    <option value={auditDateFilter} className="bg-[#101927] text-slate-200">
                       {auditDateFilter} (Custom Date)
                     </option>
                   )}
@@ -603,7 +603,7 @@ export default function OfficialFormsExportView() {
                 <button
                   type="button"
                   onClick={() => handleAuditStepDay(1)}
-                  className="px-2.5 py-1 text-slate-400 hover:text-sky-400 hover:bg-slate-100 transition-colors border-l border-slate-200 cursor-pointer"
+                  className="px-2.5 py-1 text-slate-400 hover:text-white hover:bg-[#172235] transition-colors border-l border-[#1F2E43] cursor-pointer"
                   title="Next Day (Hari Berikutnya)"
                 >
                   <ChevronRight className="h-3.5 w-3.5" />
@@ -621,7 +621,7 @@ export default function OfficialFormsExportView() {
                       setAuditDateFilter(e.target.value);
                     }
                   }}
-                  className="bg-slate-50 border border-slate-200 text-slate-800 rounded-lg px-2 py-0.5 text-xs font-mono focus:border-sky-500 focus:outline-none cursor-pointer shadow-xs"
+                  className="bg-[#0A1018] border border-[#1F2E43] text-slate-200 rounded-lg px-2 py-0.5 text-xs font-mono focus:border-[#009FE3] focus:outline-none cursor-pointer"
                 />
               </div>
 
@@ -629,7 +629,7 @@ export default function OfficialFormsExportView() {
                 <button
                   type="button"
                   onClick={() => setAuditDateFilter('all')}
-                  className="px-2.5 py-1 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-500 border border-slate-200 text-[11px] font-mono transition-all cursor-pointer shadow-xs"
+                  className="px-2.5 py-1 rounded-lg bg-[#0A1018] hover:bg-[#172235] text-slate-300 border border-[#1F2E43] text-[11px] font-mono transition-all cursor-pointer"
                 >
                   All Dates
                 </button>
@@ -639,7 +639,7 @@ export default function OfficialFormsExportView() {
                 <button
                   type="button"
                   onClick={() => setAuditDateFilter(getRealtimeShiftDate())}
-                  className="px-2.5 py-1 rounded-lg bg-slate-50 hover:bg-slate-100 text-sky-400 border border-sky-800/60 text-[11px] font-mono transition-all cursor-pointer shadow-xs font-semibold"
+                  className="px-2.5 py-1 rounded-lg bg-[#0A1018] hover:bg-[#172235] text-[#009FE3] border border-[#009FE3]/40 text-[11px] font-mono transition-all cursor-pointer font-semibold"
                 >
                   Today&apos;s Logs
                 </button>
@@ -649,31 +649,31 @@ export default function OfficialFormsExportView() {
             {/* Right side filter controls: Table, Action, and Search */}
             <div className="flex items-center gap-2 flex-wrap">
               {/* Table Name Filter */}
-              <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 shadow-xs">
-                <Filter className="h-3 w-3 text-sky-400" />
+              <div className="flex items-center gap-1 bg-[#0A1018] border border-[#1F2E43] rounded-lg px-2 py-1">
+                <Filter className="h-3 w-3 text-[#009FE3]" />
                 <select
                   value={auditTableFilter}
                   onChange={e => setAuditTableFilter(e.target.value)}
-                  className="bg-transparent text-slate-800 text-xs font-mono focus:outline-none cursor-pointer"
+                  className="bg-transparent text-slate-200 text-xs font-mono focus:outline-none cursor-pointer"
                 >
-                  <option value="all" className="bg-white text-slate-800">All Tables</option>
+                  <option value="all" className="bg-[#101927] text-slate-200">All Tables</option>
                   {availableAuditTables.map(t => (
-                    <option key={t} value={t} className="bg-white text-slate-800">{t}</option>
+                    <option key={t} value={t} className="bg-[#101927] text-slate-200">{t}</option>
                   ))}
                 </select>
               </div>
 
               {/* Action Filter */}
-              <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 shadow-xs">
+              <div className="flex items-center gap-1 bg-[#0A1018] border border-[#1F2E43] rounded-lg px-2 py-1">
                 <select
                   value={auditActionFilter}
                   onChange={e => setAuditActionFilter(e.target.value)}
-                  className="bg-transparent text-slate-800 text-xs font-mono focus:outline-none cursor-pointer"
+                  className="bg-transparent text-slate-200 text-xs font-mono focus:outline-none cursor-pointer"
                 >
-                  <option value="all" className="bg-white text-slate-800">All Actions</option>
-                  <option value="insert" className="bg-white text-green-600 font-semibold">INSERT</option>
-                  <option value="update" className="bg-white text-amber-600 font-semibold">UPDATE</option>
-                  <option value="void" className="bg-white text-red-600 font-semibold">VOID / DELETE</option>
+                  <option value="all" className="bg-[#101927] text-slate-200">All Actions</option>
+                  <option value="insert" className="bg-[#101927] text-emerald-400 font-semibold">INSERT</option>
+                  <option value="update" className="bg-[#101927] text-amber-400 font-semibold">UPDATE</option>
+                  <option value="void" className="bg-[#101927] text-rose-400 font-semibold">VOID / DELETE</option>
                 </select>
               </div>
 
@@ -685,7 +685,7 @@ export default function OfficialFormsExportView() {
                   value={auditSearchQuery}
                   onChange={e => setAuditSearchQuery(e.target.value)}
                   placeholder="Search actor, lot, id..."
-                  className="bg-slate-50 border border-slate-200 text-slate-800 rounded-lg pl-8 pr-3 py-1 text-xs font-mono focus:border-sky-500 focus:outline-none w-44 placeholder-slate-500 shadow-xs"
+                  className="bg-[#0A1018] border border-[#1F2E43] text-slate-200 rounded-lg pl-8 pr-3 py-1 text-xs font-mono focus:border-[#009FE3] focus:outline-none w-44 placeholder-slate-500"
                 />
               </div>
 
@@ -699,7 +699,7 @@ export default function OfficialFormsExportView() {
                     setAuditActionFilter('all');
                     setAuditSearchQuery('');
                   }}
-                  className="flex items-center gap-1 px-2 py-1 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-red-600 border border-rose-800/60 text-[11px] font-mono cursor-pointer transition-colors shadow-xs"
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/60 text-[11px] font-mono cursor-pointer transition-colors"
                   title="Reset all filters"
                 >
                   <RotateCcw className="h-3 w-3" />
@@ -708,7 +708,7 @@ export default function OfficialFormsExportView() {
               )}
 
               {/* Records count badge */}
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 text-sky-400 font-mono font-bold text-[11px]">
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#0A1018] border border-[#1F2E43] text-[#009FE3] font-mono font-bold text-[11px]">
                 <span>{filteredAuditLogs.length} / {auditLogs.length} Records</span>
               </div>
             </div>
@@ -1045,17 +1045,17 @@ export default function OfficialFormsExportView() {
 
       {/* FORM 3: Audit Trail Viewer */}
       {activeFormType === 'audit' && (
-        <div className="rounded-lg border border-slate-200 bg-white p-4 sm:p-5 shadow-sm space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
-            <div className="flex items-center gap-2.5 text-slate-900 font-semibold">
-              <div className="p-2 rounded-lg bg-slate-50 border border-slate-200 text-sky-400 shadow-xs">
+        <div className="rounded-lg border border-[#1F2E43] bg-[#101927] p-4 sm:p-5 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#1F2E43] pb-3">
+            <div className="flex items-center gap-2.5 text-slate-100 font-semibold">
+              <div className="p-2 rounded-lg bg-[#0A1018] border border-[#1F2E43] text-[#009FE3]">
                 <History className="h-4 w-4" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold text-sm text-slate-900">Immutable Regulatory Audit Trail</span>
-                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-950/40 text-green-600 border border-emerald-800/60 text-[10px] font-mono font-medium">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span className="font-semibold text-sm text-slate-100">Immutable Regulatory Audit Trail</span>
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-950/50 text-emerald-400 border border-emerald-800/60 text-[10px] font-mono font-medium">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                     Live Supabase Ledger
                   </span>
                 </div>
@@ -1074,14 +1074,14 @@ export default function OfficialFormsExportView() {
                     setAuditLogs(getAuditLogs());
                   }
                 }}
-                className="flex items-center gap-1.5 bg-slate-50 hover:bg-slate-100 text-sky-400 px-3 py-1.5 rounded-lg border border-slate-200 hover:border-sky-500/50 transition-all cursor-pointer text-xs active:scale-95 shadow-xs"
+                className="flex items-center gap-1.5 bg-[#0A1018] hover:bg-[#172235] text-[#009FE3] px-3 py-1.5 rounded-lg border border-[#1F2E43] hover:border-[#009FE3]/50 transition-all cursor-pointer text-xs"
                 title="Fetch latest audit logs directly from Supabase"
               >
-                <RotateCcw className="h-3.5 w-3.5 text-sky-400" />
+                <RotateCcw className="h-3.5 w-3.5 text-[#009FE3]" />
                 <span>Sync Supabase</span>
               </button>
 
-              <span className="text-xs font-mono text-sky-400 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg font-semibold">
+              <span className="text-xs font-mono text-[#009FE3] bg-[#0A1018] border border-[#1F2E43] px-3 py-1.5 rounded-lg font-semibold">
                 Showing {filteredAuditLogs.length} of {auditLogs.length} Records
               </span>
             </div>
@@ -1161,11 +1161,11 @@ export default function OfficialFormsExportView() {
 
           {/* Audit Logs Table or Empty State */}
           {filteredAuditLogs.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50/50 p-10 text-center space-y-3 font-mono">
-              <div className="h-10 w-10 mx-auto rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-sky-400 shadow-xs">
+            <div className="rounded-lg border border-dashed border-[#1F2E43] bg-[#0A1018] p-10 text-center space-y-3 font-mono">
+              <div className="h-10 w-10 mx-auto rounded-lg bg-[#101927] border border-[#1F2E43] flex items-center justify-center text-[#009FE3]">
                 <History className="h-5 w-5" />
               </div>
-              <div className="text-slate-800 font-semibold text-sm">No Audit Trail Records Found</div>
+              <div className="text-slate-200 font-semibold text-sm">No Audit Trail Records Found</div>
               <p className="text-xs text-slate-400 max-w-md mx-auto">
                 No database ledger events match the selected date ({auditDateFilter === 'all' ? 'All Dates' : auditDateFilter}) or active search filters.
               </p>
@@ -1177,16 +1177,16 @@ export default function OfficialFormsExportView() {
                   setAuditActionFilter('all');
                   setAuditSearchQuery('');
                 }}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-sky-400 border border-slate-200 text-xs font-mono transition-colors cursor-pointer shadow-xs"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#101927] hover:bg-[#172235] text-[#009FE3] border border-[#1F2E43] text-xs font-mono transition-colors cursor-pointer"
               >
                 <RotateCcw className="h-3 w-3" />
                 <span>Reset All Filters</span>
               </button>
             </div>
           ) : (
-            <div className="rounded-lg border border-slate-200 bg-slate-50 overflow-hidden shadow-xs">
+            <div className="rounded-lg border border-[#1F2E43] bg-[#0A1018] overflow-hidden">
               <table className="w-full text-left text-xs font-mono">
-                <thead className="bg-white text-slate-400 text-[10px] tracking-wider uppercase border-b border-slate-200">
+                <thead className="bg-[#101927] text-slate-400 text-[10px] tracking-wider uppercase border-b border-[#1F2E43]">
                   <tr>
                     <th className="py-2.5 px-3">Timestamp (MYT)</th>
                     <th className="py-2.5 px-3">Table Name</th>
@@ -1197,26 +1197,26 @@ export default function OfficialFormsExportView() {
                     <th className="py-2.5 px-3 text-right">Inspect</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200/60">
+                <tbody className="divide-y divide-[#1F2E43]">
                   {filteredAuditLogs.map(log => (
-                    <tr key={log.id} className="hover:bg-slate-50 transition-colors">
+                    <tr key={log.id} className="hover:bg-[#101927] transition-colors">
                       <td className="py-2.5 px-3 text-slate-400 whitespace-nowrap font-mono text-[11px]">
                         {formatDateTime(log.occurred_at)}
                       </td>
                       <td className="py-2.5 px-3 font-semibold whitespace-nowrap">
-                        <span className="px-1.5 py-0.5 rounded bg-slate-50 border border-slate-200 text-sky-400 text-[10px] tracking-wide font-mono font-medium">
+                        <span className="px-1.5 py-0.5 rounded bg-[#101927] border border-[#1F2E43] text-[#009FE3] text-[10px] tracking-wide font-mono font-medium">
                           {log.table_name}
                         </span>
                       </td>
                       <td className="py-2.5 px-3 whitespace-nowrap">
                         <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase font-mono border ${
-                          log.action === 'insert' ? 'bg-emerald-950/40 text-green-600 border-emerald-800/60' :
-                          log.action === 'update' ? 'bg-amber-950/40 text-amber-600 border-amber-800/60' : 'bg-rose-950/40 text-red-600 border-rose-800/60'
+                          log.action === 'insert' ? 'bg-emerald-950/40 text-emerald-400 border-emerald-800/60' :
+                          log.action === 'update' ? 'bg-amber-950/40 text-amber-400 border-amber-800/60' : 'bg-rose-950/40 text-rose-400 border-rose-800/60'
                         }`}>
                           {log.action}
                         </span>
                       </td>
-                      <td className="py-2.5 px-3 text-slate-800 whitespace-nowrap font-medium text-[11px]">
+                      <td className="py-2.5 px-3 text-slate-200 whitespace-nowrap font-medium text-[11px]">
                         {log.actor_name || 'System / DB Trigger'}
                       </td>
                       <td className="py-2.5 px-3 text-slate-400 text-[11px] max-w-[120px] truncate font-mono">
@@ -1229,9 +1229,9 @@ export default function OfficialFormsExportView() {
                         <button
                           type="button"
                           onClick={() => setExpandedLogId(log.id)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-50 hover:bg-slate-100 text-sky-400 border border-slate-200 text-[10px] transition-colors cursor-pointer active:scale-95 font-mono shadow-xs"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#101927] hover:bg-[#172235] text-[#009FE3] border border-[#1F2E43] text-[10px] transition-colors cursor-pointer font-mono"
                         >
-                          <Eye className="h-3 w-3 text-sky-400" />
+                          <Eye className="h-3 w-3 text-[#009FE3]" />
                           <span>View JSON</span>
                         </button>
                       </td>
@@ -1247,49 +1247,49 @@ export default function OfficialFormsExportView() {
             const expLog = auditLogs.find(l => l.id === expandedLogId);
             if (!expLog) return null;
             return (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 no-print">
-                <div className="w-full max-w-2xl rounded-lg border border-slate-200 bg-white p-5 shadow-2xl space-y-4 max-h-[90vh] flex flex-col font-mono text-xs">
-                  <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-                    <div className="flex items-center gap-2 text-slate-900 font-semibold text-sm">
-                      <History className="h-4 w-4 text-sky-400" />
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 no-print">
+                <div className="w-full max-w-2xl rounded-lg border border-[#1F2E43] bg-[#101927] p-5 shadow-2xl space-y-4 max-h-[90vh] flex flex-col font-mono text-xs">
+                  <div className="flex items-center justify-between border-b border-[#1F2E43] pb-3">
+                    <div className="flex items-center gap-2 text-slate-100 font-semibold text-sm">
+                      <History className="h-4 w-4 text-[#009FE3]" />
                       <span>Audit Record Details — ID: {String(expLog.id)}</span>
                     </div>
                     <button
                       type="button"
                       onClick={() => setExpandedLogId(null)}
-                      className="text-slate-400 hover:text-slate-800 p-1 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+                      className="text-slate-400 hover:text-slate-200 p-1 rounded-lg hover:bg-[#172235] transition-colors cursor-pointer"
                     >
                       <X className="h-4 w-4" />
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-50 p-3 rounded-lg border border-slate-200 text-[11px]">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-[#0A1018] p-3 rounded-lg border border-[#1F2E43] text-[11px]">
                     <div>
                       <div className="text-slate-400 uppercase text-[9px] tracking-wider">Timestamp:</div>
-                      <div className="text-slate-800 font-medium">{formatDateTime(expLog.occurred_at)}</div>
+                      <div className="text-slate-200 font-medium">{formatDateTime(expLog.occurred_at)}</div>
                     </div>
                     <div>
                       <div className="text-slate-400 uppercase text-[9px] tracking-wider">Table:</div>
-                      <div className="text-sky-400 font-semibold">{expLog.table_name}</div>
+                      <div className="text-[#009FE3] font-semibold">{expLog.table_name}</div>
                     </div>
                     <div>
                       <div className="text-slate-400 uppercase text-[9px] tracking-wider">Action:</div>
-                      <div className="uppercase font-bold text-green-600">{expLog.action}</div>
+                      <div className="uppercase font-bold text-emerald-400">{expLog.action}</div>
                     </div>
                     <div>
                       <div className="text-slate-400 uppercase text-[9px] tracking-wider">Actor:</div>
-                      <div className="text-slate-800">{expLog.actor_name || 'System / DB Trigger'}</div>
+                      <div className="text-slate-200">{expLog.actor_name || 'System / DB Trigger'}</div>
                     </div>
                   </div>
 
                   <div className="overflow-y-auto space-y-3 flex-1 pr-1">
                     {expLog.new_row && (
                       <div>
-                        <div className="text-green-600 font-bold mb-1 text-[11px] flex items-center gap-1.5 font-mono">
-                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                        <div className="text-emerald-400 font-bold mb-1 text-[11px] flex items-center gap-1.5 font-mono">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
                           NEW ROW DATA (State after operation):
                         </div>
-                        <pre className="bg-white p-3 rounded-lg border border-slate-200 text-[11px] text-slate-500 overflow-x-auto whitespace-pre-wrap">
+                        <pre className="bg-[#0A1018] p-3 rounded-lg border border-[#1F2E43] text-[11px] text-slate-300 overflow-x-auto whitespace-pre-wrap">
                           {JSON.stringify(expLog.new_row, null, 2)}
                         </pre>
                       </div>
@@ -1297,22 +1297,22 @@ export default function OfficialFormsExportView() {
 
                     {expLog.old_row && (
                       <div>
-                        <div className="text-red-600 font-bold mb-1 text-[11px] flex items-center gap-1.5 font-mono">
-                          <span className="h-1.5 w-1.5 rounded-full bg-rose-500"></span>
+                        <div className="text-rose-400 font-bold mb-1 text-[11px] flex items-center gap-1.5 font-mono">
+                          <span className="h-1.5 w-1.5 rounded-full bg-rose-400"></span>
                           OLD ROW DATA (State before operation):
                         </div>
-                        <pre className="bg-white p-3 rounded-lg border border-slate-200 text-[11px] text-slate-500 overflow-x-auto whitespace-pre-wrap">
+                        <pre className="bg-[#0A1018] p-3 rounded-lg border border-[#1F2E43] text-[11px] text-slate-300 overflow-x-auto whitespace-pre-wrap">
                           {JSON.stringify(expLog.old_row, null, 2)}
                         </pre>
                       </div>
                     )}
                   </div>
 
-                  <div className="flex items-center justify-end pt-3 border-t border-slate-200">
+                  <div className="flex items-center justify-end pt-3 border-t border-[#1F2E43]">
                     <button
                       type="button"
                       onClick={() => setExpandedLogId(null)}
-                      className="px-4 py-2 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-800 text-xs transition-colors cursor-pointer border border-slate-200 font-mono"
+                      className="px-4 py-2 rounded-lg bg-[#0A1018] hover:bg-[#172235] text-slate-300 text-xs transition-colors cursor-pointer border border-[#1F2E43] font-mono"
                     >
                       Close
                     </button>
@@ -1326,17 +1326,17 @@ export default function OfficialFormsExportView() {
 
       {/* Quick Edit Remarks Modal (RF-FR-001) */}
       {isEditingRemarks && activeReport && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 no-print">
-          <div className="w-full max-w-lg rounded-lg border border-slate-200 bg-white p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-              <div className="flex items-center gap-2 text-slate-900 font-semibold">
-                <Edit3 className="h-4 w-4 text-sky-400" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 no-print">
+          <div className="w-full max-w-lg rounded-lg border border-[#1F2E43] bg-[#101927] p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-[#1F2E43] pb-3">
+              <div className="flex items-center gap-2 text-slate-100 font-semibold">
+                <Edit3 className="h-4 w-4 text-[#009FE3]" />
                 <span>Edit Remarks & Operating Flags — Lot {activeReport.lot_no}</span>
               </div>
               <button
                 type="button"
                 onClick={() => setIsEditingRemarks(false)}
-                className="text-slate-400 hover:text-slate-800 p-1 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+                className="text-slate-400 hover:text-slate-200 p-1 rounded-lg hover:bg-[#172235] transition-colors cursor-pointer"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -1358,51 +1358,51 @@ export default function OfficialFormsExportView() {
                 <div className="grid grid-cols-3 gap-2.5">
                   <label className={`flex items-start gap-2.5 p-2.5 rounded-lg border transition-all cursor-pointer select-none ${
                     editFlushing 
-                      ? 'bg-amber-950/40 border-amber-800/60 text-amber-300 shadow-xs' 
-                      : 'bg-slate-50 border-slate-200 text-slate-400 hover:border-slate-300'
+                      ? 'bg-amber-950/40 border-amber-800 text-amber-300' 
+                      : 'bg-[#0A1018] border-[#1F2E43] text-slate-400 hover:border-slate-600'
                   }`}>
                     <input
                       type="checkbox"
                       checked={editFlushing}
                       onChange={e => setEditFlushing(e.target.checked)}
-                      className="mt-0.5 h-4 w-4 rounded border-slate-200 bg-slate-50 text-amber-500 focus:ring-amber-500 cursor-pointer"
+                      className="mt-0.5 h-4 w-4 rounded border-[#1F2E43] bg-[#101927] text-amber-500 focus:ring-amber-500 cursor-pointer"
                     />
                     <div className="font-mono text-xs">
-                      <div className="font-semibold text-slate-800">Flushing</div>
+                      <div className="font-semibold text-slate-200">Flushing</div>
                       <div className="text-[10px] text-slate-400">Line flushed</div>
                     </div>
                   </label>
 
                   <label className={`flex items-start gap-2.5 p-2.5 rounded-lg border transition-all cursor-pointer select-none ${
                     editCooling 
-                      ? 'bg-sky-950/40 border-sky-800/60 text-sky-300 shadow-xs' 
-                      : 'bg-slate-50 border-slate-200 text-slate-400 hover:border-slate-300'
+                      ? 'bg-[#009FE3]/15 border-[#009FE3]/40 text-[#009FE3]' 
+                      : 'bg-[#0A1018] border-[#1F2E43] text-slate-400 hover:border-slate-600'
                   }`}>
                     <input
                       type="checkbox"
                       checked={editCooling}
                       onChange={e => setEditCooling(e.target.checked)}
-                      className="mt-0.5 h-4 w-4 rounded border-slate-200 bg-slate-50 text-sky-500 focus:ring-sky-500 cursor-pointer"
+                      className="mt-0.5 h-4 w-4 rounded border-[#1F2E43] bg-[#101927] text-[#009FE3] focus:ring-[#009FE3] cursor-pointer"
                     />
                     <div className="font-mono text-xs">
-                      <div className="font-semibold text-slate-800">Cooling</div>
+                      <div className="font-semibold text-slate-200">Cooling</div>
                       <div className="text-[10px] text-slate-400">Active cooling</div>
                     </div>
                   </label>
 
                   <label className={`flex items-start gap-2.5 p-2.5 rounded-lg border transition-all cursor-pointer select-none ${
                     editPushover 
-                      ? 'bg-sky-950/40 border-sky-800/60 text-sky-300 shadow-xs' 
-                      : 'bg-slate-50 border-slate-200 text-slate-400 hover:border-slate-300'
+                      ? 'bg-[#009FE3]/15 border-[#009FE3]/40 text-[#009FE3]' 
+                      : 'bg-[#0A1018] border-[#1F2E43] text-slate-400 hover:border-slate-600'
                   }`}>
                     <input
                       type="checkbox"
                       checked={editPushover}
                       onChange={e => setEditPushover(e.target.checked)}
-                      className="mt-0.5 h-4 w-4 rounded border-slate-200 bg-slate-50 text-sky-500 focus:ring-sky-500 cursor-pointer"
+                      className="mt-0.5 h-4 w-4 rounded border-[#1F2E43] bg-[#101927] text-[#009FE3] focus:ring-[#009FE3] cursor-pointer"
                     />
                     <div className="font-mono text-xs">
-                      <div className="font-semibold text-slate-800">Push over</div>
+                      <div className="font-semibold text-slate-200">Push over</div>
                       <div className="text-[10px] text-slate-400">Pushover transfer</div>
                     </div>
                   </label>
@@ -1419,21 +1419,21 @@ export default function OfficialFormsExportView() {
                   value={editRemarksText}
                   onChange={e => setEditRemarksText(e.target.value)}
                   placeholder="Type remarks here (e.g. sample appearance, clarity, moisture haze, process deviations, or batch notes)..."
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono text-slate-800 placeholder-slate-500 focus:outline-none focus:border-sky-500 resize-y shadow-xs"
+                  className="w-full bg-[#0A1018] border border-[#1F2E43] rounded-lg px-3 py-2 text-xs font-mono text-slate-200 placeholder-slate-500 focus:outline-none focus:border-[#009FE3] resize-y"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200 font-mono">
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#1F2E43] font-mono">
                 <button
                   type="button"
                   onClick={() => setIsEditingRemarks(false)}
-                  className="px-4 py-2 rounded-lg text-xs text-slate-400 hover:bg-slate-100 transition-colors cursor-pointer border border-slate-200"
+                  className="px-4 py-2 rounded-lg text-xs text-slate-400 hover:text-slate-200 hover:bg-[#172235] transition-colors cursor-pointer border border-[#1F2E43]"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex items-center gap-1.5 bg-sky-600 hover:bg-sky-500 text-white font-medium px-4 py-2 rounded-lg text-xs transition-colors shadow-sm font-mono cursor-pointer active:scale-95"
+                  className="flex items-center gap-1.5 bg-[#009FE3] hover:bg-[#0089C4] text-white font-medium px-4 py-2 rounded-lg text-xs transition-colors font-mono cursor-pointer border border-[#009FE3]/50"
                 >
                   <Save className="h-3.5 w-3.5" />
                   <span>Save & Sync Remarks</span>

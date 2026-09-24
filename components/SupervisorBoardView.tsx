@@ -88,34 +88,34 @@ export default function SupervisorBoardView() {
   return (
     <div className="space-y-6">
       {/* 1. Supervisor Dashboard Header */}
-      <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+      <div className="rounded-xl border border-[#1F2E43] bg-[#101927] p-4 sm:p-5 shadow-sm">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[#1F2E43] pb-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-blue-500/40 bg-blue-600/10 text-blue-600 shadow-sm">
+            <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-[#009FE3]/40 bg-[#009FE3]/10 text-[#009FE3] shadow-sm">
               <Activity className="h-5 w-5" />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="rounded border border-slate-200 bg-slate-50 px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-blue-600">
+                <span className="rounded border border-[#1F2E43] bg-[#0A1018] px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-[#009FE3]">
                   SV-CONSOLE-01
                 </span>
-                <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900 font-sans">
+                <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-100 font-sans">
                   Supervisor Live Operations Board
                 </h1>
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-mono text-green-600 font-semibold">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" /> LIVE TELEMETRY
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-[#10B981]/30 bg-[#10B981]/10 px-2.5 py-0.5 text-[11px] font-mono text-[#10B981] font-semibold">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#10B981] animate-pulse" /> LIVE TELEMETRY
                 </span>
               </div>
               <p className="text-xs text-slate-400 font-mono mt-1">
-                Nisshin Deodorizer Plant · Active Shift Date: <span className="text-blue-600 font-semibold">{sheet.shift_date}</span>
+                Nisshin Deodorizer Plant · Active Shift Date: <span className="text-[#009FE3] font-semibold">{sheet.shift_date}</span>
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-3 self-end sm:self-auto">
-            <div className="text-right text-xs font-mono bg-slate-50 px-3.5 py-2 rounded-lg border border-slate-200">
-              <div className="text-slate-500 text-[10px] font-semibold uppercase tracking-wider">LATEST LOGGED ROUND</div>
-              <div className="text-slate-900 font-semibold mt-0.5">
+            <div className="text-right text-xs font-mono bg-[#0A1018] px-3.5 py-2 rounded-lg border border-[#1F2E43]">
+              <div className="text-slate-400 text-[10px] font-semibold uppercase tracking-wider">LATEST LOGGED ROUND</div>
+              <div className="text-slate-100 font-semibold mt-0.5">
                 {latestEntry ? `${latestEntry.slot_label} hrs (${latestEntry.recorded_by_name || 'Shift Operator'})` : 'No readings yet'}
               </div>
             </div>
@@ -125,40 +125,40 @@ export default function SupervisorBoardView() {
         {/* Quick KPI Stat Cards */}
         <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
           {/* Active Vacuum */}
-          <div className="rounded-lg border border-slate-200 bg-slate-50 p-3.5 hover:border-slate-300 transition-colors">
+          <div className="rounded-lg border border-[#1F2E43] bg-[#131E2D] p-3.5 hover:border-[#263A52] transition-colors">
             <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1 font-mono">
               <span className="uppercase tracking-wider font-semibold text-slate-400">DEOD VACUUM</span>
-              <Gauge className="h-3.5 w-3.5 text-blue-600" />
+              <Gauge className="h-3.5 w-3.5 text-[#009FE3]" />
             </div>
-            <div className="text-2xl font-bold font-mono text-slate-900 tracking-tight">
+            <div className="text-2xl font-bold font-mono text-slate-100 tracking-tight">
               {latestEntry?.vacuum_torr ? `${latestEntry.vacuum_torr.toFixed(1)}` : '-'}
               <span className="text-xs text-slate-400 font-normal ml-1 font-mono">Torr</span>
             </div>
-            <div className="text-[10px] text-blue-600 font-mono mt-1">Band: 1.0 - 4.5 Torr</div>
+            <div className="text-[10px] text-[#009FE3] font-mono mt-1">Band: 1.0 - 4.5 Torr</div>
           </div>
 
           {/* Tray 4 Max Deod Temp */}
-          <div className="rounded-lg border border-slate-200 bg-slate-50 p-3.5 hover:border-slate-300 transition-colors">
+          <div className="rounded-lg border border-[#1F2E43] bg-[#131E2D] p-3.5 hover:border-[#263A52] transition-colors">
             <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1 font-mono">
               <span className="uppercase tracking-wider font-semibold text-slate-400">TRAY 4 TEMP</span>
-              <Thermometer className="h-3.5 w-3.5 text-blue-600" />
+              <Thermometer className="h-3.5 w-3.5 text-[#009FE3]" />
             </div>
-            <div className="text-2xl font-bold font-mono text-slate-900 tracking-tight">
+            <div className="text-2xl font-bold font-mono text-slate-100 tracking-tight">
               {latestEntry?.tray_4_temp_c ? `${latestEntry.tray_4_temp_c.toFixed(1)}` : '-'}
               <span className="text-xs text-slate-400 font-normal ml-1 font-mono">°C</span>
             </div>
-            <div className="text-[10px] text-blue-600 font-mono mt-1">Band: 250 - 268°C</div>
+            <div className="text-[10px] text-[#009FE3] font-mono mt-1">Band: 250 - 268°C</div>
           </div>
 
           {/* Missing Slots */}
           <div className={`rounded-lg border p-3.5 transition-colors ${
-            missingSlots.length > 0 ? 'border-red-500/40 bg-red-500/10' : 'border-slate-200 bg-slate-50'
+            missingSlots.length > 0 ? 'border-[#EF4444]/40 bg-[#EF4444]/10' : 'border-[#1F2E43] bg-[#131E2D]'
           }`}>
             <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1 font-mono">
               <span className="uppercase tracking-wider font-semibold text-slate-400">MISSING SLOTS</span>
-              <Clock className={`h-3.5 w-3.5 ${missingSlots.length > 0 ? 'text-red-400' : 'text-slate-400'}`} />
+              <Clock className={`h-3.5 w-3.5 ${missingSlots.length > 0 ? 'text-[#EF4444]' : 'text-slate-500'}`} />
             </div>
-            <div className={`text-2xl font-bold font-mono tracking-tight ${missingSlots.length > 0 ? 'text-red-400' : 'text-slate-900'}`}>
+            <div className={`text-2xl font-bold font-mono tracking-tight ${missingSlots.length > 0 ? 'text-[#EF4444]' : 'text-slate-100'}`}>
               {missingSlots.length}
             </div>
             <div className="text-[10px] text-slate-400 font-mono mt-1">
@@ -168,13 +168,13 @@ export default function SupervisorBoardView() {
 
           {/* Active Deviations */}
           <div className={`rounded-lg border p-3.5 transition-colors ${
-            openDeviations.length > 0 ? 'border-amber-500/40 bg-amber-500/10' : 'border-slate-200 bg-slate-50'
+            openDeviations.length > 0 ? 'border-[#F59E0B]/40 bg-[#F59E0B]/10' : 'border-[#1F2E43] bg-[#131E2D]'
           }`}>
             <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1 font-mono">
               <span className="uppercase tracking-wider font-semibold text-slate-400">OPEN DEVIATIONS</span>
-              <AlertTriangle className={`h-3.5 w-3.5 ${openDeviations.length > 0 ? 'text-amber-600' : 'text-slate-400'}`} />
+              <AlertTriangle className={`h-3.5 w-3.5 ${openDeviations.length > 0 ? 'text-[#F59E0B]' : 'text-slate-500'}`} />
             </div>
-            <div className={`text-2xl font-bold font-mono tracking-tight ${openDeviations.length > 0 ? 'text-amber-600' : 'text-slate-900'}`}>
+            <div className={`text-2xl font-bold font-mono tracking-tight ${openDeviations.length > 0 ? 'text-[#F59E0B]' : 'text-slate-100'}`}>
               {openDeviations.length}
             </div>
             <div className="text-[10px] text-slate-400 font-mono mt-1">
@@ -186,19 +186,19 @@ export default function SupervisorBoardView() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* 2. Open Deviations & Corrective Action Log */}
-        <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
-          <div className="flex items-center justify-between mb-4 border-b border-slate-200 pb-3">
-            <div className="flex items-center gap-2 font-semibold text-slate-800 font-mono text-xs uppercase tracking-wider">
-              <ShieldAlert className="h-4 w-4 text-amber-600" />
+        <div className="rounded-xl border border-[#1F2E43] bg-[#101927] p-4 sm:p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-4 border-b border-[#1F2E43] pb-3">
+            <div className="flex items-center gap-2 font-semibold text-slate-100 font-mono text-xs uppercase tracking-wider">
+              <ShieldAlert className="h-4 w-4 text-[#F59E0B]" />
               <span>Plant Deviations & Corrective Action Notes</span>
             </div>
-            <span className="text-[10px] font-mono text-blue-600 font-semibold bg-slate-50 px-2 py-0.5 rounded border border-slate-200">
+            <span className="text-[10px] font-mono text-[#009FE3] font-semibold bg-[#0A1018] px-2 py-0.5 rounded border border-[#1F2E43]">
               COUNT: {deviations.length}
             </span>
           </div>
 
           {deviations.length === 0 ? (
-            <div className="p-8 text-center text-xs text-slate-400 font-mono bg-slate-50 rounded-lg border border-slate-200">
+            <div className="p-8 text-center text-xs text-slate-400 font-mono bg-[#0A1018] rounded-lg border border-[#1F2E43]">
               No process deviations logged. All parameters operating within normal threshold limits.
             </div>
           ) : (
@@ -209,39 +209,39 @@ export default function SupervisorBoardView() {
                   <div
                     key={dev.id}
                     className={`p-3.5 rounded-lg border transition-colors ${
-                      isAck ? 'border-slate-200 bg-slate-50' : 'border-amber-500/40 bg-amber-500/10'
+                      isAck ? 'border-[#1F2E43] bg-[#0A1018]' : 'border-[#F59E0B]/40 bg-[#F59E0B]/10'
                     }`}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-mono font-bold text-xs text-slate-900">
+                          <span className="font-mono font-bold text-xs text-slate-100">
                             HOUR {dev.slot_label}
                           </span>
-                          <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-slate-50 border border-slate-200 text-blue-600 font-medium">
+                          <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-[#101927] border border-[#1F2E43] text-[#009FE3] font-medium">
                             {dev.field_label}
                           </span>
                           {isAck ? (
-                            <span className="text-[9px] font-mono text-green-600 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/30 font-semibold">
+                            <span className="text-[9px] font-mono text-[#10B981] bg-[#10B981]/15 px-1.5 py-0.5 rounded border border-[#10B981]/30 font-semibold">
                               ACKNOWLEDGED
                             </span>
                           ) : (
-                            <span className="text-[9px] font-mono text-red-400 bg-red-500/10 px-1.5 py-0.5 rounded border border-red-500/30 animate-pulse font-semibold">
+                            <span className="text-[9px] font-mono text-[#EF4444] bg-[#EF4444]/15 px-1.5 py-0.5 rounded border border-[#EF4444]/30 animate-pulse font-semibold">
                               OPEN DEVIATION
                             </span>
                           )}
                         </div>
 
-                        <div className="mt-1.5 text-xs text-slate-500 font-mono">
-                          Observed value: <strong className="text-amber-600">{dev.observed}</strong> (Limit Band: {dev.soft_min || 0} - {dev.soft_max || 'N/A'})
+                        <div className="mt-1.5 text-xs text-slate-300 font-mono">
+                          Observed value: <strong className="text-[#F59E0B]">{dev.observed}</strong> (Limit Band: {dev.soft_min || 0} - {dev.soft_max || 'N/A'})
                         </div>
 
                         {dev.action_taken ? (
-                          <div className="mt-2 text-xs text-slate-500 bg-slate-50 p-2.5 rounded border border-slate-200 font-mono">
-                            <span className="font-semibold text-slate-800">Corrective action ({dev.acknowledged_by_name}):</span> {dev.action_taken}
+                          <div className="mt-2 text-xs text-slate-300 bg-[#101927] p-2.5 rounded border border-[#1F2E43] font-mono">
+                            <span className="font-semibold text-slate-100">Corrective action ({dev.acknowledged_by_name}):</span> {dev.action_taken}
                           </div>
                         ) : (
-                          <div className="mt-2 text-[11px] text-amber-600 italic font-mono">
+                          <div className="mt-2 text-[11px] text-[#F59E0B] italic font-mono">
                             Awaiting supervisor corrective sign-off...
                           </div>
                         )}
@@ -253,7 +253,7 @@ export default function SupervisorBoardView() {
                             setSelectedDev(dev);
                             setActionNarrative('');
                           }}
-                          className="shrink-0 flex items-center gap-1.5 bg-blue-600/15 hover:bg-blue-600/25 text-blue-700 text-xs font-mono font-medium uppercase tracking-wider px-3 py-1.5 rounded transition-all border border-blue-500/40 shadow-xs cursor-pointer"
+                          className="shrink-0 flex items-center gap-1.5 bg-[#009FE3]/15 hover:bg-[#009FE3]/25 text-[#08B5F5] text-xs font-mono font-medium uppercase tracking-wider px-3 py-1.5 rounded transition-all border border-[#009FE3]/40 shadow-xs cursor-pointer"
                         >
                           <MessageSquare className="h-3.5 w-3.5" />
                           <span>Acknowledge</span>
@@ -270,31 +270,31 @@ export default function SupervisorBoardView() {
         {/* 3. Missing Entries & QC Lab Alert Queue */}
         <div className="space-y-6">
           {/* Missing Hourly Entries Box */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-4 border-b border-slate-200 pb-3">
-              <div className="flex items-center gap-2 font-semibold text-slate-800 font-mono text-xs uppercase tracking-wider">
-                <Clock className="h-4 w-4 text-red-400" />
+          <div className="rounded-xl border border-[#1F2E43] bg-[#101927] p-4 sm:p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-4 border-b border-[#1F2E43] pb-3">
+              <div className="flex items-center gap-2 font-semibold text-slate-100 font-mono text-xs uppercase tracking-wider">
+                <Clock className="h-4 w-4 text-[#EF4444]" />
                 <span>Overdue Hourly Log Entries</span>
               </div>
-              <span className="text-[10px] font-mono text-slate-500 uppercase font-semibold">
+              <span className="text-[10px] font-mono text-slate-400 uppercase font-semibold">
                 SHIFT COMPLIANCE CHECK
               </span>
             </div>
 
             {missingSlots.length === 0 ? (
-              <div className="p-3.5 text-center text-xs text-green-600 font-mono bg-emerald-500/10 rounded-lg border border-emerald-500/30">
-                <CheckCircle2 className="h-4 w-4 inline-block mr-1.5 text-green-600" />
+              <div className="p-3.5 text-center text-xs text-[#10B981] font-mono bg-[#10B981]/10 rounded-lg border border-[#10B981]/30">
+                <CheckCircle2 className="h-4 w-4 inline-block mr-1.5 text-[#10B981]" />
                 Zero overdue slots. Operating shifts are completely up to date.
               </div>
             ) : (
               <div className="space-y-2">
                 {missingSlots.map(m => (
-                  <div key={m.index} className="flex items-center justify-between p-3 rounded-lg border border-red-500/30 bg-red-500/10">
+                  <div key={m.index} className="flex items-center justify-between p-3 rounded-lg border border-[#EF4444]/30 bg-[#EF4444]/10">
                     <div className="flex items-center gap-2">
-                      <span className="font-mono font-bold text-xs text-red-400">Hour {m.label}</span>
+                      <span className="font-mono font-bold text-xs text-[#EF4444]">Hour {m.label}</span>
                       <span className="text-xs text-slate-400 font-mono">Blank in RF-FR-004</span>
                     </div>
-                    <span className="text-[10px] font-mono text-red-300 bg-red-500/20 px-2 py-0.5 rounded border border-red-500/40 font-medium">
+                    <span className="text-[10px] font-mono text-red-300 bg-[#EF4444]/20 px-2 py-0.5 rounded border border-[#EF4444]/40 font-medium">
                       Overdue by ~{m.overdueMin} mins
                     </span>
                   </div>
@@ -304,13 +304,13 @@ export default function SupervisorBoardView() {
           </div>
 
           {/* QC Lab Status in Realtime */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-4 border-b border-slate-200 pb-3">
-              <div className="flex items-center gap-2 font-semibold text-slate-800 font-mono text-xs uppercase tracking-wider">
-                <FlaskConical className="h-4 w-4 text-blue-600" />
+          <div className="rounded-xl border border-[#1F2E43] bg-[#101927] p-4 sm:p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-4 border-b border-[#1F2E43] pb-3">
+              <div className="flex items-center gap-2 font-semibold text-slate-100 font-mono text-xs uppercase tracking-wider">
+                <FlaskConical className="h-4 w-4 text-[#009FE3]" />
                 <span>QC Lab Sample Queue (RF-FR-001)</span>
               </div>
-              <span className="text-[10px] font-mono text-blue-600 font-semibold bg-slate-50 px-2 py-0.5 rounded border border-slate-200">
+              <span className="text-[10px] font-mono text-[#009FE3] font-semibold bg-[#0A1018] px-2 py-0.5 rounded border border-[#1F2E43]">
                 PENDING: {pendingSamples.length}
               </span>
             </div>
@@ -320,11 +320,11 @@ export default function SupervisorBoardView() {
                 const isRejected = rep.decision?.decision === 'reject';
                 const isAccepted = rep.decision?.decision === 'accept';
                 return (
-                  <div key={rep.id} className="flex items-center justify-between p-3 rounded-lg border border-slate-200 bg-slate-50 hover:border-slate-300 transition-colors">
+                  <div key={rep.id} className="flex items-center justify-between p-3 rounded-lg border border-[#1F2E43] bg-[#0A1018] hover:border-[#263A52] transition-colors">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs font-semibold text-slate-900">{rep.lot_no}</span>
-                        <span className="text-xs text-blue-600 font-mono font-medium">({rep.product_name})</span>
+                        <span className="font-mono text-xs font-semibold text-slate-100">{rep.lot_no}</span>
+                        <span className="text-xs text-[#009FE3] font-mono font-medium">({rep.product_name})</span>
                       </div>
                       <div className="text-[10px] text-slate-400 font-mono mt-0.5">
                         Sampled: {rep.time_check} · {rep.sampling_point_name || 'Deodorizer Outlet'}
@@ -333,15 +333,15 @@ export default function SupervisorBoardView() {
 
                     <div>
                       {isRejected ? (
-                        <span className="text-[10px] font-mono text-red-400 bg-red-500/10 px-2 py-0.5 rounded border border-red-500/30 font-semibold">
+                        <span className="text-[10px] font-mono text-[#EF4444] bg-[#EF4444]/15 px-2 py-0.5 rounded border border-[#EF4444]/30 font-semibold">
                           REJECTED ({rep.decision?.disposition?.toUpperCase()})
                         </span>
                       ) : isAccepted ? (
-                        <span className="text-[10px] font-mono text-green-600 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30 font-semibold">
+                        <span className="text-[10px] font-mono text-[#10B981] bg-[#10B981]/15 px-2 py-0.5 rounded border border-[#10B981]/30 font-semibold">
                           ACCEPTED
                         </span>
                       ) : (
-                        <span className="text-[10px] font-mono text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30 font-semibold">
+                        <span className="text-[10px] font-mono text-[#F59E0B] bg-[#F59E0B]/15 px-2 py-0.5 rounded border border-[#F59E0B]/30 font-semibold">
                           LAB TESTING
                         </span>
                       )}
@@ -356,28 +356,28 @@ export default function SupervisorBoardView() {
 
       {/* Acknowledge Deviation Modal */}
       {selectedDev && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-xs p-4">
-          <div className="w-full max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-2xl shadow-black">
-            <div className="flex items-center gap-3 text-blue-600 mb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xs p-4">
+          <div className="w-full max-w-md rounded-xl border border-[#1F2E43] bg-[#101927] p-6 shadow-2xl shadow-black">
+            <div className="flex items-center gap-3 text-[#009FE3] mb-3">
               <MessageSquare className="h-5 w-5" />
-              <h3 className="text-base font-bold text-slate-900 font-sans">
+              <h3 className="text-base font-bold text-slate-100 font-sans">
                 Acknowledge Deviation: Hour {selectedDev.slot_label}
               </h3>
             </div>
 
-            <div className="text-xs text-slate-500 mb-4 p-3 rounded-lg bg-slate-50 border border-slate-200 font-mono">
-              <span className="font-semibold text-slate-900">Parameter:</span> {selectedDev.field_label} ({selectedDev.observed})
+            <div className="text-xs text-slate-300 mb-4 p-3 rounded-lg bg-[#0A1018] border border-[#1F2E43] font-mono">
+              <span className="font-semibold text-slate-100">Parameter:</span> {selectedDev.field_label} ({selectedDev.observed})
             </div>
 
             {ackError && (
-              <div className="mb-4 rounded-lg bg-red-500/10 p-2.5 text-xs text-red-300 border border-red-500/30 font-mono">
+              <div className="mb-4 rounded-lg bg-[#EF4444]/15 p-2.5 text-xs text-red-300 border border-[#EF4444]/30 font-mono">
                 {ackError}
               </div>
             )}
 
             <form onSubmit={handleAcknowledge} className="space-y-4">
               <div>
-                <label className="block text-[11px] font-mono text-slate-500 mb-1">
+                <label className="block text-[11px] font-mono text-slate-400 mb-1">
                   Corrective Action Note (Auditor review narrative):
                 </label>
                 <textarea
@@ -386,7 +386,7 @@ export default function SupervisorBoardView() {
                   placeholder="Describe cause and correction made (e.g. Adjusted ejector steam bypass valve to 3.2 Bar)..."
                   value={actionNarrative}
                   onChange={e => setActionNarrative(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono text-slate-900 placeholder:text-slate-500 focus:outline-none focus:border-blue-500 resize-none"
+                  className="w-full bg-[#0A1018] border border-[#1F2E43] rounded-lg px-3 py-2 text-xs font-mono text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-[#009FE3] focus:ring-1 focus:ring-[#009FE3]/30 resize-none"
                 />
               </div>
 
@@ -394,13 +394,13 @@ export default function SupervisorBoardView() {
                 <button
                   type="button"
                   onClick={() => setSelectedDev(null)}
-                  className="px-3.5 py-1.5 rounded text-xs font-mono text-slate-400 hover:text-slate-800 cursor-pointer"
+                  className="px-3.5 py-1.5 rounded text-xs font-mono text-slate-400 hover:text-slate-200 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="bg-blue-600 hover:bg-blue-500 text-white font-mono font-medium text-xs uppercase px-4 py-1.5 rounded transition-all border border-blue-600/40 shadow-sm shadow-blue-200 cursor-pointer"
+                  className="bg-[#009FE3] hover:bg-[#08B5F5] text-white font-mono font-medium text-xs uppercase px-4 py-1.5 rounded transition-all border border-[#009FE3] shadow-sm cursor-pointer"
                 >
                   Save Corrective Note
                 </button>
