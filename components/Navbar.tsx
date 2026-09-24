@@ -189,9 +189,9 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
       {/* ========================================================================= */}
       {/* 2. DESKTOP LEFT SIDEBAR (Fixed left, width 256px / 280px)                 */}
       {/* ========================================================================= */}
-      <aside className="hidden lg:flex fixed inset-y-0 left-0 w-64 xl:w-72 bg-[#080E18] border-r border-[#1F2E43] flex-col justify-between z-40 select-none">
+      <aside className="hidden lg:flex fixed inset-y-0 left-0 w-64 xl:w-72 bg-[#080E18] border-r border-[#1F2E43] flex-col justify-between z-40 select-none overflow-hidden">
         {/* Brand Header */}
-        <div className="p-4 border-b border-[#1F2E43]/60 bg-[#060A10]/40">
+        <div className="p-4 border-b border-[#1F2E43]/60 bg-[#060A10]/40 relative z-10">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center shadow-lg shadow-red-900/30 border border-red-400/40 shrink-0">
               <span className="text-white font-extrabold text-sm tracking-tight font-sans">
@@ -210,7 +210,7 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
         </div>
 
         {/* Navigation Items List */}
-        <div className="flex-1 px-3 py-3 space-y-1 overflow-y-auto">
+        <div className="flex-1 px-3 py-3 space-y-1 overflow-y-auto relative z-10">
           <div className="text-[10px] uppercase font-mono tracking-wider text-slate-400 px-3 py-1">
             Menu Navigation
           </div>
@@ -294,41 +294,38 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
         </div>
 
         {/* ===================================================================== */}
-        {/* BOTTOM LEFT OF SIDEBAR: REFINERY PLANT IMAGE & SHIFT BADGE CARD       */}
+        {/* BOTTOM LEFT OF SIDEBAR: SEAMLESS REFINERY PLANT BLEND (NO BOX/FRAME) */}
         {/* ===================================================================== */}
-        <div className="p-3 border-t border-[#1F2E43] bg-[#060A10]/70">
-          {/* Refinery Plant Night Image */}
-          <div className="relative rounded-xl overflow-hidden border border-[#1F2E43] shadow-lg group">
+        <div className="relative mt-auto pt-24 pb-4 px-3.5 overflow-hidden z-10">
+          {/* Seamless Refinery Plant Background Image with Smooth Gradient Mask */}
+          <div className="absolute inset-0 pointer-events-none -z-10 overflow-hidden">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/refinery-plant.jpg"
               alt="Lam Soon Refinery Plant"
-              className="w-full h-28 object-cover object-center brightness-95 group-hover:scale-105 transition-transform duration-500"
+              className="w-full h-full object-cover object-bottom brightness-90 contrast-115 saturate-110"
+              style={{
+                maskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 45%, rgba(0,0,0,0.3) 75%, rgba(0,0,0,0) 100%)',
+                WebkitMaskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 45%, rgba(0,0,0,0.3) 75%, rgba(0,0,0,0) 100%)',
+              }}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#060A10] via-transparent to-transparent opacity-85" />
-            <div className="absolute bottom-2 left-2.5 right-2.5 flex items-center justify-between text-[10px]">
-              <span className="font-mono text-white/90 bg-black/60 backdrop-blur-xs px-2 py-0.5 rounded border border-white/10 flex items-center gap-1.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#10B981] animate-pulse"></span>
-                Nisshin Plant
-              </span>
-              <span className="text-white/70 font-mono text-[9px] bg-black/50 px-1.5 py-0.5 rounded">
-                24/7 Ops
-              </span>
-            </div>
+            {/* Gradient wash to seamlessly blend top and bottom into sidebar dark navy background */}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#080E18]/40 via-transparent to-[#080E18]" />
+            <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-[#080E18] to-transparent" />
           </div>
 
-          {/* Shift Badge Card */}
-          <div className="mt-2.5 p-2 rounded-lg bg-[#0C1523] border border-[#1F2E43] flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="relative flex h-2 w-2">
+          {/* Shift Badge Card (Glassmorphism Pill floating directly on top of the plant blend) */}
+          <div className="relative z-10 p-2.5 rounded-xl bg-[#070F1C]/85 backdrop-blur-md border border-white/10 shadow-lg flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <span className="relative flex h-2.5 w-2.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10B981] opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#10B981]"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#10B981]"></span>
               </span>
               <div>
-                <div className="text-[10px] font-bold text-white font-mono tracking-wider">
+                <div className="text-[11px] font-bold text-white font-mono tracking-wider">
                   {currentShiftName}
                 </div>
-                <div className="text-[9px] text-slate-400 font-mono">
+                <div className="text-[10px] text-slate-300 font-mono">
                   {currentShiftHours}
                 </div>
               </div>
@@ -340,12 +337,15 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
             </span>
           </div>
 
-          {/* Plant Footer Details */}
-          <div className="mt-2 text-center">
-            <div className="text-[10px] font-medium text-slate-300">
-              Lam Soon Edible Oils Sdn Bhd
+          {/* Plant Footer Details (Matching screenshot layout: 2 lines company name + version) */}
+          <div className="relative z-10 mt-3 px-1 text-left">
+            <div className="text-[11px] font-medium text-slate-300 leading-tight">
+              Lam Soon Edible Oils
             </div>
-            <div className="text-[9px] text-slate-400 font-mono mt-0.5">
+            <div className="text-[11px] font-medium text-slate-400 leading-tight">
+              Sdn Bhd
+            </div>
+            <div className="text-[10px] text-slate-400 font-mono mt-1">
               Version 1.0.0
             </div>
           </div>
@@ -415,7 +415,7 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
             <button
               onClick={onLogout}
               className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium text-[#EF4444] bg-[#EF4444]/10 border border-[#EF4444]/30 hover:bg-[#EF4444]/20 hover:text-red-300 transition-colors ml-1 cursor-pointer shrink-0"
-              title="Sign out of current session and return to login screen"
+              title="Sign Out"
             >
               <LogOut className="h-3.5 w-3.5" />
               <span className="hidden md:inline">Sign Out</span>
@@ -517,18 +517,20 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
             </div>
           )}
 
-          {/* Mobile Refinery Image & Info */}
-          <div className="pt-2 border-t border-[#1F2E43]">
-            <div className="relative rounded-lg overflow-hidden border border-[#1F2E43]">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/refinery-plant.jpg"
-                alt="Refinery Plant"
-                className="w-full h-24 object-cover"
-              />
-              <div className="absolute bottom-1 left-2 text-[9px] font-mono text-white/90 bg-black/60 px-1.5 py-0.5 rounded">
-                {currentShiftName} · 14:00 - 22:00
-              </div>
+          {/* Mobile Refinery Image Seamless Blend */}
+          <div className="relative rounded-lg overflow-hidden h-24 mt-2">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/refinery-plant.jpg"
+              alt="Refinery Plant"
+              className="w-full h-full object-cover object-bottom"
+              style={{
+                maskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%)',
+                WebkitMaskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%)',
+              }}
+            />
+            <div className="absolute bottom-1 left-2 text-[9px] font-mono text-white/90 bg-black/60 px-1.5 py-0.5 rounded">
+              {currentShiftName} · 14:00 - 22:00
             </div>
           </div>
 
