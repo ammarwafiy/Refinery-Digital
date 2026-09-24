@@ -80,12 +80,12 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
     .sort((a, b) => allowedTabs.indexOf(a.id) - allowedTabs.indexOf(b.id));
 
   const roleColors: Record<UserRole, { bg: string; text: string; border: string }> = {
-    operator: { bg: 'bg-emerald-950/30', text: 'text-emerald-400', border: 'border-emerald-700/50' },
-    supervisor: { bg: 'bg-amber-950/30', text: 'text-amber-400', border: 'border-amber-700/50' },
-    qc_analyst: { bg: 'bg-sky-950/30', text: 'text-[#08b5f5]', border: 'border-[#009fe3]/40' },
-    qc_manager: { bg: 'bg-cyan-950/30', text: 'text-[#22c3ff]', border: 'border-[#08b5f5]/40' },
-    admin: { bg: 'bg-indigo-950/30', text: 'text-indigo-400', border: 'border-indigo-700/50' },
-    viewer: { bg: 'bg-[#121c2a]', text: 'text-slate-300', border: 'border-[#1e2d42]' },
+    operator: { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200' },
+    supervisor: { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
+    qc_analyst: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
+    qc_manager: { bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200' },
+    admin: { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
+    viewer: { bg: 'bg-slate-100', text: 'text-slate-600', border: 'border-slate-300' },
   };
 
   const handleMobileTabSelect = (tabId: string) => {
@@ -95,74 +95,74 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b border-[#1e2d42] bg-[#070b12]/95 backdrop-blur-md">
-        {/* Top SCADA Status Strip - Desktop Only */}
-        <div className="hidden lg:flex items-center justify-between border-b border-[#1e2d42] bg-[#0b111b] px-3.5 py-1 text-xs text-slate-400">
+      <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white shadow-sm">
+        {/* Top Status Strip - Desktop Only */}
+        <div className="hidden lg:flex items-center justify-between border-b border-slate-100 bg-slate-50 px-3.5 py-1 text-xs text-slate-500">
           <div className="flex items-center gap-2.5">
-            <span className="flex items-center gap-2 font-semibold text-slate-100 tracking-wide">
-              <span className="flex h-5 w-5 items-center justify-center rounded bg-[#0f1724] border border-[#1e2d42] shrink-0">
-                <Flame className="h-3.5 w-3.5 text-[#009fe3]" />
+            <span className="flex items-center gap-2 font-semibold text-slate-800">
+              <span className="flex h-5 w-5 items-center justify-center rounded bg-blue-50 border border-blue-200 shrink-0">
+                <Flame className="h-3.5 w-3.5 text-blue-600" />
               </span>
-              <span className="tracking-wider uppercase text-[11px] font-bold text-slate-200">
+              <span className="text-[11px] font-semibold text-slate-700">
                 <span className="hidden xl:inline">Lam Soon Edible Oils Sdn. Bhd.</span>
                 <span className="xl:hidden">Lam Soon</span>
               </span>
             </span>
-            <span className="text-slate-700">|</span>
-            <div className="flex items-center gap-1.5 font-mono text-[11px] text-[#08b5f5] bg-[#0f1724] px-2 py-0.5 rounded border border-[#1e2d42]">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#009fe3]"></span>
+            <span className="text-slate-300">|</span>
+            <div className="flex items-center gap-1.5 text-[11px] text-blue-600 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
+              <span className="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
               <span className="hidden xl:inline">NISSHIN DEODORIZER PLANT</span>
               <span className="xl:hidden">NISSHIN PLANT</span>
             </div>
-            <span className="hidden 2xl:inline text-[11px] font-mono text-slate-400">
+            <span className="hidden 2xl:inline text-[11px] text-slate-400">
               Doc: PRD-REF-001 (Rev. 02)
             </span>
           </div>
 
-          {/* Clock & Telemetry Status */}
+          {/* Clock & Status */}
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-950/30 border border-emerald-700/50 text-emerald-400">
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-green-50 border border-green-200 text-green-700">
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
               </span>
-              <span className="font-mono text-[11px] font-medium tracking-wider">DCS ONLINE</span>
+              <span className="text-[11px] font-medium">DCS ONLINE</span>
             </div>
 
-            <div className="hidden xl:flex items-center gap-1.5 text-slate-300 font-mono text-[11px] px-2 py-0.5 rounded bg-[#0f1724] border border-[#1e2d42]">
-              <Wifi className="h-3 w-3 text-[#009fe3]" />
+            <div className="hidden xl:flex items-center gap-1.5 text-slate-600 text-[11px] px-2 py-0.5 rounded-md bg-slate-50 border border-slate-200">
+              <Wifi className="h-3 w-3 text-blue-500" />
               <span>DB Sync: Active</span>
             </div>
 
-            <div className="flex items-center gap-1.5 font-mono text-[11px] text-slate-200 bg-[#0f1724] px-2.5 py-0.5 rounded border border-[#1e2d42]">
+            <div className="flex items-center gap-1.5 text-[11px] text-slate-700 bg-white px-2.5 py-0.5 rounded-md border border-slate-200">
               <Clock className="h-3 w-3 text-slate-400" />
-              <span className="font-medium tracking-wider">{timeString || '12:00:00 MYT'}</span>
+              <span className="font-medium font-mono">{timeString || '12:00:00 MYT'}</span>
             </div>
           </div>
         </div>
 
         {/* Mobile Header Bar (Screen width < 1024px) */}
-        <div className="flex lg:hidden items-center justify-between px-3.5 py-2 border-b border-[#1e2d42] bg-[#070b12]">
+        <div className="flex lg:hidden items-center justify-between px-3.5 py-2 border-b border-slate-100 bg-white">
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded bg-[#0f1724] border border-[#1e2d42]">
-              <Flame className="h-4 w-4 text-[#009fe3]" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 border border-blue-200">
+              <Flame className="h-4 w-4 text-blue-600" />
             </div>
             <div>
-              <div className="font-bold text-xs tracking-wider uppercase text-slate-200 flex items-center gap-1.5">
+              <div className="font-semibold text-xs text-slate-800 flex items-center gap-1.5">
                 <span>Lam Soon</span>
-                <span className="text-[10px] font-mono text-[#08b5f5] bg-[#0f1724] px-1.5 py-0.2 rounded border border-[#1e2d42]">
+                <span className="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
                   NISSHIN
                 </span>
               </div>
-              <div className="text-[10px] font-mono text-slate-400 flex items-center gap-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <div className="text-[10px] text-slate-500 flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></span>
                 <span>DCS ONLINE · {profile.employee_no}</span>
               </div>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase border ${roleColors[role].bg} ${roleColors[role].text} ${roleColors[role].border}`}>
+            <span className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase border ${roleColors[role].bg} ${roleColors[role].text} ${roleColors[role].border}`}>
               {role === 'operator' && 'OP'}
               {role === 'supervisor' && 'SV'}
               {role === 'qc_analyst' && 'QC'}
@@ -175,18 +175,18 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
             <button
               type="button"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="flex items-center justify-center h-8 w-8 rounded bg-[#0f1724] border border-[#1e2d42] text-slate-300 hover:text-white transition-colors cursor-pointer"
+              className="flex items-center justify-center h-8 w-8 rounded-lg bg-slate-50 border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
               aria-label="Toggle navigation menu"
             >
-              {isMobileMenuOpen ? <X className="h-4 w-4 text-[#08b5f5]" /> : <Menu className="h-4 w-4" />}
+              {isMobileMenuOpen ? <X className="h-4 w-4 text-blue-600" /> : <Menu className="h-4 w-4" />}
             </button>
           </div>
         </div>
 
         {/* Desktop Navigation & Role Bar (lg:flex) */}
-        <div className="hidden lg:flex items-center justify-between gap-2 px-3 py-1.5 bg-[#070b12]">
-          {/* Tactile Navigation Tabs - Segmented Console Strip */}
-          <nav className="flex items-center gap-1 p-1 rounded-lg bg-[#0b111b] border border-[#1e2d42] overflow-x-auto min-w-0">
+        <div className="hidden lg:flex items-center justify-between gap-2 px-3 py-1.5 bg-white">
+          {/* Navigation Tabs */}
+          <nav className="flex items-center gap-1 p-1 rounded-lg bg-slate-50 border border-slate-200 overflow-x-auto min-w-0">
             {visibleNavItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
@@ -194,21 +194,18 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`group relative flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-medium font-sans transition-all whitespace-nowrap cursor-pointer ${isActive
-                      ? 'bg-[#009fe3] text-white font-medium shadow-[0_1px_3px_rgba(0,0,0,0.3)] border border-[#08b5f5]'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-[#121c2a] border border-transparent'
+                  className={`group relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium font-sans transition-all whitespace-nowrap cursor-pointer ${isActive
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-white border border-transparent'
                     }`}
                 >
-                  <Icon className={`h-3.5 w-3.5 shrink-0 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-300'}`} />
+                  <Icon className={`h-3.5 w-3.5 shrink-0 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-600'}`} />
                   <span>{item.label}</span>
                   {item.badge && (
-                    <span className={`text-[8px] px-1 py-0.2 rounded font-mono font-medium ${isActive ? 'bg-[#08b5f5]/30 text-white border border-[#22c3ff]/40' : 'bg-[#121c2a] text-slate-400 border border-[#1e2d42]'
+                    <span className={`text-[8px] px-1 py-0.5 rounded font-medium ${isActive ? 'bg-blue-500/30 text-white' : 'bg-slate-100 text-slate-500 border border-slate-200'
                       }`}>
                       {item.badge}
                     </span>
-                  )}
-                  {isActive && (
-                    <span className="absolute bottom-0 left-2 right-2 h-[2px] bg-[#22c3ff] rounded-full"></span>
                   )}
                 </button>
               );
@@ -216,11 +213,11 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
           </nav>
 
           {/* User Info & Role Bar - Always visible, zero overflow */}
-          <div className="flex items-center gap-1.5 bg-[#0b111b] p-1.5 rounded-lg border border-[#1e2d42] shrink-0 ml-auto">
+          <div className="flex items-center gap-1.5 bg-slate-50 p-1.5 rounded-lg border border-slate-200 shrink-0 ml-auto">
             {/* Dedicated Role Mode Badge */}
             <div className="flex items-center gap-1 px-1.5 py-0.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
-              <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase border tracking-wider ${roleColors[role].bg} ${roleColors[role].text} ${roleColors[role].border}`}>
+              <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse shrink-0"></span>
+              <span className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase border ${roleColors[role].bg} ${roleColors[role].text} ${roleColors[role].border}`}>
                 <span className="hidden xl:inline">
                   {role === 'operator' && 'OP · PROCESS LOG'}
                   {role === 'supervisor' && 'SV · LIVE BOARD'}
@@ -239,14 +236,14 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
             </div>
 
             {/* User Profile Badge */}
-            <div className="border-l border-[#1e2d42] pl-2 pr-1.5 text-right">
+            <div className="border-l border-slate-200 pl-2 pr-1.5 text-right">
               <div 
-                className="text-[11px] font-medium text-slate-200 leading-tight" 
+                className="text-[11px] font-medium text-slate-700 leading-tight" 
                 title={profile.full_name}
               >
                 {profile.full_name}
               </div>
-              <div className="text-[10px] font-mono text-[#08b5f5] font-medium">
+              <div className="text-[10px] font-mono text-blue-600 font-medium">
                 {profile.employee_no}
               </div>
             </div>
@@ -255,13 +252,13 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
             {role === 'admin' && (
               <button
                 onClick={() => setActiveTab('admin')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-mono font-medium transition-all ml-1 cursor-pointer border shrink-0 ${activeTab === 'admin'
-                    ? 'bg-[#009fe3] text-white border-[#08b5f5] shadow-sm'
-                    : 'text-slate-300 bg-[#0f1724] border-[#1e2d42] hover:bg-[#162235] hover:text-white'
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all ml-1 cursor-pointer border shrink-0 ${activeTab === 'admin'
+                    ? 'bg-blue-600 text-white border-blue-700 shadow-sm'
+                    : 'text-slate-600 bg-white border-slate-200 hover:bg-slate-50 hover:text-slate-900'
                   }`}
                 title="Plant Administration & User Management Panel"
               >
-                <Users className="h-3.5 w-3.5 text-[#08b5f5]" />
+                <Users className="h-3.5 w-3.5 text-blue-500" />
                 <span>Admin & Users</span>
               </button>
             )}
@@ -270,7 +267,7 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
             {onLogout && (
               <button
                 onClick={onLogout}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-mono font-medium text-rose-400 bg-rose-950/30 border border-rose-800/40 hover:bg-rose-900/50 hover:text-rose-200 transition-colors ml-1 cursor-pointer shrink-0 shadow-xs"
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium text-red-600 bg-red-50 border border-red-200 hover:bg-red-100 hover:text-red-700 transition-colors ml-1 cursor-pointer shrink-0"
                 title="Sign out of current session and return to login screen"
               >
                 <LogOut className="h-3.5 w-3.5" />
@@ -282,35 +279,35 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
 
         {/* Mobile Expandable Drawer Menu (lg:hidden) */}
         {isMobileMenuOpen && (
-          <div className="lg:hidden bg-[#070b12] border-b border-[#1e2d42] p-4 space-y-3">
+          <div className="lg:hidden bg-white border-b border-slate-200 p-4 space-y-3">
             {/* User Profile Card on Mobile */}
-            <div className="flex items-center justify-between p-3 rounded-lg bg-[#0f1724] border border-[#1e2d42]">
+            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-200">
               <div>
-                <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider font-medium">Signed in Operator</div>
-                <div className="text-sm font-semibold text-slate-100 mt-0.5">{profile.full_name}</div>
-                <div className="text-xs font-mono text-[#08b5f5] font-medium">{profile.employee_no}</div>
+                <div className="text-[10px] text-slate-500 uppercase tracking-wider font-medium">Signed in Operator</div>
+                <div className="text-sm font-semibold text-slate-900 mt-0.5">{profile.full_name}</div>
+                <div className="text-xs text-blue-600 font-medium">{profile.employee_no}</div>
               </div>
-              <span className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase border tracking-wider ${roleColors[role].bg} ${roleColors[role].text} ${roleColors[role].border}`}>
+              <span className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase border ${roleColors[role].bg} ${roleColors[role].text} ${roleColors[role].border}`}>
                 {role}
               </span>
             </div>
 
             {/* Plant Clock & Status Bar on Mobile */}
-            <div className="flex items-center justify-between p-2 rounded bg-[#0b111b] border border-[#1e2d42] text-xs font-mono text-slate-400">
-              <div className="flex items-center gap-1.5 text-emerald-400">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <div className="flex items-center justify-between p-2 rounded-md bg-slate-50 border border-slate-200 text-xs text-slate-500">
+              <div className="flex items-center gap-1.5 text-green-600">
+                <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
                 <span className="font-medium text-[11px]">DCS Live Feed</span>
               </div>
-              <div className="flex items-center gap-1.5 text-slate-200">
+              <div className="flex items-center gap-1.5 text-slate-700">
                 <Clock className="h-3 w-3 text-slate-400" />
-                <span className="text-[11px] font-medium">{timeString || '12:00:00 MYT'}</span>
+                <span className="text-[11px] font-medium font-mono">{timeString || '12:00:00 MYT'}</span>
               </div>
             </div>
 
             {/* Navigation Tabs List for Mobile */}
             <div className="space-y-1">
-              <div className="text-[10px] font-mono uppercase text-slate-400 px-1 font-medium tracking-wider">
-                Console Views ({visibleNavItems.length}):
+              <div className="text-[10px] uppercase text-slate-400 px-1 font-medium tracking-wider">
+                Views ({visibleNavItems.length}):
               </div>
               {visibleNavItems.map((item) => {
                 const Icon = item.icon;
@@ -319,10 +316,10 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
                   <button
                     key={item.id}
                     onClick={() => handleMobileTabSelect(item.id)}
-                    className={`w-full flex items-center justify-between px-3 py-2 rounded text-xs font-medium font-sans transition-colors border cursor-pointer ${
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-medium font-sans transition-colors border cursor-pointer ${
                       isActive
-                        ? 'bg-[#009fe3] text-white border-[#08b5f5] shadow-xs'
-                        : 'bg-[#0f1724] text-slate-300 hover:bg-[#121c2a] border-[#1e2d42]'
+                        ? 'bg-blue-600 text-white border-blue-700 shadow-sm'
+                        : 'bg-white text-slate-700 hover:bg-slate-50 border-slate-200'
                     }`}
                   >
                     <div className="flex items-center gap-2.5">
@@ -330,8 +327,8 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
                       <span className="font-medium">{item.label}</span>
                     </div>
                     {item.badge && (
-                      <span className={`text-[9px] px-1.5 py-0.2 rounded font-mono font-medium ${
-                        isActive ? 'bg-[#08b5f5]/30 text-white border border-[#22c3ff]/40' : 'bg-[#121c2a] text-slate-400 border border-[#1e2d42]'
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded font-medium ${
+                        isActive ? 'bg-blue-500/30 text-white' : 'bg-slate-100 text-slate-500 border border-slate-200'
                       }`}>
                         {item.badge}
                       </span>
@@ -343,18 +340,18 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
 
             {/* Admin Management Button for Mobile */}
             {role === 'admin' && (
-              <div className="pt-2 border-t border-[#1e2d42]">
+              <div className="pt-2 border-t border-slate-200">
                 <button
                   onClick={() => {
                     setActiveTab('admin');
                     setIsMobileMenuOpen(false);
                   }}
-                  className={`w-full flex items-center justify-center gap-2 py-2 rounded text-xs font-mono font-medium transition-colors cursor-pointer border ${activeTab === 'admin'
-                      ? 'bg-[#009fe3] text-white border-[#08b5f5]'
-                      : 'text-slate-300 bg-[#0f1724] border-[#1e2d42] hover:bg-[#162235] hover:text-white'
+                  className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-medium transition-colors cursor-pointer border ${activeTab === 'admin'
+                      ? 'bg-blue-600 text-white border-blue-700'
+                      : 'text-slate-700 bg-white border-slate-200 hover:bg-slate-50'
                     }`}
                 >
-                  <Users className="h-4 w-4 text-[#08b5f5]" />
+                  <Users className="h-4 w-4 text-blue-500" />
                   <span>Admin & Users Panel</span>
                 </button>
               </div>
@@ -362,13 +359,13 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
 
             {/* Mobile Actions: Sign Out */}
             {onLogout && (
-              <div className="pt-2 border-t border-[#1e2d42]">
+              <div className="pt-2 border-t border-slate-200">
                 <button
                   onClick={() => {
                     setIsMobileMenuOpen(false);
                     onLogout();
                   }}
-                  className="w-full flex items-center justify-center gap-2 py-2 rounded text-xs font-mono font-medium text-rose-400 bg-rose-950/30 border border-rose-800/40 hover:bg-rose-900/50 transition-colors cursor-pointer"
+                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-medium text-red-600 bg-red-50 border border-red-200 hover:bg-red-100 transition-colors cursor-pointer"
                 >
                   <LogOut className="h-4 w-4" />
                   <span>Sign Out of Session</span>
@@ -380,7 +377,7 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
       </header>
 
       {/* Mobile Bottom Quick-Navigation Dock (Fixed for phone thumbs) */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#070b12]/95 backdrop-blur-md border-t border-[#1e2d42] px-1 py-1 flex items-center justify-around">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-sm border-t border-slate-200 px-1 py-1 flex items-center justify-around">
         {visibleNavItems.slice(0, 4).map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
@@ -391,14 +388,14 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
                 setActiveTab(item.id);
                 setIsMobileMenuOpen(false);
               }}
-              className={`flex flex-col items-center justify-center py-1 px-2 rounded transition-colors cursor-pointer min-w-[54px] ${
-                isActive ? 'text-[#08b5f5] font-medium' : 'text-slate-400 hover:text-slate-200'
+              className={`flex flex-col items-center justify-center py-1 px-2 rounded-md transition-colors cursor-pointer min-w-[54px] ${
+                isActive ? 'text-blue-600 font-medium' : 'text-slate-400 hover:text-slate-600'
               }`}
             >
-              <div className={`p-1 rounded ${isActive ? 'bg-[#0f1724] text-[#08b5f5] border border-[#1e2d42]' : ''}`}>
+              <div className={`p-1 rounded-md ${isActive ? 'bg-blue-50 text-blue-600 border border-blue-200' : ''}`}>
                 <Icon className="h-4 w-4" />
               </div>
-              <span className="text-[9px] font-mono tracking-tight mt-0.5 truncate max-w-[64px]">
+              <span className="text-[9px] tracking-tight mt-0.5 truncate max-w-[64px]">
                 {item.shortLabel || item.label}
               </span>
             </button>
@@ -408,14 +405,14 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
         {/* Toggle Menu Button in Bottom Dock */}
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className={`flex flex-col items-center justify-center py-1 px-2 rounded transition-colors cursor-pointer min-w-[54px] ${
-            isMobileMenuOpen ? 'text-[#08b5f5] font-medium' : 'text-slate-400 hover:text-slate-200'
+          className={`flex flex-col items-center justify-center py-1 px-2 rounded-md transition-colors cursor-pointer min-w-[54px] ${
+            isMobileMenuOpen ? 'text-blue-600 font-medium' : 'text-slate-400 hover:text-slate-600'
           }`}
         >
-          <div className={`p-1 rounded ${isMobileMenuOpen ? 'bg-[#0f1724] text-[#08b5f5] border border-[#1e2d42]' : ''}`}>
+          <div className={`p-1 rounded-md ${isMobileMenuOpen ? 'bg-blue-50 text-blue-600 border border-blue-200' : ''}`}>
             {isMobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </div>
-          <span className="text-[9px] font-mono tracking-tight mt-0.5">
+          <span className="text-[9px] tracking-tight mt-0.5">
             {isMobileMenuOpen ? 'Close' : 'Menu'}
           </span>
         </button>

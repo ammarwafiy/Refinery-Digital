@@ -65,8 +65,8 @@ export default function Home() {
   const currentTab = allowedTabs.includes(activeTab) ? activeTab : (ROLE_DEFAULT_TAB[authUser.role] || allowedTabs[0]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0c121e] text-slate-200">
-      {/* Top SCADA Navigation & Role Switcher */}
+    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900">
+      {/* Top Navigation & Role Switcher */}
       <Navbar 
         activeTab={currentTab} 
         setActiveTab={setActiveTab} 
@@ -95,14 +95,14 @@ export default function Home() {
       </main>
 
       {/* Industrial Plant Footer */}
-      <footer className="w-full border-t border-[#23304a] bg-[#0c121e] py-3 px-4 text-[11px] text-slate-400 font-mono no-print">
+      <footer className="w-full border-t border-slate-200 bg-white py-3 px-4 text-[11px] text-slate-500 font-sans no-print">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-center gap-2 text-center">
-          <Flame className="h-3.5 w-3.5 text-sky-500 shrink-0" />
-          <span className="text-slate-300 font-semibold tracking-wide">
+          <Flame className="h-3.5 w-3.5 text-blue-600 shrink-0" />
+          <span className="text-slate-700 font-semibold">
             Lam Soon Edible Oils Sdn. Bhd.
           </span>
-          <span className="text-slate-600">·</span>
-          <span className="text-slate-400">Nisshin Deodorizer Plant Refinery Management System (PRD-REF-001)</span>
+          <span className="text-slate-300">·</span>
+          <span className="text-slate-500">Nisshin Deodorizer Plant Refinery Management System (PRD-REF-001)</span>
         </div>
       </footer>
     </div>

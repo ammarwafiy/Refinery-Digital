@@ -6,25 +6,22 @@
 }
 
 :root {
-  --background: #070b12;
-  --foreground: #f1f5f9;
-  --card-canvas: #070b12;
-  --card-subtle: #0b111b;
-  --card-panel: #0f1724;
-  --card-elevated: #121c2a;
-  --card-interactive: #162235;
+  --background: #ffffff;
+  --foreground: #0f172a;
+  --surface: #f8fafc;
+  --surface-raised: #ffffff;
 
-  --border-subtle: #1e2d42;
-  --border-strong: #263a54;
-  --border-focus: #009fe3;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --border-focus: #2563eb;
 
-  --primary-accent: #009fe3;
-  --accent-cyan: #08b5f5;
-  --accent-glow: #22c3ff;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-light: #eff6ff;
 
-  --status-success: #10b981;
-  --status-warning: #f59e0b;
-  --status-critical: #ef4444;
+  --status-success: #16a34a;
+  --status-warning: #d97706;
+  --status-critical: #dc2626;
   --status-neutral: #64748b;
 }
 
@@ -34,8 +31,8 @@
 }
 
 body {
-  background-color: #070b12;
-  color: #f1f5f9;
+  background-color: #ffffff;
+  color: #0f172a;
   font-family: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   overflow-x: hidden;
   font-weight: 450;
@@ -43,23 +40,23 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* Industrial Dark Scrollbar */
+/* Clean Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #070b12;
+  background: #f8fafc;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1e2d42;
+  background: #cbd5e1;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #263a54;
+  background: #94a3b8;
 }
 
 /* Precision Tabular Numbers: Uses Inter with tabular figures so readings align cleanly without skinny typewriter glyphs */
@@ -74,45 +71,45 @@ body {
   font-weight: 500;
 }
 
-/* Industrial Console Layered Panels */
+/* Clean Card Panels */
 .industrial-panel {
-  background-color: #0f1724;
-  border: 1px solid #1e2d42;
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.45), inset 0 1px 0 0 rgba(255, 255, 255, 0.03);
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
 }
 
 .industrial-card {
-  background-color: #121c2a;
-  border: 1px solid #1e2d42;
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.03);
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
 .industrial-input {
-  background-color: #0b111b;
-  border: 1px solid #1e2d42;
-  color: #f1f5f9;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #0f172a;
   font-family: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
   font-feature-settings: "tnum" 1;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .industrial-input:hover:not(:disabled) {
-  border-color: #263a54;
+  border-color: #cbd5e1;
 }
 
 .industrial-input:focus {
-  border-color: #009fe3;
+  border-color: #2563eb;
   outline: none;
-  box-shadow: 0 0 0 1px rgba(0, 159, 227, 0.4), inset 0 1px 2px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
 }
 
 .industrial-input:disabled {
   opacity: 0.55;
-  background-color: #070b12;
+  background-color: #f1f5f9;
   cursor: not-allowed;
 }
 
-/* Operational LED Status Indicators */
+/* Status Indicators (no glow) */
 .led-indicator {
   display: inline-block;
   width: 7px;
@@ -121,28 +118,24 @@ body {
 }
 
 .led-blue, .led-cyan {
-  background: #009fe3;
-  box-shadow: 0 0 6px rgba(0, 159, 227, 0.7);
+  background: #2563eb;
 }
 
 .led-emerald {
-  background: #10b981;
-  box-shadow: 0 0 6px rgba(16, 185, 129, 0.7);
+  background: #16a34a;
 }
 
 .led-amber {
-  background: #f59e0b;
-  box-shadow: 0 0 6px rgba(245, 158, 11, 0.7);
+  background: #d97706;
 }
 
 .led-rose {
-  background: #ef4444;
-  box-shadow: 0 0 6px rgba(239, 68, 68, 0.7);
+  background: #dc2626;
 }
 
-/* Subtle Technical Focus & Glow Helpers */
+/* Subtle Focus Helper */
 .refinery-glow {
-  box-shadow: 0 0 12px -2px rgba(0, 159, 227, 0.4);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
 }
 
 /* Print layout optimizations - strictly pure black & white */
