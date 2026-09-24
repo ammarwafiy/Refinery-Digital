@@ -2011,6 +2011,10 @@ export function updateSampleResults(
     remark_cooling?: boolean;
     remark_pushover?: boolean;
     remarks?: string | null;
+    sampling_point_id?: string | null;
+    sampling_point_name?: string;
+    crystallizer_no?: string | null;
+    batch_no?: string | null;
   }
 ): { success: boolean; error?: string } {
   const reports = getSampleReports();
@@ -2027,6 +2031,10 @@ export function updateSampleResults(
     if (remarksData.remark_cooling !== undefined) report.remark_cooling = remarksData.remark_cooling;
     if (remarksData.remark_pushover !== undefined) report.remark_pushover = remarksData.remark_pushover;
     if (remarksData.remarks !== undefined) report.remarks = remarksData.remarks;
+    if (remarksData.sampling_point_id !== undefined) report.sampling_point_id = remarksData.sampling_point_id;
+    if (remarksData.sampling_point_name !== undefined) report.sampling_point_name = remarksData.sampling_point_name;
+    if (remarksData.crystallizer_no !== undefined) report.crystallizer_no = remarksData.crystallizer_no;
+    if (remarksData.batch_no !== undefined) report.batch_no = remarksData.batch_no;
   }
 
   resultsData.forEach(item => {

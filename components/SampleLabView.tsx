@@ -97,6 +97,8 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
   const [qcRemarkCooling, setQcRemarkCooling] = useState(false);
   const [qcRemarkPushover, setQcRemarkPushover] = useState(false);
   const [qcRemarksText, setQcRemarksText] = useState('');
+  const [qcSamplingPointId, setQcSamplingPointId] = useState<string>('');
+  const [qcCrystallizerBatch, setQcCrystallizerBatch] = useState<string>('');
 
   // Auto-generate next sequential Lot Number whenever Product or Date changes
   useEffect(() => {
@@ -301,6 +303,11 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
       setQcRemarkCooling(selectedReport.remark_cooling ?? false);
       setQcRemarkPushover(selectedReport.remark_pushover ?? false);
       setQcRemarksText(selectedReport.remarks || '');
+      setQcSamplingPointId(selectedReport.sampling_point_id || '');
+      const cryst = selectedReport.crystallizer_no || '';
+      const batch = selectedReport.batch_no || '';
+      const combined = cryst && batch ? `${cryst} / ${batch}` : (cryst || batch || '');
+      setQcCrystallizerBatch(combined);
     }
     if (displayResults.length > 0) {
       const inputs: Record<string, { num?: number; text?: string }> = {};
@@ -409,11 +416,25 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
       };
     });
 
+    let crystNo = qcCrystallizerBatch.trim();
+    let batchNo = '';
+    if (qcCrystallizerBatch.includes('/')) {
+      const parts = qcCrystallizerBatch.split('/');
+      crystNo = parts[0]?.trim() || '';
+      batchNo = parts.slice(1).join('/').trim();
+    }
+
+    const matchedSp = samplingPoints.find(sp => sp.id === qcSamplingPointId);
+
     const res = updateSampleResults(selectedReport.id, payload, {
       remark_flushing: qcRemarkFlushing,
       remark_cooling: qcRemarkCooling,
       remark_pushover: qcRemarkPushover,
       remarks: qcRemarksText,
+      sampling_point_id: qcSamplingPointId || null,
+      sampling_point_name: matchedSp?.name || undefined,
+      crystallizer_no: crystNo || null,
+      batch_no: batchNo || (qcCrystallizerBatch.includes('/') ? null : crystNo || null),
     });
     if (res.success) {
       setResultsSuccess('Laboratory test results, operating remarks & checkboxes saved and synced with Supabase!');
@@ -938,88 +959,147 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
             {selectedReport ? (
               <div className="rounded-xl border border-[#1F2E43] bg-[#101927] p-5 sm:p-6 space-y-5">
                 {/* Sample Header Summary */}
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[#1F2E43] pb-4">
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded border border-[#1F2E43] bg-[#0A1018] text-[#009FE3] font-semibold">
-                        {selectedReport.report_no}
-                      </span>
-                      <h2 className="text-lg font-bold text-slate-100 font-mono">
-                        {selectedReport.lot_no}
-                      </h2>
-                      {selectedReport.remarks?.includes('Process Log') && (
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#009FE3]/10 text-[#009FE3] border border-[#009FE3]/30 flex items-center gap-1 font-semibold">
-                          ⚡ Auto-Dispatched ({selectedReport.time_check})
+                <div className="border-b border-[#1F2E43] pb-4 space-y-3">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded border border-[#1F2E43] bg-[#0A1018] text-[#009FE3] font-semibold">
+                          {selectedReport.report_no}
                         </span>
-                      )}
+                        <h2 className="text-lg font-bold text-slate-100 font-mono">
+                          {selectedReport.lot_no}
+                        </h2>
+                        {selectedReport.remarks?.includes('Process Log') && (
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#009FE3]/10 text-[#009FE3] border border-[#009FE3]/30 flex items-center gap-1 font-semibold">
+                            ⚡ Auto-Dispatched ({selectedReport.time_check})
+                          </span>
+                        )}
+                      </div>
+                      <div className="mt-1.5 text-xs text-slate-400 font-mono flex flex-wrap items-center gap-2.5">
+                        <span>Product: <strong className="text-slate-200">{selectedReport.product_name}</strong></span>
+                        <span>•</span>
+                        <span>Tanks: <strong className="text-slate-400">{selectedReport.feed_tank_code || 'Feed'} → {selectedReport.discharge_tank_code || 'Discharge'}</strong></span>
+                        <span>•</span>
+                        <span>Submitted: <strong className="text-slate-400">{selectedReport.submitted_by_name}</strong></span>
+                      </div>
                     </div>
-                    <div className="mt-1.5 text-xs text-slate-400 font-mono flex flex-wrap items-center gap-2.5">
-                      <span>Product: <strong className="text-slate-200">{selectedReport.product_name}</strong></span>
-                      <span>•</span>
-                      <span>Tanks: <strong className="text-slate-400">{selectedReport.feed_tank_code || 'Feed'} → {selectedReport.discharge_tank_code || 'Discharge'}</strong></span>
-                      <span>•</span>
-                      <span>Submitted: <strong className="text-slate-400">{selectedReport.submitted_by_name}</strong></span>
+
+                    {/* QC Decision Action or Badge */}
+                    <div className="flex items-center gap-2.5">
+                      {selectedReport.decision ? (
+                        <>
+                          <div className="text-right">
+                            <div className={`text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-lg border inline-block ${
+                              selectedReport.decision.decision === 'reject'
+                                ? 'bg-red-500/10 text-red-400 border-red-500/30'
+                                : selectedReport.decision.decision === 'accept'
+                                ? 'bg-emerald-500/10 text-green-600 border-emerald-500/30'
+                                : 'bg-amber-500/10 text-amber-600 border-amber-500/30'
+                            }`}>
+                              DECISION: {selectedReport.decision.decision.toUpperCase()}
+                            </div>
+                            <div className="text-[9px] font-mono text-slate-500 mt-0.5">
+                              By: {selectedReport.decision.decided_by_name}
+                            </div>
+                          </div>
+
+                          {(role === 'qc_analyst' || role === 'qc_manager' || role === 'admin') && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setDecisionType(selectedReport.decision?.decision || 'accept');
+                                setIsDecisionModalOpen(true);
+                              }}
+                              className="flex items-center gap-1.5 bg-[#0A1018] hover:bg-[#172235] text-slate-300 hover:text-white border border-[#1F2E43] px-2.5 py-1.5 rounded-md text-xs font-mono transition-colors cursor-pointer"
+                              title="Update or re-record QC Decision"
+                            >
+                              <ShieldCheck className="h-3.5 w-3.5 text-[#009FE3]" />
+                              <span>Update Decision</span>
+                            </button>
+                          )}
+                        </>
+                      ) : (
+                        (role === 'qc_analyst' || role === 'qc_manager' || role === 'admin') && (
+                          <button
+                            onClick={() => setIsDecisionModalOpen(true)}
+                            className="flex items-center gap-1.5 bg-[#009FE3] hover:bg-[#0089C4] text-white font-mono font-medium text-xs uppercase px-3.5 py-2 rounded-lg transition-all border border-[#009FE3]/50 cursor-pointer"
+                          >
+                            <ShieldCheck className="h-3.5 w-3.5" />
+                            <span>Record Decision</span>
+                          </button>
+                        )
+                      )}
+
+                      {/* Direct Navigation to RF-FR-001 Certificate */}
+                      {onNavigateToCertificate && (
+                        <button
+                          type="button"
+                          onClick={() => onNavigateToCertificate(selectedReport.id)}
+                          className="flex items-center gap-1.5 bg-[#0A1018] hover:bg-[#172235] text-slate-300 hover:text-white border border-[#1F2E43] px-2.5 py-1.5 rounded-md text-xs font-mono transition-colors cursor-pointer"
+                          title="View & export official RF-FR-001 Certificate"
+                        >
+                          <FileText className="h-3.5 w-3.5 text-[#009FE3]" />
+                          <span>Certificate</span>
+                        </button>
+                      )}
                     </div>
                   </div>
 
-                  {/* QC Decision Action or Badge */}
-                  <div className="flex items-center gap-2.5">
-                    {selectedReport.decision ? (
-                      <>
-                        <div className="text-right">
-                          <div className={`text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-lg border inline-block ${
-                            selectedReport.decision.decision === 'reject'
-                              ? 'bg-red-500/10 text-red-400 border-red-500/30'
-                              : selectedReport.decision.decision === 'accept'
-                              ? 'bg-emerald-500/10 text-green-600 border-emerald-500/30'
-                              : 'bg-amber-500/10 text-amber-600 border-amber-500/30'
-                          }`}>
-                            DECISION: {selectedReport.decision.decision.toUpperCase()}
-                          </div>
-                          <div className="text-[9px] font-mono text-slate-500 mt-0.5">
-                            By: {selectedReport.decision.decided_by_name}
-                          </div>
-                        </div>
-
-                        {(role === 'qc_analyst' || role === 'qc_manager' || role === 'admin') && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setDecisionType(selectedReport.decision?.decision || 'accept');
-                              setIsDecisionModalOpen(true);
-                            }}
-                            className="flex items-center gap-1.5 bg-[#0A1018] hover:bg-[#172235] text-slate-300 hover:text-white border border-[#1F2E43] px-2.5 py-1.5 rounded-md text-xs font-mono transition-colors cursor-pointer"
-                            title="Update or re-record QC Decision"
-                          >
-                            <ShieldCheck className="h-3.5 w-3.5 text-[#009FE3]" />
-                            <span>Update Decision</span>
-                          </button>
-                        )}
-                      </>
-                    ) : (
-                      (role === 'qc_analyst' || role === 'qc_manager' || role === 'admin') && (
-                        <button
-                          onClick={() => setIsDecisionModalOpen(true)}
-                          className="flex items-center gap-1.5 bg-[#009FE3] hover:bg-[#0089C4] text-white font-mono font-medium text-xs uppercase px-3.5 py-2 rounded-lg transition-all border border-[#009FE3]/50 cursor-pointer"
-                        >
-                          <ShieldCheck className="h-3.5 w-3.5" />
-                          <span>Record Decision</span>
-                        </button>
-                      )
-                    )}
-
-                    {/* Direct Navigation to RF-FR-001 Certificate */}
-                    {onNavigateToCertificate && (
-                      <button
-                        type="button"
-                        onClick={() => onNavigateToCertificate(selectedReport.id)}
-                        className="flex items-center gap-1.5 bg-[#0A1018] hover:bg-[#172235] text-slate-300 hover:text-white border border-[#1F2E43] px-2.5 py-1.5 rounded-md text-xs font-mono transition-colors cursor-pointer"
-                        title="View & export official RF-FR-001 Certificate"
+                  {/* QC Operational Sampling Point & Crystallizer / Batch No Selection Bar */}
+                  <div className="pt-3 border-t border-[#1F2E43]/60 grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[#0A1018] p-3 rounded-lg border border-[#1F2E43]">
+                    <div>
+                      <label className="block text-[10px] font-mono text-slate-400 uppercase tracking-wider font-semibold mb-1 flex items-center gap-1.5">
+                        <span className="text-[#009FE3]">📍</span> Sampling Point (QC Selection):
+                      </label>
+                      <select
+                        value={qcSamplingPointId}
+                        disabled={!canEdit}
+                        onChange={e => {
+                          const val = e.target.value;
+                          setQcSamplingPointId(val);
+                          const matched = samplingPoints.find(sp => sp.id === val);
+                          if (selectedReport) {
+                            selectedReport.sampling_point_id = val;
+                            selectedReport.sampling_point_name = matched?.name || '';
+                          }
+                        }}
+                        className="w-full bg-[#101927] border border-[#1F2E43] rounded-md px-2.5 py-1.5 text-xs font-mono text-slate-200 cursor-pointer focus:outline-none focus:border-[#009FE3] disabled:opacity-50"
                       >
-                        <FileText className="h-3.5 w-3.5 text-[#009FE3]" />
-                        <span>Certificate</span>
-                      </button>
-                    )}
+                        <option value="" className="bg-[#101927] text-slate-400">-- Select Sampling Point --</option>
+                        {samplingPoints.map(sp => (
+                          <option key={sp.id} value={sp.id} className="bg-[#101927] text-slate-200">
+                            {sp.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] font-mono text-slate-400 uppercase tracking-wider font-semibold mb-1 flex items-center gap-1.5">
+                        <span className="text-[#009FE3]">🏷️</span> Crystallizer / Batch No:
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. CR-04 / B260904"
+                        disabled={!canEdit}
+                        value={qcCrystallizerBatch}
+                        onChange={e => {
+                          const val = e.target.value;
+                          setQcCrystallizerBatch(val);
+                          if (selectedReport) {
+                            if (val.includes('/')) {
+                              const [c, b] = val.split('/');
+                              selectedReport.crystallizer_no = c?.trim();
+                              selectedReport.batch_no = b?.trim();
+                            } else {
+                              selectedReport.crystallizer_no = val.trim();
+                              selectedReport.batch_no = val.trim();
+                            }
+                          }
+                        }}
+                        className="w-full bg-[#101927] border border-[#1F2E43] rounded-md px-2.5 py-1.5 text-xs font-mono text-slate-200 placeholder-slate-500 focus:outline-none focus:border-[#009FE3] disabled:opacity-50"
+                      />
+                    </div>
                   </div>
                 </div>
 
