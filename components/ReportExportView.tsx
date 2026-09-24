@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   FileSpreadsheet,
   Download,
@@ -32,9 +32,21 @@ type ReportCategory = 'process' | 'qc' | 'deviations' | 'master';
 
 export default function ReportExportView() {
   const sheet = getActiveProcessSheet();
-  const sampleReports = getSampleReports();
+  const [sampleReports, setSampleReports] = useState(() => getSampleReports());
   const deviations = getDeviations();
   const products = getProducts();
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setSampleReports(getSampleReports());
+    };
+    window.addEventListener('refinery_reports_updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener('refinery_reports_updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
+  }, []);
 
   // Filter States
   const [period, setPeriod] = useState<ReportPeriod>('daily');

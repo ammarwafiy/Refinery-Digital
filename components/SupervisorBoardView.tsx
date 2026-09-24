@@ -40,6 +40,13 @@ export default function SupervisorBoardView() {
   useEffect(() => {
     setRole(getCurrentRole());
     refreshData();
+
+    window.addEventListener('refinery_reports_updated', refreshData);
+    window.addEventListener('storage', refreshData);
+    return () => {
+      window.removeEventListener('refinery_reports_updated', refreshData);
+      window.removeEventListener('storage', refreshData);
+    };
   }, []);
 
   const refreshData = () => {

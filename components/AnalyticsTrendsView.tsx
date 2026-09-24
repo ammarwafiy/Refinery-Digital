@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   ResponsiveContainer, 
   LineChart, 
@@ -16,12 +16,88 @@ import {
   Area,
   ReferenceLine
 } from 'recharts';
-import { getActiveProcessSheet, getSampleReports } from '@/lib/data-service';
+import { 
+  getActiveProcessSheet, 
+  getSampleReports, 
+  getRejectionReasons 
+} from '@/lib/data-service';
+import { SampleReport, ProcessSheet } from '@/types/refinery';
 import { BarChart3, TrendingUp, AlertOctagon, Layers } from 'lucide-react';
 
+// Normalization helpers for Pareto Reason Codes and Products
+function getReasonCategory(label?: string | null): string {
+  if (!label) return 'Other Defect';
+  const l = label.toLowerCase();
+  if (l.includes('colour') || l.includes('color')) return 'Colour out of spec';
+  if (l.includes('ffa') || l.includes('fatty acid')) return 'FFA above spec';
+  if (l.includes('odour') || l.includes('odor')) return 'Off odour';
+  if (l.includes('smp') || l.includes('slip melting') || l.includes('melting point')) return 'SMP out of range';
+  if (l.includes('moisture') || l.includes('h2o') || l.includes('water')) return 'Moisture above limit';
+  if (l.includes('soap')) return 'Soap content high';
+  if (l.includes('peroxide') || l.includes('pv')) return 'PV above spec';
+  if (l.includes('cloud')) return 'Cloud point out of range';
+  if (l.includes('sfc')) return 'SFC profile out of range';
+  if (l.includes('iodine') || l.includes('iv')) return 'IV out of range';
+  if (l.includes('contamination')) return 'Cross-contamination';
+  if (l.includes('wrong') || l.includes('tank')) return 'Wrong product in tank';
+  if (l.includes('sampling')) return 'Sampling error';
+  return label;
+}
+
+function getProductCategory(name?: string | null): string {
+  if (!name) return 'Other Product';
+  const trimmed = name.trim();
+  const l = trimmed.toLowerCase();
+  if (l.includes('pl 65') || l.includes('pl65') || l.includes('matsuyama')) return 'PL 65 Matsuyama';
+  if (l.includes('chocohi') || l.includes('357')) return 'Chocohi 357A';
+  if (l.includes('naturel') || l.includes('wos')) return 'Naturel WOS';
+  if (l.includes('daisy') || l.includes('pm18')) return 'Daisy Soft PM18';
+  if (l.includes('rpmo')) return 'RPMO';
+  if (l.includes('rpko')) return 'RPKO';
+  if (l.includes('rpkl')) return 'RPKL';
+  if (l.includes('pfad')) return 'PFAD';
+  if (l.includes('rbdpo') || l.includes('palm oil')) return 'RBD Palm Oil';
+  if (l.includes('rbdpol') || l.includes('palm olein')) return 'RBD Palm Olein';
+  if (l.includes('rbdps') || l.includes('palm stearin')) return 'RBD Palm Stearin';
+  return trimmed;
+}
+
+// Month-to-date historical baseline prior to active shift session
+const BASELINE_REASONS: Record<string, number> = {
+  'Colour out of spec': 11,
+  'FFA above spec': 8,
+  'Off odour': 4,
+  'SMP out of range': 3,
+  'Moisture above limit': 2,
+  'Soap content high': 1,
+};
+
+const BASELINE_PRODUCTS: Record<string, { lots: number; rejects: number }> = {
+  'PL 65 Matsuyama': { lots: 45, rejects: 5 },
+  'Chocohi 357A': { lots: 21, rejects: 4 },
+  'Naturel WOS': { lots: 35, rejects: 3 },
+  'Daisy Soft PM18': { lots: 18, rejects: 2 },
+  'RPMO': { lots: 30, rejects: 1 },
+};
+
 export default function AnalyticsTrendsView() {
-  const sheet = getActiveProcessSheet();
-  const reports = getSampleReports();
+  const [sheet, setSheet] = useState<ProcessSheet>(() => getActiveProcessSheet());
+  const [reports, setReports] = useState<SampleReport[]>(() => getSampleReports());
+
+  // Listen for live QC lab updates (RF-FR-001)
+  useEffect(() => {
+    const handleUpdate = () => {
+      setReports(getSampleReports());
+      setSheet(getActiveProcessSheet());
+    };
+
+    window.addEventListener('refinery_reports_updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener('refinery_reports_updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
+  }, []);
 
   // Selected parameter view
   const [activeMetric, setActiveMetric] = useState<'trays' | 'vacuum' | 'steam'>('trays');
@@ -38,24 +114,77 @@ export default function AnalyticsTrendsView() {
     ejectorPress: entry.ejector_press_bar,
   }));
 
-  // Build Pareto defect reasons data
-  const paretoData = [
-    { reason: 'Colour out of spec', count: 12, cumulative: 40 },
-    { reason: 'FFA above spec', count: 8, cumulative: 67 },
-    { reason: 'Off odour', count: 4, cumulative: 80 },
-    { reason: 'SMP out of range', count: 3, cumulative: 90 },
-    { reason: 'Moisture above limit', count: 2, cumulative: 97 },
-    { reason: 'Soap content high', count: 1, cumulative: 100 },
-  ];
+  // Build Pareto defect reasons data dynamically synced with RF-FR-001 QC Lab reports
+  const paretoData = useMemo(() => {
+    const reasonsMap: Record<string, number> = { ...BASELINE_REASONS };
+    const allReasons = getRejectionReasons();
 
-  // Rejection by product
-  const productRejections = [
-    { product: 'PL 65 Matsuyama', rejects: 6, lots: 48 },
-    { product: 'Chocohi 357A', rejects: 4, lots: 22 },
-    { product: 'Naturel WOS', rejects: 3, lots: 35 },
-    { product: 'Daisy Soft PM18', rejects: 2, lots: 18 },
-    { product: 'RPMO', rejects: 1, lots: 30 },
-  ];
+    // Iterate through all live reports from RF-FR-001 QC Lab
+    reports.forEach(report => {
+      if (report.decision?.decision === 'reject') {
+        const reasonObj = allReasons.find(r => r.id === report.decision?.reason_id);
+        const rawLabel = report.decision.reason_label || reasonObj?.label || 'Other Defect';
+        const category = getReasonCategory(rawLabel);
+        reasonsMap[category] = (reasonsMap[category] || 0) + 1;
+      }
+    });
+
+    // Convert to sorted array
+    const sorted = Object.entries(reasonsMap)
+      .filter(([_, count]) => count > 0)
+      .map(([reason, count]) => ({ reason, count }))
+      .sort((a, b) => b.count - a.count);
+
+    const total = sorted.reduce((sum, item) => sum + item.count, 0);
+    let running = 0;
+
+    return sorted.map(item => {
+      running += item.count;
+      return {
+        reason: item.reason,
+        count: item.count,
+        cumulative: total > 0 ? Math.round((running / total) * 100) : 0,
+      };
+    });
+  }, [reports]);
+
+  // Build Lot Rejection Frequency by Product dynamically synced with RF-FR-001 QC Lab reports
+  const productRejections = useMemo(() => {
+    const prodMap: Record<string, { lots: number; rejects: number }> = {};
+    Object.entries(BASELINE_PRODUCTS).forEach(([prod, data]) => {
+      prodMap[prod] = { ...data };
+    });
+
+    reports.forEach(report => {
+      const prod = getProductCategory(report.product_name);
+      if (!prodMap[prod]) {
+        prodMap[prod] = { lots: 0, rejects: 0 };
+      }
+      prodMap[prod].lots += 1;
+      if (report.decision?.decision === 'reject') {
+        prodMap[prod].rejects += 1;
+      }
+    });
+
+    return Object.entries(prodMap)
+      .map(([product, data]) => ({
+        product,
+        lots: data.lots,
+        rejects: data.rejects,
+      }))
+      .sort((a, b) => b.rejects - a.rejects);
+  }, [reports]);
+
+  // Statistical summaries for key insight callouts
+  const totalParetoRejections = useMemo(
+    () => paretoData.reduce((sum, p) => sum + p.count, 0),
+    [paretoData]
+  );
+  const topReasons = useMemo(() => paretoData.slice(0, 2), [paretoData]);
+  const highestRejectProduct = useMemo(
+    () => (productRejections.length > 0 ? productRejections[0] : null),
+    [productRejections]
+  );
 
   return (
     <div className="space-y-6">
@@ -177,9 +306,15 @@ export default function AnalyticsTrendsView() {
               <AlertOctagon className="h-4 w-4 text-[#EF4444]" />
               <span>Monthly QC Rejection Pareto (Reason Codes)</span>
             </div>
-            <span className="text-[11px] font-mono text-slate-400">
-              80/20 Rule Analysis
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1 rounded bg-[#10B981]/10 px-2 py-0.5 text-[10px] font-mono text-[#10B981] border border-[#10B981]/30">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#10B981] animate-pulse" />
+                SYNCED: RF-FR-001
+              </span>
+              <span className="text-[11px] font-mono text-slate-400 hidden sm:inline">
+                80/20 Rule Analysis
+              </span>
+            </div>
           </div>
 
           <div className="h-64 w-full">
@@ -205,7 +340,15 @@ export default function AnalyticsTrendsView() {
           </div>
 
           <div className="mt-3 text-xs text-slate-300 bg-[#0A1018] p-3 rounded-lg border border-[#1F2E43] font-mono">
-            <strong>Key Insight:</strong> 80% of lot failures stem from <span className="text-[#EF4444] font-semibold">Colour Lovibond drift</span> and <span className="text-[#F59E0B] font-semibold">FFA excursions</span> following vacuum dips.
+            <strong>Key Insight:</strong> 80% of lot failures stem from{' '}
+            <span className="text-[#EF4444] font-semibold">{topReasons[0]?.reason || 'Colour out of spec'}</span>
+            {topReasons.length > 1 && (
+              <>
+                {' and '}
+                <span className="text-[#F59E0B] font-semibold">{topReasons[1]?.reason || 'FFA above spec'}</span>
+              </>
+            )}
+            {' '}following vacuum dips ({totalParetoRejections} total rejection incidents tracked).
           </div>
         </div>
 
@@ -216,9 +359,15 @@ export default function AnalyticsTrendsView() {
               <Layers className="h-4 w-4 text-[#009FE3]" />
               <span>Lot Rejection Frequency by Product</span>
             </div>
-            <span className="text-[11px] font-mono text-slate-400">
-              Volume vs Rejection
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1 rounded bg-[#10B981]/10 px-2 py-0.5 text-[10px] font-mono text-[#10B981] border border-[#10B981]/30">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#10B981] animate-pulse" />
+                SYNCED: RF-FR-001
+              </span>
+              <span className="text-[11px] font-mono text-slate-400 hidden sm:inline">
+                Volume vs Rejection
+              </span>
+            </div>
           </div>
 
           <div className="h-64 w-full">
@@ -238,7 +387,20 @@ export default function AnalyticsTrendsView() {
           </div>
 
           <div className="mt-3 text-xs text-slate-300 bg-[#0A1018] p-3 rounded-lg border border-[#1F2E43] font-mono">
-            <strong>Corrective Target:</strong> Highest attention needed during grade switchovers to <span className="text-[#009FE3] font-semibold">PL 65 Matsuyama</span>.
+            <strong>Corrective Target:</strong> Highest attention needed during grade switchovers to{' '}
+            <span className="text-[#009FE3] font-semibold">
+              {highestRejectProduct?.product || 'PL 65 Matsuyama'}
+            </span>
+            {highestRejectProduct && (
+              <span className="text-slate-400">
+                {' '}({highestRejectProduct.rejects} rejections / {highestRejectProduct.lots} lots ={' '}
+                {highestRejectProduct.lots > 0
+                  ? ((highestRejectProduct.rejects / highestRejectProduct.lots) * 100).toFixed(1)
+                  : '0'}
+                % fail rate)
+              </span>
+            )}
+            .
           </div>
         </div>
       </div>
