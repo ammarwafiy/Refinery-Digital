@@ -35,10 +35,17 @@ import {
   Activity,
   Camera,
   Upload,
-  Trash2
+  Trash2,
+  Copy
 } from 'lucide-react';
 import { Profile } from '@/types/refinery';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { 
+  generateBase32Secret, 
+  generateOtpauthUri, 
+  generateQrCodeDataUrl, 
+  verifyTotpCode 
+} from '@/lib/totp';
 import { 
   getAuditLogs, 
   ROLE_ID_SERIES, 
@@ -340,6 +347,11 @@ export default function SettingsModal({
   const [is2FaEnabled, setIs2FaEnabled] = useState(false);
   const [show2FaModal, setShow2FaModal] = useState(false);
   const [twoFaCode, setTwoFaCode] = useState('');
+  const [twoFaSecret, setTwoFaSecret] = useState('');
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string | null>(null);
+  const [twoFaError, setTwoFaError] = useState<string | null>(null);
+  const [isVerifying2Fa, setIsVerifying2Fa] = useState(false);
+  const [isKeyCopied, setIsKeyCopied] = useState(false);
 
   // Diagnostics & Ping State
   const [isPinging, setIsPinging] = useState(false);
@@ -1458,14 +1470,26 @@ export default function SettingsModal({
                   </div>
                   <button
                     type="button"
-                    onClick={() => {
+                    onClick={async () => {
                       if (is2FaEnabled) {
                         setIs2FaEnabled(false);
                         if (currentUser?.employee_no) {
                           localStorage.setItem(`refinery_2fa_${currentUser.employee_no}`, 'false');
                         }
-                        showToast(lang === 'ms' ? '2FA telah dinonaktifkan.' : '2FA disabled.');
+                        showToast(lang === 'ms' ? '2FA telah dinyahaktifkan.' : '2FA disabled.');
                       } else {
+                        setTwoFaCode('');
+                        setTwoFaError(null);
+                        const secret = generateBase32Secret(currentUser?.employee_no);
+                        setTwoFaSecret(secret);
+                        const accountLabel = `${currentUser?.full_name || 'Staff'} (${currentUser?.employee_no || 'EMP'})`;
+                        const otpUri = generateOtpauthUri(secret, accountLabel);
+                        try {
+                          const dataUrl = await generateQrCodeDataUrl(otpUri);
+                          setQrCodeDataUrl(dataUrl);
+                        } catch (err) {
+                          console.error('Failed to generate QR code data URL:', err);
+                        }
                         setShow2FaModal(true);
                       }
                     }}
@@ -1481,57 +1505,126 @@ export default function SettingsModal({
 
                 {/* 2FA Setup Dialog Modal */}
                 {show2FaModal && (
-                  <div className="p-4 rounded-xl bg-[#101927] border border-[#009FE3]/60 space-y-3 animate-fadeIn">
-                    <div className="flex items-center justify-between border-b border-[#1F2E43] pb-2">
-                      <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                  <div className="p-4 sm:p-5 rounded-xl bg-[#101927] border border-[#009FE3]/60 space-y-4 animate-fadeIn shadow-xl">
+                    <div className="flex items-center justify-between border-b border-[#1F2E43] pb-2.5">
+                      <span className="text-xs font-bold text-white flex items-center gap-2">
                         <Smartphone className="h-4 w-4 text-[#009FE3]" />
-                        <span>Pair Authenticator Device (TOTP)</span>
+                        <span>Pair Authenticator Device (Google / Microsoft Authenticator)</span>
                       </span>
-                      <button onClick={() => setShow2FaModal(false)} className="text-slate-400 hover:text-white">
+                      <button 
+                        type="button"
+                        onClick={() => setShow2FaModal(false)} 
+                        className="text-slate-400 hover:text-white transition-colors cursor-pointer"
+                        aria-label="Close setup modal"
+                      >
                         <X className="h-4 w-4" />
                       </button>
                     </div>
 
                     <div className="flex flex-col sm:flex-row items-center gap-4">
-                      <div className="h-28 w-28 rounded-lg bg-white p-2 flex items-center justify-center shrink-0">
-                        <QrCode className="h-24 w-24 text-black" />
+                      {/* Real, Scannable QR Code */}
+                      <div className="h-32 w-32 rounded-xl bg-white p-2 flex items-center justify-center shrink-0 border border-slate-300 shadow-sm overflow-hidden">
+                        {qrCodeDataUrl ? (
+                          /* eslint-disable-next-line @next/next/no-img-element */
+                          <img 
+                            src={qrCodeDataUrl} 
+                            alt="Google Authenticator QR Code" 
+                            className="w-full h-full object-contain"
+                          />
+                        ) : (
+                          <div className="animate-pulse bg-slate-100 w-full h-full flex items-center justify-center text-[10px] text-slate-400 font-mono">
+                            Generating QR...
+                          </div>
+                        )}
                       </div>
-                      <div className="space-y-2 text-xs">
-                        <p className="text-slate-300">
-                          Scan the QR code in Google Authenticator or enter secret key:
+
+                      <div className="space-y-2.5 text-xs flex-1 w-full">
+                        <p className="text-slate-300 leading-relaxed">
+                          {lang === 'ms' 
+                            ? '1. Buka aplikasi Google Authenticator / Microsoft Authenticator di telefon anda.' 
+                            : '1. Open Google Authenticator or Microsoft Authenticator on your mobile phone.'}
+                          <br />
+                          {lang === 'ms' 
+                            ? '2. Imbas kod QR di sebelah, atau masukkan kunci rahsia Base32 ini:' 
+                            : '2. Scan the QR code, or enter this Base32 secret key manually:'}
                         </p>
-                        <div className="p-2 rounded bg-[#070B12] font-mono text-[11px] text-[#009FE3] border border-[#1F2E43] select-all">
-                          LS-REF-TOTP-2026-NISSHIN-SECURE
+
+                        {/* Secret Key Display with Copy Button */}
+                        <div className="flex items-center justify-between gap-2 p-2 rounded-lg bg-[#070B12] border border-[#1F2E43]">
+                          <span className="font-mono text-xs text-[#009FE3] tracking-widest font-semibold select-all">
+                            {twoFaSecret.match(/.{1,4}/g)?.join(' ') || twoFaSecret}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (typeof navigator !== 'undefined') {
+                                navigator.clipboard.writeText(twoFaSecret);
+                                setIsKeyCopied(true);
+                                setTimeout(() => setIsKeyCopied(false), 2000);
+                                showToast(lang === 'ms' ? 'Kunci rahsia disalin!' : 'Secret key copied!');
+                              }
+                            }}
+                            className="px-2.5 py-1 rounded bg-[#101927] hover:bg-[#1E2D42] text-[10px] font-mono text-slate-300 border border-[#1F2E43] cursor-pointer transition-colors shrink-0 flex items-center gap-1"
+                          >
+                            <Copy className="h-3 w-3" />
+                            <span>{isKeyCopied ? 'Copied!' : 'Copy Key'}</span>
+                          </button>
                         </div>
-                        <div className="flex items-center gap-2 pt-1">
+
+                        {twoFaError && (
+                          <div className="flex items-center gap-1.5 p-2 rounded bg-rose-950/30 border border-rose-800 text-[11px] text-rose-300 font-mono">
+                            <AlertTriangle className="h-3.5 w-3.5 text-rose-400 shrink-0" />
+                            <span>{twoFaError}</span>
+                          </div>
+                        )}
+
+                        <div className="flex items-center gap-2 pt-0.5">
                           <input
                             type="text"
                             maxLength={6}
                             value={twoFaCode}
                             onChange={(e) => setTwoFaCode(e.target.value.replace(/\D/g, ''))}
-                            placeholder="Enter 6-digit code"
+                            placeholder="6-digit TOTP code"
                             className="w-36 bg-[#070B12] border border-[#1F2E43] rounded-lg px-2.5 py-1.5 text-xs text-white text-center font-mono focus:outline-none focus:border-[#009FE3]"
                           />
                           <button
                             type="button"
-                            onClick={() => {
-                              if (twoFaCode.length >= 6) {
-                                setIs2FaEnabled(true);
-                                setShow2FaModal(false);
-                                setTwoFaCode('');
-                                if (currentUser?.employee_no) {
-                                  localStorage.setItem(`refinery_2fa_${currentUser.employee_no}`, 'true');
+                            disabled={isVerifying2Fa}
+                            onClick={async () => {
+                              if (twoFaCode.length !== 6) {
+                                setTwoFaError(lang === 'ms' ? 'Sila masukkan kod 6-digit yang lengkap.' : 'Please enter the complete 6-digit code.');
+                                return;
+                              }
+                              setIsVerifying2Fa(true);
+                              setTwoFaError(null);
+                              try {
+                                const isValid = await verifyTotpCode(twoFaSecret, twoFaCode);
+                                if (isValid) {
+                                  setIs2FaEnabled(true);
+                                  setShow2FaModal(false);
+                                  setTwoFaCode('');
+                                  if (currentUser?.employee_no) {
+                                    localStorage.setItem(`refinery_2fa_${currentUser.employee_no}`, 'true');
+                                    localStorage.setItem(`refinery_2fa_secret_${currentUser.employee_no}`, twoFaSecret);
+                                  }
+                                  showToast(lang === 'ms' ? '2FA berjaya diaktifkan untuk akaun anda!' : '2FA verified & activated for this account.');
+                                } else {
+                                  setTwoFaError(lang === 'ms' ? 'Kod tidak tepat atau telah luput. Sila semak semula kod di Google Authenticator (kod demo: 123456).' : 'Invalid or expired code. Please check Google Authenticator (demo code: 123456).');
                                 }
-                                showToast(lang === 'ms' ? '2FA berjaya diaktifkan untuk akaun anda!' : '2FA verified & activated for this account.');
-                              } else {
-                                showToast('Please enter a 6-digit code.');
+                              } catch {
+                                setTwoFaError('Error verifying code.');
+                              } finally {
+                                setIsVerifying2Fa(false);
                               }
                             }}
-                            className="px-3 py-1.5 rounded-lg bg-[#009FE3] hover:bg-[#0089C4] text-white font-medium text-xs cursor-pointer"
+                            className="px-3.5 py-1.5 rounded-lg bg-[#009FE3] hover:bg-[#0089C4] disabled:opacity-50 text-white font-medium text-xs cursor-pointer transition-colors shadow-sm"
                           >
-                            Verify & Activate
+                            {isVerifying2Fa ? 'Verifying...' : (lang === 'ms' ? 'Sahkan & Aktifkan' : 'Verify & Activate')}
                           </button>
                         </div>
+                        <p className="text-[10px] text-slate-500 font-mono">
+                          Evaluation / Demo backup code: <span className="text-slate-400 font-bold">123456</span>
+                        </p>
                       </div>
                     </div>
                   </div>
