@@ -154,46 +154,339 @@ body {
   }
 }
 
-/* High-Visibility Daylight Theme (Daylight Control Room) */
+/* ========================================================================= */
+/* HIGH-CONTRAST INDUSTRIAL DAYLIGHT THEME (Daylight SCADA Control Room)     */
+/* ========================================================================= */
+
+/* 1. Global Canvas & Typography */
 html.light-theme,
 html.light-theme body {
-  background-color: #F8FAFC !important;
+  background-color: #F1F5F9 !important; /* Industrial slate-100 neutral ground */
+  color: #0F172A !important;           /* Deep slate-900 high-legibility text */
+}
+
+/* 2. Top-level Root Containers */
+html.light-theme .min-h-screen {
+  background-color: #F1F5F9 !important;
   color: #0F172A !important;
 }
 
+/* 3. Header, Sidebar & Navigation Bars */
 html.light-theme aside,
 html.light-theme header,
 html.light-theme nav {
   background-color: #FFFFFF !important;
-  border-color: #CBD5E1 !important;
+  border-color: #E2E8F0 !important;
+  color: #0F172A !important;
 }
 
-html.light-theme .bg-\[\#070B12\],
-html.light-theme .bg-\[\#080E18\],
-html.light-theme .bg-\[\#0A1018\],
-html.light-theme .bg-\[\#0C1523\],
-html.light-theme .bg-\[\#101927\],
-html.light-theme .bg-\[\#121D2C\],
-html.light-theme .bg-\[\#172235\] {
+/* Dynamic Page Subheader / Breadcrumbs Banner (handles arbitrary opacity bg-[#070B12]/80) */
+html.light-theme [class*="bg-[#070B12]"] {
   background-color: #FFFFFF !important;
+  border-color: #E2E8F0 !important;
   color: #0F172A !important;
+}
+
+/* 4. Primary Cards & Workstation Containers (bg-[#101927], bg-[#121D2C]) */
+html.light-theme [class*="bg-[#101927]"],
+html.light-theme [class*="bg-[#121D2C]"],
+html.light-theme .industrial-panel {
+  background-color: #FFFFFF !important;
+  border-color: #E2E8F0 !important;
+  color: #0F172A !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* 5. Inner Section Panels, Wells & Parameter Boxes (bg-[#131E2D], bg-[#152338], bg-[#172235], bg-[#18263A], bg-[#1E2D42]) */
+html.light-theme [class*="bg-[#131E2D]"],
+html.light-theme [class*="bg-[#152338]"],
+html.light-theme [class*="bg-[#172235]"],
+html.light-theme [class*="bg-[#18263A]"],
+html.light-theme [class*="bg-[#1E2D42]"],
+html.light-theme [class*="bg-[#2A3E59]"],
+html.light-theme [class*="bg-[#2A3E5B]"],
+html.light-theme .industrial-card,
+html.light-theme .industrial-well {
+  background-color: #F8FAFC !important; /* Soft recessed slate-50 well */
+  border-color: #E2E8F0 !important;
+  color: #0F172A !important;
+}
+
+/* 6. Form Wells, Stat Tiles & Search Bars (bg-[#0A1018], bg-[#0C1523], bg-[#080E18], bg-[#060A10], bg-[#142032]) */
+html.light-theme [class*="bg-[#0A1018]"],
+html.light-theme [class*="bg-[#0C1523]"],
+html.light-theme [class*="bg-[#080E18]"],
+html.light-theme [class*="bg-[#060A10]"],
+html.light-theme [class*="bg-[#142032]"],
+html.light-theme [class*="bg-[#1A283C]"] {
+  background-color: #FFFFFF !important;
+  border-color: #E2E8F0 !important;
+  color: #0F172A !important;
+}
+
+/* 7. Sidebar Plant Overlay & Shift Card Blend */
+html.light-theme aside [class*="bg-[#070F1C]"] {
+  background-color: rgba(255, 255, 255, 0.94) !important;
+  border-color: #E2E8F0 !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08) !important;
+}
+html.light-theme aside [class*="bg-[#070F1C]"] * {
+  color: #0F172A !important;
+}
+html.light-theme aside [class*="from-[#080E18]"] {
+  --tw-gradient-from: rgba(255, 255, 255, 0.85) !important;
+}
+html.light-theme aside [class*="to-[#080E18]"] {
+  --tw-gradient-to: #FFFFFF !important;
+}
+
+/* 8. Comprehensive Border Smoothing */
+html.light-theme [class*="border-[#1F2E43]"],
+html.light-theme [class*="border-[#2D415E]"],
+html.light-theme [class*="border-[#142032]"],
+html.light-theme [class*="border-[#101927]"],
+html.light-theme [class*="border-[#152338]"],
+html.light-theme [class*="border-[#172235]"],
+html.light-theme [class*="border-[#263A52]"] {
   border-color: #E2E8F0 !important;
 }
 
-html.light-theme .text-slate-400,
-html.light-theme .text-slate-500 {
+/* 9. Input, Select, Textarea & Form Controls */
+html.light-theme input:not([type="checkbox"]):not([type="radio"]),
+html.light-theme select,
+html.light-theme textarea,
+html.light-theme .industrial-input {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+  border-color: #CBD5E1 !important;
+}
+html.light-theme input:focus,
+html.light-theme select:focus,
+html.light-theme textarea:focus,
+html.light-theme .industrial-input:focus {
+  border-color: #009FE3 !important;
+  box-shadow: 0 0 0 2px rgba(0, 159, 227, 0.15) !important;
+}
+html.light-theme input:disabled,
+html.light-theme select:disabled,
+html.light-theme textarea:disabled,
+html.light-theme .industrial-input:disabled {
+  background-color: #F8FAFC !important;
+  color: #94A3B8 !important;
+  border-color: #E2E8F0 !important;
+}
+html.light-theme input::placeholder,
+html.light-theme textarea::placeholder {
+  color: #94A3B8 !important;
+}
+html.light-theme option {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+}
+
+/* 10. General Text Contrast Mappings */
+html.light-theme h1,
+html.light-theme h2,
+html.light-theme h3,
+html.light-theme h4,
+html.light-theme h5,
+html.light-theme h6 {
+  color: #0F172A !important;
+}
+
+html.light-theme [class*="text-slate-100"],
+html.light-theme [class*="text-slate-200"],
+html.light-theme [class*="text-slate-300"] {
+  color: #1E293B !important;
+}
+
+html.light-theme [class*="text-slate-400"] {
+  color: #475569 !important;
+}
+
+html.light-theme [class*="text-slate-500"] {
   color: #64748B !important;
 }
 
-html.light-theme .text-slate-200,
-html.light-theme .text-slate-100,
+html.light-theme [class*="text-slate-600"] {
+  color: #64748B !important;
+}
+
+/* Non-button/non-badge text-white becomes dark slate */
 html.light-theme .text-white {
   color: #0F172A !important;
 }
 
-html.light-theme input,
-html.light-theme select {
-  background-color: #F1F5F9 !important;
-  color: #0F172A !important;
-  border-color: #CBD5E1 !important;
+/* 11. CRITICAL: Colored Action Buttons & Active Navigation MUST KEEP CRISP WHITE TEXT */
+html.light-theme button[class*="bg-emerald"],
+html.light-theme button[class*="bg-amber"],
+html.light-theme button[class*="bg-red"],
+html.light-theme button[class*="bg-blue"],
+html.light-theme button[class*="bg-[#009FE3]"],
+html.light-theme button[class*="bg-[#0089C4]"],
+html.light-theme button[class*="bg-[#08B5F5]"],
+html.light-theme button[class*="bg-[#1D8CF8]"],
+html.light-theme button[class*="bg-[#10B981]"],
+html.light-theme button[class*="bg-[#F59E0B]"],
+html.light-theme button[class*="bg-[#EF4444]"],
+html.light-theme [class*="bg-emerald-600"],
+html.light-theme [class*="bg-emerald-500"],
+html.light-theme [class*="bg-amber-600"],
+html.light-theme [class*="bg-amber-500"],
+html.light-theme [class*="bg-red-600"],
+html.light-theme [class*="bg-red-500"],
+html.light-theme [class*="bg-blue-600"],
+html.light-theme [class*="bg-blue-500"],
+html.light-theme [class*="bg-[#009FE3]"].text-white,
+html.light-theme [class*="bg-[#1D8CF8]"].text-white {
+  color: #FFFFFF !important;
 }
+
+/* Child elements inside colored action buttons */
+html.light-theme button[class*="bg-emerald"] *,
+html.light-theme button[class*="bg-amber"] *,
+html.light-theme button[class*="bg-red"] *,
+html.light-theme button[class*="bg-blue"] *,
+html.light-theme button[class*="bg-[#009FE3]"] *,
+html.light-theme button[class*="bg-[#0089C4]"] *,
+html.light-theme button[class*="bg-[#08B5F5]"] *,
+html.light-theme button[class*="bg-[#1D8CF8]"] *,
+html.light-theme button[class*="bg-[#10B981]"] *,
+html.light-theme button[class*="bg-[#F59E0B]"] *,
+html.light-theme button[class*="bg-[#EF4444]"] *,
+html.light-theme [class*="bg-emerald-600"] > *,
+html.light-theme [class*="bg-amber-600"] > *,
+html.light-theme [class*="bg-red-600"] > *,
+html.light-theme [class*="bg-[#009FE3]"] > *,
+html.light-theme [class*="bg-[#1D8CF8]"] > * {
+  color: #FFFFFF !important;
+}
+
+/* Selected Timeline Slot badge inside button */
+html.light-theme button[class*="bg-[#009FE3]"] .bg-\[\#101927\] {
+  background-color: #FFFFFF !important;
+  color: #009FE3 !important;
+  font-weight: 700 !important;
+}
+
+/* Active navigation badge (e.g. 24-Hour pill in sidebar) */
+html.light-theme nav button[class*="bg-[#1D8CF8]"] span[class*="bg-black"] {
+  background-color: rgba(255, 255, 255, 0.25) !important;
+  color: #FFFFFF !important;
+}
+
+/* 12. Soft Alert & Status Pill Badges (High Contrast Daylight SCADA) */
+html.light-theme [class*="bg-[#009FE3]/10"],
+html.light-theme [class*="bg-[#009FE3]/15"] {
+  background-color: #E0F2FE !important;
+  border-color: #BAE6FD !important;
+  color: #0284C7 !important;
+}
+html.light-theme [class*="bg-[#009FE3]/10"] *,
+html.light-theme [class*="bg-[#009FE3]/15"] * {
+  color: #0284C7 !important;
+}
+
+html.light-theme [class*="bg-[#10B981]/10"],
+html.light-theme [class*="bg-[#10B981]/15"] {
+  background-color: #ECFDF5 !important;
+  border-color: #A7F3D0 !important;
+  color: #047857 !important;
+}
+html.light-theme [class*="bg-[#10B981]/10"] *,
+html.light-theme [class*="bg-[#10B981]/15"] * {
+  color: #047857 !important;
+}
+
+html.light-theme [class*="bg-[#F59E0B]/10"],
+html.light-theme [class*="bg-[#F59E0B]/15"] {
+  background-color: #FFFBEB !important;
+  border-color: #FDE68A !important;
+  color: #B45309 !important;
+}
+html.light-theme [class*="bg-[#F59E0B]/10"] *,
+html.light-theme [class*="bg-[#F59E0B]/15"] * {
+  color: #B45309 !important;
+}
+
+html.light-theme [class*="bg-[#EF4444]/10"],
+html.light-theme [class*="bg-[#EF4444]/15"] {
+  background-color: #FEF2F2 !important;
+  border-color: #FECACA !important;
+  color: #DC2626 !important;
+}
+html.light-theme [class*="bg-[#EF4444]/10"] *,
+html.light-theme [class*="bg-[#EF4444]/15"] * {
+  color: #DC2626 !important;
+}
+
+/* 13. Deep Brand & Status Accent Text for Daylight Mode (Preventing washed-out cyan/green) */
+html.light-theme [class*="text-[#009FE3]"],
+html.light-theme [class*="text-[#08B5F5]"],
+html.light-theme [class*="text-[#1D8CF8]"] {
+  color: #0284C7 !important;
+}
+
+html.light-theme [class*="text-[#10B981]"],
+html.light-theme [class*="text-[#10b981]"],
+html.light-theme [class*="text-emerald-300"],
+html.light-theme [class*="text-emerald-400"] {
+  color: #047857 !important;
+}
+
+html.light-theme [class*="text-[#F59E0B]"],
+html.light-theme [class*="text-[#f59e0b]"],
+html.light-theme [class*="text-amber-300"],
+html.light-theme [class*="text-amber-400"] {
+  color: #B45309 !important;
+}
+
+html.light-theme [class*="text-[#EF4444]"],
+html.light-theme [class*="text-red-300"],
+html.light-theme [class*="text-red-400"] {
+  color: #DC2626 !important;
+}
+
+/* Re-assert white text for colored buttons (overriding text-[#009FE3] if nested) */
+html.light-theme button[class*="bg-emerald"] *,
+html.light-theme button[class*="bg-amber"] *,
+html.light-theme button[class*="bg-red"] *,
+html.light-theme button[class*="bg-blue"] *,
+html.light-theme button[class*="bg-[#009FE3]"] *,
+html.light-theme button[class*="bg-[#1D8CF8]"] * {
+  color: #FFFFFF !important;
+}
+
+/* 14. Modals & Overlays */
+html.light-theme [role="dialog"],
+html.light-theme .shadow-2xl {
+  background-color: #FFFFFF !important;
+  border-color: #CBD5E1 !important;
+  color: #0F172A !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Modal backdrop dimming (semi-transparent slate overlay) */
+html.light-theme [class*="bg-black/"],
+html.light-theme [class*="bg-black/70"],
+html.light-theme [class*="bg-black/80"] {
+  background-color: rgba(15, 23, 42, 0.45) !important;
+}
+
+/* 15. Header Divider Bars & Scrollbars */
+html.light-theme span[class*="text-[#1F2E43]"] {
+  color: #CBD5E1 !important;
+}
+
+html.light-theme ::-webkit-scrollbar-track {
+  background: #F1F5F9;
+}
+
+html.light-theme ::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+}
+
+html.light-theme ::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
