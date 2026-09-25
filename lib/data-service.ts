@@ -88,7 +88,7 @@ export function makeDeviationUuid(seed?: number | string): string {
   return `90000000-0000-0000-0000-${hexNum}`;
 }
 
-const STORAGE_KEYS = {
+export const STORAGE_KEYS = {
   AUTH_USER: 'refinery_auth_user',
   CURRENT_ROLE: 'refinery_current_role',
   PROFILES: 'refinery_staff_profiles',
@@ -112,7 +112,7 @@ let memoryDeviations: Deviation[] = JSON.parse(JSON.stringify(INITIAL_DEVIATIONS
 let memoryAuditLogs: AuditLogEntry[] = JSON.parse(JSON.stringify(INITIAL_AUDIT_LOGS));
 
 // Helpers to sync with browser storage if available
-function getStored<T>(key: string, defaultVal: T): T {
+export function getStored<T>(key: string, defaultVal: T): T {
   if (typeof window === 'undefined') return defaultVal;
   try {
     const item = localStorage.getItem(key);
@@ -122,7 +122,7 @@ function getStored<T>(key: string, defaultVal: T): T {
   }
 }
 
-function setStored<T>(key: string, val: T): void {
+export function setStored<T>(key: string, val: T): void {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(key, JSON.stringify(val));

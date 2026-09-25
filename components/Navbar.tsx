@@ -54,30 +54,61 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
       setProfile(getCurrentProfile());
     }
 
+    const getSystemSettings = () => {
+      if (typeof window === 'undefined') return { timeFormat: '24h', dateFormat: 'DD/MM/YYYY', theme: 'dark', language: 'en' };
+      try {
+        const stored = localStorage.getItem('refinery_system_settings');
+        if (stored) return JSON.parse(stored);
+      } catch {}
+      return { timeFormat: '24h', dateFormat: 'DD/MM/YYYY', theme: 'dark', language: 'en' };
+    };
+
+    const applyTheme = (theme: string) => {
+      if (typeof document === 'undefined') return;
+      if (theme === 'light') {
+        document.documentElement.classList.add('light-theme');
+        document.documentElement.classList.remove('dark');
+      } else {
+        document.documentElement.classList.remove('light-theme');
+        document.documentElement.classList.add('dark');
+      }
+    };
+
     const updateClock = () => {
       const now = new Date();
-      setTimeString(
-        now.toLocaleTimeString('en-GB', {
-          timeZone: 'Asia/Kuala_Lumpur',
-          hour12: false,
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-        }) + ' MYT'
-      );
+      const settings = getSystemSettings();
+      const is12h = settings.timeFormat === '12h';
 
-      const datePart = now.toLocaleDateString('en-GB', {
+      // 1. Time display
+      const timePart = now.toLocaleTimeString(settings.language === 'ms' ? 'ms-MY' : 'en-GB', {
         timeZone: 'Asia/Kuala_Lumpur',
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-      });
-      const timePart = now.toLocaleTimeString('en-GB', {
-        timeZone: 'Asia/Kuala_Lumpur',
-        hour12: false,
+        hour12: is12h,
         hour: '2-digit',
         minute: '2-digit',
+        second: is12h ? undefined : '2-digit',
       });
+      setTimeString(`${timePart} MYT`);
+
+      // 2. Date display according to chosen format
+      let datePart = '';
+      if (settings.dateFormat === 'YYYY-MM-DD') {
+        const y = now.getFullYear();
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const d = String(now.getDate()).padStart(2, '0');
+        datePart = `${y}-${m}-${d}`;
+      } else if (settings.dateFormat === 'DD MMM YYYY') {
+        datePart = now.toLocaleDateString('en-GB', {
+          timeZone: 'Asia/Kuala_Lumpur',
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
+        });
+      } else {
+        const d = String(now.getDate()).padStart(2, '0');
+        const m = String(now.getMonth() + 1).padStart(2, '0');
+        const y = now.getFullYear();
+        datePart = `${d}/${m}/${y}`;
+      }
       setFormattedDateTime(`${datePart} ${timePart}`);
 
       // Shift Calculation based on Malaysia local hour
@@ -102,9 +133,20 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
       }
     };
 
+    applyTheme(getSystemSettings().theme);
     updateClock();
     const timer = setInterval(updateClock, 1000);
-    return () => clearInterval(timer);
+
+    const handleSettingsUpdate = () => {
+      applyTheme(getSystemSettings().theme);
+      updateClock();
+    };
+    window.addEventListener('refinery_settings_updated', handleSettingsUpdate);
+
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener('refinery_settings_updated', handleSettingsUpdate);
+    };
   }, [currentUser]);
 
   const navItems = [
