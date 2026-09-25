@@ -25,6 +25,7 @@ import {
   getCurrentProfile,
   ROLE_ALLOWED_TABS
 } from '@/lib/data-service';
+import SettingsModal from '@/components/SettingsModal';
 
 interface NavbarProps {
   activeTab: string;
@@ -42,6 +43,7 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
   const [currentShiftName, setCurrentShiftName] = useState<string>('SHIFT B');
   const [currentShiftHours, setCurrentShiftHours] = useState<string>('14:00 – 22:00');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
 
   useEffect(() => {
     if (currentUser) {
@@ -296,7 +298,16 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
           {/* Auxiliary Menu Items */}
           <div className="space-y-1">
             <div
-              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-slate-200 hover:bg-[#121D2C] cursor-pointer transition-colors"
+              role="button"
+              tabIndex={0}
+              onClick={() => setIsSettingsOpen(true)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setIsSettingsOpen(true);
+                }
+              }}
+              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-slate-200 hover:bg-[#121D2C] cursor-pointer transition-colors select-none focus:outline-none focus:ring-1 focus:ring-[#009FE3]"
               title="System Settings"
             >
               <Settings className="h-4 w-4 text-slate-400" />
@@ -536,6 +547,29 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
             </div>
           )}
 
+          {/* System Settings for Mobile */}
+          <div className="pt-2 border-t border-[#1F2E43]">
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                setIsSettingsOpen(true);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setIsMobileMenuOpen(false);
+                  setIsSettingsOpen(true);
+                }
+              }}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-medium text-slate-200 bg-[#172235] border border-[#1F2E43] hover:bg-[#1E2D42] transition-colors cursor-pointer select-none"
+            >
+              <Settings className="h-4 w-4 text-[#009FE3]" />
+              <span>System Settings</span>
+            </div>
+          </div>
+
           {/* Mobile Refinery Image Seamless Blend */}
           <div className="relative rounded-lg overflow-hidden h-24 mt-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -623,6 +657,19 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
           </span>
         </button>
       </nav>
+
+      {/* Industrial System Settings Modal */}
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        currentUser={profile}
+        onProfileUpdate={(updated) => {
+          setProfile(updated);
+          if (onRoleChange) {
+            onRoleChange(updated);
+          }
+        }}
+      />
     </>
   );
 }
