@@ -220,6 +220,18 @@ export default function SettingsModal({
     }
   };
 
+  // Keyboard Escape listener to close modal
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   const navTabs: { id: SettingsTab; label: string; icon: React.ElementType; badge?: string }[] = [
     { id: 'profile', label: 'Operator Profile', icon: User },
     { id: 'preferences', label: 'System Preferences', icon: Sliders },
@@ -230,12 +242,26 @@ export default function SettingsModal({
   ];
 
   const roleMeta = currentUser?.role ? ROLE_ID_SERIES[currentUser.role] : null;
+  const modalInitials = (currentUser?.full_name || 'OP')
+    .split(' ')
+    .map(n => (n ? n[0] : ''))
+    .filter(Boolean)
+    .slice(0, 2)
+    .join('')
+    .toUpperCase() || 'OP';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/80 backdrop-blur-sm animate-fadeIn">
+    <div 
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-5 bg-black/85 backdrop-blur-sm animate-fadeIn"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-6 right-6 z-60 flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-[#101927] border border-[#009FE3]/50 text-slate-100 text-xs shadow-2xl shadow-black/80 animate-slideDown">
+        <div className="fixed top-6 right-6 z-[10000] flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-[#101927] border border-[#009FE3]/50 text-slate-100 text-xs shadow-2xl shadow-black/80 animate-slideDown">
           <CheckCircle2 className="h-4 w-4 text-[#10B981] shrink-0" />
           <span>{toastMessage}</span>
         </div>
@@ -322,12 +348,7 @@ export default function SettingsModal({
 
                 <div className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-xl bg-[#101927] border border-[#1F2E43]">
                   <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-[#009FE3] to-blue-700 flex items-center justify-center text-white font-bold text-xl shadow-lg font-mono border-2 border-slate-600/40 shrink-0">
-                    {(currentUser?.full_name || 'OP')
-                      .split(' ')
-                      .map(n => n[0])
-                      .slice(0, 2)
-                      .join('')
-                      .toUpperCase()}
+                    {modalInitials}
                   </div>
                   <div className="space-y-1 text-center sm:text-left min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start">

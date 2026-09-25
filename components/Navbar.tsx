@@ -191,6 +191,17 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
               {roleBadgeLabel}
             </span>
 
+            {/* Quick Settings Icon in Mobile Topbar */}
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => setIsSettingsOpen(true)}
+              className="flex items-center justify-center h-8 w-8 rounded-lg bg-[#101927] border border-[#1F2E43] text-slate-300 hover:text-white hover:border-[#009FE3]/50 transition-colors cursor-pointer select-none"
+              title="System Settings"
+            >
+              <Settings className="h-4 w-4 text-[#009FE3]" />
+            </div>
+
             {/* Mobile Hamburger Menu Toggle Button (Button #0) */}
             <button
               type="button"
@@ -296,25 +307,33 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
           </div>
 
           {/* Auxiliary Menu Items */}
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             <div
               role="button"
               tabIndex={0}
-              onClick={() => setIsSettingsOpen(true)}
+              onClick={() => {
+                console.log('Sidebar Settings clicked');
+                setIsSettingsOpen(true);
+              }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault();
                   setIsSettingsOpen(true);
                 }
               }}
-              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-slate-200 hover:bg-[#121D2C] cursor-pointer transition-colors select-none focus:outline-none focus:ring-1 focus:ring-[#009FE3]"
-              title="System Settings"
+              className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-medium text-slate-200 bg-[#101927] border border-[#1F2E43] hover:border-[#009FE3]/70 hover:bg-[#152338] hover:text-white cursor-pointer transition-all select-none active:scale-[0.98] shadow-xs focus:outline-none focus:ring-1 focus:ring-[#009FE3]"
+              title="Refinery System Settings & Preferences"
             >
-              <Settings className="h-4 w-4 text-slate-400" />
-              <span>Settings</span>
+              <div className="flex items-center gap-2.5">
+                <Settings className="h-4 w-4 text-[#009FE3]" />
+                <span className="font-sans">Settings</span>
+              </div>
+              <span className="text-[9px] px-1.5 py-0.5 rounded font-mono bg-[#1A283C] text-slate-400 border border-[#1F2E43]">
+                v1.0
+              </span>
             </div>
             <div
-              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-slate-200 hover:bg-[#121D2C] cursor-pointer transition-colors"
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-slate-200 hover:bg-[#121D2C] cursor-pointer transition-colors"
               title="Help & Support Documentation"
             >
               <HelpCircle className="h-4 w-4 text-slate-400" />
@@ -425,8 +444,20 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
 
           <span className="text-[#1F2E43]">|</span>
 
-          {/* User Profile Chip */}
-          <div className="flex items-center gap-2.5 pl-1">
+          {/* User Profile Chip (Clickable for Settings) */}
+          <div 
+            role="button"
+            tabIndex={0}
+            onClick={() => setIsSettingsOpen(true)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setIsSettingsOpen(true);
+              }
+            }}
+            className="flex items-center gap-2.5 pl-1 py-1 pr-2 rounded-lg hover:bg-[#121D2C] border border-transparent hover:border-[#1F2E43] cursor-pointer transition-colors select-none"
+            title="Click to view & edit Profile / Settings"
+          >
             <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#1E2D42] to-[#121B29] border border-[#2D415E] flex items-center justify-center font-bold text-xs text-[#009FE3] shadow-sm">
               {userInitials}
             </div>
@@ -438,6 +469,24 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
                 {role === 'operator' ? 'Operator' : role === 'supervisor' ? 'Supervisor' : role.startsWith('qc') ? 'QC Analyst' : role}
               </div>
             </div>
+          </div>
+
+          {/* Quick Header Settings Button */}
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => setIsSettingsOpen(true)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setIsSettingsOpen(true);
+              }
+            }}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium text-slate-300 bg-[#121D2C] border border-[#1F2E43] hover:border-[#009FE3]/60 hover:bg-[#18263A] hover:text-white transition-all cursor-pointer select-none active:scale-95 shadow-xs"
+            title="Open Workstation Settings"
+          >
+            <Settings className="h-3.5 w-3.5 text-[#009FE3]" />
+            <span className="hidden xl:inline">Settings</span>
           </div>
 
           {/* Sign Out Button (Button #3) */}
