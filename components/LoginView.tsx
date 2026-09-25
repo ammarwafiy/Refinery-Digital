@@ -12,7 +12,7 @@ import {
   Cpu
 } from 'lucide-react';
 import { Profile } from '@/types/refinery';
-import { loginUser } from '@/lib/data-service';
+import { loginUser, authenticateUser } from '@/lib/data-service';
 
 interface LoginViewProps {
   onLogin: (profile: Profile) => void;
@@ -25,12 +25,20 @@ export default function LoginView({ onLogin }: LoginViewProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
     setIsLoading(true);
 
-    setTimeout(() => {
+    try {
+      const res = await authenticateUser(identifier, password);
+      setIsLoading(false);
+      if (res.success && res.profile) {
+        onLogin(res.profile);
+      } else {
+        setErrorMessage(res.error || 'Authentication failed. Please verify your Employee ID or password.');
+      }
+    } catch {
       const res = loginUser(identifier, password);
       setIsLoading(false);
       if (res.success && res.profile) {
@@ -38,7 +46,7 @@ export default function LoginView({ onLogin }: LoginViewProps) {
       } else {
         setErrorMessage(res.error || 'Authentication failed. Please verify your Employee ID or password.');
       }
-    }, 350);
+    }
   };
 
   return (

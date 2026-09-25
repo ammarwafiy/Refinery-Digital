@@ -44,7 +44,8 @@ import {
   getStored, 
   setStored,
   getAllProcessSheets,
-  getSampleReports
+  getSampleReports,
+  syncProfilesFromSupabase
 } from '@/lib/data-service';
 
 export interface SystemSettings {
@@ -105,6 +106,10 @@ const DICT = {
     saveProfile: 'Save Profile Changes',
     saving: 'Saving...',
     changePasswordQuick: 'Change Password (Go to Security)',
+    updatePassDirect: 'Update Password (Sync with Supabase)',
+    newPassPlaceholder: 'Leave empty to keep existing password',
+    confirmPassPlaceholder: 'Re-enter new password to verify',
+    passNote: 'Minimum 6 characters · Synchronized directly to Supabase profiles table',
 
     // Preferences
     prefHeading: '2. System Display & Workstation Preferences',
@@ -202,6 +207,10 @@ const DICT = {
     saveProfile: 'Simpan Perubahan Profil',
     saving: 'Menyimpan...',
     changePasswordQuick: 'Tukar Kata Laluan (Pergi ke Keselamatan)',
+    updatePassDirect: 'Tukar Kata Laluan (Selaras ke Supabase)',
+    newPassPlaceholder: 'Biarkan kosong jika kekal kata laluan sedia ada',
+    confirmPassPlaceholder: 'Masukkan semula kata laluan baharu',
+    passNote: 'Sekurang-kurangnya 6 aksara · Diselaraskan terus ke pangkalan data Supabase',
 
     // Preferences
     prefHeading: '2. Pilihan Paparan & Stesen Kerja',
@@ -300,6 +309,9 @@ export default function SettingsModal({
   const [fullName, setFullName] = useState(currentUser?.full_name || '');
   const [department, setDepartment] = useState('Refinery Plant Operations');
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [profileNewPassword, setProfileNewPassword] = useState('');
+  const [profileConfirmPassword, setProfileConfirmPassword] = useState('');
+  const [showProfilePassword, setShowProfilePassword] = useState(false);
 
   // Security Form State
   const [currentPassword, setCurrentPassword] = useState('');
@@ -418,40 +430,74 @@ export default function SettingsModal({
     showToast(lang === 'ms' ? 'Pilihan berjaya disimpan dan dikemas kini.' : 'Preferences updated and saved to local plant cache.');
   };
 
-  // Full Profile Update: Local state + Supabase Sync
+  // Full Profile Update: Local state + Supabase Sync (Name + Optional Password)
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentUser) return;
-    setIsSavingProfile(true);
 
+    if (profileNewPassword) {
+      if (profileNewPassword.length < 6) {
+        showToast(lang === 'ms' 
+          ? 'Kata laluan baharu mesti sekurang-kurangnya 6 aksara.' 
+          : 'New password must be at least 6 characters long.');
+        return;
+      }
+      if (profileNewPassword !== profileConfirmPassword) {
+        showToast(lang === 'ms' 
+          ? 'Pengesahan kata laluan tidak sepadan.' 
+          : 'New password and confirmation password do not match.');
+        return;
+      }
+    }
+
+    setIsSavingProfile(true);
     const cleanName = fullName.trim() || currentUser.full_name;
 
     try {
-      // 1. Send update to Supabase via server API
-      const res = await fetch('/api/profiles', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-plant-admin-signature': PLANT_ADMIN_SIGNATURE,
-        },
-        body: JSON.stringify({
-          employee_no: currentUser.employee_no,
-          full_name: cleanName,
-        }),
-      });
-
-      if (!res.ok && isSupabaseConfigured && supabase) {
-        // Direct Supabase fallback
-        await supabase
-          .from('profiles')
-          .update({ full_name: cleanName })
-          .eq('employee_no', currentUser.employee_no);
+      const payload: Record<string, any> = {
+        employee_no: currentUser.employee_no,
+        full_name: cleanName,
+      };
+      if (profileNewPassword) {
+        payload.password = profileNewPassword;
       }
 
-      // 2. Update local state & storage
+      // 1. Send update to Supabase via server API
+      try {
+        await fetch('/api/profiles', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-plant-admin-signature': PLANT_ADMIN_SIGNATURE,
+          },
+          body: JSON.stringify(payload),
+        });
+      } catch (apiErr) {
+        console.warn('[Profile Update] API call failed:', apiErr);
+      }
+
+      // 2. Direct Supabase Client update (ALWAYS executed to guarantee DB persistence)
+      if (isSupabaseConfigured && supabase) {
+        try {
+          const directUpdates: Record<string, any> = { full_name: cleanName };
+          if (profileNewPassword) {
+            directUpdates.password = profileNewPassword;
+          }
+          await supabase
+            .from('profiles')
+            .update(directUpdates)
+            .eq('employee_no', currentUser.employee_no);
+        } catch (dbErr) {
+          console.warn('[Profile Update] Direct Supabase update error:', dbErr);
+        }
+      }
+
+      // 3. Update local state & storage immediately
+      const activePassword = profileNewPassword || currentUser.password || 'password123';
       const updated: Profile = {
         ...currentUser,
         full_name: cleanName,
+        password: activePassword,
       };
 
       if (onProfileUpdate) {
@@ -467,11 +513,27 @@ export default function SettingsModal({
         const idx = all.findIndex(p => p.employee_no === currentUser.employee_no);
         if (idx !== -1) {
           all[idx].full_name = cleanName;
+          if (profileNewPassword) all[idx].password = activePassword;
           setStored(STORAGE_KEYS.PROFILES, all);
         }
       }
 
-      showToast(lang === 'ms' ? 'Profil operator berjaya dikemaskini dan diselaraskan ke Supabase!' : 'Operator profile details updated and synced with Supabase.');
+      // 4. Proactive sync to ensure cache matches
+      syncProfilesFromSupabase().catch(() => {});
+
+      const hadPassword = Boolean(profileNewPassword);
+      setProfileNewPassword('');
+      setProfileConfirmPassword('');
+
+      if (hadPassword) {
+        showToast(lang === 'ms' 
+          ? 'Profil dan kata laluan berjaya disimpan & diselaraskan ke Supabase!' 
+          : 'Profile and password updated & synced to Supabase successfully!');
+      } else {
+        showToast(lang === 'ms' 
+          ? 'Profil operator berjaya dikemaskini dan diselaraskan ke Supabase!' 
+          : 'Operator profile details updated and synced with Supabase.');
+      }
     } catch (err: any) {
       showToast(lang === 'ms' ? 'Profil dikemaskini secara tempatan.' : 'Profile updated in local session.');
     } finally {
@@ -521,9 +583,8 @@ export default function SettingsModal({
 
     try {
       // 1. Sync via Server API (which updates profiles.password in Supabase)
-      let synced = false;
       try {
-        const res = await fetch('/api/profiles', {
+        await fetch('/api/profiles', {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -534,20 +595,15 @@ export default function SettingsModal({
             password: newPassword,
           }),
         });
-
-        if (res.ok) {
-          synced = true;
-        }
       } catch {}
 
-      // 2. Direct Supabase fallback
-      if (!synced && isSupabaseConfigured && supabase) {
+      // 2. Direct Supabase Client update
+      if (isSupabaseConfigured && supabase) {
         try {
           await supabase
             .from('profiles')
             .update({ password: newPassword })
             .eq('employee_no', currentUser.employee_no);
-          synced = true;
         } catch {}
       }
 
@@ -564,6 +620,9 @@ export default function SettingsModal({
       };
       setStored(STORAGE_KEYS.AUTH_USER, updatedUser);
       if (onProfileUpdate) onProfileUpdate(updatedUser);
+
+      // 4. Proactive sync to ensure cache matches
+      syncProfilesFromSupabase().catch(() => {});
 
       setIsUpdatingPassword(false);
       setPasswordStatus({ 
@@ -883,6 +942,54 @@ export default function SettingsModal({
                         </span>
                       </div>
                     </div>
+                  </div>
+
+                  {/* Change Password in Profile Tab (Sync to Supabase) */}
+                  <div className="p-4 rounded-xl bg-[#070B12] border border-[#1F2E43] space-y-3">
+                    <div className="flex items-center justify-between border-b border-[#1F2E43]/60 pb-2">
+                      <label className="text-xs font-bold text-white flex items-center gap-1.5 font-mono">
+                        <KeyRound className="h-3.5 w-3.5 text-[#009FE3]" />
+                        <span>{t.updatePassDirect}</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setShowProfilePassword(!showProfilePassword)}
+                        className="text-[11px] text-slate-400 hover:text-[#009FE3] flex items-center gap-1 font-mono transition-colors cursor-pointer"
+                      >
+                        {showProfilePassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                        <span>{showProfilePassword ? 'Hide' : 'Show'}</span>
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[11px] text-slate-400 mb-1">
+                          {t.newPass}
+                        </label>
+                        <input
+                          type={showProfilePassword ? 'text' : 'password'}
+                          value={profileNewPassword}
+                          onChange={(e) => setProfileNewPassword(e.target.value)}
+                          placeholder={t.newPassPlaceholder}
+                          className="w-full bg-[#101927] border border-[#1F2E43] rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#009FE3]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] text-slate-400 mb-1">
+                          {t.confirmPass}
+                        </label>
+                        <input
+                          type={showProfilePassword ? 'text' : 'password'}
+                          value={profileConfirmPassword}
+                          onChange={(e) => setProfileConfirmPassword(e.target.value)}
+                          placeholder={t.confirmPassPlaceholder}
+                          className="w-full bg-[#101927] border border-[#1F2E43] rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#009FE3]"
+                        />
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-slate-400 font-mono">
+                      {t.passNote}
+                    </p>
                   </div>
 
                   {/* Last Login Info */}

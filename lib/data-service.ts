@@ -232,6 +232,71 @@ export function loginUser(identifier: string, password?: string): { success: boo
   return { success: true, profile: found };
 }
 
+// Live Supabase Authentication Engine: Queries Supabase for live credentials with offline fallback
+export async function authenticateUser(identifier: string, password?: string): Promise<{ success: boolean; profile?: Profile; error?: string }> {
+  const cleanId = identifier.trim().toLowerCase();
+
+  // 1. Proactively query Supabase directly first to get live credentials & latest full_name
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .or(`employee_no.ilike.${cleanId},full_name.ilike.%${cleanId}%,role.ilike.${cleanId}`)
+        .limit(1);
+
+      if (!error && Array.isArray(data) && data.length > 0) {
+        const liveUser = data[0];
+        const mappedUser: Profile = {
+          id: liveUser.employee_no,
+          employee_no: liveUser.employee_no,
+          full_name: liveUser.full_name,
+          role: liveUser.role,
+          status: liveUser.status || (liveUser.active === false ? 'unactive' : 'active'),
+          active: liveUser.status === 'active' || liveUser.active === true,
+          password: liveUser.password || 'password123',
+          created_at: liveUser.created_at || new Date().toISOString(),
+        };
+
+        if (mappedUser.status === 'unactive' || mappedUser.active === false) {
+          return {
+            success: false,
+            error: `Account (${mappedUser.employee_no} - ${mappedUser.full_name}) has been deactivated by the Plant Administrator. Please contact plant administration.`
+          };
+        }
+
+        const expectedPassword = mappedUser.password || 'password123';
+        if (!password || password.trim() !== expectedPassword) {
+          return {
+            success: false,
+            error: 'The password entered is incorrect. Please ensure you enter the accurate password for this ID.'
+          };
+        }
+
+        setAuthUser(mappedUser);
+
+        // Update local profiles list with live user
+        const all = getProfiles();
+        const existingIdx = all.findIndex(p => p.employee_no === mappedUser.employee_no);
+        if (existingIdx !== -1) {
+          all[existingIdx] = mappedUser;
+        } else {
+          all.push(mappedUser);
+        }
+        setStored(STORAGE_KEYS.PROFILES, all);
+        memoryProfiles = all;
+
+        return { success: true, profile: mappedUser };
+      }
+    } catch (dbErr) {
+      console.warn('[Auth] Direct Supabase auth query fallback:', dbErr);
+    }
+  }
+
+  // 2. Fall back to offline/local loginUser
+  return loginUser(identifier, password);
+}
+
 export function logoutUser(): void {
   setAuthUser(null);
 }
