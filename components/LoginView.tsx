@@ -70,9 +70,9 @@ export default function LoginView({ onLogin }: LoginViewProps) {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col justify-between bg-[#0F1722] text-slate-100 select-none">
+    <div className="min-h-screen w-full flex flex-col justify-between bg-[#070B12] text-slate-100 select-none">
       {/* 1. TOP HEADER BAR */}
-      <header className="w-full border-b border-[#1F2E43]/60 bg-[#0F1722] px-4 sm:px-6 py-2.5 flex items-center justify-between text-slate-100 z-10 shrink-0">
+      <header className="w-full border-b border-[#1F2E43] bg-[#070B12] px-4 sm:px-6 py-2.5 flex items-center justify-between text-slate-100 z-10 shrink-0">
         <div className="flex items-center gap-3">
           <div className="h-9 w-9 rounded-lg bg-[#E31B23] p-1 flex items-center justify-center shrink-0 shadow-sm overflow-hidden">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -102,59 +102,89 @@ export default function LoginView({ onLogin }: LoginViewProps) {
         </div>
       </header>
 
-      {/* 2. SPLIT-SCREEN MAIN CANVAS */}
+      {/* 2. SPLIT-SCREEN MAIN CANVAS (DARK THEME) */}
       <main className="flex-1 flex flex-col lg:flex-row min-h-0 w-full overflow-y-auto">
         {/* Left Hero / Brand Column */}
-        <div className="lg:w-1/2 flex flex-col justify-between bg-[#F8FAFC] relative overflow-hidden p-6 sm:p-10 lg:p-12 border-b lg:border-b-0 lg:border-r border-slate-200">
+        <div className="lg:w-1/2 flex flex-col justify-between bg-[#0A101D] relative overflow-hidden p-6 sm:p-10 lg:p-12 border-b lg:border-b-0 lg:border-r border-[#1F2E43]">
+          {/* Subtle Ambient Glow */}
+          <div className="absolute -top-24 -left-24 w-96 h-96 bg-[#009FE3]/10 rounded-full blur-3xl pointer-events-none" />
+          
           {/* Top text block */}
-          <div className="max-w-xl z-10">
+          <div className="max-w-xl z-10 relative">
             <div className="flex items-center gap-2 mb-3">
               <span className="h-1 w-7 bg-[#E31B23] rounded-full inline-block"></span>
-              <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500 font-mono">
+              <span className="text-[11px] font-bold uppercase tracking-widest text-[#009FE3] font-mono">
                 REFINERY PROCESS MANAGEMENT SYSTEM
               </span>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-[#0F172A] tracking-tight leading-[1.15] mb-4">
+            <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-white tracking-tight leading-[1.15] mb-4">
               Safe Process.<br />
               Consistent Quality.
             </h1>
 
-            <p className="text-slate-600 text-sm sm:text-base leading-relaxed max-w-lg">
+            <p className="text-slate-400 text-sm sm:text-base leading-relaxed max-w-lg">
               Integrated process control, quality management and digital records for efficient and compliant refinery operations.
             </p>
           </div>
 
-          {/* Bottom Refinery Plant Visual */}
-          <div className="relative mt-8 sm:mt-12 -mx-6 sm:-mx-10 lg:-mx-12 -mb-6 sm:-mb-10 lg:-mb-12 h-64 sm:h-80 lg:h-[420px] overflow-hidden">
+          {/* Bottom Refinery Plant Visual with Blurry Transition */}
+          <div className="relative mt-8 sm:mt-12 -mx-6 sm:-mx-10 lg:-mx-12 -mb-6 sm:-mb-10 lg:-mb-12 h-64 sm:h-80 lg:h-[420px] overflow-hidden group">
+            {/* Background Image */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/refinery-daylight.jpg"
+              src="/refinery-plant.jpg"
               alt="Industrial Refinery Plant"
-              className="w-full h-full object-cover object-center contrast-105 saturate-105"
+              className="w-full h-full object-cover object-center brightness-95 contrast-105 transform group-hover:scale-105 transition-transform duration-1000 ease-out"
             />
-            {/* Subtle top gradient overlay to fade seamlessly into white background */}
-            <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-[#F8FAFC] to-transparent pointer-events-none" />
+
+            {/* Blurry Transition Layers */}
+            {/* 1. Top blur transition dissolving upwards into the dark card */}
+            <div 
+              className="absolute inset-x-0 top-0 h-28 pointer-events-none backdrop-blur-md"
+              style={{
+                maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.5) 40%, rgba(0,0,0,0) 100%)',
+                WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.5) 40%, rgba(0,0,0,0) 100%)'
+              }}
+            />
+            {/* 2. Top gradient fade to blend background tone */}
+            <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-[#0A101D] via-[#0A101D]/70 to-transparent pointer-events-none" />
+
+            {/* 3. Right edge blur transition towards center split line */}
+            <div 
+              className="absolute inset-y-0 right-0 w-24 pointer-events-none backdrop-blur-sm hidden lg:block"
+              style={{
+                maskImage: 'linear-gradient(to left, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%)',
+                WebkitMaskImage: 'linear-gradient(to left, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%)'
+              }}
+            />
+            <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-[#0A101D] to-transparent pointer-events-none hidden lg:block" />
+
+            {/* 4. Bottom subtle fade */}
+            <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#0A101D]/90 to-transparent pointer-events-none" />
           </div>
         </div>
 
-        {/* Right Sign-In Form Column */}
-        <div className="lg:w-1/2 bg-[#ECEFF4] flex items-center justify-center p-4 sm:p-8 lg:p-12">
-          <div className="w-full max-w-[440px] bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm text-[#0F172A]">
+        {/* Right Sign-In Form Column (Dark Theme) */}
+        <div className="lg:w-1/2 bg-[#070B12] flex items-center justify-center p-4 sm:p-8 lg:p-12 relative">
+          {/* Subtle Ambient Light */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-[#009FE3]/5 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="w-full max-w-[440px] bg-[#0D1522] rounded-2xl border border-[#1F2E43] p-6 sm:p-8 shadow-2xl relative z-10">
             {/* Card Title */}
-            <h2 className="text-2xl font-bold tracking-tight text-[#0F172A]">
+            <h2 className="text-2xl font-bold tracking-tight text-white">
               Plant Personnel Sign In
             </h2>
-            <div className="h-px bg-slate-200 w-full mt-3 mb-4" />
+            <div className="h-px bg-[#1F2E43] w-full mt-3 mb-4" />
 
-            <p className="text-xs text-slate-500 leading-relaxed mb-6">
+            <p className="text-xs text-slate-400 leading-relaxed mb-6">
               Enter your employee ID and password to access the Refinery Process Management System.
             </p>
 
             {/* Error Alert */}
             {errorMessage && (
-              <div className="mb-5 flex items-start gap-2.5 rounded-lg bg-red-50 p-3 text-xs text-red-700 border border-red-200">
-                <AlertCircle className="h-4 w-4 shrink-0 text-red-600 mt-0.5" />
+              <div className="mb-5 flex items-start gap-2.5 rounded-lg bg-red-950/40 p-3 text-xs text-red-300 border border-red-800/60">
+                <AlertCircle className="h-4 w-4 shrink-0 text-red-400 mt-0.5" />
                 <span>{errorMessage}</span>
               </div>
             )}
@@ -163,41 +193,41 @@ export default function LoginView({ onLogin }: LoginViewProps) {
             <form onSubmit={handleFormSubmit} className="space-y-4">
               {/* Employee ID / Email */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
                   Employee ID / Email
                 </label>
                 <div className="relative">
-                  <User className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                  <User className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
                   <input
                     type="text"
                     required
                     placeholder="e.g. OP-1042, SV-2014, QC-3201"
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
-                    className="w-full bg-[#F8FAFC] border border-[#CBD5E1] rounded-lg pl-9 pr-3 py-2.5 text-xs sm:text-sm text-[#0F172A] placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#009FE3] focus:ring-1 focus:ring-[#009FE3] transition-all font-mono"
+                    className="w-full bg-[#070B14] border border-[#1F2E43] rounded-lg pl-9 pr-3 py-2.5 text-xs sm:text-sm text-white placeholder-slate-500 focus:bg-[#090F1A] focus:outline-none focus:border-[#009FE3] focus:ring-1 focus:ring-[#009FE3] transition-all font-mono"
                   />
                 </div>
               </div>
 
               {/* Password */}
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
                   Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                  <Lock className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
                     placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-[#F8FAFC] border border-[#CBD5E1] rounded-lg pl-9 pr-9 py-2.5 text-xs sm:text-sm text-[#0F172A] placeholder-slate-400 focus:bg-white focus:outline-none focus:border-[#009FE3] focus:ring-1 focus:ring-[#009FE3] transition-all"
+                    className="w-full bg-[#070B14] border border-[#1F2E43] rounded-lg pl-9 pr-9 py-2.5 text-xs sm:text-sm text-white placeholder-slate-500 focus:bg-[#090F1A] focus:outline-none focus:border-[#009FE3] focus:ring-1 focus:ring-[#009FE3] transition-all"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                    className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
                     title={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -207,11 +237,11 @@ export default function LoginView({ onLogin }: LoginViewProps) {
 
               {/* Remember & Forgot Password */}
               <div className="flex items-center justify-between text-xs pt-1">
-                <label className="flex items-center gap-2 cursor-pointer select-none text-slate-600">
+                <label className="flex items-center gap-2 cursor-pointer select-none text-slate-400 hover:text-slate-300">
                   <input
                     type="checkbox"
                     defaultChecked
-                    className="h-3.5 w-3.5 rounded border-[#CBD5E1] text-[#0A1B2E] focus:ring-[#0A1B2E] cursor-pointer"
+                    className="h-3.5 w-3.5 rounded border-[#1F2E43] bg-[#070B14] text-[#009FE3] focus:ring-[#009FE3] cursor-pointer"
                   />
                   <span>Remember this device</span>
                 </label>
@@ -220,7 +250,7 @@ export default function LoginView({ onLogin }: LoginViewProps) {
                     setErrorMessage(null);
                     alert('For security compliance (21 CFR Part 11), please contact your Plant System Administrator or Supervisor to reset your terminal credential.');
                   }}
-                  className="text-[#1D8CF8] hover:underline cursor-pointer font-medium"
+                  className="text-[#009FE3] hover:text-[#38BDF8] hover:underline cursor-pointer font-medium transition-colors"
                 >
                   Forgot password?
                 </span>
@@ -230,7 +260,7 @@ export default function LoginView({ onLogin }: LoginViewProps) {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex items-center justify-center gap-2 bg-[#0A1B2E] hover:bg-[#122A47] disabled:opacity-50 text-white font-semibold py-3 px-4 rounded-lg text-sm transition-all shadow-sm mt-3 cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 bg-[#009FE3] hover:bg-[#08B5F5] disabled:opacity-50 text-white font-semibold py-3 px-4 rounded-lg text-sm transition-all shadow-lg shadow-[#009FE3]/25 mt-3 cursor-pointer"
               >
                 {isLoading ? (
                   <span>Authenticating Credentials...</span>
@@ -243,10 +273,10 @@ export default function LoginView({ onLogin }: LoginViewProps) {
             {/* Bottom Plant Notice */}
             <div className="relative mt-7 text-center">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-200"></div>
+                <div className="w-full border-t border-[#1F2E43]"></div>
               </div>
               <div className="relative flex justify-center text-[11px]">
-                <span className="bg-white px-3 text-slate-400 font-medium">
+                <span className="bg-[#0D1522] px-3 text-slate-500 font-medium">
                   Authorized Plant Personnel Only
                 </span>
               </div>
@@ -256,7 +286,7 @@ export default function LoginView({ onLogin }: LoginViewProps) {
       </main>
 
       {/* 3. BOTTOM FOOTER BAR */}
-      <footer className="w-full border-t border-[#1F2E43]/60 bg-[#0F1722] py-2.5 px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-400 font-mono z-10 shrink-0">
+      <footer className="w-full border-t border-[#1F2E43] bg-[#070B12] py-2.5 px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-400 font-mono z-10 shrink-0">
         <div className="flex items-center gap-3">
           <span>21 CFR Part 11 Compliant</span>
           <span className="text-slate-600">|</span>
