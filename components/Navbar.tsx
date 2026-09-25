@@ -708,17 +708,19 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
       </nav>
 
       {/* Industrial System Settings Modal */}
-      <SettingsModal
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        currentUser={profile}
-        onProfileUpdate={(updated) => {
-          setProfile(updated);
-          if (onRoleChange) {
-            onRoleChange(updated);
-          }
-        }}
-      />
+      {isSettingsOpen && (
+        <SettingsModal
+          isOpen={isSettingsOpen}
+          onClose={() => setIsSettingsOpen(false)}
+          currentUser={profile}
+          onProfileUpdate={(updated) => {
+            setProfile(updated);
+            if (onRoleChange) {
+              onRoleChange(updated);
+            }
+          }}
+        />
+      )}
     </>
   );
 }

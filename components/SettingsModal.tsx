@@ -112,6 +112,18 @@ export default function SettingsModal({
     }
   }, [currentUser]);
 
+  // Keyboard Escape listener to close modal (Must be before early return to adhere to React Hook rules)
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const showToast = (msg: string) => {
@@ -219,18 +231,6 @@ export default function SettingsModal({
       showToast('Audit log export ready.');
     }
   };
-
-  // Keyboard Escape listener to close modal
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
 
   const navTabs: { id: SettingsTab; label: string; icon: React.ElementType; badge?: string }[] = [
     { id: 'profile', label: 'Operator Profile', icon: User },
