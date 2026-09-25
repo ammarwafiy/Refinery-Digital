@@ -327,10 +327,6 @@ export default function SettingsModal({
   const [avatarPreview, setAvatarPreview] = useState<string | null>(currentUser?.avatar_url || null);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const avatarFileInputRef = useRef<HTMLInputElement>(null);
-  const [profileCurrentPassword, setProfileCurrentPassword] = useState('');
-  const [profileNewPassword, setProfileNewPassword] = useState('');
-  const [profileConfirmPassword, setProfileConfirmPassword] = useState('');
-  const [showProfilePassword, setShowProfilePassword] = useState(false);
 
   // Security Form State
   const [currentPassword, setCurrentPassword] = useState('');
@@ -536,44 +532,10 @@ export default function SettingsModal({
     showToast(lang === 'ms' ? 'Pilihan berjaya disimpan dan dikemas kini.' : 'Preferences updated and saved to local plant cache.');
   };
 
-  // Full Profile Update: Local state + Supabase Sync (Name + Avatar + Optional Password)
+  // Full Profile Update: Local state + Supabase Sync (Name + Avatar)
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentUser) return;
-
-    if (profileNewPassword) {
-      // Current password verification against stored user profile
-      const all = getProfiles();
-      const storedUser = all.find(p => p.employee_no === currentUser.employee_no);
-      const expectedOld = storedUser?.password || currentUser.password || 'password123';
-
-      if (!profileCurrentPassword) {
-        showToast(lang === 'ms' 
-          ? 'Sila masukkan kata laluan semasa untuk menukar kata laluan.' 
-          : 'Please enter your current password to authorize password update.');
-        return;
-      }
-
-      if (profileCurrentPassword.trim() !== expectedOld && profileCurrentPassword.trim() !== 'password123') {
-        showToast(lang === 'ms' 
-          ? 'Kata laluan semasa tidak tepat! Sila masukkan kata laluan sedia ada yang betul.' 
-          : 'Current password is incorrect! Please enter your valid current password.');
-        return;
-      }
-
-      if (profileNewPassword.length < 6) {
-        showToast(lang === 'ms' 
-          ? 'Kata laluan baharu mesti sekurang-kurangnya 6 aksara.' 
-          : 'New password must be at least 6 characters long.');
-        return;
-      }
-      if (profileNewPassword !== profileConfirmPassword) {
-        showToast(lang === 'ms' 
-          ? 'Pengesahan kata laluan tidak sepadan.' 
-          : 'New password and confirmation password do not match.');
-        return;
-      }
-    }
 
     setIsSavingProfile(true);
     const cleanName = fullName.trim() || currentUser.full_name;
@@ -584,9 +546,6 @@ export default function SettingsModal({
         full_name: cleanName,
         avatar_url: avatarPreview || null,
       };
-      if (profileNewPassword) {
-        payload.password = profileNewPassword;
-      }
 
       // 1. Send update to Supabase via server API
       try {
@@ -609,9 +568,6 @@ export default function SettingsModal({
             full_name: cleanName,
             avatar_url: avatarPreview || null,
           };
-          if (profileNewPassword) {
-            directUpdates.password = profileNewPassword;
-          }
           await supabase
             .from('profiles')
             .update(directUpdates)
@@ -622,7 +578,7 @@ export default function SettingsModal({
       }
 
       // 3. Update local state & storage immediately
-      const activePassword = profileNewPassword || currentUser.password || 'password123';
+      const activePassword = currentUser.password || 'password123';
       const updated: Profile = {
         ...currentUser,
         full_name: cleanName,
@@ -644,7 +600,6 @@ export default function SettingsModal({
         if (idx !== -1) {
           all[idx].full_name = cleanName;
           all[idx].avatar_url = avatarPreview || undefined;
-          if (profileNewPassword) all[idx].password = activePassword;
           setStored(STORAGE_KEYS.PROFILES, all);
         }
       }
@@ -652,20 +607,9 @@ export default function SettingsModal({
       // 4. Proactive sync to ensure cache matches
       syncProfilesFromSupabase().catch(() => {});
 
-      const hadPassword = Boolean(profileNewPassword);
-      setProfileCurrentPassword('');
-      setProfileNewPassword('');
-      setProfileConfirmPassword('');
-
-      if (hadPassword) {
-        showToast(lang === 'ms' 
-          ? 'Profil, avatar dan kata laluan berjaya disimpan & diselaraskan ke Supabase!' 
-          : 'Profile, avatar and password updated & synced to Supabase successfully!');
-      } else {
-        showToast(lang === 'ms' 
-          ? 'Profil operator & avatar berjaya dikemaskini dan diselaraskan ke Supabase!' 
-          : 'Operator profile details & avatar updated and synced with Supabase.');
-      }
+      showToast(lang === 'ms' 
+        ? 'Profil operator & avatar berjaya dikemaskini dan diselaraskan ke Supabase!' 
+        : 'Operator profile details & avatar updated and synced with Supabase.');
     } catch (err: any) {
       showToast(lang === 'ms' ? 'Profil dikemaskini secara tempatan.' : 'Profile updated in local session.');
     } finally {
@@ -1147,68 +1091,7 @@ export default function SettingsModal({
                     </div>
                   </div>
 
-                  {/* Change Password in Profile Tab (Sync to Supabase) */}
-                  <div className="p-4 rounded-xl bg-[#070B12] border border-[#1F2E43] space-y-3">
-                    <div className="flex items-center justify-between border-b border-[#1F2E43]/60 pb-2">
-                      <label className="text-xs font-bold text-white flex items-center gap-1.5 font-mono">
-                        <KeyRound className="h-3.5 w-3.5 text-[#009FE3]" />
-                        <span>{t.updatePassDirect}</span>
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => setShowProfilePassword(!showProfilePassword)}
-                        className="text-[11px] text-slate-400 hover:text-[#009FE3] flex items-center gap-1 font-mono transition-colors cursor-pointer"
-                      >
-                        {showProfilePassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                        <span>{showProfilePassword ? 'Hide' : 'Show'}</span>
-                      </button>
-                    </div>
 
-                    {/* Current Password Field */}
-                    <div>
-                      <label className="block text-[11px] text-slate-400 mb-1 flex items-center justify-between">
-                        <span>{t.currentPassDirect}</span>
-                        <span className="text-[10px] text-slate-500 font-mono">(Required to authorize changes)</span>
-                      </label>
-                      <input
-                        type={showProfilePassword ? 'text' : 'password'}
-                        value={profileCurrentPassword}
-                        onChange={(e) => setProfileCurrentPassword(e.target.value)}
-                        placeholder={t.currentPassDirectPlaceholder}
-                        className="w-full bg-[#101927] border border-[#1F2E43] rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#009FE3]"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[11px] text-slate-400 mb-1">
-                          {t.newPass}
-                        </label>
-                        <input
-                          type={showProfilePassword ? 'text' : 'password'}
-                          value={profileNewPassword}
-                          onChange={(e) => setProfileNewPassword(e.target.value)}
-                          placeholder={t.newPassPlaceholder}
-                          className="w-full bg-[#101927] border border-[#1F2E43] rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#009FE3]"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[11px] text-slate-400 mb-1">
-                          {t.confirmPass}
-                        </label>
-                        <input
-                          type={showProfilePassword ? 'text' : 'password'}
-                          value={profileConfirmPassword}
-                          onChange={(e) => setProfileConfirmPassword(e.target.value)}
-                          placeholder={t.confirmPassPlaceholder}
-                          className="w-full bg-[#101927] border border-[#1F2E43] rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#009FE3]"
-                        />
-                      </div>
-                    </div>
-                    <p className="text-[10px] text-slate-400 font-mono">
-                      {t.passNote}
-                    </p>
-                  </div>
 
                   {/* Last Login Info */}
                   <div className="p-3 rounded-xl bg-[#070B12] border border-[#1F2E43] flex items-center justify-between text-xs font-mono text-slate-400">
