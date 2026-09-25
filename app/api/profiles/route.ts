@@ -92,7 +92,7 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json().catch(() => ({}));
-    const { employee_no, full_name, role, status, password, created_at } = body;
+    const { employee_no, full_name, role, status, password, created_at, avatar_url } = body;
 
     // Strict Input Validation & Perimeter Sanitization
     const cleanEmployeeNo = sanitizeInputString(employee_no).toUpperCase();
@@ -121,6 +121,7 @@ export async function POST(req: Request) {
       role: cleanRole,
       status: cleanStatus,
       password: cleanPassword,
+      avatar_url: avatar_url || null,
       created_at: created_at || new Date().toISOString(),
     };
 
@@ -171,7 +172,7 @@ export async function PATCH(req: Request) {
     }
 
     const body = await req.json().catch(() => ({}));
-    const { employee_no, status, role, full_name, password } = body;
+    const { employee_no, status, role, full_name, password, avatar_url } = body;
 
     const cleanEmployeeNo = sanitizeInputString(employee_no).toUpperCase();
     if (!cleanEmployeeNo) {
@@ -197,6 +198,9 @@ export async function PATCH(req: Request) {
     }
     if (password !== undefined) {
       updates.password = sanitizeInputString(password);
+    }
+    if (avatar_url !== undefined) {
+      updates.avatar_url = avatar_url;
     }
 
     const supabaseAdmin = getSupabaseAdmin();

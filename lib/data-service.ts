@@ -256,6 +256,7 @@ export async function authenticateUser(identifier: string, password?: string): P
           active: liveUser.status === 'active' || liveUser.active === true,
           password: liveUser.password || 'password123',
           created_at: liveUser.created_at || new Date().toISOString(),
+          avatar_url: liveUser.avatar_url || undefined,
         };
 
         if (mappedUser.status === 'unactive' || mappedUser.active === false) {
@@ -345,6 +346,7 @@ export async function syncProfilesFromSupabase(): Promise<{ success: boolean; co
           active: p.status === 'active' || p.active === true,
           password: p.password || 'password123',
           created_at: p.created_at || new Date().toISOString(),
+          avatar_url: p.avatar_url || undefined,
         }));
 
         memoryProfiles = liveProfiles;
@@ -378,6 +380,7 @@ export async function syncProfilesFromSupabase(): Promise<{ success: boolean; co
           active: p.status === 'active' || p.active === true,
           password: p.password || 'password123',
           created_at: p.created_at || new Date().toISOString(),
+          avatar_url: p.avatar_url || undefined,
         }));
 
         memoryProfiles = liveProfiles;
@@ -495,7 +498,7 @@ if (typeof window !== 'undefined') {
   }
 }
 
-export async function addProfile(data: { full_name: string; role: UserRole; employee_no?: string; password?: string }): Promise<Profile> {
+export async function addProfile(data: { full_name: string; role: UserRole; employee_no?: string; password?: string; avatar_url?: string }): Promise<Profile> {
   const employee_no = (data.employee_no?.trim() || generateNextEmployeeId(data.role)).toUpperCase();
   const current = getProfiles();
 
@@ -507,7 +510,8 @@ export async function addProfile(data: { full_name: string; role: UserRole; empl
     status: 'active',
     active: true,
     password: data.password?.trim() || 'password123',
-    created_at: new Date().toISOString()
+    created_at: new Date().toISOString(),
+    avatar_url: data.avatar_url || undefined,
   };
 
   // Immediate optimistic update in local state
@@ -532,7 +536,8 @@ export async function addProfile(data: { full_name: string; role: UserRole; empl
           role: newProfile.role,
           status: newProfile.status,
           password: newProfile.password,
-          created_at: newProfile.created_at
+          created_at: newProfile.created_at,
+          avatar_url: newProfile.avatar_url,
         })
       });
 

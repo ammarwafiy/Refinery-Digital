@@ -500,8 +500,16 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
             className="flex items-center gap-2.5 pl-1 py-1 pr-2 rounded-lg hover:bg-[#121D2C] border border-transparent hover:border-[#1F2E43] cursor-pointer transition-colors select-none"
             title="Click to view & edit Profile / Settings"
           >
-            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#1E2D42] to-[#121B29] border border-[#2D415E] flex items-center justify-center font-bold text-xs text-[#009FE3] shadow-sm">
-              {userInitials}
+            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#1E2D42] to-[#121B29] border border-[#2D415E] flex items-center justify-center font-bold text-xs text-[#009FE3] shadow-sm overflow-hidden shrink-0">
+              {profile.avatar_url ? (
+                <img
+                  src={profile.avatar_url}
+                  alt={profile.full_name}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                userInitials
+              )}
             </div>
             <div className="text-left">
               <div className="text-xs font-semibold text-slate-100 leading-tight">
@@ -552,15 +560,28 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
         <div className="lg:hidden fixed inset-x-0 top-14 z-50 bg-[#101927] border-b border-[#1F2E43] p-4 space-y-3 max-h-[80vh] overflow-y-auto shadow-2xl">
           {/* User Profile Card on Mobile */}
           <div className="flex items-center justify-between p-3 rounded-lg bg-[#0A1018] border border-[#1F2E43]">
-            <div>
-              <div className="text-[10px] text-slate-400 uppercase tracking-wider font-medium font-mono">
-                Signed in Personnel
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#1E2D42] to-[#121B29] border border-[#2D415E] flex items-center justify-center font-bold text-xs text-[#009FE3] shadow-sm overflow-hidden shrink-0">
+                {profile.avatar_url ? (
+                  <img
+                    src={profile.avatar_url}
+                    alt={profile.full_name}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  userInitials
+                )}
               </div>
-              <div className="text-sm font-semibold text-slate-100 mt-0.5">
-                {profile.full_name}
-              </div>
-              <div className="text-xs text-[#009FE3] font-medium font-mono">
-                {profile.employee_no}
+              <div>
+                <div className="text-[10px] text-slate-400 uppercase tracking-wider font-medium font-mono">
+                  Signed in Personnel
+                </div>
+                <div className="text-sm font-semibold text-slate-100 mt-0.5">
+                  {profile.full_name}
+                </div>
+                <div className="text-xs text-[#009FE3] font-medium font-mono">
+                  {profile.employee_no}
+                </div>
               </div>
             </div>
             <span

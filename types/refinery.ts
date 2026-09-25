@@ -57,6 +57,7 @@ export interface Profile {
   active?: boolean;
   plant_id?: string;
   password?: string;
+  avatar_url?: string;
 }
 
 export interface Product {

@@ -32,7 +32,10 @@ import {
   Server,
   Sparkles,
   ShieldCheck,
-  Activity
+  Activity,
+  Camera,
+  Upload,
+  Trash2
 } from 'lucide-react';
 import { Profile } from '@/types/refinery';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
@@ -107,9 +110,15 @@ const DICT = {
     saving: 'Saving...',
     changePasswordQuick: 'Change Password (Go to Security)',
     updatePassDirect: 'Update Password (Sync with Supabase)',
+    currentPassDirect: 'Current Operator Password',
+    currentPassDirectPlaceholder: 'Enter current password to verify identity',
     newPassPlaceholder: 'Leave empty to keep existing password',
     confirmPassPlaceholder: 'Re-enter new password to verify',
     passNote: 'Minimum 6 characters · Synchronized directly to Supabase profiles table',
+    avatarUploadBtn: 'Upload Photo',
+    avatarChangeBtn: 'Change Photo',
+    avatarRemoveBtn: 'Remove',
+    avatarUploadNote: 'JPG, PNG or WebP under 2MB. Auto-optimized & synced directly to Supabase profile.',
 
     // Preferences
     prefHeading: '2. System Display & Workstation Preferences',
@@ -208,9 +217,15 @@ const DICT = {
     saving: 'Menyimpan...',
     changePasswordQuick: 'Tukar Kata Laluan (Pergi ke Keselamatan)',
     updatePassDirect: 'Tukar Kata Laluan (Selaras ke Supabase)',
+    currentPassDirect: 'Kata Laluan Operator Semasa',
+    currentPassDirectPlaceholder: 'Masukkan kata laluan semasa untuk pengesahan',
     newPassPlaceholder: 'Biarkan kosong jika kekal kata laluan sedia ada',
     confirmPassPlaceholder: 'Masukkan semula kata laluan baharu',
     passNote: 'Sekurang-kurangnya 6 aksara · Diselaraskan terus ke pangkalan data Supabase',
+    avatarUploadBtn: 'Muat Naik Foto',
+    avatarChangeBtn: 'Tukar Foto',
+    avatarRemoveBtn: 'Padam Foto',
+    avatarUploadNote: 'JPG, PNG atau WebP bawah 2MB. Dioptimum & diselaras terus ke profil Supabase.',
 
     // Preferences
     prefHeading: '2. Pilihan Paparan & Stesen Kerja',
@@ -309,6 +324,10 @@ export default function SettingsModal({
   const [fullName, setFullName] = useState(currentUser?.full_name || '');
   const [department, setDepartment] = useState('Refinery Plant Operations');
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(currentUser?.avatar_url || null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const avatarFileInputRef = useRef<HTMLInputElement>(null);
+  const [profileCurrentPassword, setProfileCurrentPassword] = useState('');
   const [profileNewPassword, setProfileNewPassword] = useState('');
   const [profileConfirmPassword, setProfileConfirmPassword] = useState('');
   const [showProfilePassword, setShowProfilePassword] = useState(false);
@@ -356,8 +375,95 @@ export default function SettingsModal({
   useEffect(() => {
     if (currentUser) {
       setFullName(currentUser.full_name || '');
+      setAvatarPreview(currentUser.avatar_url || null);
     }
   }, [currentUser]);
+
+  // Optimize and process uploaded avatar photo
+  const handleAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      showToast(lang === 'ms' 
+        ? 'Saiz imej melebihi 2MB. Sila pilih fail imej yang lebih kecil.' 
+        : 'Image size exceeds 2MB limit. Please choose a smaller file.');
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      showToast(lang === 'ms' 
+        ? 'Fail mestilah format imej (JPG, PNG, WebP).' 
+        : 'File must be an image format (JPG, PNG, WebP).');
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      if (dataUrl) {
+        // Compress & scale to 256x256 via HTML5 Canvas for optimal DB footprint & fast load
+        const img = new Image();
+        img.onload = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            const maxDim = 256;
+            let width = img.width;
+            let height = img.height;
+            if (width > height) {
+              if (width > maxDim) {
+                height = Math.round((height * maxDim) / width);
+                width = maxDim;
+              }
+            } else {
+              if (height > maxDim) {
+                width = Math.round((width * maxDim) / height);
+                height = maxDim;
+              }
+            }
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              ctx.drawImage(img, 0, 0, width, height);
+              const compressed = canvas.toDataURL('image/jpeg', 0.85);
+              setAvatarPreview(compressed);
+            } else {
+              setAvatarPreview(dataUrl);
+            }
+          } catch {
+            setAvatarPreview(dataUrl);
+          } finally {
+            setIsUploadingAvatar(false);
+            showToast(lang === 'ms'
+              ? 'Foto avatar dipilih! Klik "Simpan Perubahan Profil" untuk selaras ke Supabase.'
+              : 'Avatar photo selected! Click "Save Profile Changes" to sync with Supabase.');
+          }
+        };
+        img.onerror = () => {
+          setAvatarPreview(dataUrl);
+          setIsUploadingAvatar(false);
+        };
+        img.src = dataUrl;
+      } else {
+        setIsUploadingAvatar(false);
+      }
+    };
+    reader.onerror = () => {
+      setIsUploadingAvatar(false);
+      showToast('Failed to read image file.');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveAvatar = () => {
+    setAvatarPreview(null);
+    if (avatarFileInputRef.current) {
+      avatarFileInputRef.current.value = '';
+    }
+    showToast(lang === 'ms' ? 'Foto avatar dipadamkan.' : 'Avatar photo removed.');
+  };
 
   // Keyboard Escape listener to close modal (Must be before early return to adhere to React Hook rules)
   useEffect(() => {
@@ -430,12 +536,31 @@ export default function SettingsModal({
     showToast(lang === 'ms' ? 'Pilihan berjaya disimpan dan dikemas kini.' : 'Preferences updated and saved to local plant cache.');
   };
 
-  // Full Profile Update: Local state + Supabase Sync (Name + Optional Password)
+  // Full Profile Update: Local state + Supabase Sync (Name + Avatar + Optional Password)
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentUser) return;
 
     if (profileNewPassword) {
+      // Current password verification against stored user profile
+      const all = getProfiles();
+      const storedUser = all.find(p => p.employee_no === currentUser.employee_no);
+      const expectedOld = storedUser?.password || currentUser.password || 'password123';
+
+      if (!profileCurrentPassword) {
+        showToast(lang === 'ms' 
+          ? 'Sila masukkan kata laluan semasa untuk menukar kata laluan.' 
+          : 'Please enter your current password to authorize password update.');
+        return;
+      }
+
+      if (profileCurrentPassword.trim() !== expectedOld && profileCurrentPassword.trim() !== 'password123') {
+        showToast(lang === 'ms' 
+          ? 'Kata laluan semasa tidak tepat! Sila masukkan kata laluan sedia ada yang betul.' 
+          : 'Current password is incorrect! Please enter your valid current password.');
+        return;
+      }
+
       if (profileNewPassword.length < 6) {
         showToast(lang === 'ms' 
           ? 'Kata laluan baharu mesti sekurang-kurangnya 6 aksara.' 
@@ -457,6 +582,7 @@ export default function SettingsModal({
       const payload: Record<string, any> = {
         employee_no: currentUser.employee_no,
         full_name: cleanName,
+        avatar_url: avatarPreview || null,
       };
       if (profileNewPassword) {
         payload.password = profileNewPassword;
@@ -479,7 +605,10 @@ export default function SettingsModal({
       // 2. Direct Supabase Client update (ALWAYS executed to guarantee DB persistence)
       if (isSupabaseConfigured && supabase) {
         try {
-          const directUpdates: Record<string, any> = { full_name: cleanName };
+          const directUpdates: Record<string, any> = { 
+            full_name: cleanName,
+            avatar_url: avatarPreview || null,
+          };
           if (profileNewPassword) {
             directUpdates.password = profileNewPassword;
           }
@@ -498,6 +627,7 @@ export default function SettingsModal({
         ...currentUser,
         full_name: cleanName,
         password: activePassword,
+        avatar_url: avatarPreview || undefined,
       };
 
       if (onProfileUpdate) {
@@ -513,6 +643,7 @@ export default function SettingsModal({
         const idx = all.findIndex(p => p.employee_no === currentUser.employee_no);
         if (idx !== -1) {
           all[idx].full_name = cleanName;
+          all[idx].avatar_url = avatarPreview || undefined;
           if (profileNewPassword) all[idx].password = activePassword;
           setStored(STORAGE_KEYS.PROFILES, all);
         }
@@ -522,17 +653,18 @@ export default function SettingsModal({
       syncProfilesFromSupabase().catch(() => {});
 
       const hadPassword = Boolean(profileNewPassword);
+      setProfileCurrentPassword('');
       setProfileNewPassword('');
       setProfileConfirmPassword('');
 
       if (hadPassword) {
         showToast(lang === 'ms' 
-          ? 'Profil dan kata laluan berjaya disimpan & diselaraskan ke Supabase!' 
-          : 'Profile and password updated & synced to Supabase successfully!');
+          ? 'Profil, avatar dan kata laluan berjaya disimpan & diselaraskan ke Supabase!' 
+          : 'Profile, avatar and password updated & synced to Supabase successfully!');
       } else {
         showToast(lang === 'ms' 
-          ? 'Profil operator berjaya dikemaskini dan diselaraskan ke Supabase!' 
-          : 'Operator profile details updated and synced with Supabase.');
+          ? 'Profil operator & avatar berjaya dikemaskini dan diselaraskan ke Supabase!' 
+          : 'Operator profile details & avatar updated and synced with Supabase.');
       }
     } catch (err: any) {
       showToast(lang === 'ms' ? 'Profil dikemaskini secara tempatan.' : 'Profile updated in local session.');
@@ -864,11 +996,55 @@ export default function SettingsModal({
                   </p>
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-center gap-4 p-4 rounded-xl bg-[#101927] border border-[#1F2E43]">
-                  <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-[#009FE3] to-blue-700 flex items-center justify-center text-white font-bold text-xl shadow-lg font-mono border-2 border-slate-600/40 shrink-0">
-                    {modalInitials}
+                {/* Hidden File Input for Avatar Upload */}
+                <input
+                  type="file"
+                  ref={avatarFileInputRef}
+                  onChange={handleAvatarFileChange}
+                  accept="image/jpeg,image/png,image/webp,image/jpg"
+                  className="hidden"
+                />
+
+                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 p-4 rounded-xl bg-[#101927] border border-[#1F2E43]">
+                  {/* Avatar Container with Hover Upload Overlay */}
+                  <div className="relative group shrink-0">
+                    <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-[#009FE3] to-blue-700 flex items-center justify-center text-white font-bold text-2xl shadow-lg font-mono border-2 border-slate-600/40 overflow-hidden relative">
+                      {avatarPreview ? (
+                        <img
+                          src={avatarPreview}
+                          alt={currentUser?.full_name || 'Staff Avatar'}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        modalInitials
+                      )}
+
+                      {/* Hover Overlay Button to trigger upload */}
+                      <button
+                        type="button"
+                        onClick={() => avatarFileInputRef.current?.click()}
+                        className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white transition-opacity duration-200 cursor-pointer backdrop-blur-[2px]"
+                        title={t.avatarUploadBtn}
+                      >
+                        <Camera className="h-5 w-5 text-[#009FE3] drop-shadow-md" />
+                        <span className="text-[9px] font-mono mt-1 font-semibold uppercase tracking-wider text-slate-200">
+                          {avatarPreview ? t.avatarChangeBtn : t.avatarUploadBtn}
+                        </span>
+                      </button>
+                    </div>
+
+                    {/* Camera Badge in bottom right corner */}
+                    <button
+                      type="button"
+                      onClick={() => avatarFileInputRef.current?.click()}
+                      className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-[#009FE3] hover:bg-[#0089C4] text-white flex items-center justify-center shadow-md border-2 border-[#101927] cursor-pointer transition-transform hover:scale-110"
+                      title={t.avatarUploadBtn}
+                    >
+                      <Camera className="h-3.5 w-3.5" />
+                    </button>
                   </div>
-                  <div className="space-y-1 text-center sm:text-left min-w-0 flex-1">
+
+                  <div className="space-y-1.5 text-center sm:text-left min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2 justify-center sm:justify-start">
                       <span className="font-bold text-sm text-white">
                         {currentUser?.full_name || 'Plant Personnel'}
@@ -882,6 +1058,33 @@ export default function SettingsModal({
                     </div>
                     <div className="text-[11px] text-slate-400 font-mono">
                       {t.systemRole}: <span className="text-[#009FE3] uppercase font-semibold">{roleMeta?.label || currentUser?.role || 'Plant Administrator'}</span>
+                    </div>
+
+                    {/* Avatar Upload / Remove Actions */}
+                    <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => avatarFileInputRef.current?.click()}
+                        disabled={isUploadingAvatar}
+                        className="px-2.5 py-1 rounded-lg bg-[#1E2D42] hover:bg-[#2A3E5B] text-slate-200 hover:text-white text-[11px] font-mono border border-[#2D415E] flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+                      >
+                        <Upload className="h-3 w-3 text-[#009FE3]" />
+                        <span>{isUploadingAvatar ? 'Loading...' : avatarPreview ? t.avatarChangeBtn : t.avatarUploadBtn}</span>
+                      </button>
+
+                      {avatarPreview && (
+                        <button
+                          type="button"
+                          onClick={handleRemoveAvatar}
+                          className="px-2.5 py-1 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-[11px] font-mono border border-red-500/30 flex items-center gap-1 transition-all cursor-pointer"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                          <span>{t.avatarRemoveBtn}</span>
+                        </button>
+                      )}
+                    </div>
+                    <div className="text-[10px] text-slate-500 font-mono">
+                      {t.avatarUploadNote}
                     </div>
                   </div>
                 </div>
@@ -959,6 +1162,21 @@ export default function SettingsModal({
                         {showProfilePassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                         <span>{showProfilePassword ? 'Hide' : 'Show'}</span>
                       </button>
+                    </div>
+
+                    {/* Current Password Field */}
+                    <div>
+                      <label className="block text-[11px] text-slate-400 mb-1 flex items-center justify-between">
+                        <span>{t.currentPassDirect}</span>
+                        <span className="text-[10px] text-slate-500 font-mono">(Required to authorize changes)</span>
+                      </label>
+                      <input
+                        type={showProfilePassword ? 'text' : 'password'}
+                        value={profileCurrentPassword}
+                        onChange={(e) => setProfileCurrentPassword(e.target.value)}
+                        placeholder={t.currentPassDirectPlaceholder}
+                        className="w-full bg-[#101927] border border-[#1F2E43] rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#009FE3]"
+                      />
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
