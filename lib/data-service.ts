@@ -421,13 +421,21 @@ export async function syncProfilesFromSupabase(): Promise<{ success: boolean; co
 
 // Auto-sync on client load and Supabase Realtime channel listener
 if (typeof window !== 'undefined') {
+  // Purge any stale dirty audit logs from localStorage immediately
+  try {
+    const rawAudit = localStorage.getItem(STORAGE_KEYS.AUDIT_LOGS);
+    if (rawAudit && (rawAudit.length > 5000 || rawAudit.includes('22e9') || rawAudit.includes('178b'))) {
+      localStorage.removeItem(STORAGE_KEYS.AUDIT_LOGS);
+    }
+  } catch {}
+
   // Initial sync upon client mounting
   setTimeout(() => {
     syncProfilesFromSupabase().catch(() => {});
     syncProcessSheetsFromSupabase().catch(() => {});
     syncSampleReportsFromSupabase().catch(() => {});
     syncAuditLogsFromSupabase().catch(() => {});
-  }, 150);
+  }, 50);
 
   // Background auto-sync interval (every 20 seconds)
   setInterval(() => {
@@ -2482,7 +2490,23 @@ export async function deleteSampleReport(
 
 // 5. Audit Log
 export function getAuditLogs(): AuditLogEntry[] {
-  return getStored<AuditLogEntry[]>(STORAGE_KEYS.AUDIT_LOGS, memoryAuditLogs);
+  const stored = getStored<AuditLogEntry[]>(STORAGE_KEYS.AUDIT_LOGS, memoryAuditLogs);
+  if (Array.isArray(stored)) {
+    // Self-healing: if localStorage holds corrupted legacy records (>50 or contains corrupted legacy UUID patterns like 22e9 / 178b)
+    const isCorrupt = stored.length > 50 || stored.some(l => {
+      const id = String(l.record_id || '');
+      return id.includes('22e9') || id.includes('178b') || id.length === 32;
+    });
+    if (isCorrupt) {
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.removeItem(STORAGE_KEYS.AUDIT_LOGS);
+        } catch {}
+      }
+      return memoryAuditLogs;
+    }
+  }
+  return stored;
 }
 
 // Sync single audit log entry to Supabase audit_log table in background

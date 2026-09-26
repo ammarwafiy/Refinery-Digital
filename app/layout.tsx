@@ -8,6 +8,9 @@ const inter = Inter({
   display: "swap",
 });
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export const metadata: Metadata = {
   title: "Refinery Process Management System | Lam Soon Edible Oils",
   description: "Lam Soon Edible Oils Sdn. Bhd. — Nisshin Deodorizer Plant (RF-FR-004 Process Control & RF-FR-001 QC Lab)",

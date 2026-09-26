@@ -45,7 +45,13 @@ const nextConfig: NextConfig = {
       {
         // Apply security headers to all routes across the application
         source: '/(.*)',
-        headers: securityHeaders,
+        headers: [
+          ...securityHeaders,
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=0, must-revalidate',
+          },
+        ],
       },
     ];
   },
