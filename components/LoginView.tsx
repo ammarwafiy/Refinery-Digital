@@ -6,7 +6,13 @@ import {
   Lock, 
   AlertCircle, 
   Eye, 
-  EyeOff
+  EyeOff,
+  Factory,
+  ShieldCheck,
+  FileText,
+  Database,
+  Info,
+  ArrowRight
 } from 'lucide-react';
 import { Profile } from '@/types/refinery';
 import { loginUser, authenticateUser } from '@/lib/data-service';
@@ -70,9 +76,9 @@ export default function LoginView({ onLogin }: LoginViewProps) {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col justify-between bg-[#070B12] text-slate-100 select-none">
+    <div className="min-h-screen w-full flex flex-col justify-between bg-[#070C14] text-slate-100 select-none">
       {/* 1. TOP HEADER BAR */}
-      <header className="w-full border-b border-[#1F2E43] bg-[#070B12] px-4 sm:px-6 py-2.5 flex items-center justify-between text-slate-100 z-10 shrink-0">
+      <header className="w-full border-b border-[#172538] bg-[#070C14] px-4 sm:px-6 py-2.5 flex items-center justify-between text-slate-100 z-10 shrink-0">
         <div className="flex items-center gap-3">
           <div className="h-9 w-9 rounded-lg bg-[#E31B23] p-1 flex items-center justify-center shrink-0 shadow-sm overflow-hidden">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -102,83 +108,112 @@ export default function LoginView({ onLogin }: LoginViewProps) {
         </div>
       </header>
 
-      {/* 2. SPLIT-SCREEN MAIN CANVAS (DARK THEME) */}
+      {/* 2. SPLIT-SCREEN MAIN CANVAS */}
       <main className="flex-1 flex flex-col lg:flex-row min-h-0 w-full overflow-y-auto">
-        {/* Left Hero / Brand Column */}
-        <div className="lg:w-1/2 flex flex-col justify-between bg-[#0A101D] relative overflow-hidden p-6 sm:p-10 lg:p-12 border-b lg:border-b-0 lg:border-r border-[#1F2E43]">
-          {/* Subtle Ambient Glow */}
-          <div className="absolute -top-24 -left-24 w-96 h-96 bg-[#009FE3]/10 rounded-full blur-3xl pointer-events-none" />
-          
-          {/* Top text block */}
-          <div className="max-w-xl z-10 relative">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="h-1 w-7 bg-[#E31B23] rounded-full inline-block"></span>
-              <span className="text-[11px] font-bold uppercase tracking-widest text-[#009FE3] font-mono">
-                REFINERY PROCESS MANAGEMENT SYSTEM
-              </span>
-            </div>
-
-            <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-white tracking-tight leading-[1.15] mb-4">
-              Safe Process.<br />
-              Consistent Quality.
-            </h1>
-
-            <p className="text-slate-400 text-sm sm:text-base leading-relaxed max-w-lg">
-              Integrated process control, quality management and digital records for efficient and compliant refinery operations.
-            </p>
-          </div>
-
-          {/* Bottom Refinery Plant Visual with Blurry Transition */}
-          <div className="relative mt-8 sm:mt-12 -mx-6 sm:-mx-10 lg:-mx-12 -mb-6 sm:-mb-10 lg:-mb-12 h-64 sm:h-80 lg:h-[420px] overflow-hidden group">
-            {/* Background Image */}
+        {/* Left Hero / Brand Column with Refinery Dusk Visual */}
+        <div className="lg:w-1/2 relative overflow-hidden flex flex-col justify-between p-6 sm:p-10 lg:p-14 border-b lg:border-b-0 lg:border-r border-[#172538] bg-[#070C14] min-h-[500px]">
+          {/* Background Industrial Dusk Visual */}
+          <div className="absolute inset-0 z-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/refinery-plant.jpg"
+              src="/refinery-dusk.jpg"
               alt="Industrial Refinery Plant"
-              className="w-full h-full object-cover object-center brightness-95 contrast-105 transform group-hover:scale-105 transition-transform duration-1000 ease-out"
+              className="w-full h-full object-cover object-center brightness-90 contrast-105"
             />
+            {/* Dark Gradient Vignette for Text Legibility */}
+            <div className="absolute inset-0 bg-gradient-to-r from-[#070C14]/95 via-[#070C14]/75 to-[#070C14]/20 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#070C14]/90 via-transparent to-[#070C14]/60 pointer-events-none" />
 
-            {/* Blurry Transition Layers */}
-            {/* 1. Top blur transition dissolving upwards into the dark card */}
+            {/* Blurry Transition on Right Edge */}
             <div 
-              className="absolute inset-x-0 top-0 h-28 pointer-events-none backdrop-blur-md"
-              style={{
-                maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.5) 40%, rgba(0,0,0,0) 100%)',
-                WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.5) 40%, rgba(0,0,0,0) 100%)'
-              }}
-            />
-            {/* 2. Top gradient fade to blend background tone */}
-            <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-[#0A101D] via-[#0A101D]/70 to-transparent pointer-events-none" />
-
-            {/* 3. Right edge blur transition towards center split line */}
-            <div 
-              className="absolute inset-y-0 right-0 w-24 pointer-events-none backdrop-blur-sm hidden lg:block"
+              className="absolute inset-y-0 right-0 w-28 pointer-events-none backdrop-blur-md hidden lg:block"
               style={{
                 maskImage: 'linear-gradient(to left, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%)',
                 WebkitMaskImage: 'linear-gradient(to left, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%)'
               }}
             />
-            <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-[#0A101D] to-transparent pointer-events-none hidden lg:block" />
+            <div className="absolute inset-y-0 right-0 w-28 bg-gradient-to-l from-[#070C14] to-transparent pointer-events-none hidden lg:block" />
+          </div>
 
-            {/* 4. Bottom subtle fade */}
-            <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#0A101D]/90 to-transparent pointer-events-none" />
+          {/* Top Brand Text Block */}
+          <div className="max-w-xl z-10 relative">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="h-0.5 w-6 bg-[#E31B23] rounded-full inline-block"></span>
+              <span className="text-[11px] font-bold uppercase tracking-widest text-slate-300 font-mono">
+                REFINERY PROCESS MANAGEMENT SYSTEM
+              </span>
+            </div>
+
+            <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-white tracking-tight leading-[1.12] mb-4">
+              Safe Operations.<br />
+              Reliable Processes.<br />
+              Consistent Quality.
+            </h1>
+
+            <p className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-lg mb-8">
+              Digital process recording, quality management and operational documentation for the Nisshin Deodorizer Refinery.
+            </p>
+          </div>
+
+          {/* 3 Industrial Feature Badges */}
+          <div className="space-y-3.5 max-w-md z-10 relative mt-6 lg:mt-0">
+            {/* 1. Process Control */}
+            <div className="flex items-center gap-3.5">
+              <div className="h-11 w-11 rounded-lg bg-[#0F1726]/60 border border-white/10 flex items-center justify-center backdrop-blur-md shrink-0 shadow-sm">
+                <Factory className="h-5 w-5 text-slate-200" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-white leading-snug">Process Control</h3>
+                <p className="text-xs text-slate-400">Record and monitor process parameters</p>
+              </div>
+            </div>
+
+            {/* 2. Quality Management */}
+            <div className="flex items-center gap-3.5">
+              <div className="h-11 w-11 rounded-lg bg-[#0F1726]/60 border border-white/10 flex items-center justify-center backdrop-blur-md shrink-0 shadow-sm">
+                <ShieldCheck className="h-5 w-5 text-slate-200" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-white leading-snug">Quality Management</h3>
+                <p className="text-xs text-slate-400">Ensure product quality and regulatory compliance</p>
+              </div>
+            </div>
+
+            {/* 3. Digital Records */}
+            <div className="flex items-center gap-3.5">
+              <div className="h-11 w-11 rounded-lg bg-[#0F1726]/60 border border-white/10 flex items-center justify-center backdrop-blur-md shrink-0 shadow-sm">
+                <FileText className="h-5 w-5 text-slate-200" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-white leading-snug">Digital Records</h3>
+                <p className="text-xs text-slate-400">Centralized documentation for audit readiness</p>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Right Sign-In Form Column (Dark Theme) */}
-        <div className="lg:w-1/2 bg-[#070B12] flex items-center justify-center p-4 sm:p-8 lg:p-12 relative">
-          {/* Subtle Ambient Light */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-[#009FE3]/5 rounded-full blur-3xl pointer-events-none" />
+        {/* Right Sign-In Form Column */}
+        <div className="lg:w-1/2 bg-[#070C14] flex items-center justify-center p-4 sm:p-8 lg:p-12 relative">
+          <div className="w-full max-w-[460px] bg-[#0A1220]/95 rounded-2xl border border-[#1C2C40] p-6 sm:p-8 lg:p-9 shadow-2xl relative z-10 backdrop-blur-xl">
+            {/* Card Header Info */}
+            <div className="flex items-center justify-between pb-3.5 border-b border-[#1C2C40] mb-5">
+              <div className="flex items-center gap-2">
+                <Factory className="h-4 w-4 text-[#009FE3]" />
+                <span className="text-[10px] font-mono uppercase tracking-wider text-slate-300 font-semibold">
+                  REFINERY PROCESS MANAGEMENT SYSTEM
+                </span>
+              </div>
+              <span className="text-[10px] font-mono text-slate-500">
+                PRD-REF-001
+              </span>
+            </div>
 
-          <div className="w-full max-w-[440px] bg-[#0D1522] rounded-2xl border border-[#1F2E43] p-6 sm:p-8 shadow-2xl relative z-10">
             {/* Card Title */}
-            <h2 className="text-2xl font-bold tracking-tight text-white">
-              Plant Personnel Sign In
+            <h2 className="text-2xl sm:text-[26px] font-bold tracking-tight text-white mb-2">
+              Refinery System Sign In
             </h2>
-            <div className="h-px bg-[#1F2E43] w-full mt-3 mb-4" />
-
             <p className="text-xs text-slate-400 leading-relaxed mb-6">
-              Enter your employee ID and password to access the Refinery Process Management System.
+              Sign in with your authorized employee credentials to access the Refinery Process Management System.
             </p>
 
             {/* Error Alert */}
@@ -197,14 +232,14 @@ export default function LoginView({ onLogin }: LoginViewProps) {
                   Employee ID / Email
                 </label>
                 <div className="relative">
-                  <User className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
+                  <User className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
                   <input
                     type="text"
                     required
                     placeholder="e.g. OP-1042, SV-2014, QC-3201"
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
-                    className="w-full bg-[#070B14] border border-[#1F2E43] rounded-lg pl-9 pr-3 py-2.5 text-xs sm:text-sm text-white placeholder-slate-500 focus:bg-[#090F1A] focus:outline-none focus:border-[#009FE3] focus:ring-1 focus:ring-[#009FE3] transition-all font-mono"
+                    className="w-full bg-[#060A12] border border-[#1C2C40] rounded-lg pl-10 pr-3 py-3 text-xs sm:text-sm text-white placeholder-slate-500 focus:bg-[#080E1A] focus:outline-none focus:border-[#009FE3] focus:ring-1 focus:ring-[#009FE3] transition-all font-mono"
                   />
                 </div>
               </div>
@@ -215,19 +250,19 @@ export default function LoginView({ onLogin }: LoginViewProps) {
                   Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
+                  <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
                     placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-[#070B14] border border-[#1F2E43] rounded-lg pl-9 pr-9 py-2.5 text-xs sm:text-sm text-white placeholder-slate-500 focus:bg-[#090F1A] focus:outline-none focus:border-[#009FE3] focus:ring-1 focus:ring-[#009FE3] transition-all"
+                    className="w-full bg-[#060A12] border border-[#1C2C40] rounded-lg pl-10 pr-10 py-3 text-xs sm:text-sm text-white placeholder-slate-500 focus:bg-[#080E1A] focus:outline-none focus:border-[#009FE3] focus:ring-1 focus:ring-[#009FE3] transition-all"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+                    className="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
                     title={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -241,16 +276,19 @@ export default function LoginView({ onLogin }: LoginViewProps) {
                   <input
                     type="checkbox"
                     defaultChecked
-                    className="h-3.5 w-3.5 rounded border-[#1F2E43] bg-[#070B14] text-[#009FE3] focus:ring-[#009FE3] cursor-pointer"
+                    className="h-3.5 w-3.5 rounded border-[#1C2C40] bg-[#060A12] text-[#009FE3] focus:ring-[#009FE3] cursor-pointer"
                   />
-                  <span>Remember this device</span>
+                  <span className="flex items-center gap-1">
+                    Remember this device
+                    <Info className="h-3.5 w-3.5 text-slate-500 hover:text-slate-400" />
+                  </span>
                 </label>
                 <span 
                   onClick={() => {
                     setErrorMessage(null);
                     alert('For security compliance (21 CFR Part 11), please contact your Plant System Administrator or Supervisor to reset your terminal credential.');
                   }}
-                  className="text-[#009FE3] hover:text-[#38BDF8] hover:underline cursor-pointer font-medium transition-colors"
+                  className="text-[#0095FF] hover:text-[#38BDF8] hover:underline cursor-pointer font-medium transition-colors"
                 >
                   Forgot password?
                 </span>
@@ -260,25 +298,58 @@ export default function LoginView({ onLogin }: LoginViewProps) {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex items-center justify-center gap-2 bg-[#009FE3] hover:bg-[#08B5F5] disabled:opacity-50 text-white font-semibold py-3 px-4 rounded-lg text-sm transition-all shadow-lg shadow-[#009FE3]/25 mt-3 cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 bg-[#008AE6] hover:bg-[#007AC9] disabled:opacity-50 text-white font-semibold py-3.5 px-4 rounded-lg text-sm transition-all shadow-lg shadow-[#008AE6]/25 mt-4 cursor-pointer"
               >
                 {isLoading ? (
                   <span>Authenticating Credentials...</span>
                 ) : (
-                  <span>Sign In</span>
+                  <span className="flex items-center justify-center gap-2 font-medium">
+                    Sign In to Refinery System
+                    <ArrowRight className="h-4 w-4" />
+                  </span>
                 )}
               </button>
             </form>
 
-            {/* Bottom Plant Notice */}
+            {/* Bottom Plant Notice Divider */}
             <div className="relative mt-7 text-center">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-[#1F2E43]"></div>
+                <div className="w-full border-t border-[#1C2C40]"></div>
               </div>
-              <div className="relative flex justify-center text-[11px]">
-                <span className="bg-[#0D1522] px-3 text-slate-500 font-medium">
-                  Authorized Plant Personnel Only
+              <div className="relative flex justify-center text-[10px]">
+                <span className="bg-[#0A1220] px-3 text-slate-400 font-medium uppercase tracking-widest font-mono">
+                  Authorized Refinery Personnel Only
                 </span>
+              </div>
+            </div>
+
+            {/* 3 Compliance / Trust Badges */}
+            <div className="grid grid-cols-3 gap-2 mt-6 pt-1 text-left">
+              {/* Badge 1 */}
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="h-5 w-5 text-[#009FE3] shrink-0" />
+                <div className="text-[11px] leading-tight">
+                  <span className="text-white font-semibold block text-[11px]">21 CFR Part 11</span>
+                  <span className="text-slate-400 text-[10px]">Compliant</span>
+                </div>
+              </div>
+
+              {/* Badge 2 */}
+              <div className="flex items-center gap-2">
+                <Lock className="h-5 w-5 text-[#009FE3] shrink-0" />
+                <div className="text-[11px] leading-tight">
+                  <span className="text-white font-semibold block text-[11px]">Secure</span>
+                  <span className="text-slate-400 text-[10px]">Access Control</span>
+                </div>
+              </div>
+
+              {/* Badge 3 */}
+              <div className="flex items-center gap-2">
+                <Database className="h-5 w-5 text-[#009FE3] shrink-0" />
+                <div className="text-[11px] leading-tight">
+                  <span className="text-white font-semibold block text-[11px]">Audit-Ready</span>
+                  <span className="text-slate-400 text-[10px]">Digital Records</span>
+                </div>
               </div>
             </div>
           </div>
@@ -286,9 +357,11 @@ export default function LoginView({ onLogin }: LoginViewProps) {
       </main>
 
       {/* 3. BOTTOM FOOTER BAR */}
-      <footer className="w-full border-t border-[#1F2E43] bg-[#070B12] py-2.5 px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-400 font-mono z-10 shrink-0">
+      <footer className="w-full border-t border-[#172538] bg-[#070C14] py-2.5 px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-400 font-mono z-10 shrink-0">
         <div className="flex items-center gap-3">
-          <span>21 CFR Part 11 Compliant</span>
+          <span>Lam Soon Edible Oils Sdn. Bhd.</span>
+          <span className="text-slate-600">|</span>
+          <span>Nisshin Deodorizer Refinery</span>
           <span className="text-slate-600">|</span>
           <span>DOC: PRD-REF-001</span>
           <span className="text-slate-600">|</span>
@@ -296,11 +369,11 @@ export default function LoginView({ onLogin }: LoginViewProps) {
         </div>
 
         <div className="flex items-center gap-3 font-sans">
-          <span>Lam Soon Edible Oils Sdn. Bhd.</span>
-          <span className="text-slate-600">|</span>
           <span className="hover:text-slate-200 cursor-pointer transition-colors">Help & Support</span>
           <span className="text-slate-600">|</span>
           <span className="hover:text-slate-200 cursor-pointer transition-colors">Privacy Policy</span>
+          <span className="text-slate-600">|</span>
+          <span className="hover:text-slate-200 cursor-pointer transition-colors">Contact Administrator</span>
         </div>
       </footer>
     </div>
