@@ -341,7 +341,7 @@ export default function SupervisorBoardView() {
                     <div>
                       {isRejected ? (
                         <span className="text-[10px] font-mono text-[#EF4444] bg-[#EF4444]/15 px-2 py-0.5 rounded border border-[#EF4444]/30 font-semibold">
-                          REJECTED ({rep.decision?.disposition?.toUpperCase()})
+                          REJECTED ({String(rep.decision?.disposition || 'REPROCESS').toUpperCase()})
                         </span>
                       ) : isAccepted ? (
                         <span className="text-[10px] font-mono text-[#10B981] bg-[#10B981]/15 px-2 py-0.5 rounded border border-[#10B981]/30 font-semibold">

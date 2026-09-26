@@ -1763,26 +1763,26 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
             <div className="rounded-lg border border-[#1F2E43] bg-[#070B14] p-3.5 space-y-1.5 text-xs font-mono">
               <div className="flex justify-between">
                 <span className="text-slate-400">Report No:</span>
-                <span className="text-slate-200 font-bold">{reportToDelete.report_no}</span>
+                <span className="text-slate-200 font-bold">{reportToDelete.report_no || '-'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Lot Number:</span>
-                <span className="text-[#009FE3] font-bold">{reportToDelete.lot_no}</span>
+                <span className="text-[#009FE3] font-bold">{reportToDelete.lot_no || '-'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Product:</span>
-                <span className="text-slate-200">{reportToDelete.product_name}</span>
+                <span className="text-slate-200">{reportToDelete.product_name || '-'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Sampling Time:</span>
-                <span className="text-slate-300">{reportToDelete.sample_date} {reportToDelete.time_check}</span>
+                <span className="text-slate-300">{reportToDelete.sample_date || ''} {reportToDelete.time_check || ''}</span>
               </div>
-              {reportToDelete.decision && (
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Current Status:</span>
-                  <span className="text-amber-400 font-semibold">{reportToDelete.decision.decision.toUpperCase()}</span>
-                </div>
-              )}
+              <div className="flex justify-between">
+                <span className="text-slate-400">Current Status:</span>
+                <span className="text-amber-400 font-semibold">
+                  {String(reportToDelete.decision?.decision || reportToDelete.status || 'PENDING').toUpperCase()}
+                </span>
+              </div>
             </div>
 
             {/* Error Message if any */}

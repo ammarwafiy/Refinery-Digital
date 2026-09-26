@@ -2328,10 +2328,11 @@ export async function deleteSampleReport(
   reportId: string,
   reason?: string
 ): Promise<{ success: boolean; error?: string; remainingReports?: SampleReport[] }> {
-  const profile = getCurrentProfile();
-  const role = getCurrentRole();
+  const authUser = getAuthUser();
+  const profile = authUser || getCurrentProfile();
+  const activeRole = authUser?.role || getCurrentRole();
 
-  if (role !== 'qc_analyst' && role !== 'qc_manager' && role !== 'admin') {
+  if (activeRole !== 'qc_analyst' && activeRole !== 'qc_manager' && activeRole !== 'admin') {
     return { success: false, error: 'Access Denied: Only Quality Control personnel or Administrators can remove sample records.' };
   }
 
@@ -2395,14 +2396,14 @@ export async function deleteSampleReport(
     targetReport,
     {
       action: 'SAMPLE_DELETED_BY_QC',
-      report_no: targetReport.report_no,
-      lot_no: targetReport.lot_no,
-      product: targetReport.product_name,
-      sample_date: targetReport.sample_date,
-      time_check: targetReport.time_check,
+      report_no: targetReport.report_no || '',
+      lot_no: targetReport.lot_no || '',
+      product: targetReport.product_name || '',
+      sample_date: targetReport.sample_date || '',
+      time_check: targetReport.time_check || '',
       reason: reason || 'Incorrect sample analysis removed by QC',
-      deleted_by: profile.full_name,
-      employee_no: profile.employee_no,
+      deleted_by: profile?.full_name || 'QC Analyst',
+      employee_no: profile?.employee_no || 'QC-STAFF',
       timestamp: new Date().toISOString()
     }
   );

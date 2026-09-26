@@ -264,7 +264,7 @@ export default function ReportExportView() {
           getRes('COLOUR_Y'),
           getOdour(),
           getRes('CLOUD_POINT'),
-          r.decision?.decision ? r.decision.decision.toUpperCase() : 'PENDING',
+          r.decision?.decision ? String(r.decision.decision).toUpperCase() : 'PENDING',
           `"${(r.decision?.reason_label || r.remarks || '-').replace(/"/g, '""')}"`,
           `"${(r.decision?.decided_by_name || r.submitted_by_name || '-').replace(/"/g, '""')}"`
         ];
@@ -331,7 +331,7 @@ export default function ReportExportView() {
           e.strip_steam_pct_of_oil ?? '-',
           e.has_deviation ? 'DEVIATION' : 'NORMAL',
           matchingQC?.lot_no || '-',
-          matchingQC?.decision?.decision ? matchingQC.decision.decision.toUpperCase() : 'PENDING',
+          matchingQC?.decision?.decision ? String(matchingQC.decision.decision).toUpperCase() : 'PENDING',
           ffa,
           h2o,
           iv,
