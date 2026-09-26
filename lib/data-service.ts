@@ -150,15 +150,156 @@ export function setStored<T>(key: string, val: T): void {
   }
 }
 
+// =============================================================================
+// Standardized Operational, User & Administration, and Document Code Dictionaries
+// =============================================================================
+export const ACTION_RECORD_CODES = {
+  SAMPLE_REPORT: { prefix: 'SR', label: 'Sample Report', example: 'SR001' },
+  QC_DECISION: { prefix: 'QC', label: 'QC Decision', example: 'QC001' },
+  ISO_CERTIFICATE: { prefix: 'ISO', label: 'ISO Certificate', example: 'ISO001' },
+  BATCH_PROCESS: { prefix: 'BP', label: 'Batch Process', example: 'BP001' },
+  PRODUCTION_RECORD: { prefix: 'PR', label: 'Production Record', example: 'PR001' },
+  PROCESS_LOG: { prefix: 'PL', label: 'Process Log', example: 'PL001' },
+  APPROVAL_RECORD: { prefix: 'AR', label: 'Approval Record', example: 'AR001' },
+  AUDIT_LOG: { prefix: 'AL', label: 'Audit Log', example: 'AL001' },
+} as const;
+
+export const USER_ADMIN_CODES = {
+  USER: { prefix: 'USR', label: 'User', example: 'USR001' },
+  ADMINISTRATOR: { prefix: 'ADM', label: 'Administrator', example: 'ADM001' },
+  OPERATOR: { prefix: 'OPR', label: 'Operator', example: 'OPR001' },
+  QC_STAFF: { prefix: 'QCS', label: 'QC Staff', example: 'QCS001' },
+  SUPERVISOR: { prefix: 'SUP', label: 'Supervisor', example: 'SUP001' },
+  MANAGER: { prefix: 'MGR', label: 'Manager', example: 'MGR001' },
+} as const;
+
+export const DOCUMENT_MANAGEMENT_CODES = {
+  DOCUMENT: { prefix: 'DOC', label: 'Document', example: 'DOC001' },
+  SOP: { prefix: 'SOP', label: 'Standard Operating Procedure', example: 'SOP001' },
+  WORK_INSTRUCTION: { prefix: 'WI', label: 'Work Instruction', example: 'WI001' },
+  CERTIFICATE: { prefix: 'CRT', label: 'Certificate', example: 'CRT001' },
+  ATTACHMENT: { prefix: 'ATT', label: 'Attachment', example: 'ATT001' },
+  REVISION: { prefix: 'REV', label: 'Document Revision', example: 'REV001' },
+} as const;
+
+export const USER_ALIAS_MAP: Record<string, string> = {
+  // Legacy -> Standard
+  'op-1042': 'opr001',
+  'sv-2014': 'sup001',
+  'qc-3201': 'qcs001',
+  'qm-4502': 'mgr001',
+  'ad-5010': 'adm001',
+  'au-9901': 'usr001',
+  // Standard -> Legacy
+  'opr001': 'op-1042',
+  'sup001': 'sv-2014',
+  'qcs001': 'qc-3201',
+  'mgr001': 'qm-4502',
+  'adm001': 'ad-5010',
+  'usr001': 'au-9901',
+};
+
+// Formats table name to official standard category
+export function formatAuditTableName(tableName: string): string {
+  const t = (tableName || '').toLowerCase();
+  switch (t) {
+    case 'sample_reports':
+      return 'Sample Report (SR)';
+    case 'qc_decisions':
+      return 'QC Decision (QC)';
+    case 'iso_certificates':
+    case 'certifications':
+      return 'ISO Certificate (ISO)';
+    case 'batch_processes':
+    case 'process_batches':
+      return 'Batch Process (BP)';
+    case 'process_sheets':
+      return 'Production Record (PR)';
+    case 'process_entries':
+      return 'Process Log (PL)';
+    case 'deviations':
+    case 'approval_records':
+      return 'Approval Record (AR)';
+    case 'audit_log':
+    case 'audit_logs':
+      return 'Audit Log (AL)';
+    case 'profiles':
+    case 'users':
+      return 'User & Admin (USR/ADM)';
+    case 'documents':
+      return 'Document (DOC)';
+    default:
+      return tableName;
+  }
+}
+
+// Formats any record ID / audit row to standard prefix code (e.g. SR001, QC001, PR001, PL001, AL001)
+export function formatAuditRecordId(entry: AuditLogEntry | { table_name?: string; record_id?: string; id?: any }): string {
+  const table = (entry?.table_name || '').toLowerCase();
+  const rawId = String(entry?.record_id || entry?.id || '').trim();
+  
+  if (/^(SR|QC|ISO|BP|PR|PL|AR|AL|USR|ADM|OPR|QCS|SUP|MGR|DOC|SOP|WI|CRT|ATT|REV)\d+/i.test(rawId)) {
+    return rawId.toUpperCase();
+  }
+
+  let num = 1;
+  if (/^\d+$/.test(rawId)) {
+    num = parseInt(rawId, 10);
+  } else if (rawId.includes('-')) {
+    const parts = rawId.split('-');
+    const lastPart = parts[parts.length - 1];
+    const parsedHex = parseInt(lastPart, 16);
+    if (!isNaN(parsedHex) && parsedHex > 0) {
+      num = parsedHex;
+    } else {
+      const digits = rawId.replace(/\D/g, '');
+      num = digits ? parseInt(digits.slice(-4), 10) : 1;
+    }
+  }
+
+  const displayNum = ((num - 1) % 999) + 1;
+  const padded = String(displayNum).padStart(3, '0');
+
+  switch (table) {
+    case 'sample_reports':
+      return `SR${padded}`;
+    case 'qc_decisions':
+      return `QC${padded}`;
+    case 'iso_certificates':
+    case 'certifications':
+      return `ISO${padded}`;
+    case 'batch_processes':
+    case 'process_batches':
+      return `BP${padded}`;
+    case 'process_sheets':
+      return `PR${padded}`;
+    case 'process_entries':
+      return `PL${padded}`;
+    case 'deviations':
+    case 'approval_records':
+      return `AR${padded}`;
+    case 'audit_log':
+    case 'audit_logs':
+      return `AL${padded}`;
+    case 'profiles':
+    case 'users':
+      return `USR${padded}`;
+    case 'documents':
+      return `DOC${padded}`;
+    default:
+      return rawId ? `REC-${rawId.slice(0, 8)}` : `AL${padded}`;
+  }
+}
+
 // Consistent Industrial Employee ID Configuration
-// Format: 2-Letter Department Code + 4-Digit Number
+// Format: Standardized Role Prefix + 3-Digit Sequence (e.g. OPR001, SUP001, QCS001, MGR001, ADM001, USR001)
 export const ROLE_ID_SERIES: Record<UserRole, { prefix: string; label: string; start: number; example: string }> = {
-  operator:   { prefix: 'OP', label: 'Plant Operator (0700-0600)', start: 1042, example: 'OP-1043' },
-  supervisor: { prefix: 'SV', label: 'Shift Supervisor', start: 2014, example: 'SV-2015' },
-  qc_analyst: { prefix: 'QC', label: 'QC Lab Analyst', start: 3201, example: 'QC-3202' },
-  qc_manager: { prefix: 'QM', label: 'Quality Control Manager', start: 4502, example: 'QM-4503' },
-  admin:      { prefix: 'AD', label: 'Plant Administrator / Engineering', start: 5010, example: 'AD-5011' },
-  viewer:     { prefix: 'AU', label: 'Quality Auditor (ISO/HACCP)', start: 9901, example: 'AU-9902' },
+  operator:   { prefix: 'OPR', label: 'Operator (OPR001)', start: 1, example: 'OPR001' },
+  supervisor: { prefix: 'SUP', label: 'Supervisor (SUP001)', start: 1, example: 'SUP001' },
+  qc_analyst: { prefix: 'QCS', label: 'QC Staff (QCS001)', start: 1, example: 'QCS001' },
+  qc_manager: { prefix: 'MGR', label: 'Manager (MGR001)', start: 1, example: 'MGR001' },
+  admin:      { prefix: 'ADM', label: 'Administrator (ADM001)', start: 1, example: 'ADM001' },
+  viewer:     { prefix: 'USR', label: 'User (USR001)', start: 1, example: 'USR001' },
 };
 
 // Role-Based Views & Navigation Rules (RBAC)
@@ -181,22 +322,24 @@ export const ROLE_DEFAULT_TAB: Record<UserRole, string> = {
 };
 
 export function generateNextEmployeeId(role: UserRole): string {
-  const meta = ROLE_ID_SERIES[role] || { prefix: 'ST', start: 1000 };
+  const meta = ROLE_ID_SERIES[role] || { prefix: 'USR', start: 1 };
   const all = getProfiles();
+  
   const existingNums = all
-    .filter(p => (p?.employee_no || '').toUpperCase().startsWith(`${meta.prefix}-`))
-    .map(p => {
-      const parts = (p?.employee_no || '').split('-');
-      return parseInt(parts[1], 10);
+    .map(p => (p?.employee_no || '').trim().toUpperCase())
+    .filter(id => id.startsWith(meta.prefix))
+    .map(id => {
+      const digits = id.slice(meta.prefix.length).replace(/\D/g, '');
+      return digits ? parseInt(digits, 10) : NaN;
     })
     .filter(n => !isNaN(n));
 
   if (existingNums.length === 0) {
-    return `${meta.prefix}-${meta.start}`;
+    return `${meta.prefix}${String(meta.start).padStart(3, '0')}`;
   }
 
-  const maxNum = Math.max(...existingNums, meta.start);
-  return `${meta.prefix}-${maxNum + 1}`;
+  const maxNum = Math.max(...existingNums, meta.start - 1);
+  return `${meta.prefix}${String(maxNum + 1).padStart(3, '0')}`;
 }
 
 // 1. Authentication & Session Management
@@ -214,20 +357,23 @@ export function setAuthUser(profile: Profile | null): void {
 
 export function loginUser(identifier: string, password?: string): { success: boolean; profile?: Profile; error?: string } {
   const cleanId = identifier.trim().toLowerCase();
+  const aliasId = USER_ALIAS_MAP[cleanId];
   const allProfiles = getProfiles();
 
-  // Match by employee_no (exact or lowercase), full_name, or role
-  const found = allProfiles.find(p => 
-    p.employee_no.toLowerCase() === cleanId ||
-    p.full_name.toLowerCase() === cleanId ||
-    p.full_name.toLowerCase().includes(cleanId) ||
-    p.role.toLowerCase() === cleanId
-  );
+  // Match by employee_no (exact, lowercase, or alias), full_name, or role
+  const found = allProfiles.find(p => {
+    const empNo = p.employee_no.toLowerCase();
+    return empNo === cleanId ||
+      (aliasId && empNo === aliasId) ||
+      p.full_name.toLowerCase() === cleanId ||
+      p.full_name.toLowerCase().includes(cleanId) ||
+      p.role.toLowerCase() === cleanId;
+  });
 
   if (!found) {
     return { 
       success: false, 
-      error: `Employee ID "${identifier}" was not found in the plant directory. Please verify your ID (e.g., OP-1042, SV-2014, QC-3201).` 
+      error: `Employee ID "${identifier}" was not found in the plant directory. Please verify your ID (e.g., OPR001, SUP001, QCS001, ADM001).` 
     };
   }
 
@@ -254,14 +400,19 @@ export function loginUser(identifier: string, password?: string): { success: boo
 // Live Supabase Authentication Engine: Queries Supabase for live credentials with offline fallback
 export async function authenticateUser(identifier: string, password?: string): Promise<{ success: boolean; profile?: Profile; error?: string }> {
   const cleanId = identifier.trim().toLowerCase();
+  const aliasId = USER_ALIAS_MAP[cleanId];
 
   // 1. Proactively query Supabase directly first to get live credentials & latest full_name
   if (isSupabaseConfigured && supabase) {
     try {
+      const orFilter = aliasId
+        ? `employee_no.ilike.${cleanId},employee_no.ilike.${aliasId},full_name.ilike.%${cleanId}%,role.ilike.${cleanId}`
+        : `employee_no.ilike.${cleanId},full_name.ilike.%${cleanId}%,role.ilike.${cleanId}`;
+
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .or(`employee_no.ilike.${cleanId},full_name.ilike.%${cleanId}%,role.ilike.${cleanId}`)
+        .or(orFilter)
         .limit(1);
 
       if (!error && Array.isArray(data) && data.length > 0) {

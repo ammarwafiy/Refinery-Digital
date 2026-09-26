@@ -9,7 +9,9 @@ import {
   getAvailableShiftDates,
   getProcessSheetByDate,
   getRealtimeShiftDate,
-  syncAuditLogsFromSupabase
+  syncAuditLogsFromSupabase,
+  formatAuditRecordId,
+  formatAuditTableName
 } from '@/lib/data-service';
 import type { SampleReport, ProcessSheet, AuditLogEntry } from '@/types/refinery';
 import { 
@@ -312,6 +314,7 @@ export default function OfficialFormsExportView() {
       const headers = [
         'Timestamp (MYT)',
         'Table Name',
+        'Standard Code',
         'Action',
         'Authorized Actor',
         'Record ID',
@@ -319,7 +322,8 @@ export default function OfficialFormsExportView() {
       ];
       const rows = filteredAuditLogs.map(log => [
         `"${formatDateTime(log.occurred_at)}"`,
-        log.table_name,
+        `"${formatAuditTableName(log.table_name)}"`,
+        `"${formatAuditRecordId(log)}"`,
         String(log.action || '').toUpperCase(),
         `"${(log.actor_name || 'System / DB Trigger').replace(/"/g, '""')}"`,
         `"${String(log.record_id || log.id || '-').replace(/"/g, '""')}"`,
@@ -1189,10 +1193,10 @@ export default function OfficialFormsExportView() {
                 <thead className="bg-[#101927] text-slate-400 text-[10px] tracking-wider uppercase border-b border-[#1F2E43]">
                   <tr>
                     <th className="py-2.5 px-3">Timestamp (MYT)</th>
-                    <th className="py-2.5 px-3">Table Name</th>
+                    <th className="py-2.5 px-3">Category / Table</th>
                     <th className="py-2.5 px-3">Action</th>
                     <th className="py-2.5 px-3">Authorized Actor</th>
-                    <th className="py-2.5 px-3">Record ID</th>
+                    <th className="py-2.5 px-3">Standard Code</th>
                     <th className="py-2.5 px-3">Audit Details &amp; Payload</th>
                     <th className="py-2.5 px-3 text-right">Inspect</th>
                   </tr>
@@ -1205,7 +1209,7 @@ export default function OfficialFormsExportView() {
                       </td>
                       <td className="py-2.5 px-3 font-semibold whitespace-nowrap">
                         <span className="px-1.5 py-0.5 rounded bg-[#101927] border border-[#1F2E43] text-[#009FE3] text-[10px] tracking-wide font-mono font-medium">
-                          {log.table_name}
+                          {formatAuditTableName(log.table_name)}
                         </span>
                       </td>
                       <td className="py-2.5 px-3 whitespace-nowrap">
@@ -1219,8 +1223,13 @@ export default function OfficialFormsExportView() {
                       <td className="py-2.5 px-3 text-slate-200 whitespace-nowrap font-medium text-[11px]">
                         {log.actor_name || 'System / DB Trigger'}
                       </td>
-                      <td className="py-2.5 px-3 text-slate-400 text-[11px] max-w-[120px] truncate font-mono">
-                        {String(log.record_id || log.id || '-')}
+                      <td className="py-2.5 px-3 whitespace-nowrap font-mono text-[11px]">
+                        <span 
+                          className="font-bold text-[#009FE3] bg-[#0A101D] border border-[#1F2E43] px-2 py-0.5 rounded shadow-sm inline-block"
+                          title={`Raw Database Record ID: ${String(log.record_id || log.id || '')}`}
+                        >
+                          {formatAuditRecordId(log)}
+                        </span>
                       </td>
                       <td className="py-2.5 px-3 text-slate-400 max-w-sm md:max-w-md truncate font-mono text-[11px]">
                         {JSON.stringify(log.new_row || log.old_row || {})}
@@ -1252,7 +1261,7 @@ export default function OfficialFormsExportView() {
                   <div className="flex items-center justify-between border-b border-[#1F2E43] pb-3">
                     <div className="flex items-center gap-2 text-slate-100 font-semibold text-sm">
                       <History className="h-4 w-4 text-[#009FE3]" />
-                      <span>Audit Record Details — ID: {String(expLog.id)}</span>
+                      <span>Audit Record Details — {formatAuditRecordId(expLog)} ({formatAuditTableName(expLog.table_name)})</span>
                     </div>
                     <button
                       type="button"

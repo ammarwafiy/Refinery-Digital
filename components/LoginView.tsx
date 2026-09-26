@@ -236,7 +236,7 @@ export default function LoginView({ onLogin }: LoginViewProps) {
                   <input
                     type="text"
                     required
-                    placeholder="e.g. OP-1042, SV-2014, QC-3201"
+                    placeholder="e.g. OPR001, SUP001, QCS001, ADM001"
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
                     className="w-full bg-[#060A12] border border-[#1C2C40] rounded-lg pl-10 pr-3 py-3 text-xs sm:text-sm text-white placeholder-slate-500 focus:bg-[#080E1A] focus:outline-none focus:border-[#009FE3] focus:ring-1 focus:ring-[#009FE3] transition-all font-mono"
