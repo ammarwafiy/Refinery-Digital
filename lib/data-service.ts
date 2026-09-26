@@ -63,27 +63,45 @@ export function makeEntryUuid(dateStr: string, slotIndex: number): string {
   return `61000000-${mmdd}-0000-0000-0000000000${hexSlot}`;
 }
 
-export function makeSampleReportUuid(seed?: number | string): string {
-  const num = typeof seed === 'number' ? seed : parseInt(String(seed || Date.now()).replace(/\D/g, '').slice(-12), 10) || Math.floor(Math.random() * 1000000);
+export function makeSampleReportUuid(seed?: number | string, slotIndex?: number): string {
+  // If called with dateStr and slotIndex (e.g. '2026-09-26', 0)
+  if (typeof seed === 'string' && seed.includes('-') && slotIndex !== undefined) {
+    const parts = seed.split('-');
+    const mmdd = `${parts[1] || '09'}${parts[2] || '26'}`;
+    const hexSlot = (slotIndex ?? 0).toString(16).padStart(2, '0');
+    return `70000000-${mmdd}-0000-0000-0000000000${hexSlot}`;
+  }
+  // If sequential integer or numeric seed (e.g. 486)
+  const num = typeof seed === 'number' ? seed : parseInt(String(seed || '').replace(/\D/g, '').slice(-12), 10) || 486;
   const hexNum = (num % 0xffffffffffff).toString(16).padStart(12, '0');
   return `70000000-0000-0000-0000-${hexNum}`;
 }
 
-export function makeSampleResultUuid(reportSeq: number | string, paramIndex: number): string {
-  const rNum = typeof reportSeq === 'number' ? reportSeq : parseInt(String(reportSeq).replace(/\D/g, '').slice(-4), 10) || 1;
+export function makeSampleResultUuid(reportIdOrSeq: number | string, paramIndex: number): string {
+  if (typeof reportIdOrSeq === 'string' && reportIdOrSeq.startsWith('70000000-')) {
+    const parts = reportIdOrSeq.split('-');
+    const middle = parts[1] || '0000';
+    const slotHex = parts[4] ? parts[4].slice(-2) : '00';
+    const pHex = (paramIndex % 0xff).toString(16).padStart(2, '0');
+    return `71000000-${middle}-${slotHex}00-0000-0000000000${pHex}`;
+  }
+  const rNum = typeof reportIdOrSeq === 'number' ? reportIdOrSeq : parseInt(String(reportIdOrSeq).replace(/\D/g, '').slice(-4), 10) || 1;
   const rHex = (rNum % 0xffff).toString(16).padStart(4, '0');
-  const pHex = (paramIndex % 0xffffffffffff).toString(16).padStart(12, '0');
-  return `71000000-${rHex}-0000-0000-${pHex}`;
+  const pHex = (paramIndex % 0xff).toString(16).padStart(2, '0');
+  return `71000000-0000-${rHex}-0000-0000000000${pHex}`;
 }
 
-export function makeDecisionUuid(seed?: number | string): string {
-  const num = typeof seed === 'number' ? seed : parseInt(String(seed || Date.now()).replace(/\D/g, '').slice(-12), 10) || Math.floor(Math.random() * 1000000);
+export function makeDecisionUuid(reportIdOrSeed?: number | string): string {
+  if (typeof reportIdOrSeed === 'string' && reportIdOrSeed.startsWith('70000000-')) {
+    return '80000000-' + reportIdOrSeed.slice(9);
+  }
+  const num = typeof reportIdOrSeed === 'number' ? reportIdOrSeed : parseInt(String(reportIdOrSeed || '').replace(/\D/g, '').slice(-12), 10) || 1;
   const hexNum = (num % 0xffffffffffff).toString(16).padStart(12, '0');
   return `80000000-0000-0000-0000-${hexNum}`;
 }
 
 export function makeDeviationUuid(seed?: number | string): string {
-  const num = typeof seed === 'number' ? seed : parseInt(String(seed || Date.now()).replace(/\D/g, '').slice(-12), 10) || Math.floor(Math.random() * 1000000);
+  const num = typeof seed === 'number' ? seed : parseInt(String(seed || '').replace(/\D/g, '').slice(-12), 10) || 1;
   const hexNum = (num % 0xffffffffffff).toString(16).padStart(12, '0');
   return `90000000-0000-0000-0000-${hexNum}`;
 }
@@ -1141,16 +1159,30 @@ export function ensureAutoDispatchedQC(
     const slotLabel = String(((targetSlotIndex + 7) % 24) * 100).padStart(4, '0');
     const slotTimeCheck = `${slotLabel.slice(0, 2)}:00`;
 
+    const parts = (targetShiftDate || '2026-09-20').split('-');
+    const mmdd = `${parts[1] || '09'}${parts[2] || '20'}`;
+    const hexSlot = (targetSlotIndex ?? 0).toString(16).padStart(2, '0');
+    const slotHour = slotLabel.slice(0, 2);
+    const reportId = `70000000-${mmdd}-0000-0000-0000000000${hexSlot}`;
+    const reportNo = `SAR-2026-${mmdd}${slotHour}`;
+
     const currentReports = getStored<SampleReport[]>(STORAGE_KEYS.REPORTS, memoryReports);
     const deletedReports = getStored<string[]>(STORAGE_KEYS.DELETED_REPORTS, []);
     const slotKey = `${targetShiftDate}-${slotLabel}`;
-    if (deletedReports.includes(slotKey)) {
+    if (deletedReports.includes(slotKey) || deletedReports.includes(reportId) || deletedReports.includes(reportNo)) {
       return null;
     }
 
-    const existingReportIdx = currentReports.findIndex(
-      r => r.sample_date === targetShiftDate && (r.time_check === slotTimeCheck || r.lot_no?.endsWith(`-${slotLabel}`))
-    );
+    const existingReportIdx = currentReports.findIndex(r => {
+      if (r.id === reportId || r.report_no === reportNo) return true;
+      if (r.sample_date === targetShiftDate) {
+        if (r.time_check === slotTimeCheck || r.time_check?.startsWith(slotHour + ':')) return true;
+        if (r.lot_no?.endsWith(`-${slotLabel}`)) return true;
+        const rHour = (r.time_check || '').slice(0, 2);
+        if (rHour === slotHour) return true;
+      }
+      return false;
+    });
 
     // Determine product to use
     let productId: string | undefined = explicitProductId;
@@ -1253,13 +1285,10 @@ export function ensureAutoDispatchedQC(
       return existing;
     }
 
-    // Auto-create new QC sample report immediately for this timeline slot
-    const reportSeq = Math.floor(1000 + Math.random() * 9000);
-    const reportId = makeSampleReportUuid(reportSeq);
+    // Auto-create new QC sample report immediately with deterministic RFC-4122 UUID and sequential batch
     const cleanProdCode = (prodObj?.code || productName.split(' ')[0] || 'PL65').replace(/[^a-zA-Z0-9]/g, '');
     const cleanDateCode = targetShiftDate.replace(/-/g, '').slice(2);
     const lotNo = `LOT-${cleanProdCode}-${cleanDateCode}-${slotLabel}`;
-    const reportNo = `SAR-2026-${String(Math.floor(100000 + Math.random() * 900000))}`;
     const now = new Date().toISOString();
     const profile = getCurrentProfile();
 
@@ -1283,7 +1312,7 @@ export function ensureAutoDispatchedQC(
       discharge_tank_id: DEFAULT_DISCHARGE_TANK_ID,
       discharge_tank_code: 'TK-201A',
       crystallizer_no: 'CR-04',
-      batch_no: `B${cleanDateCode}${slotLabel.slice(0, 2)}`,
+      batch_no: `B${cleanDateCode}${slotHour}`,
       sampling_point_id: DEFAULT_SAMPLING_POINT_ID,
       sampling_point_name: 'Deodorizer Outlet Pipe (Header 4)',
       submitted_by: submitterId,
@@ -1323,8 +1352,8 @@ export function ensureAutoDispatchedQC(
 
 /**
  * Comprehensive Auto-Dispatch Sync:
- * Scans all process entries in the active process sheet(s) that have recorded production readings
- * and ensures that an awaiting sample lot exists in RF-FR-001 QC Lab for every single recorded hour.
+ * Scans process entries in active/open shift sheet(s) that have recorded production readings
+ * and ensures that an awaiting sample lot exists in RF-FR-001 QC Lab for every recorded hour.
  */
 export function syncAllProcessEntriesToQC(targetShiftDate?: string): number {
   try {
@@ -1337,10 +1366,10 @@ export function syncAllProcessEntriesToQC(targetShiftDate?: string): number {
     }
     datesToSync.add(realtimeDate);
 
-    // Also include any sheets stored in allSheets that have entries
+    // Only include currently open / in-progress sheets to avoid re-dispatching historical verified days
     Object.keys(allSheets).forEach(d => {
       const s = allSheets[d];
-      if (s && s.entries && s.entries.length > 0) {
+      if (s && s.status === 'open' && s.entries && s.entries.length > 0) {
         datesToSync.add(d);
       }
     });
@@ -1941,10 +1970,20 @@ export async function syncSampleReportsFromSupabase(): Promise<{ success: boolea
     }
 
     const currentReports = getSampleReports();
-    const mergedReports: SampleReport[] = [...currentReports];
+    const remoteReportNos = new Set(remoteReports.map((r: any) => r.report_no));
+    const remoteIds = new Set(remoteReports.map((r: any) => r.id));
+
+    // Filter out obsolete/corrupt records from local storage that are not present in Supabase
+    const cleanLocal = currentReports.filter(r => {
+      if (remoteReportNos.has(r.report_no) || remoteIds.has(r.id)) return true;
+      if (r.report_no && /^SAR-2026-00048[1-5]$/.test(r.report_no)) return true;
+      return false;
+    });
+
+    const mergedReports: SampleReport[] = [...cleanLocal];
 
     remoteReports.forEach((sbRep: any) => {
-      const existingIdx = mergedReports.findIndex(r => r.report_no === sbRep.report_no);
+      const existingIdx = mergedReports.findIndex(r => r.report_no === sbRep.report_no || r.id === sbRep.id);
       
       const mappedResults: SampleResult[] = Array.isArray(sbRep.results) ? sbRep.results.map((r: any) => ({
         id: r.id,
@@ -2017,6 +2056,13 @@ export async function syncSampleReportsFromSupabase(): Promise<{ success: boolea
       }
     });
 
+    // Sort by sample_date desc, time_check desc
+    mergedReports.sort((a, b) => {
+      const dCmp = (b.sample_date || '').localeCompare(a.sample_date || '');
+      if (dCmp !== 0) return dCmp;
+      return (b.time_check || '').localeCompare(a.time_check || '');
+    });
+
     memoryReports = mergedReports;
     setStored(STORAGE_KEYS.REPORTS, mergedReports);
 
@@ -2060,9 +2106,22 @@ export function createSampleReport(data: {
   const disc = tanks.find(t => t.id === data.discharge_tank_id);
   const sp = sps.find(s => s.id === data.sampling_point_id);
 
-  const reportSeq = Math.floor(1000 + Math.random() * 9000);
-  const reportId = makeSampleReportUuid(reportSeq);
-  const reportNo = `SAR-2026-${String(Math.floor(100000 + Math.random() * 900000))}`;
+  const currentReports = getStored<SampleReport[]>(STORAGE_KEYS.REPORTS, memoryReports);
+  // Find highest SAR-2026-000XXX number for sequential manual samples
+  let maxSeq = 485;
+  currentReports.forEach(r => {
+    const m = r.report_no?.match(/^SAR-2026-(\d{6})$/);
+    if (m) {
+      const num = parseInt(m[1], 10);
+      if (num < 10000 && num > maxSeq) {
+        maxSeq = num;
+      }
+    }
+  });
+  const nextSeq = maxSeq + 1;
+  const seqStr = String(nextSeq).padStart(6, '0');
+  const reportNo = `SAR-2026-${seqStr}`;
+  const reportId = `70000000-0000-0000-0000-${String(nextSeq).padStart(12, '0')}`;
 
   // Prepare requested parameter results
   const results: SampleResult[] = [];
@@ -2076,7 +2135,7 @@ export function createSampleReport(data: {
         : param.series_values;
       activeTemps.forEach(temp => {
         results.push({
-          id: makeSampleResultUuid(reportSeq, resSeq++),
+          id: makeSampleResultUuid(reportId, resSeq++),
           report_id: reportId,
           parameter_id: param.id,
           parameter_code: param.code,
@@ -2088,7 +2147,7 @@ export function createSampleReport(data: {
       });
     } else {
       results.push({
-        id: makeSampleResultUuid(reportSeq, resSeq++),
+        id: makeSampleResultUuid(reportId, resSeq++),
         report_id: reportId,
         parameter_id: param.id,
         parameter_code: param.code,
@@ -2287,7 +2346,7 @@ export function submitQCDecision(data: {
   const reasonObj = reasons.find(r => r.id === data.reason_id);
 
   const decisionObj: QCDecision = {
-    id: makeDecisionUuid(),
+    id: makeDecisionUuid(data.report_id),
     report_id: data.report_id,
     decision: data.decision,
     reason_id: data.reason_id,
