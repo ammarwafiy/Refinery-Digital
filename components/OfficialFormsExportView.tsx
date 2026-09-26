@@ -143,12 +143,14 @@ export default function OfficialFormsExportView() {
       const repList = getSampleReports();
       setReports(repList);
       setSheet(getProcessSheetByDate(selectedShiftDate));
-      setAuditLogs(getAuditLogs());
+      setAuditLogs([...getAuditLogs()]);
       setAvailableShiftDates(getAvailableShiftDates());
     };
 
     refreshData();
-    syncAuditLogsFromSupabase().catch(() => {});
+    syncAuditLogsFromSupabase().then(() => {
+      setAuditLogs([...getAuditLogs()]);
+    }).catch(() => {});
 
     window.addEventListener('refinery_reports_updated', refreshData);
     window.addEventListener('refinery_sheet_updated', refreshData);
@@ -1070,9 +1072,7 @@ export default function OfficialFormsExportView() {
                 type="button"
                 onClick={async () => {
                   const res = await syncAuditLogsFromSupabase();
-                  if (res.success) {
-                    setAuditLogs(getAuditLogs());
-                  }
+                  setAuditLogs([...getAuditLogs()]);
                 }}
                 className="flex items-center gap-1.5 bg-[#0A1018] hover:bg-[#172235] text-[#009FE3] px-3 py-1.5 rounded-lg border border-[#1F2E43] hover:border-[#009FE3]/50 transition-all cursor-pointer text-xs"
                 title="Fetch latest audit logs directly from Supabase"

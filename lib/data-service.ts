@@ -2552,30 +2552,8 @@ export async function syncAuditLogsFromSupabase(): Promise<{ success: boolean; c
     });
 
     // Supabase audit_log is the authoritative immutable regulatory ledger.
-    // Retain only very recent un-synced local entries (< 60s) that have standard clean UUIDs.
-    // Stale/corrupt local logs from past sessions with irregular UUIDs are purged.
-    const localLogs = getAuditLogs();
-    const remoteKeys = new Set(mappedRemote.map(r => `${r.table_name}_${r.record_id}_${r.action}`));
-    const now = Date.now();
-
-    const pendingLocal = localLogs.filter(l => {
-      if (!l.occurred_at || !l.record_id) return false;
-      const ageMs = now - new Date(l.occurred_at).getTime();
-      if (ageMs > 60000 || ageMs < -60000) return false;
-      // Exclude dirty UUID fragments
-      if (typeof l.record_id === 'string' && /[0-9a-f]{4}/i.test(l.record_id) && 
-          !l.record_id.startsWith('11111111') && !l.record_id.startsWith('20000000') && 
-          !l.record_id.startsWith('30000000') && !l.record_id.startsWith('40000000') && 
-          !l.record_id.startsWith('50000000') && !l.record_id.startsWith('60000000') && 
-          !l.record_id.startsWith('61000000') && !l.record_id.startsWith('70000000') && 
-          !l.record_id.startsWith('71000000') && !l.record_id.startsWith('80000000') && 
-          !l.record_id.startsWith('90000000')) {
-        return false;
-      }
-      return !remoteKeys.has(`${l.table_name}_${l.record_id}_${l.action}`);
-    });
-
-    const merged = [...mappedRemote, ...pendingLocal].sort((a, b) => 
+    // Overwrite local storage directly with the clean Supabase records.
+    const merged = mappedRemote.sort((a, b) => 
       new Date(b.occurred_at).getTime() - new Date(a.occurred_at).getTime()
     );
 
