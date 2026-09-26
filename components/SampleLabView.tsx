@@ -27,7 +27,8 @@ import {
   getRealtimeShiftDate,
   ensureAutoDispatchedQC,
   syncAllProcessEntriesToQC,
-  generateNextLotNo
+  generateNextLotNo,
+  deleteSampleReport
 } from '@/lib/data-service';
 import {
   DEFAULT_PRODUCT_ID,
@@ -46,7 +47,9 @@ import {
   ShieldCheck,
   Sparkles,
   RefreshCw,
-  FileText
+  FileText,
+  Trash2,
+  AlertTriangle
 } from 'lucide-react';
 
 interface SampleLabViewProps {
@@ -120,6 +123,14 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
   const [decisionDisposition, setDecisionDisposition] = useState<Disposition>('reprocess');
   const [decisionPassword, setDecisionPassword] = useState('');
   const [decisionError, setDecisionError] = useState<string | null>(null);
+
+  // Delete Sample state (QC mistake correction)
+  const [reportToDelete, setReportToDelete] = useState<SampleReport | null>(null);
+  const [deleteReason, setDeleteReason] = useState<string>('Wrong analytical readings entered');
+  const [deleteCustomReason, setDeleteCustomReason] = useState<string>('');
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deleteSuccessMessage, setDeleteSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const activeR = currentRole || currentUser?.role || getCurrentRole();
@@ -473,6 +484,38 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
     refreshReports();
   };
 
+  const handleConfirmDelete = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reportToDelete) return;
+    setDeleteError(null);
+    setIsDeleting(true);
+
+    const finalReason = deleteReason === 'other'
+      ? (deleteCustomReason.trim() || 'Mistake in sample entry')
+      : deleteReason;
+
+    try {
+      const res = await deleteSampleReport(reportToDelete.id, finalReason);
+      setIsDeleting(false);
+      if (res.success) {
+        setDeleteSuccessMessage(`Sample lot ${reportToDelete.lot_no} (${reportToDelete.report_no}) was deleted and synchronized.`);
+        const remaining = res.remainingReports || reports.filter(r => r.id !== reportToDelete.id);
+        setReports(remaining);
+        if (selectedReportId === reportToDelete.id) {
+          setSelectedReportId(remaining.length > 0 ? remaining[0].id : null);
+        }
+        setReportToDelete(null);
+        setDeleteCustomReason('');
+        setTimeout(() => setDeleteSuccessMessage(null), 5000);
+      } else {
+        setDeleteError(res.error || 'Failed to delete sample report.');
+      }
+    } catch (err: any) {
+      setIsDeleting(false);
+      setDeleteError(err?.message || 'Error occurred while deleting sample.');
+    }
+  };
+
   // Filtered reports list
   const filteredReports = reports.filter(r => {
     const matchSearch = r.lot_no.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -574,6 +617,22 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
           </div>
         )}
       </div>
+
+      {/* Delete Success Alert Notification */}
+      {deleteSuccessMessage && (
+        <div className="flex items-center justify-between gap-3 p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-950/40 text-emerald-300 font-mono text-xs shadow-lg">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+            <span>{deleteSuccessMessage}</span>
+          </div>
+          <span 
+            onClick={() => setDeleteSuccessMessage(null)} 
+            className="cursor-pointer text-slate-400 hover:text-slate-200 px-1 font-bold text-sm"
+          >
+            ✕
+          </span>
+        </div>
+      )}
 
       {/* 2. Content Views */}
 
@@ -1041,6 +1100,19 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                         >
                           <FileText className="h-3.5 w-3.5 text-[#009FE3]" />
                           <span>Certificate</span>
+                        </button>
+                      )}
+
+                      {/* Delete Sample Action for QC */}
+                      {canEdit && (
+                        <button
+                          type="button"
+                          onClick={() => setReportToDelete(selectedReport)}
+                          className="flex items-center gap-1.5 bg-red-950/40 hover:bg-red-900/60 text-red-300 hover:text-red-200 border border-red-800/60 px-2.5 py-1.5 rounded-md text-xs font-mono transition-colors cursor-pointer"
+                          title="Delete this sample analysis (QC correction)"
+                        >
+                          <Trash2 className="h-3.5 w-3.5 text-red-400" />
+                          <span>Delete Sample</span>
                         </button>
                       )}
                     </div>
@@ -1652,6 +1724,133 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                   className="bg-[#009FE3] hover:bg-[#0089C4] text-white font-mono font-medium text-xs uppercase px-4 py-1.5 rounded-lg transition-all border border-[#009FE3]/50 cursor-pointer"
                 >
                   Sign & Commit Decision
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* Modal: Delete Sample Confirmation (QC Correction) */}
+      {reportToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="w-full max-w-lg rounded-2xl border border-red-500/40 bg-[#0D1522] p-6 shadow-2xl space-y-4">
+            <div className="flex items-start justify-between border-b border-[#1F2E43] pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="h-9 w-9 rounded-lg bg-red-500/10 border border-red-500/30 flex items-center justify-center shrink-0">
+                  <Trash2 className="h-5 w-5 text-red-400" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white font-mono">
+                    Delete Sample Analysis
+                  </h3>
+                  <p className="text-[11px] text-slate-400 font-mono">
+                    Quality Control Record Removal &bull; 21 CFR Part 11
+                  </p>
+                </div>
+              </div>
+              <span
+                onClick={() => {
+                  setReportToDelete(null);
+                  setDeleteError(null);
+                }}
+                className="text-slate-400 hover:text-slate-200 cursor-pointer text-lg font-bold"
+              >
+                ✕
+              </span>
+            </div>
+
+            {/* Sample Information Summary */}
+            <div className="rounded-lg border border-[#1F2E43] bg-[#070B14] p-3.5 space-y-1.5 text-xs font-mono">
+              <div className="flex justify-between">
+                <span className="text-slate-400">Report No:</span>
+                <span className="text-slate-200 font-bold">{reportToDelete.report_no}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Lot Number:</span>
+                <span className="text-[#009FE3] font-bold">{reportToDelete.lot_no}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Product:</span>
+                <span className="text-slate-200">{reportToDelete.product_name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Sampling Time:</span>
+                <span className="text-slate-300">{reportToDelete.sample_date} {reportToDelete.time_check}</span>
+              </div>
+              {reportToDelete.decision && (
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Current Status:</span>
+                  <span className="text-amber-400 font-semibold">{reportToDelete.decision.decision.toUpperCase()}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Error Message if any */}
+            {deleteError && (
+              <div className="flex items-center gap-2 p-3 rounded-lg border border-red-500/40 bg-red-950/40 text-red-300 text-xs font-mono">
+                <AlertTriangle className="h-4 w-4 text-red-400 shrink-0" />
+                <span>{deleteError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleConfirmDelete} className="space-y-4">
+              <div>
+                <label className="block text-[11px] font-mono text-slate-300 mb-1.5 uppercase tracking-wider font-semibold">
+                  Reason for Deletion *
+                </label>
+                <select
+                  required
+                  value={deleteReason}
+                  onChange={e => setDeleteReason(e.target.value)}
+                  className="w-full bg-[#070B14] border border-[#1F2E43] rounded-lg px-3 py-2 text-xs font-mono text-slate-100 cursor-pointer focus:border-[#009FE3] focus:outline-none"
+                >
+                  <option value="Wrong analytical readings entered">Wrong analytical readings / parameters entered</option>
+                  <option value="Incorrect product or tank selection">Incorrect product or tank selection</option>
+                  <option value="Duplicate sample lot in queue">Duplicate sample lot generated in queue</option>
+                  <option value="Contaminated or invalid physical sample">Contaminated or invalid physical sample</option>
+                  <option value="Process log entry cancelled or obsolete">Process log entry cancelled or obsolete</option>
+                  <option value="other">Other reason (specify below)...</option>
+                </select>
+              </div>
+
+              {deleteReason === 'other' && (
+                <div>
+                  <label className="block text-[11px] font-mono text-slate-300 mb-1 uppercase tracking-wider font-semibold">
+                    Specific Reason Narrative *
+                  </label>
+                  <textarea
+                    required
+                    rows={2}
+                    placeholder="Enter specific audit explanation for sample removal..."
+                    value={deleteCustomReason}
+                    onChange={e => setDeleteCustomReason(e.target.value)}
+                    className="w-full bg-[#070B14] border border-[#1F2E43] rounded-lg px-3 py-2 text-xs font-mono text-slate-100 placeholder-slate-500 focus:outline-none focus:border-[#009FE3] resize-none"
+                  />
+                </div>
+              )}
+
+              <p className="text-[11px] text-amber-400/90 bg-amber-950/30 p-2.5 rounded-lg border border-amber-500/20 font-mono leading-relaxed">
+                ⚠️ Notice: Deleting this sample will purge its analytical test results, update the QC queue, and sync across all refinery log sheets and Supabase cloud records.
+              </p>
+
+              <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-[#1F2E43]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setReportToDelete(null);
+                    setDeleteError(null);
+                  }}
+                  className="px-4 py-2 rounded-lg text-xs font-mono text-slate-400 hover:text-slate-200 cursor-pointer transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isDeleting}
+                  className="flex items-center gap-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-mono font-medium text-xs uppercase px-4 py-2 rounded-lg transition-all border border-red-500/50 cursor-pointer shadow-lg shadow-red-950/50"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  <span>{isDeleting ? 'Deleting Sample...' : 'Confirm & Delete Sample'}</span>
                 </button>
               </div>
             </form>

@@ -97,6 +97,7 @@ export const STORAGE_KEYS = {
   REPORTS: 'refinery_sample_reports',
   DEVIATIONS: 'refinery_deviations',
   AUDIT_LOGS: 'refinery_audit_logs',
+  DELETED_REPORTS: 'refinery_deleted_sample_reports',
 };
 
 // In-Memory fallback store
@@ -1141,6 +1142,12 @@ export function ensureAutoDispatchedQC(
     const slotTimeCheck = `${slotLabel.slice(0, 2)}:00`;
 
     const currentReports = getStored<SampleReport[]>(STORAGE_KEYS.REPORTS, memoryReports);
+    const deletedReports = getStored<string[]>(STORAGE_KEYS.DELETED_REPORTS, []);
+    const slotKey = `${targetShiftDate}-${slotLabel}`;
+    if (deletedReports.includes(slotKey)) {
+      return null;
+    }
+
     const existingReportIdx = currentReports.findIndex(
       r => r.sample_date === targetShiftDate && (r.time_check === slotTimeCheck || r.lot_no?.endsWith(`-${slotLabel}`))
     );
@@ -2314,6 +2321,110 @@ export function submitQCDecision(data: {
   });
 
   return { success: true };
+}
+
+// Delete Sample Report (QC Lab removal for incorrect / mistaken entries)
+export async function deleteSampleReport(
+  reportId: string,
+  reason?: string
+): Promise<{ success: boolean; error?: string; remainingReports?: SampleReport[] }> {
+  const profile = getCurrentProfile();
+  const role = getCurrentRole();
+
+  if (role !== 'qc_analyst' && role !== 'qc_manager' && role !== 'admin') {
+    return { success: false, error: 'Access Denied: Only Quality Control personnel or Administrators can remove sample records.' };
+  }
+
+  const reports = getSampleReports();
+  const targetReport = reports.find(r => r.id === reportId || r.report_no === reportId);
+  if (!targetReport) {
+    return { success: false, error: 'Sample report not found or already removed.' };
+  }
+
+  // Filter out the report from active lists
+  const updatedReports = reports.filter(r => r.id !== targetReport.id && r.report_no !== targetReport.report_no);
+  setStored(STORAGE_KEYS.REPORTS, updatedReports);
+  memoryReports = updatedReports;
+
+  // Track deleted lot and slot key so auto-dispatch sync doesn't immediately resurrect it
+  const deletedKeys = getStored<string[]>(STORAGE_KEYS.DELETED_REPORTS, []);
+  if (targetReport.id) deletedKeys.push(targetReport.id);
+  if (targetReport.report_no) deletedKeys.push(targetReport.report_no);
+  if (targetReport.lot_no) deletedKeys.push(targetReport.lot_no);
+
+  // Also extract slot key (e.g. 2026-09-26-0800) if applicable
+  const timeDigits = (targetReport.time_check || '').replace(/:/g, '').slice(0, 4);
+  if (targetReport.sample_date && timeDigits) {
+    deletedKeys.push(`${targetReport.sample_date}-${timeDigits}`);
+  }
+  const lotMatch = targetReport.lot_no?.match(/-(\d{4})$/);
+  if (targetReport.sample_date && lotMatch) {
+    deletedKeys.push(`${targetReport.sample_date}-${lotMatch[1]}`);
+  }
+  setStored(STORAGE_KEYS.DELETED_REPORTS, Array.from(new Set(deletedKeys)));
+
+  // If this report was tied to a process entry in the active sheet, update entry auto_dispatch_qc flag
+  try {
+    const allSheets = getAllProcessSheets();
+    let sheetUpdated = false;
+    Object.keys(allSheets).forEach(d => {
+      const sheet = allSheets[d];
+      if (sheet && sheet.entries) {
+        sheet.entries.forEach(e => {
+          const slotLabel = String(((e.slot_index + 7) % 24) * 100).padStart(4, '0');
+          if (targetReport.sample_date === d && (targetReport.lot_no?.endsWith(`-${slotLabel}`) || targetReport.time_check?.startsWith(slotLabel.slice(0, 2)))) {
+            e.auto_dispatch_qc = false;
+            sheetUpdated = true;
+          }
+        });
+      }
+    });
+    if (sheetUpdated) {
+      setStored(STORAGE_KEYS.ALL_SHEETS, allSheets);
+      memoryAllSheets = allSheets;
+    }
+  } catch (err) {
+    console.warn('[Delete Sample] Process sheet sync warning:', err);
+  }
+
+  // Record 21 CFR Part 11 Audit Log
+  addAuditLog(
+    'sample_reports',
+    targetReport.id,
+    'void',
+    targetReport,
+    {
+      action: 'SAMPLE_DELETED_BY_QC',
+      report_no: targetReport.report_no,
+      lot_no: targetReport.lot_no,
+      product: targetReport.product_name,
+      sample_date: targetReport.sample_date,
+      time_check: targetReport.time_check,
+      reason: reason || 'Incorrect sample analysis removed by QC',
+      deleted_by: profile.full_name,
+      employee_no: profile.employee_no,
+      timestamp: new Date().toISOString()
+    }
+  );
+
+  // Sync deletion with Supabase remote tables
+  if (supabase) {
+    try {
+      await supabase.from('sample_results').delete().eq('report_id', targetReport.id);
+      await supabase.from('qc_decisions').delete().eq('report_id', targetReport.id);
+      await supabase.from('sample_reports').delete().eq('id', targetReport.id);
+      await supabase.from('sample_reports').delete().eq('report_no', targetReport.report_no);
+    } catch (sbErr) {
+      console.warn('[Supabase Delete] Failed to delete remote records:', sbErr);
+    }
+  }
+
+  // Notify all listening components across the application
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('refinery_reports_updated', { detail: updatedReports }));
+  }
+
+  return { success: true, remainingReports: updatedReports };
 }
 
 // 5. Audit Log
