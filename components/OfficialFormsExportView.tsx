@@ -351,9 +351,15 @@ export default function OfficialFormsExportView() {
               <FileText className="h-5 w-5" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-mono text-[10px] text-[#009FE3] uppercase tracking-widest bg-[#0A1018] border border-[#009FE3]/30 px-1.5 py-0.5 rounded font-semibold">
-                  DOC-SYS-04
+                  DOC001 · DOC-SYS-04
+                </span>
+                <span className="font-mono text-[10px] text-amber-400 font-semibold bg-amber-950/50 px-2 py-0.5 rounded border border-amber-800/60">
+                  ISO001 · CRT001
+                </span>
+                <span className="font-mono text-[10px] text-sky-400 font-semibold bg-sky-950/50 px-2 py-0.5 rounded border border-sky-800/60">
+                  SOP001 · WI001 · REV001
                 </span>
                 <span className="flex items-center gap-1 font-mono text-[10px] text-emerald-400 font-semibold bg-emerald-950/50 px-2 py-0.5 rounded border border-emerald-800/60">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -364,7 +370,7 @@ export default function OfficialFormsExportView() {
                 Official Controlled Forms & Regulatory Audit Trail
               </h1>
               <p className="text-xs text-slate-400">
-                Exact physical form layout replication for customer and ISO 9001 / HACCP compliance audits.
+                PR001 (Production Record) · SR001 (Sample Report) · AL001 (Audit Log) · ISO001 (Certificate) · ATT001 (Attachment)
               </p>
             </div>
           </div>
@@ -735,14 +741,18 @@ export default function OfficialFormsExportView() {
                 <div className="text-sm font-semibold text-slate-500">
                   Refinery Section · Nisshin Deodorizer Plant
                 </div>
-                <div className="text-base font-bold text-slate-900 mt-1 uppercase">
-                  Hourly Process Control Log Sheet
+                <div className="text-base font-bold text-slate-900 mt-1 uppercase flex items-center gap-2">
+                  <span>Hourly Process Control Log Sheet</span>
+                  <span className="text-xs bg-sky-100 text-sky-800 border border-sky-300 px-1.5 py-0.5 rounded font-mono font-bold">
+                    PR001 (Production Record)
+                  </span>
                 </div>
               </div>
 
               <div className="text-right font-mono text-xs border border-slate-900 p-2 rounded">
-                <div><strong>DOC NO:</strong> RF-FR-004</div>
-                <div><strong>REVISION:</strong> 02</div>
+                <div><strong>DOC:</strong> DOC001 (RF-FR-004)</div>
+                <div><strong>SOP / WI:</strong> SOP001 · WI001</div>
+                <div><strong>REVISION:</strong> REV001 (Rev 02)</div>
                 <div><strong>EFFECTIVE:</strong> 01/01/2026</div>
               </div>
             </div>
@@ -882,14 +892,21 @@ export default function OfficialFormsExportView() {
               <div className="text-sm font-semibold text-slate-500">
                 Refinery Section · Quality Assurance Department
               </div>
-              <div className="text-base font-bold text-slate-900 mt-1 uppercase">
-                Sample Analysis Report
+              <div className="text-base font-bold text-slate-900 mt-1 uppercase flex items-center gap-2">
+                <span>Sample Analysis Report</span>
+                <span className="text-xs bg-emerald-100 text-emerald-800 border border-emerald-300 px-1.5 py-0.5 rounded font-mono font-bold">
+                  SR001 (Sample Report)
+                </span>
+                <span className="text-xs bg-amber-100 text-amber-800 border border-amber-300 px-1.5 py-0.5 rounded font-mono font-bold">
+                  ISO001 · CRT001
+                </span>
               </div>
             </div>
 
             <div className="text-right font-mono text-xs border border-slate-900 p-2 rounded">
-              <div><strong>DOC NO:</strong> RF-FR-001</div>
-              <div><strong>REVISION:</strong> 02</div>
+              <div><strong>DOC:</strong> DOC001 (RF-FR-001)</div>
+              <div><strong>REVISION:</strong> REV001 (Rev 02)</div>
+              <div><strong>ATTACHMENT:</strong> ATT001 (COA Spec)</div>
               <div><strong>REPORT NO:</strong> {activeReport.report_no}</div>
             </div>
           </div>
@@ -1059,7 +1076,7 @@ export default function OfficialFormsExportView() {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold text-sm text-slate-100">Immutable Regulatory Audit Trail</span>
+                  <span className="font-semibold text-sm text-slate-100">AL001 · Immutable Regulatory Audit Trail</span>
                   <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-950/50 text-emerald-400 border border-emerald-800/60 text-[10px] font-mono font-medium">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                     Live Supabase Ledger

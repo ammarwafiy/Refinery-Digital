@@ -341,8 +341,11 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#1F2E43] pb-4">
           <div>
             <div className="flex items-center gap-2.5 flex-wrap">
-              <span className="rounded border border-[#1F2E43] bg-[#131E2D] px-2.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-[#009FE3]">
-                RF-FR-004 REV. 02
+              <span className="rounded border border-[#009FE3]/50 bg-[#131E2D] px-2.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-[#009FE3]">
+                PR001 · RF-FR-004 REV. 02
+              </span>
+              <span className="rounded border border-emerald-800/60 bg-emerald-950/40 px-2 py-0.5 font-mono text-[10px] font-bold text-emerald-400">
+                SOP001 · WI001
               </span>
               <h1 className="text-lg sm:text-xl font-bold tracking-tight text-white font-sans">
                 Hourly Deodorizer Process Control Log
@@ -375,7 +378,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
               )}
             </div>
             <p className="mt-1 text-xs text-slate-400 font-mono">
-              <span className="text-slate-500 uppercase tracking-wider text-[10px]">UNIT:</span> UNIT-DEOD-01 · <span className="text-slate-500 uppercase tracking-wider text-[10px]">CYCLE:</span> 07:00 (Start) → 06:00 (Next Day)
+              <span className="text-[#009FE3] font-bold">DOC001</span> · <span className="text-slate-500 uppercase tracking-wider text-[10px]">UNIT:</span> UNIT-DEOD-01 · <span className="text-slate-500 uppercase tracking-wider text-[10px]">BATCH:</span> <span className="text-amber-400 font-semibold">BP001</span> · <span className="text-slate-500 uppercase tracking-wider text-[10px]">CYCLE:</span> 07:00 (Start) → 06:00 (Next Day)
               {sheet.status === 'verified' && sheet.verified_by_name && (
                 <span className="ml-2 text-green-600 font-medium">
                   · Verified by: {sheet.verified_by_name}
@@ -619,11 +622,15 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
       <div className="rounded-lg border border-[#1F2E43] bg-[#101927] p-5 sm:p-6 shadow-lg">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[#1F2E43] pb-4 mb-6">
           <div className="flex items-center gap-3.5">
-            <div className="flex h-12 w-14 items-center justify-center rounded border border-[#1F2E43] bg-[#131E2D] text-[#009FE3] font-mono text-lg font-bold tracking-tight shadow-inner">
-              {selectedSlotLabel}
+            <div className="flex h-12 w-16 items-center justify-center rounded border border-[#1F2E43] bg-[#131E2D] text-[#009FE3] font-mono text-base font-bold tracking-tight shadow-inner flex-col">
+              <span className="text-[9px] text-[#009FE3] font-mono uppercase font-bold">PL{String(selectedSlotIndex + 1).padStart(3, '0')}</span>
+              <span className="text-white text-xs">{selectedSlotLabel}</span>
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2 flex-wrap font-sans">
+                <span className="px-2 py-0.5 rounded bg-[#009FE3]/15 border border-[#009FE3]/40 text-[#009FE3] text-xs font-mono font-semibold">
+                  PL{String(selectedSlotIndex + 1).padStart(3, '0')} · Process Log
+                </span>
                 <span>Hourly Readings for {currentSlotTimeStr} hrs</span>
                 {isLiveSlot ? (
                   <span className="inline-flex items-center gap-1.5 rounded border border-[#009FE3]/40 bg-[#009FE3]/10 px-2 py-0.5 text-[11px] font-mono text-[#009FE3]">
@@ -645,7 +652,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                 )}
               </h2>
               <p className="text-xs text-slate-400 font-mono mt-0.5">
-                Layout sequence aligns strictly with paper form RF-FR-004. Ghost numbers indicate previous hour readings.
+                <span className="text-[#009FE3] font-bold">PR001</span> · Production Record (RF-FR-004) · <span className="text-emerald-400 font-bold">SOP001</span> · <span className="text-sky-400 font-bold">WI001</span>. Ghost numbers indicate previous hour readings.
               </p>
             </div>
           </div>

@@ -197,7 +197,7 @@ export default function SupervisorBoardView() {
           <div className="flex items-center justify-between mb-4 border-b border-[#1F2E43] pb-3">
             <div className="flex items-center gap-2 font-semibold text-slate-100 font-mono text-xs uppercase tracking-wider">
               <ShieldAlert className="h-4 w-4 text-[#F59E0B]" />
-              <span>Plant Deviations & Corrective Action Notes</span>
+              <span>Plant Deviations & Corrective Action Notes (AR001 · Approval Record)</span>
             </div>
             <span className="text-[10px] font-mono text-[#009FE3] font-semibold bg-[#0A1018] px-2 py-0.5 rounded border border-[#1F2E43]">
               COUNT: {deviations.length}
@@ -223,7 +223,7 @@ export default function SupervisorBoardView() {
                       <div>
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-mono font-bold text-xs text-slate-100">
-                            HOUR {dev.slot_label}
+                            [AR001] HOUR {dev.slot_label}
                           </span>
                           <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-[#101927] border border-[#1F2E43] text-[#009FE3] font-medium">
                             {dev.field_label}
@@ -315,7 +315,7 @@ export default function SupervisorBoardView() {
             <div className="flex items-center justify-between mb-4 border-b border-[#1F2E43] pb-3">
               <div className="flex items-center gap-2 font-semibold text-slate-100 font-mono text-xs uppercase tracking-wider">
                 <FlaskConical className="h-4 w-4 text-[#009FE3]" />
-                <span>QC Lab Sample Queue (RF-FR-001)</span>
+                <span>QC Lab Sample Queue (SR001 · RF-FR-001)</span>
               </div>
               <span className="text-[10px] font-mono text-[#009FE3] font-semibold bg-[#0A1018] px-2 py-0.5 rounded border border-[#1F2E43]">
                 PENDING: {pendingSamples.length}
@@ -330,7 +330,9 @@ export default function SupervisorBoardView() {
                   <div key={rep.id} className="flex items-center justify-between p-3 rounded-lg border border-[#1F2E43] bg-[#0A1018] hover:border-[#263A52] transition-colors">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs font-semibold text-slate-100">{rep.lot_no}</span>
+                        <span className="font-mono text-xs font-semibold text-slate-100">
+                          <span className="text-[#009FE3] font-bold mr-1.5">[SR001]</span>{rep.lot_no}
+                        </span>
                         <span className="text-xs text-[#009FE3] font-mono font-medium">({rep.product_name})</span>
                       </div>
                       <div className="text-[10px] text-slate-400 font-mono mt-0.5">
@@ -341,15 +343,15 @@ export default function SupervisorBoardView() {
                     <div>
                       {isRejected ? (
                         <span className="text-[10px] font-mono text-[#EF4444] bg-[#EF4444]/15 px-2 py-0.5 rounded border border-[#EF4444]/30 font-semibold">
-                          REJECTED ({String(rep.decision?.disposition || 'REPROCESS').toUpperCase()})
+                          [QC001] REJECTED ({String(rep.decision?.disposition || 'REPROCESS').toUpperCase()})
                         </span>
                       ) : isAccepted ? (
                         <span className="text-[10px] font-mono text-[#10B981] bg-[#10B981]/15 px-2 py-0.5 rounded border border-[#10B981]/30 font-semibold">
-                          ACCEPTED
+                          [QC001] ACCEPTED
                         </span>
                       ) : (
                         <span className="text-[10px] font-mono text-[#F59E0B] bg-[#F59E0B]/15 px-2 py-0.5 rounded border border-[#F59E0B]/30 font-semibold">
-                          LAB TESTING
+                          [QC001] LAB TESTING
                         </span>
                       )}
                     </div>

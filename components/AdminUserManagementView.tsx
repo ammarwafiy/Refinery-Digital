@@ -540,7 +540,7 @@ export default function AdminUserManagementView() {
 
   const handleSwitchToAdmin = () => {
     const all = getProfiles();
-    const adminUser = all.find(p => p.role === 'admin') || all[0];
+    const adminUser = all.find(p => p.employee_no === 'ADM001') || all.find(p => p.role === 'admin') || all[0];
     setCurrentRole('admin');
     setAuthUser(adminUser);
     setCurrentRoleState('admin');
@@ -555,14 +555,22 @@ export default function AdminUserManagementView() {
 
   const isAdmin = currentRole === 'admin';
 
-  // Filtered Profiles
-  const filteredProfiles = profiles.filter(p => {
-    const matchesSearch = 
-      p.employee_no.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.full_name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesRole = roleFilter === 'all' || p.role === roleFilter;
-    return matchesSearch && matchesRole;
-  });
+  // Filtered Profiles: prioritize standard profiles
+  const filteredProfiles = profiles
+    .filter(p => {
+      const matchesSearch = 
+        p.employee_no.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.full_name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesRole = roleFilter === 'all' || p.role === roleFilter;
+      return matchesSearch && matchesRole;
+    })
+    .sort((a, b) => {
+      const isStdA = a.employee_no.startsWith('OPR') || a.employee_no.startsWith('SUP') || a.employee_no.startsWith('QCS') || a.employee_no.startsWith('MGR') || a.employee_no.startsWith('ADM') || a.employee_no.startsWith('USR');
+      const isStdB = b.employee_no.startsWith('OPR') || b.employee_no.startsWith('SUP') || b.employee_no.startsWith('QCS') || b.employee_no.startsWith('MGR') || b.employee_no.startsWith('ADM') || b.employee_no.startsWith('USR');
+      if (isStdA && !isStdB) return -1;
+      if (!isStdA && isStdB) return 1;
+      return 0;
+    });
 
   // Metrics
   const totalCount = profiles.length;
@@ -589,12 +597,15 @@ export default function AdminUserManagementView() {
             <ShieldCheck className="h-5 w-5" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-base sm:text-lg font-bold text-slate-100 tracking-wide">
                 Plant Administration & User Management
               </h1>
               <span className="rounded bg-[#0A1018] px-2 py-0.5 text-[10px] font-mono text-[#009FE3] border border-[#009FE3]/30 font-semibold">
                 ADMIN ACCESS ONLY
+              </span>
+              <span className="rounded bg-[#009FE3]/15 px-2 py-0.5 text-[10px] font-mono text-[#009FE3] border border-[#009FE3]/40 font-bold">
+                USR001 · ADM001 · OPR001 · QCS001 · SUP001 · MGR001
               </span>
             </div>
             <p className="text-xs text-slate-400 font-sans mt-0.5">
@@ -937,8 +948,10 @@ export default function AdminUserManagementView() {
 
                       return (
                         <tr key={p.employee_no || p.id} className="hover:bg-[#101927] transition-colors">
-                          <td className="py-2.5 px-3.5 font-bold text-[#009FE3]">
-                            {p.employee_no}
+                          <td className="py-2.5 px-3.5 font-bold font-mono">
+                            <span className="text-[#009FE3] bg-[#0A1018] border border-[#1F2E43] px-2 py-0.5 rounded shadow-xs inline-block">
+                              {p.employee_no}
+                            </span>
                           </td>
                           <td className="py-2.5 px-3.5 text-slate-200 font-sans font-medium">
                             <div className="flex items-center gap-1.5">
@@ -951,8 +964,8 @@ export default function AdminUserManagementView() {
                             </div>
                           </td>
                           <td className="py-2.5 px-3.5">
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${badge.bg} ${badge.text} ${badge.border}`}>
-                              {String(p.role || '').toUpperCase()}
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${badge.bg} ${badge.text} ${badge.border} font-mono`}>
+                              {p.role === 'operator' ? 'OPR001 · OPERATOR' : p.role === 'supervisor' ? 'SUP001 · SUPERVISOR' : p.role === 'qc_analyst' ? 'QCS001 · QC STAFF' : p.role === 'qc_manager' ? 'MGR001 · MANAGER' : p.role === 'admin' ? 'ADM001 · ADMIN' : 'USR001 · USER'}
                             </span>
                           </td>
                           <td className="py-2.5 px-3.5">

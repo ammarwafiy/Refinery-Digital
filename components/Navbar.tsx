@@ -187,12 +187,16 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
     : 'OP';
 
   const roleBadgeLabel = safeRole === 'operator'
-    ? 'OP'
+    ? 'OPR'
     : safeRole === 'supervisor'
-    ? 'SV'
-    : safeRole.startsWith('qc')
-    ? 'QC'
-    : (safeRole || '').toUpperCase();
+    ? 'SUP'
+    : safeRole === 'qc_analyst'
+    ? 'QCS'
+    : safeRole === 'qc_manager'
+    ? 'MGR'
+    : safeRole === 'admin'
+    ? 'ADM'
+    : 'USR';
 
   const handleMobileTabSelect = (tabId: string) => {
     setActiveTab(tabId);
@@ -515,8 +519,9 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
               <div className="text-xs font-semibold text-slate-100 leading-tight">
                 {profile.full_name}
               </div>
-              <div className="text-[10px] text-slate-400 font-mono capitalize">
-                {role === 'operator' ? 'Operator' : role === 'supervisor' ? 'Supervisor' : role.startsWith('qc') ? 'QC Analyst' : role}
+              <div className="text-[10px] text-slate-400 font-mono">
+                {profile.employee_no ? `${profile.employee_no} · ` : ''}
+                {role === 'operator' ? 'Operator (OPR001)' : role === 'supervisor' ? 'Supervisor (SUP001)' : role === 'qc_analyst' ? 'QC Staff (QCS001)' : role === 'qc_manager' ? 'Manager (MGR001)' : role === 'admin' ? 'Administrator (ADM001)' : 'User (USR001)'}
               </div>
             </div>
           </div>

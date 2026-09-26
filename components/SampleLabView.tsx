@@ -1023,12 +1023,17 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded border border-[#1F2E43] bg-[#0A1018] text-[#009FE3] font-semibold">
-                          {selectedReport.report_no}
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded border border-[#009FE3]/50 bg-[#0A1018] text-[#009FE3] font-bold">
+                          SR{String(reports.findIndex(r => r.id === selectedReport.id) + 1 || 1).padStart(3, '0')} · {selectedReport.report_no}
                         </span>
                         <h2 className="text-lg font-bold text-slate-100 font-mono">
                           {selectedReport.lot_no}
                         </h2>
+                        {selectedReport.decision && (
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded border border-emerald-500/40 bg-emerald-950/40 text-emerald-400 font-bold">
+                            QC{String(reports.findIndex(r => r.id === selectedReport.id) + 1 || 1).padStart(3, '0')} · QC Decision
+                          </span>
+                        )}
                         {(selectedReport.remarks?.toLowerCase().includes('auto-dispatched') || selectedReport.remarks?.includes('Process Log')) && (
                           <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#009FE3]/10 text-[#009FE3] border border-[#009FE3]/30 flex items-center gap-1 font-semibold">
                             ⚡ Auto-Dispatched ({selectedReport.time_check})
@@ -1038,7 +1043,11 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                       <div className="mt-1.5 text-xs text-slate-400 font-mono flex flex-wrap items-center gap-2.5">
                         <span>Product: <strong className="text-slate-200">{selectedReport.product_name}</strong></span>
                         <span>•</span>
-                        <span>Tanks: <strong className="text-slate-400">{selectedReport.feed_tank_code || 'Feed'} → {selectedReport.discharge_tank_code || 'Discharge'}</strong></span>
+                        <span>Batch: <strong className="text-amber-400 font-bold">BP001</strong> ({selectedReport.crystallizer_no || selectedReport.batch_no || 'BP-2609-01'})</span>
+                        <span>•</span>
+                        <span>DOC: <strong className="text-slate-300">DOC001 (RF-FR-001)</strong></span>
+                        <span>•</span>
+                        <span>SOP: <strong className="text-emerald-400">SOP001</strong> · <strong className="text-sky-400">WI001</strong></span>
                         <span>•</span>
                         <span>Submitted: <strong className="text-slate-400">{selectedReport.submitted_by_name}</strong></span>
                       </div>
@@ -1056,7 +1065,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                                 ? 'bg-emerald-500/10 text-green-600 border-emerald-500/30'
                                 : 'bg-amber-500/10 text-amber-600 border-amber-500/30'
                             }`}>
-                              DECISION: {String(selectedReport.decision?.decision || 'PENDING').toUpperCase()}
+                              QC{String(reports.findIndex(r => r.id === selectedReport.id) + 1 || 1).padStart(3, '0')} : {String(selectedReport.decision?.decision || 'PENDING').toUpperCase()}
                             </div>
                             <div className="text-[9px] font-mono text-slate-500 mt-0.5">
                               By: {selectedReport.decision.decided_by_name}

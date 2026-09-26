@@ -487,12 +487,29 @@ export function getCurrentProfile(): Profile {
   if (user) return user;
   const role = getCurrentRole();
   const all = getProfiles();
+  const meta = ROLE_ID_SERIES[role];
+  if (meta) {
+    const standard = all.find(p => p.role === role && p.employee_no.toUpperCase().startsWith(meta.prefix));
+    if (standard) return standard;
+  }
   return all.find(p => p.role === role) || all[0];
 }
 
 export function getProfiles(): Profile[] {
-  return getStored<Profile[]>(STORAGE_KEYS.PROFILES, memoryProfiles);
+  const stored = getStored<Profile[]>(STORAGE_KEYS.PROFILES, memoryProfiles);
+  // Auto-upgrade if stored list is missing OPR001 or standard prefixes
+  const hasStandard = stored.some(p => p.employee_no === 'OPR001' || p.employee_no === 'ADM001');
+  if (!hasStandard) {
+    setStored(STORAGE_KEYS.PROFILES, INITIAL_PROFILES);
+    memoryProfiles = INITIAL_PROFILES;
+    return INITIAL_PROFILES;
+  }
+  return stored;
 }
+
+const STANDARD_PROFILE_ORDER: Record<string, number> = {
+  'OPR001': 1, 'SUP001': 2, 'QCS001': 3, 'MGR001': 4, 'ADM001': 5, 'USR001': 6
+};
 
 // Fetch live profiles from Supabase and synchronize local state
 export async function syncProfilesFromSupabase(): Promise<{ success: boolean; count: number; profiles: Profile[]; error?: string }> {
@@ -507,17 +524,23 @@ export async function syncProfilesFromSupabase(): Promise<{ success: boolean; co
     if (res.ok && contentType.includes('application/json')) {
       const json = await res.json();
       if (json.success && Array.isArray(json.profiles) && json.profiles.length > 0) {
-        const liveProfiles: Profile[] = json.profiles.map((p: any) => ({
-          id: p.employee_no,
-          employee_no: p.employee_no,
-          full_name: p.full_name,
-          role: p.role,
-          status: p.status || (p.active === false ? 'unactive' : 'active'),
-          active: p.status === 'active' || p.active === true,
-          password: p.password || 'password123',
-          created_at: p.created_at || new Date().toISOString(),
-          avatar_url: p.avatar_url || undefined,
-        }));
+        const liveProfiles: Profile[] = json.profiles
+          .map((p: any) => ({
+            id: p.employee_no,
+            employee_no: p.employee_no,
+            full_name: p.full_name,
+            role: p.role,
+            status: p.status || (p.active === false ? 'unactive' : 'active'),
+            active: p.status === 'active' || p.active === true,
+            password: p.password || 'password123',
+            created_at: p.created_at || new Date().toISOString(),
+            avatar_url: p.avatar_url || undefined,
+          }))
+          .sort((a: Profile, b: Profile) => {
+            const orderA = STANDARD_PROFILE_ORDER[a.employee_no] || 99;
+            const orderB = STANDARD_PROFILE_ORDER[b.employee_no] || 99;
+            return orderA - orderB;
+          });
 
         memoryProfiles = liveProfiles;
         setStored(STORAGE_KEYS.PROFILES, liveProfiles);
@@ -537,21 +560,26 @@ export async function syncProfilesFromSupabase(): Promise<{ success: boolean; co
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: true });
+        .select('*');
 
       if (!error && Array.isArray(data) && data.length > 0) {
-        const liveProfiles: Profile[] = data.map((p: any) => ({
-          id: p.employee_no,
-          employee_no: p.employee_no,
-          full_name: p.full_name,
-          role: p.role,
-          status: p.status || (p.active === false ? 'unactive' : 'active'),
-          active: p.status === 'active' || p.active === true,
-          password: p.password || 'password123',
-          created_at: p.created_at || new Date().toISOString(),
-          avatar_url: p.avatar_url || undefined,
-        }));
+        const liveProfiles: Profile[] = data
+          .map((p: any) => ({
+            id: p.employee_no,
+            employee_no: p.employee_no,
+            full_name: p.full_name,
+            role: p.role,
+            status: p.status || (p.active === false ? 'unactive' : 'active'),
+            active: p.status === 'active' || p.active === true,
+            password: p.password || 'password123',
+            created_at: p.created_at || new Date().toISOString(),
+            avatar_url: p.avatar_url || undefined,
+          }))
+          .sort((a: Profile, b: Profile) => {
+            const orderA = STANDARD_PROFILE_ORDER[a.employee_no] || 99;
+            const orderB = STANDARD_PROFILE_ORDER[b.employee_no] || 99;
+            return orderA - orderB;
+          });
 
         memoryProfiles = liveProfiles;
         setStored(STORAGE_KEYS.PROFILES, liveProfiles);
@@ -561,8 +589,8 @@ export async function syncProfilesFromSupabase(): Promise<{ success: boolean; co
         }
         return { success: true, count: liveProfiles.length, profiles: liveProfiles };
       }
-    } catch (directErr) {
-      console.warn('[Sync] Direct Supabase query fallback failed:', directErr);
+    } catch (sbErr) {
+      console.warn('[Sync] Direct Supabase profiles query error:', sbErr);
     }
   }
 
@@ -572,11 +600,26 @@ export async function syncProfilesFromSupabase(): Promise<{ success: boolean; co
 
 // Auto-sync on client load and Supabase Realtime channel listener
 if (typeof window !== 'undefined') {
-  // Purge any stale dirty audit logs from localStorage immediately
+  // Purge any stale dirty audit logs and auto-upgrade legacy profiles in localStorage
   try {
     const rawAudit = localStorage.getItem(STORAGE_KEYS.AUDIT_LOGS);
     if (rawAudit && (rawAudit.length > 5000 || rawAudit.includes('22e9') || rawAudit.includes('178b'))) {
       localStorage.removeItem(STORAGE_KEYS.AUDIT_LOGS);
+    }
+    const rawProfiles = localStorage.getItem(STORAGE_KEYS.PROFILES);
+    if (rawProfiles && !rawProfiles.includes('OPR001')) {
+      localStorage.removeItem(STORAGE_KEYS.PROFILES);
+    }
+    const rawAuth = localStorage.getItem(STORAGE_KEYS.AUTH_USER);
+    if (rawAuth) {
+      const parsedAuth = JSON.parse(rawAuth);
+      if (parsedAuth && parsedAuth.employee_no === 'AD-5010') {
+        const adm = INITIAL_PROFILES.find(p => p.employee_no === 'ADM001');
+        if (adm) localStorage.setItem(STORAGE_KEYS.AUTH_USER, JSON.stringify(adm));
+      } else if (parsedAuth && parsedAuth.employee_no === 'OP-1042') {
+        const opr = INITIAL_PROFILES.find(p => p.employee_no === 'OPR001');
+        if (opr) localStorage.setItem(STORAGE_KEYS.AUTH_USER, JSON.stringify(opr));
+      }
     }
   } catch {}
 

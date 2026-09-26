@@ -105,7 +105,8 @@ export const ALLOWED_ROLES = [
   'supervisor',
   'qc_analyst',
   'qc_manager',
-  'admin'
+  'admin',
+  'viewer'
 ] as const;
 
 export type ValidRole = typeof ALLOWED_ROLES[number];
