@@ -3004,6 +3004,25 @@ export function addAuditLog(
 ): void {
   const logs = getAuditLogs();
   const profile = getCurrentProfile();
+
+  const tempLog = {
+    id: Date.now(),
+    table_name: tableName,
+    record_id: recordId,
+    action,
+    new_row: newRow as Record<string, unknown>,
+    old_row: oldRow as Record<string, unknown>,
+  };
+  const standardCode = formatAuditRecordId(tempLog as any);
+
+  let enrichedNewRow = newRow as Record<string, unknown>;
+  if (enrichedNewRow && typeof enrichedNewRow === 'object') {
+    enrichedNewRow = {
+      standard_code: standardCode,
+      ...enrichedNewRow,
+    };
+  }
+
   const newEntry: AuditLogEntry = {
     id: Date.now(),
     table_name: tableName,
@@ -3011,7 +3030,7 @@ export function addAuditLog(
     action,
     actor_name: profile.full_name,
     old_row: oldRow as Record<string, unknown>,
-    new_row: newRow as Record<string, unknown>,
+    new_row: enrichedNewRow,
     occurred_at: new Date().toISOString(),
   };
   logs.unshift(newEntry);

@@ -327,7 +327,7 @@ export default function OfficialFormsExportView() {
         String(log.action || '').toUpperCase(),
         `"${(log.actor_name || 'System / DB Trigger').replace(/"/g, '""')}"`,
         `"${String(log.record_id || log.id || '-').replace(/"/g, '""')}"`,
-        `"${JSON.stringify(log.new_row || log.old_row || {}).replace(/"/g, '""')}"`
+        `"${JSON.stringify({ standard_code: formatAuditRecordId(log), ...(log.new_row || log.old_row || {}) }).replace(/"/g, '""')}"`
       ]);
 
       const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
@@ -1213,56 +1213,63 @@ export default function OfficialFormsExportView() {
                     <th className="py-2.5 px-3">Category / Table</th>
                     <th className="py-2.5 px-3">Action</th>
                     <th className="py-2.5 px-3">Authorized Actor</th>
-                    <th className="py-2.5 px-3">Standard Code</th>
                     <th className="py-2.5 px-3">Audit Details &amp; Payload</th>
                     <th className="py-2.5 px-3 text-right">Inspect</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#1F2E43]">
-                  {filteredAuditLogs.map(log => (
-                    <tr key={log.id} className="hover:bg-[#101927] transition-colors">
-                      <td className="py-2.5 px-3 text-slate-400 whitespace-nowrap font-mono text-[11px]">
-                        {formatDateTime(log.occurred_at)}
-                      </td>
-                      <td className="py-2.5 px-3 font-semibold whitespace-nowrap">
-                        <span className="px-1.5 py-0.5 rounded bg-[#101927] border border-[#1F2E43] text-[#009FE3] text-[10px] tracking-wide font-mono font-medium">
-                          {formatAuditTableName(log.table_name)}
-                        </span>
-                      </td>
-                      <td className="py-2.5 px-3 whitespace-nowrap">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase font-mono border ${
-                          log.action === 'insert' ? 'bg-emerald-950/40 text-emerald-400 border-emerald-800/60' :
-                          log.action === 'update' ? 'bg-amber-950/40 text-amber-400 border-amber-800/60' : 'bg-rose-950/40 text-rose-400 border-rose-800/60'
-                        }`}>
-                          {log.action}
-                        </span>
-                      </td>
-                      <td className="py-2.5 px-3 text-slate-200 whitespace-nowrap font-medium text-[11px]">
-                        {log.actor_name || 'System / DB Trigger'}
-                      </td>
-                      <td className="py-2.5 px-3 whitespace-nowrap font-mono text-[11px]">
-                        <span 
-                          className="font-bold text-[#009FE3] bg-[#0A101D] border border-[#1F2E43] px-2 py-0.5 rounded shadow-sm inline-block"
-                          title={`Raw Database Record ID: ${String(log.record_id || log.id || '')}`}
-                        >
-                          {formatAuditRecordId(log)}
-                        </span>
-                      </td>
-                      <td className="py-2.5 px-3 text-slate-400 max-w-sm md:max-w-md truncate font-mono text-[11px]">
-                        {JSON.stringify(log.new_row || log.old_row || {})}
-                      </td>
-                      <td className="py-2.5 px-3 text-right whitespace-nowrap">
-                        <button
-                          type="button"
-                          onClick={() => setExpandedLogId(log.id)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#101927] hover:bg-[#172235] text-[#009FE3] border border-[#1F2E43] text-[10px] transition-colors cursor-pointer font-mono"
-                        >
-                          <Eye className="h-3 w-3 text-[#009FE3]" />
-                          <span>View JSON</span>
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  {filteredAuditLogs.map(log => {
+                    const stdCode = formatAuditRecordId(log);
+                    const rawPayload = (log.new_row || log.old_row || {}) as Record<string, any>;
+                    const payloadWithCode = { standard_code: stdCode, ...rawPayload };
+
+                    return (
+                      <tr key={log.id} className="hover:bg-[#101927] transition-colors">
+                        <td className="py-2.5 px-3 text-slate-400 whitespace-nowrap font-mono text-[11px]">
+                          {formatDateTime(log.occurred_at)}
+                        </td>
+                        <td className="py-2.5 px-3 font-semibold whitespace-nowrap">
+                          <span className="px-1.5 py-0.5 rounded bg-[#101927] border border-[#1F2E43] text-[#009FE3] text-[10px] tracking-wide font-mono font-medium">
+                            {formatAuditTableName(log.table_name)}
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-3 whitespace-nowrap">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase font-mono border ${
+                            log.action === 'insert' ? 'bg-emerald-950/40 text-emerald-400 border-emerald-800/60' :
+                            log.action === 'update' ? 'bg-amber-950/40 text-amber-400 border-amber-800/60' : 'bg-rose-950/40 text-rose-400 border-rose-800/60'
+                          }`}>
+                            {log.action}
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-3 text-slate-200 whitespace-nowrap font-medium text-[11px]">
+                          {log.actor_name || 'System / DB Trigger'}
+                        </td>
+                        <td className="py-2.5 px-3 text-slate-400 max-w-sm md:max-w-lg font-mono text-[11px]">
+                          <div className="flex items-center gap-2">
+                            <span 
+                              className="font-bold text-[#009FE3] bg-[#0A101D] border border-[#009FE3]/50 px-2 py-0.5 rounded shadow-sm shrink-0 font-mono text-[10.5px]"
+                              title={`Standard Operational Code: ${stdCode} (Database Record ID: ${String(log.record_id || log.id || '')})`}
+                            >
+                              [{stdCode}]
+                            </span>
+                            <span className="truncate text-slate-300 font-mono text-[10.5px]">
+                              {JSON.stringify(payloadWithCode)}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="py-2.5 px-3 text-right whitespace-nowrap">
+                          <button
+                            type="button"
+                            onClick={() => setExpandedLogId(log.id)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#101927] hover:bg-[#172235] text-[#009FE3] border border-[#1F2E43] text-[10px] transition-colors cursor-pointer font-mono"
+                          >
+                            <Eye className="h-3 w-3 text-[#009FE3]" />
+                            <span>View JSON</span>
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -1289,7 +1296,7 @@ export default function OfficialFormsExportView() {
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-[#0A1018] p-3 rounded-lg border border-[#1F2E43] text-[11px]">
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 bg-[#0A1018] p-3 rounded-lg border border-[#1F2E43] text-[11px]">
                     <div>
                       <div className="text-slate-400 uppercase text-[9px] tracking-wider">Timestamp:</div>
                       <div className="text-slate-200 font-medium">{formatDateTime(expLog.occurred_at)}</div>
@@ -1306,6 +1313,10 @@ export default function OfficialFormsExportView() {
                       <div className="text-slate-400 uppercase text-[9px] tracking-wider">Actor:</div>
                       <div className="text-slate-200">{expLog.actor_name || 'System / DB Trigger'}</div>
                     </div>
+                    <div>
+                      <div className="text-slate-400 uppercase text-[9px] tracking-wider">Standard Code:</div>
+                      <div className="text-[#009FE3] font-bold text-xs">[{formatAuditRecordId(expLog)}]</div>
+                    </div>
                   </div>
 
                   <div className="overflow-y-auto space-y-3 flex-1 pr-1">
@@ -1316,7 +1327,7 @@ export default function OfficialFormsExportView() {
                           NEW ROW DATA (State after operation):
                         </div>
                         <pre className="bg-[#0A1018] p-3 rounded-lg border border-[#1F2E43] text-[11px] text-slate-300 overflow-x-auto whitespace-pre-wrap">
-                          {JSON.stringify(expLog.new_row, null, 2)}
+                          {JSON.stringify({ standard_code: formatAuditRecordId(expLog), ...expLog.new_row }, null, 2)}
                         </pre>
                       </div>
                     )}
@@ -1328,7 +1339,7 @@ export default function OfficialFormsExportView() {
                           OLD ROW DATA (State before operation):
                         </div>
                         <pre className="bg-[#0A1018] p-3 rounded-lg border border-[#1F2E43] text-[11px] text-slate-300 overflow-x-auto whitespace-pre-wrap">
-                          {JSON.stringify(expLog.old_row, null, 2)}
+                          {JSON.stringify({ standard_code: formatAuditRecordId(expLog), ...expLog.old_row }, null, 2)}
                         </pre>
                       </div>
                     )}
