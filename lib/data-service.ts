@@ -1969,22 +1969,10 @@ export async function syncSampleReportsFromSupabase(): Promise<{ success: boolea
       return { success: false, count: 0 };
     }
 
-    const currentReports = getSampleReports();
     const remoteReportNos = new Set(remoteReports.map((r: any) => r.report_no));
     const remoteIds = new Set(remoteReports.map((r: any) => r.id));
 
-    // Filter out obsolete/corrupt records from local storage that are not present in Supabase
-    const cleanLocal = currentReports.filter(r => {
-      if (remoteReportNos.has(r.report_no) || remoteIds.has(r.id)) return true;
-      if (r.report_no && /^SAR-2026-00048[1-5]$/.test(r.report_no)) return true;
-      return false;
-    });
-
-    const mergedReports: SampleReport[] = [...cleanLocal];
-
-    remoteReports.forEach((sbRep: any) => {
-      const existingIdx = mergedReports.findIndex(r => r.report_no === sbRep.report_no || r.id === sbRep.id);
-      
+    const mappedRemoteReports: SampleReport[] = remoteReports.map((sbRep: any) => {
       const mappedResults: SampleResult[] = Array.isArray(sbRep.results) ? sbRep.results.map((r: any) => ({
         id: r.id,
         report_id: sbRep.id,
@@ -2018,7 +2006,7 @@ export async function syncSampleReportsFromSupabase(): Promise<{ success: boolea
         };
       }
 
-      const mappedReport: SampleReport = {
+      return {
         id: sbRep.id,
         plant_id: sbRep.plant_id,
         report_no: sbRep.report_no,
@@ -2048,13 +2036,18 @@ export async function syncSampleReportsFromSupabase(): Promise<{ success: boolea
         results: mappedResults.length > 0 ? mappedResults : undefined,
         decision: mappedDecision,
       };
-
-      if (existingIdx >= 0) {
-        mergedReports[existingIdx] = { ...mergedReports[existingIdx], ...mappedReport };
-      } else {
-        mergedReports.unshift(mappedReport);
-      }
     });
+
+    // Retain only very recent un-synced local reports (< 60s)
+    const currentReports = getSampleReports();
+    const now = Date.now();
+    const pendingLocalReports = currentReports.filter(r => {
+      if (remoteReportNos.has(r.report_no) || remoteIds.has(r.id)) return false;
+      const ageMs = now - new Date(r.created_at || 0).getTime();
+      return ageMs >= 0 && ageMs < 60000;
+    });
+
+    const mergedReports: SampleReport[] = [...mappedRemoteReports, ...pendingLocalReports];
 
     // Sort by sample_date desc, time_check desc
     mergedReports.sort((a, b) => {
@@ -2496,13 +2489,25 @@ export function getAuditLogs(): AuditLogEntry[] {
 export async function syncAuditLogToSupabase(entry: AuditLogEntry): Promise<void> {
   if (!supabase) return;
   try {
+    const profile = getCurrentProfile();
+    // Resolve actor to employee_no to satisfy DB foreign key fk_audit_actor (profiles.employee_no)
+    let actorEmployeeNo: string | null = null;
+    if (profile?.employee_no) {
+      actorEmployeeNo = profile.employee_no;
+    } else {
+      const profiles = getProfiles();
+      const match = profiles.find(p => p.full_name === entry.actor_name || p.employee_no === entry.actor_name);
+      if (match) actorEmployeeNo = match.employee_no;
+    }
+
     const payload = {
       table_name: entry.table_name,
       action: entry.action,
-      actor: entry.actor_name,
+      actor: actorEmployeeNo,
+      record_id: entry.record_id || null,
       old_row: entry.old_row || null,
       new_row: entry.new_row || null,
-      occurred_at: entry.occurred_at,
+      occurred_at: entry.occurred_at || new Date().toISOString(),
     };
     await supabase.from('audit_log').insert(payload);
   } catch (err) {
@@ -2522,23 +2527,20 @@ export async function syncAuditLogsFromSupabase(): Promise<{ success: boolean; c
 
     if (error || !remoteLogs) return { success: false, count: 0 };
 
-    const localLogs = getAuditLogs();
-    const map = new Map<string, AuditLogEntry>();
+    const profiles = getProfiles();
 
-    // Index existing local logs
-    localLogs.forEach(l => map.set(String(l.id), l));
-
-    // Overlay Supabase logs
-    remoteLogs.forEach((row: any) => {
-      const key = `sb_${row.id}`;
-      const actorName = row.actor 
+    // Map remote Supabase records into standard AuditLogEntry format
+    const mappedRemote: AuditLogEntry[] = remoteLogs.map((row: any) => {
+      const matchedProfile = profiles.find(p => p.employee_no === row.actor || p.id === row.actor || p.full_name === row.actor);
+      const actorName = matchedProfile?.full_name 
         || row.new_row?.submitted_by_name 
         || row.new_row?.recorded_by_name 
         || row.new_row?.verified_by_name 
+        || row.actor 
         || 'System / DB Trigger';
 
-      map.set(key, {
-        id: key,
+      return {
+        id: row.id,
         table_name: row.table_name,
         record_id: row.record_id,
         action: (row.action || 'insert') as any,
@@ -2546,10 +2548,34 @@ export async function syncAuditLogsFromSupabase(): Promise<{ success: boolean; c
         old_row: row.old_row,
         new_row: row.new_row,
         occurred_at: row.occurred_at,
-      });
+      };
     });
 
-    const merged = Array.from(map.values()).sort((a, b) => 
+    // Supabase audit_log is the authoritative immutable regulatory ledger.
+    // Retain only very recent un-synced local entries (< 60s) that have standard clean UUIDs.
+    // Stale/corrupt local logs from past sessions with irregular UUIDs are purged.
+    const localLogs = getAuditLogs();
+    const remoteKeys = new Set(mappedRemote.map(r => `${r.table_name}_${r.record_id}_${r.action}`));
+    const now = Date.now();
+
+    const pendingLocal = localLogs.filter(l => {
+      if (!l.occurred_at || !l.record_id) return false;
+      const ageMs = now - new Date(l.occurred_at).getTime();
+      if (ageMs > 60000 || ageMs < -60000) return false;
+      // Exclude dirty UUID fragments
+      if (typeof l.record_id === 'string' && /[0-9a-f]{4}/i.test(l.record_id) && 
+          !l.record_id.startsWith('11111111') && !l.record_id.startsWith('20000000') && 
+          !l.record_id.startsWith('30000000') && !l.record_id.startsWith('40000000') && 
+          !l.record_id.startsWith('50000000') && !l.record_id.startsWith('60000000') && 
+          !l.record_id.startsWith('61000000') && !l.record_id.startsWith('70000000') && 
+          !l.record_id.startsWith('71000000') && !l.record_id.startsWith('80000000') && 
+          !l.record_id.startsWith('90000000')) {
+        return false;
+      }
+      return !remoteKeys.has(`${l.table_name}_${l.record_id}_${l.action}`);
+    });
+
+    const merged = [...mappedRemote, ...pendingLocal].sort((a, b) => 
       new Date(b.occurred_at).getTime() - new Date(a.occurred_at).getTime()
     );
 
