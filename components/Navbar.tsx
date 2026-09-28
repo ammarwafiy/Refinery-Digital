@@ -26,6 +26,7 @@ import {
   ROLE_ALLOWED_TABS
 } from '@/lib/data-service';
 import SettingsModal from '@/components/SettingsModal';
+import HelpSupportModal from '@/components/HelpSupportModal';
 
 interface NavbarProps {
   activeTab: string;
@@ -44,6 +45,7 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
   const [currentShiftHours, setCurrentShiftHours] = useState<string>('14:00 – 22:00');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
+  const [isHelpOpen, setIsHelpOpen] = useState<boolean>(false);
 
   useEffect(() => {
     if (currentUser) {
@@ -379,8 +381,19 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
               </span>
             </div>
             <div
-              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-slate-200 hover:bg-[#121D2C] cursor-pointer transition-colors"
-              title="Help & Support Documentation"
+              role="button"
+              tabIndex={0}
+              onClick={() => {
+                setIsHelpOpen(true);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setIsHelpOpen(true);
+                }
+              }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-slate-200 hover:bg-[#121D2C] cursor-pointer transition-colors select-none focus:outline-none focus:ring-1 focus:ring-[#009FE3]"
+              title="Help & Support Documentation & Plant SOP"
             >
               <HelpCircle className="h-4 w-4 text-slate-400" />
               <span>Help & Support</span>
@@ -685,6 +698,25 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
               <Settings className="h-4 w-4 text-[#009FE3]" />
               <span>System Settings</span>
             </div>
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                setIsHelpOpen(true);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setIsMobileMenuOpen(false);
+                  setIsHelpOpen(true);
+                }
+              }}
+              className="w-full flex items-center justify-center gap-2 py-2.5 mt-2 rounded-lg text-xs font-medium text-slate-300 bg-[#121D2C] border border-[#1F2E43] hover:bg-[#172437] transition-colors cursor-pointer select-none"
+            >
+              <HelpCircle className="h-4 w-4 text-[#009FE3]" />
+              <span>Help & Support Center</span>
+            </div>
           </div>
 
           {/* Mobile Refinery Image Seamless Blend */}
@@ -787,6 +819,15 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
               onRoleChange(updated);
             }
           }}
+        />
+      )}
+
+      {/* Refinery Plant Help & Support Center Modal */}
+      {isHelpOpen && (
+        <HelpSupportModal
+          isOpen={isHelpOpen}
+          onClose={() => setIsHelpOpen(false)}
+          currentUser={profile}
         />
       )}
     </>

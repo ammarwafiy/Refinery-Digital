@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { Profile } from '@/types/refinery';
 import { loginUser, authenticateUser } from '@/lib/data-service';
+import HelpSupportModal from '@/components/HelpSupportModal';
 
 interface LoginViewProps {
   onLogin: (profile: Profile) => void;
@@ -28,6 +29,7 @@ export default function LoginView({ onLogin }: LoginViewProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [formattedTime, setFormattedTime] = useState<string>('');
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   useEffect(() => {
     const updateTime = () => {
@@ -369,13 +371,25 @@ export default function LoginView({ onLogin }: LoginViewProps) {
         </div>
 
         <div className="flex items-center gap-3 font-sans">
-          <span className="hover:text-slate-200 cursor-pointer transition-colors">Help & Support</span>
+          <span 
+            onClick={() => setIsHelpOpen(true)} 
+            className="hover:text-slate-200 cursor-pointer transition-colors"
+          >
+            Help & Support
+          </span>
           <span className="text-slate-600">|</span>
           <span className="hover:text-slate-200 cursor-pointer transition-colors">Privacy Policy</span>
           <span className="text-slate-600">|</span>
           <span className="hover:text-slate-200 cursor-pointer transition-colors">Contact Administrator</span>
         </div>
       </footer>
+
+      {isHelpOpen && (
+        <HelpSupportModal
+          isOpen={isHelpOpen}
+          onClose={() => setIsHelpOpen(false)}
+        />
+      )}
     </div>
   );
 }
