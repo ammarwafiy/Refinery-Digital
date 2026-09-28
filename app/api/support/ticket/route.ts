@@ -9,6 +9,9 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PU
 
 const ADMIN_WHATSAPP_PHONE = process.env.WHATSAPP_ADMIN_PHONE || '+601161764934';
 const CALLMEBOT_API_KEY = process.env.WHATSAPP_CALLMEBOT_API_KEY || '';
+const GREEN_API_INSTANCE_ID = process.env.GREEN_API_INSTANCE_ID || process.env.WHATSAPP_GREEN_API_INSTANCE_ID || '';
+const GREEN_API_TOKEN = process.env.GREEN_API_TOKEN || process.env.WHATSAPP_GREEN_API_TOKEN || '';
+const GREEN_API_HOST = process.env.GREEN_API_HOST || 'https://api.green-api.com';
 
 function getSupabaseAdmin() {
   return createClient(supabaseUrl, supabaseKey, {
@@ -81,21 +84,56 @@ ${description}
     const cleanPhone = ADMIN_WHATSAPP_PHONE.replace(/[^0-9]/g, '');
     const whatsappUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(rawWaMessage)}`;
 
-    // 3. Dispatch to CallMeBot API in background if configured
-    let callmebotSent = false;
-    let callmebotError: string | null = null;
+    // 3. Dispatch to WhatsApp API in background (Green-API private gateway or CallMeBot)
+    let whatsappSent = false;
+    let whatsappProvider: 'green-api' | 'callmebot' | 'none' = 'none';
+    let whatsappError: string | null = null;
+    let whatsappMessageId: string | null = null;
 
-    if (CALLMEBOT_API_KEY && CALLMEBOT_API_KEY.trim() !== '') {
+    // A. Priority 1: Private Dedicated Green-API Gateway (No @lid issues, 100% private)
+    if (GREEN_API_INSTANCE_ID && GREEN_API_TOKEN) {
+      try {
+        const host = GREEN_API_HOST.trim().replace(/\/+$/, '');
+        const greenApiUrl = `${host}/waInstance${GREEN_API_INSTANCE_ID.trim()}/sendMessage/${GREEN_API_TOKEN.trim()}`;
+        const greenApiChatId = `${cleanPhone}@c.us`;
+
+        const greenRes = await fetch(greenApiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chatId: greenApiChatId,
+            message: rawWaMessage,
+          }),
+          signal: AbortSignal.timeout(10000),
+        });
+
+        const greenData = await greenRes.json().catch(() => ({}));
+        if (greenRes.ok && (greenData.idMessage || greenData.id)) {
+          whatsappSent = true;
+          whatsappProvider = 'green-api';
+          whatsappMessageId = greenData.idMessage || greenData.id;
+        } else {
+          whatsappError = `Green-API error HTTP ${greenRes.status}: ${JSON.stringify(greenData)}`;
+        }
+      } catch (err: any) {
+        whatsappError = `Green-API connection error: ${err.message || err}`;
+        console.warn('[Green-API WhatsApp Alert Warning]:', err);
+      }
+    }
+
+    // B. Priority 2: Fallback to CallMeBot if Green-API not configured or unsuccessful
+    if (!whatsappSent && CALLMEBOT_API_KEY && CALLMEBOT_API_KEY.trim() !== '') {
       try {
         const callmebotUrl = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(ADMIN_WHATSAPP_PHONE)}&text=${encodeURIComponent(rawWaMessage)}&apikey=${encodeURIComponent(CALLMEBOT_API_KEY.trim())}`;
         const cbRes = await fetch(callmebotUrl, { method: 'GET', signal: AbortSignal.timeout(8000) });
         if (cbRes.ok) {
-          callmebotSent = true;
+          whatsappSent = true;
+          whatsappProvider = 'callmebot';
         } else {
-          callmebotError = `CallMeBot returned HTTP ${cbRes.status}`;
+          whatsappError = (whatsappError ? `${whatsappError} | ` : '') + `CallMeBot returned HTTP ${cbRes.status}`;
         }
       } catch (err: any) {
-        callmebotError = err.message || 'CallMeBot network error';
+        whatsappError = (whatsappError ? `${whatsappError} | ` : '') + (err.message || 'CallMeBot network error');
         console.warn('[CallMeBot WhatsApp Alert Warning]:', err);
       }
     }
@@ -117,7 +155,10 @@ ${description}
           reporter_id: reporterId,
           reporter_role: reporterRole,
           dispatched_whatsapp: ADMIN_WHATSAPP_PHONE,
-          callmebot_sent: callmebotSent,
+          whatsapp_sent: whatsappSent,
+          whatsapp_provider: whatsappProvider,
+          whatsapp_message_id: whatsappMessageId,
+          whatsapp_error: whatsappError,
           created_at: new Date().toISOString(),
         },
       });
@@ -129,10 +170,14 @@ ${description}
       success: true,
       ticketId,
       dispatchedPhone: ADMIN_WHATSAPP_PHONE,
-      callmebotSent,
-      callmebotError,
+      whatsappSent,
+      whatsappProvider,
+      whatsappMessageId,
+      whatsappError,
+      callmebotSent: whatsappSent && whatsappProvider === 'callmebot',
+      callmebotError: whatsappError,
       whatsappUrl,
-      message: `Tiket insiden ${ticketId} berjaya didaftarkan dan dihantar ke WhatsApp Pentadbir (${ADMIN_WHATSAPP_PHONE}).`,
+      message: `Tiket insiden ${ticketId} berjaya didaftarkan${whatsappSent ? ` dan dihantar ke WhatsApp Pentadbir via ${whatsappProvider.toUpperCase()}` : ''}.`,
     });
   } catch (error: any) {
     console.error('[/api/support/ticket Error]:', error);
