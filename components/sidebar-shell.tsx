@@ -114,7 +114,7 @@ export function SidebarShell({ profile, children }: { profile: Profile; children
     return pathname.startsWith(href)
   }
 
-  const SidebarContent = () => (
+  const renderSidebarContent = () => (
     <div className="flex flex-col h-full bg-[#101927]">
       {/* Logo */}
       <div className="p-4 border-b border-[#1F2E43]">
@@ -276,12 +276,12 @@ export function SidebarShell({ profile, children }: { profile: Profile; children
 
       {/* Mobile sidebar */}
       <aside className={`fixed inset-y-0 left-0 z-50 w-72 bg-[#101927] border-r border-[#1F2E43] transform transition-transform duration-200 lg:hidden ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <SidebarContent />
+        {renderSidebarContent()}
       </aside>
 
       {/* Desktop sidebar */}
       <aside className={`hidden lg:flex flex-col shrink-0 bg-[#101927] border-r border-[#1F2E43] transition-all duration-200 ${collapsed ? 'w-[68px]' : 'w-64'}`}>
-        <SidebarContent />
+        {renderSidebarContent()}
       </aside>
 
       {/* Main content */}
