@@ -74,10 +74,9 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
       }
 
       const ticketId = result.ticketId;
-      const targetPhone = result.dispatchedPhone || '+601161764934';
 
       setTicketSuccessMessage(
-        `Tiket [${ticketId}] berjaya didaftarkan ke Log Audit Loji & disalurkan ke WhatsApp Pengurus (${targetPhone})!`
+        `Tiket [${ticketId}] berjaya didaftarkan ke Log Audit Loji & disalurkan ke WhatsApp Pengurus Loji!`
       );
 
       if (result.whatsappUrl) {
@@ -527,7 +526,7 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
                   <span>Report Plant Incident or Technical Issue</span>
                 </h3>
                 <p className="text-xs text-slate-400 mb-4">
-                  Log isu operasi, percanggahan nilai makmal, penderia SCADA atau sistem. Aduan akan terus disalurkan ke WhatsApp Pengurus/Jurutera Loji (<span className="text-emerald-400 font-mono font-semibold">+601161764934</span>).
+                  Log isu operasi, percanggahan nilai makmal, penderia SCADA atau sistem. Aduan akan terus disalurkan ke WhatsApp Pengurus Loji secara automatik.
                 </p>
 
                 {ticketSuccessMessage && (
@@ -549,7 +548,7 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-[11px] transition-colors shadow-sm"
                         >
                           <MessageSquare className="h-3.5 w-3.5" />
-                          <span>Buka Salinan di WhatsApp (+601161764934)</span>
+                          <span>Buka Salinan di WhatsApp Pengurus</span>
                           <ExternalLink className="h-3 w-3 opacity-80" />
                         </a>
                       </div>
