@@ -48,7 +48,7 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
     setTimeout(() => {
       setIsSubmittingTicket(false);
       const ticketId = `TCK-${new Date().toISOString().slice(2, 10).replace(/-/g, '')}-${Math.floor(100 + Math.random() * 900)}`;
-      setTicketSuccessMessage(`Tiket berjaya dihantar ke Bahagian Sokongan Kejuruteraan Loji! ID Rujukan: [${ticketId}]. Jurutera bertugas akan mengambil tindakan segera.`);
+      setTicketSuccessMessage(`Ticket dispatched to Plant Engineering Support! Reference ID: [${ticketId}]. Duty engineers have been notified.`);
       setTicketSubject('');
       setTicketDescription('');
     }, 600);
@@ -84,7 +84,7 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
             type="button"
             onClick={onClose}
             className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-[#1A283C] transition-colors cursor-pointer"
-            title="Tutup Modal"
+            title="Close Modal"
           >
             <X className="h-5 w-5" />
           </button>
@@ -102,7 +102,7 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
             }`}
           >
             <BookOpen className="h-4 w-4" />
-            <span>1. Modul & Aliran Kerja SOP</span>
+            <span>1. Modules & SOP Workflow</span>
           </button>
 
           <button
@@ -115,7 +115,7 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
             }`}
           >
             <FileText className="h-4 w-4" />
-            <span>2. Kamus Kod & Had PORAM</span>
+            <span>2. Code Standards & PORAM Specs</span>
           </button>
 
           <button
@@ -128,7 +128,7 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
             }`}
           >
             <PhoneCall className="h-4 w-4" />
-            <span>3. Talian Bilik Kawalan Loji</span>
+            <span>3. Plant Control Room Hotline</span>
           </button>
 
           <button
@@ -141,7 +141,7 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
             }`}
           >
             <Activity className="h-4 w-4" />
-            <span>4. Status Sistem & Laporan Isu</span>
+            <span>4. System Status & Incident Ticket</span>
           </button>
         </div>
 
@@ -153,10 +153,10 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
               <div className="bg-[#0E1726] border border-[#1F2E43] rounded-xl p-4">
                 <h3 className="text-sm font-semibold text-white flex items-center gap-2 mb-2">
                   <ShieldCheck className="h-4 w-4 text-[#009FE3]" />
-                  <span>Gambaran Keseluruhan Aliran Kerja Operasi Kilang</span>
+                  <span>Plant Operational Workflow Overview</span>
                 </h3>
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  Sistem Refinery Digital mengintegrasikan operasi kilang penapisan minyak kelapa sawit secara menyeluruh—bermula dari kemasukan log operasi fizikal setiap jam (Shift Handover), pengesahan kualiti makmal (QC Testing), kelulusan berperingkat penyelia, hingga ke pensijilan rasmi ISO dan rekod jejak audit kekal.
+                  The Refinery Digital Operations Suite unifies palm oil processing end-to-end—spanning physical hourly telemetry logs (Shift Handover), certified laboratory testing (QC Testing), multi-tiered supervisory approvals, and permanent 21 CFR Part 11 audit trails for ISO compliance.
                 </p>
               </div>
 
@@ -167,14 +167,14 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
                     <span className="text-[10px] font-mono font-bold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded border border-amber-400/20">
                       OPERATOR (OPR001)
                     </span>
-                    <span className="text-[10px] font-mono text-slate-400">BORANG: RF-FR-004</span>
+                    <span className="text-[10px] font-mono text-slate-400">FORM: RF-FR-004</span>
                   </div>
-                  <h4 className="text-sm font-bold text-white mb-1">1. Shift Handover & Log Sejam (PL / PR)</h4>
+                  <h4 className="text-sm font-bold text-white mb-1">1. Shift Handover & Hourly Logs (PL / PR)</h4>
                   <p className="text-xs text-slate-400 leading-relaxed mb-3">
-                    Operator memasukkan parameter operasi setiap jam (Suhu Deodorizer 240–265°C, Vakum, Dos Bleaching Earth). Selepas jam ke-8, tandatangan e-signature dan serah tugas shif seterusnya.
+                    Operators log physical operating parameters hourly (Deodorizer Temperature 240–265°C, Vacuum pressure, Bleaching Earth dosage). At hour 8, execute digital e-signature to complete shift handover.
                   </p>
                   <div className="text-[11px] text-slate-300 bg-[#070C16] p-2.5 rounded-lg border border-[#172437] font-mono">
-                    💡 Petua: Tekan butang &apos;Copy Previous Hour&apos; untuk menjimatkan masa jika tiada perubahan parameter mendadak.
+                    💡 Tip: Click &apos;Copy Previous Hour&apos; to accelerate logging when equipment runs in steady state.
                   </div>
                 </div>
 
@@ -184,14 +184,14 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
                     <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded border border-emerald-400/20">
                       QC ANALYST (QCS001)
                     </span>
-                    <span className="text-[10px] font-mono text-slate-400">BORANG: RF-FR-001</span>
+                    <span className="text-[10px] font-mono text-slate-400">FORM: RF-FR-001</span>
                   </div>
-                  <h4 className="text-sm font-bold text-white mb-1">2. Ujian Makmal QC (SR / QC)</h4>
+                  <h4 className="text-sm font-bold text-white mb-1">2. QC Laboratory Testing (SR / QC)</h4>
                   <p className="text-xs text-slate-400 leading-relaxed mb-3">
-                    Staf QC mengambil sampel minyak dan memasukkan keputusan ujian: FFA, M&I, Nilai DOBI, dan Nilai Iodin. Sistem akan mengesahkan kesesuaian nilai secara automatik dengan spesifikasi PORAM.
+                    QC analysts sample palm oil batches and record analytical test results: FFA, M&I, DOBI value, and Iodine Value (IV). The system evaluates test results against PORAM trade standards automatically.
                   </p>
                   <div className="text-[11px] text-slate-300 bg-[#070C16] p-2.5 rounded-lg border border-[#172437] font-mono">
-                    💡 Petua: Jika keputusan berada di luar had, status bertukar kepada &apos;Quarantine&apos; dan memerlukan semakan penyelia.
+                    💡 Tip: If values fall outside strict limits, the status automatically flags as &apos;Quarantine&apos; requiring supervisor review.
                   </div>
                 </div>
 
@@ -203,12 +203,12 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
                     </span>
                     <span className="text-[10px] font-mono text-slate-400">STATUS: APPROVED</span>
                   </div>
-                  <h4 className="text-sm font-bold text-white mb-1">3. Papan Penyelia & Kelulusan (AR)</h4>
+                  <h4 className="text-sm font-bold text-white mb-1">3. Supervisor Board & Approvals (AR)</h4>
                   <p className="text-xs text-slate-400 leading-relaxed mb-3">
-                    Penyelia dan Pengurus menyemak borang shif, meluluskan deviasi (variance), serta mengeluarkan Sijil Pelepasan Kelompok Minyak (*Batch Release Certificate*).
+                    Shift supervisors and plant quality managers audit shift sheets, authorize operational variance concessions, and issue official Batch Release Certificates.
                   </p>
                   <div className="text-[11px] text-slate-300 bg-[#070C16] p-2.5 rounded-lg border border-[#172437] font-mono">
-                    💡 Petua: Tandatangan digital direkodkan secara kekal ke dalam jejak audit tanpa boleh dipadam.
+                    💡 Tip: Every digital signoff is permanently registered in the tamper-evident audit ledger.
                   </div>
                 </div>
 
@@ -220,12 +220,12 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
                     </span>
                     <span className="text-[10px] font-mono text-slate-400">STANDARD: ISO 9001</span>
                   </div>
-                  <h4 className="text-sm font-bold text-white mb-1">4. Borang Rasmi & Jejak Audit (AL)</h4>
+                  <h4 className="text-sm font-bold text-white mb-1">4. Official Forms & Audit Trail (AL)</h4>
                   <p className="text-xs text-slate-400 leading-relaxed mb-3">
-                    Pusat cetakan borang rasmi industri (RF-FR-001, RF-FR-004), eksport data ke CSV/PDF, serta semakan integriti lejar audit yang mematuhi garis panduan FDA 21 CFR Part 11.
+                    Central repository for printing official plant forms (RF-FR-001, RF-FR-004), exporting analytical data to CSV/PDF, and verifying FDA 21 CFR Part 11 compliant audit integrity.
                   </p>
                   <div className="text-[11px] text-slate-300 bg-[#070C16] p-2.5 rounded-lg border border-[#172437] font-mono">
-                    💡 Petua: Tekan &apos;View JSON&apos; pada baris log audit untuk melihat rekod keadaan sebelum dan selepas operasi.
+                    💡 Tip: Click &apos;View Details&apos; on any audit log row to inspect exact pre-change and post-change JSON states.
                   </div>
                 </div>
               </div>
@@ -239,48 +239,48 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
               <div className="bg-[#0E1726] border border-[#1F2E43] rounded-xl p-4">
                 <h3 className="text-sm font-semibold text-white flex items-center gap-2 mb-3">
                   <FileText className="h-4 w-4 text-[#009FE3]" />
-                  <span>Kamus Kod Piawaian Loji (Traceability Dictionary)</span>
+                  <span>Official Plant Traceability Code Directory</span>
                 </h3>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                   <div className="bg-[#080D18] p-3 rounded-lg border border-[#1F2E43]">
                     <div className="text-[#009FE3] font-mono font-bold text-sm">SR001</div>
                     <div className="text-white font-medium mt-1">Sample Report</div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">Ujian makmal QC (RF-FR-001)</div>
+                    <div className="text-[10px] text-slate-400 mt-0.5">QC Lab Analysis (RF-FR-001)</div>
                   </div>
                   <div className="bg-[#080D18] p-3 rounded-lg border border-[#1F2E43]">
                     <div className="text-emerald-400 font-mono font-bold text-sm">QC001</div>
                     <div className="text-white font-medium mt-1">QC Decision</div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">Keputusan pelepasan kelompok</div>
+                    <div className="text-[10px] text-slate-400 mt-0.5">Batch Release & Disposition</div>
                   </div>
                   <div className="bg-[#080D18] p-3 rounded-lg border border-[#1F2E43]">
                     <div className="text-amber-400 font-mono font-bold text-sm">PR001</div>
                     <div className="text-white font-medium mt-1">Production Record</div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">Borang shif harian (RF-FR-004)</div>
+                    <div className="text-[10px] text-slate-400 mt-0.5">Daily Shift Sheet (RF-FR-004)</div>
                   </div>
                   <div className="bg-[#080D18] p-3 rounded-lg border border-[#1F2E43]">
                     <div className="text-sky-400 font-mono font-bold text-sm">PL001</div>
                     <div className="text-white font-medium mt-1">Process Log</div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">Catatan bacaan fizikal setiap jam</div>
+                    <div className="text-[10px] text-slate-400 mt-0.5">Hourly Process Readings</div>
                   </div>
                   <div className="bg-[#080D18] p-3 rounded-lg border border-[#1F2E43]">
                     <div className="text-purple-400 font-mono font-bold text-sm">AR001</div>
                     <div className="text-white font-medium mt-1">Approval Record</div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">Kelulusan deviasi & signoff</div>
+                    <div className="text-[10px] text-slate-400 mt-0.5">Variance Approvals & Signoffs</div>
                   </div>
                   <div className="bg-[#080D18] p-3 rounded-lg border border-[#1F2E43]">
                     <div className="text-rose-400 font-mono font-bold text-sm">AL001</div>
                     <div className="text-white font-medium mt-1">Audit Log</div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">Lejar keselamatan tidak boleh ubah</div>
+                    <div className="text-[10px] text-slate-400 mt-0.5">Immutable Security Ledger</div>
                   </div>
                   <div className="bg-[#080D18] p-3 rounded-lg border border-[#1F2E43]">
                     <div className="text-cyan-400 font-mono font-bold text-sm">BP001</div>
                     <div className="text-white font-medium mt-1">Batch Process</div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">Kitaran penapisan kelompok</div>
+                    <div className="text-[10px] text-slate-400 mt-0.5">Refinery Production Batch</div>
                   </div>
                   <div className="bg-[#080D18] p-3 rounded-lg border border-[#1F2E43]">
                     <div className="text-indigo-400 font-mono font-bold text-sm">ISO001</div>
                     <div className="text-white font-medium mt-1">ISO Certificate</div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">Pensijilan pematuhan mutu</div>
+                    <div className="text-[10px] text-slate-400 mt-0.5">Quality Compliance Certificate</div>
                   </div>
                 </div>
               </div>
@@ -289,16 +289,16 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
               <div className="bg-[#0E1726] border border-[#1F2E43] rounded-xl p-4">
                 <h3 className="text-sm font-semibold text-white flex items-center gap-2 mb-3">
                   <Sliders className="h-4 w-4 text-emerald-400" />
-                  <span>Had Kawalan Kualiti Minyak Sawit (PORAM & ISO 9001 Standards)</span>
+                  <span>Palm Oil Quality Specifications (PORAM & ISO 9001 Standards)</span>
                 </h3>
                 <div className="overflow-x-auto rounded-lg border border-[#1F2E43]">
                   <table className="w-full text-xs text-left">
                     <thead className="bg-[#080D18] text-slate-400 uppercase text-[10px] font-mono border-b border-[#1F2E43]">
                       <tr>
-                        <th className="py-2.5 px-3">Parameter Ujian</th>
-                        <th className="py-2.5 px-3">Minyak Mentah (CPO)</th>
-                        <th className="py-2.5 px-3">Minyak Ditapis (RBD Palm Oil)</th>
-                        <th className="py-2.5 px-3">Tindakan Jika Melebihi Had</th>
+                        <th className="py-2.5 px-3">Test Parameter</th>
+                        <th className="py-2.5 px-3">Crude Palm Oil (CPO)</th>
+                        <th className="py-2.5 px-3">RBD Palm Oil (Refined)</th>
+                        <th className="py-2.5 px-3">Corrective Engineering Action</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#1F2E43]/60 font-mono">
@@ -306,31 +306,31 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
                         <td className="py-2.5 px-3 text-white font-sans font-medium">Free Fatty Acid (FFA)</td>
                         <td className="py-2.5 px-3 text-slate-300">≤ 5.00 %</td>
                         <td className="py-2.5 px-3 text-emerald-400 font-bold">≤ 0.050 %</td>
-                        <td className="py-2.5 px-3 text-rose-400 font-sans">Kaji semula suhu deodorizer / masa tinggal</td>
+                        <td className="py-2.5 px-3 text-rose-400 font-sans">Adjust deodorizer temperature (250–265°C) & stripping steam</td>
                       </tr>
                       <tr className="hover:bg-[#121D2C]">
                         <td className="py-2.5 px-3 text-white font-sans font-medium">Moisture & Impurities (M&I)</td>
                         <td className="py-2.5 px-3 text-slate-300">≤ 0.25 %</td>
                         <td className="py-2.5 px-3 text-emerald-400 font-bold">≤ 0.050 %</td>
-                        <td className="py-2.5 px-3 text-rose-400 font-sans">Tingkatkan pengeringan vakum (Dryer)</td>
+                        <td className="py-2.5 px-3 text-rose-400 font-sans">Increase vacuum dryer temperature & inspect vacuum ejectors</td>
                       </tr>
                       <tr className="hover:bg-[#121D2C]">
                         <td className="py-2.5 px-3 text-white font-sans font-medium">DOBI (Bleachability Index)</td>
                         <td className="py-2.5 px-3 text-amber-400">≥ 2.80 (Good)</td>
                         <td className="py-2.5 px-3 text-slate-400">—</td>
-                        <td className="py-2.5 px-3 text-rose-400 font-sans">Tambah dos Bleaching Earth dalam Bleacher</td>
+                        <td className="py-2.5 px-3 text-rose-400 font-sans">Increase activated Bleaching Earth dosage in Bleacher B-101</td>
                       </tr>
                       <tr className="hover:bg-[#121D2C]">
                         <td className="py-2.5 px-3 text-white font-sans font-medium">Iodine Value (IV)</td>
                         <td className="py-2.5 px-3 text-slate-300">50.0 – 55.0 Wijs</td>
                         <td className="py-2.5 px-3 text-emerald-400 font-bold">50.0 – 55.0 Wijs</td>
-                        <td className="py-2.5 px-3 text-rose-400 font-sans">Semak suapan bahan mentah & fractionation</td>
+                        <td className="py-2.5 px-3 text-rose-400 font-sans">Verify CPO origin feedstock & fractionation crystallization cuts</td>
                       </tr>
                       <tr className="hover:bg-[#121D2C]">
-                        <td className="py-2.5 px-3 text-white font-sans font-medium">Warna Lovibond (5¼&quot; Cell)</td>
+                        <td className="py-2.5 px-3 text-white font-sans font-medium">Lovibond Colour (5¼&quot; Cell)</td>
                         <td className="py-2.5 px-3 text-slate-400">—</td>
                         <td className="py-2.5 px-3 text-emerald-400 font-bold">3.0 Red / 30 Yellow Max</td>
-                        <td className="py-2.5 px-3 text-rose-400 font-sans">Semak kecekapan penapis daun (Leaf Filter)</td>
+                        <td className="py-2.5 px-3 text-rose-400 font-sans">Check leaf filter screen integrity & heat bleach residence time</td>
                       </tr>
                     </tbody>
                   </table>
@@ -345,10 +345,10 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
               <div className="bg-[#0E1726] border border-[#1F2E43] rounded-xl p-4">
                 <h3 className="text-sm font-semibold text-white flex items-center gap-2 mb-2">
                   <Radio className="h-4 w-4 text-[#009FE3]" />
-                  <span>Direktori Talian Perhubungan Loji Kilang (Lam Soon Refinery)</span>
+                  <span>Plant Communications & Intercom Directory (Lam Soon Refinery)</span>
                 </h3>
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  Gunakan talian sambungan interkom (Extension) atau saluran radio komunikasi (Walkie-Talkie VHF) sekiranya berlaku kecemasan atau keperluan penyesuaian parameter loji segera.
+                  Use internal extension lines or handheld VHF two-way radios for immediate operational coordination or process escalation.
                 </p>
               </div>
 
@@ -359,10 +359,10 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
                   </div>
                   <div>
                     <div className="text-sm font-bold text-white">Central Control Room (CCR / DCS)</div>
-                    <div className="text-xs text-slate-400 mt-0.5">Bilik Kawalan Automasi Utama & Deodorizer</div>
+                    <div className="text-xs text-slate-400 mt-0.5">Primary Plant Automation & Deodorizer Control</div>
                     <div className="mt-2 text-xs font-mono space-y-1">
                       <div className="text-sky-400">Intercom Ext: <span className="font-bold">201 / 202</span></div>
-                      <div className="text-slate-300">VHF Radio: <span className="text-amber-400 font-bold">Channel 4 (Ops Loji)</span></div>
+                      <div className="text-slate-300">VHF Radio: <span className="text-amber-400 font-bold">Channel 4 (Plant Ops)</span></div>
                     </div>
                   </div>
                 </div>
@@ -372,11 +372,11 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
                     <Activity className="h-5 w-5" />
                   </div>
                   <div>
-                    <div className="text-sm font-bold text-white">Makmal Kawalan Kualiti (QC Central Lab)</div>
-                    <div className="text-xs text-slate-400 mt-0.5">Analisis Sampel & Pengesahan Kelompok</div>
+                    <div className="text-sm font-bold text-white">QC Central Laboratory</div>
+                    <div className="text-xs text-slate-400 mt-0.5">Sample Analytical Testing & Batch Certification</div>
                     <div className="mt-2 text-xs font-mono space-y-1">
                       <div className="text-emerald-400">Intercom Ext: <span className="font-bold">108</span></div>
-                      <div className="text-slate-300">Talian Terus: <span className="text-slate-200">+603-3168-8000 (Ext 108)</span></div>
+                      <div className="text-slate-300">Direct Line: <span className="text-slate-200">+603-3168-8000 (Ext 108)</span></div>
                     </div>
                   </div>
                 </div>
@@ -386,11 +386,11 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
                     <AlertTriangle className="h-5 w-5" />
                   </div>
                   <div>
-                    <div className="text-sm font-bold text-white">Talian Kecemasan & Keselamatan (EHS)</div>
-                    <div className="text-xs text-slate-400 mt-0.5">Tumpahan Minyak, Kebakaran & Kemalangan Loji</div>
+                    <div className="text-sm font-bold text-white">Emergency Health & Safety (EHS)</div>
+                    <div className="text-xs text-slate-400 mt-0.5">Oil Spill Containment, Fire Alarms & Site Incidents</div>
                     <div className="mt-2 text-xs font-mono space-y-1">
-                      <div className="text-rose-400 font-bold">Kecemasan: 999 / Ext. 911</div>
-                      <div className="text-slate-300">Pegawai EHS Bertugas: <span className="text-slate-200">Ext 115</span></div>
+                      <div className="text-rose-400 font-bold">Emergency: 999 / Ext. 911</div>
+                      <div className="text-slate-300">Duty Safety Officer: <span className="text-slate-200">Ext 115</span></div>
                     </div>
                   </div>
                 </div>
@@ -400,11 +400,11 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
                     <Sliders className="h-5 w-5" />
                   </div>
                   <div>
-                    <div className="text-sm font-bold text-white">Sokongan Kejuruteraan IT & SCADA</div>
-                    <div className="text-xs text-slate-400 mt-0.5">Sistem Pangkalan Data, Rangkaian & Sensor Loji</div>
+                    <div className="text-sm font-bold text-white">Plant IT & SCADA Engineering</div>
+                    <div className="text-xs text-slate-400 mt-0.5">Database Infrastructure, Network & Process Sensors</div>
                     <div className="mt-2 text-xs font-mono space-y-1">
                       <div className="text-purple-400">Intercom Ext: <span className="font-bold">305</span></div>
-                      <div className="text-slate-300">Emel: <span className="text-slate-200">plant-it@lamsoon.com.my</span></div>
+                      <div className="text-slate-300">Email: <span className="text-slate-200">plant-it@lamsoon.com.my</span></div>
                     </div>
                   </div>
                 </div>
@@ -414,23 +414,23 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
               <div className="bg-[#080D18] p-4 rounded-xl border border-[#1F2E43]">
                 <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2 flex items-center gap-2">
                   <Clock className="h-4 w-4 text-[#009FE3]" />
-                  <span>Jadual Waktu Syif Operasi Loji 24 Jam</span>
+                  <span>24-Hour Continuous Plant Shift Schedule</span>
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono">
                   <div className="p-3 rounded-lg bg-[#0E1726] border border-[#1F2E43]">
-                    <div className="text-amber-400 font-bold">SYIF A (Pagi)</div>
+                    <div className="text-amber-400 font-bold">SHIFT A (Morning)</div>
                     <div className="text-slate-200 text-sm mt-0.5">06:00 – 14:00 MYT</div>
-                    <div className="text-[10px] text-slate-400 mt-1">Handover pada jam 13:45</div>
+                    <div className="text-[10px] text-slate-400 mt-1">Handover window: 13:45</div>
                   </div>
                   <div className="p-3 rounded-lg bg-[#0E1726] border border-[#1F2E43]">
-                    <div className="text-sky-400 font-bold">SYIF B (Petang)</div>
+                    <div className="text-sky-400 font-bold">SHIFT B (Afternoon)</div>
                     <div className="text-slate-200 text-sm mt-0.5">14:00 – 22:00 MYT</div>
-                    <div className="text-[10px] text-slate-400 mt-1">Handover pada jam 21:45</div>
+                    <div className="text-[10px] text-slate-400 mt-1">Handover window: 21:45</div>
                   </div>
                   <div className="p-3 rounded-lg bg-[#0E1726] border border-[#1F2E43]">
-                    <div className="text-purple-400 font-bold">SYIF C (Malam)</div>
+                    <div className="text-purple-400 font-bold">SHIFT C (Night)</div>
                     <div className="text-slate-200 text-sm mt-0.5">22:00 – 06:00 MYT</div>
-                    <div className="text-[10px] text-slate-400 mt-1">Handover pada jam 05:45</div>
+                    <div className="text-[10px] text-slate-400 mt-1">Handover window: 05:45</div>
                   </div>
                 </div>
               </div>
@@ -443,7 +443,7 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
               {/* Diagnostics Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
                 <div className="bg-[#0E1726] p-3.5 rounded-xl border border-[#1F2E43]">
-                  <div className="text-slate-400 text-[10px] uppercase">Pangkalan Data</div>
+                  <div className="text-slate-400 text-[10px] uppercase">Database Engine</div>
                   <div className="text-emerald-400 font-bold text-sm mt-1 flex items-center gap-1.5">
                     <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
                     <span>ONLINE</span>
@@ -452,19 +452,19 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
                 </div>
 
                 <div className="bg-[#0E1726] p-3.5 rounded-xl border border-[#1F2E43]">
-                  <div className="text-slate-400 text-[10px] uppercase">Zon Masa Loji</div>
+                  <div className="text-slate-400 text-[10px] uppercase">Plant Timezone</div>
                   <div className="text-[#009FE3] font-bold text-sm mt-1">Asia/Kuala_Lumpur</div>
                   <div className="text-[10px] text-slate-400 mt-1">MYT (UTC +08:00)</div>
                 </div>
 
                 <div className="bg-[#0E1726] p-3.5 rounded-xl border border-[#1F2E43]">
-                  <div className="text-slate-400 text-[10px] uppercase">Lejar Audit</div>
-                  <div className="text-purple-400 font-bold text-sm mt-1">226+ Rekod</div>
-                  <div className="text-[10px] text-slate-400 mt-1">Kekal & Disahkan Integriti</div>
+                  <div className="text-slate-400 text-[10px] uppercase">Audit Ledger</div>
+                  <div className="text-purple-400 font-bold text-sm mt-1">226+ Records</div>
+                  <div className="text-[10px] text-slate-400 mt-1">Immutable & Verified</div>
                 </div>
 
                 <div className="bg-[#0E1726] p-3.5 rounded-xl border border-[#1F2E43]">
-                  <div className="text-slate-400 text-[10px] uppercase">Versi Sistem</div>
+                  <div className="text-slate-400 text-[10px] uppercase">Application Build</div>
                   <div className="text-white font-bold text-sm mt-1">v1.0.0 Production</div>
                   <div className="text-[10px] text-slate-400 mt-1">Next.js 16 + React 19</div>
                 </div>
@@ -474,10 +474,10 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
               <div className="bg-[#0E1726] border border-[#1F2E43] rounded-xl p-5">
                 <h3 className="text-sm font-bold text-white flex items-center gap-2 mb-1">
                   <Send className="h-4 w-4 text-[#009FE3]" />
-                  <span>Borang Laporan Masalah & Aduan Teknikal Kilang</span>
+                  <span>Report Plant Incident or Technical Issue</span>
                 </h3>
                 <p className="text-xs text-slate-400 mb-4">
-                  Laporkan sebarang ralat pengiraan, masalah pautan pangkalan data, atau sensor loji yang tidak disegerakkan terus kepada Bahagian Kejuruteraan Loji.
+                  Log operational issues, calculation discrepancies, database synchronization delays, or physical sensor errors directly with the Plant Engineering Desk.
                 </p>
 
                 {ticketSuccessMessage && (
@@ -491,28 +491,28 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-[11px] font-medium text-slate-300 mb-1">
-                        Kategori Isu
+                        Issue Category
                       </label>
                       <select
                         value={ticketCategory}
                         onChange={(e) => setTicketCategory(e.target.value)}
                         className="w-full bg-[#080D18] border border-[#1F2E43] rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-[#009FE3]"
                       >
-                        <option value="process">Operasi Shift & Log Sejam (RF-FR-004)</option>
-                        <option value="qc">Ujian Makmal QC & Nilai Sampel (RF-FR-001)</option>
-                        <option value="scada">Sambungan Sensor / DCS Pelayan</option>
-                        <option value="security">Akaun Pengguna & Hak Akses</option>
-                        <option value="general">Cadangan Penambahbaikan Sistem</option>
+                        <option value="process">Shift Operations & Hourly Log (RF-FR-004)</option>
+                        <option value="qc">QC Laboratory Testing & Sample Results (RF-FR-001)</option>
+                        <option value="scada">Physical Sensor / DCS Connectivity</option>
+                        <option value="security">User Authentication & Role Permissions</option>
+                        <option value="general">System Feature Enhancement Request</option>
                       </select>
                     </div>
 
                     <div>
                       <label className="block text-[11px] font-medium text-slate-300 mb-1">
-                        Tajuk Isu / Lokasi Peralatan
+                        Issue Subject / Equipment Tag
                       </label>
                       <input
                         type="text"
-                        placeholder="cth: Deodorizer D-201 sensor tekanan tidak stabil"
+                        placeholder="e.g., Deodorizer D-201 vacuum transmitter pressure spike"
                         value={ticketSubject}
                         onChange={(e) => setTicketSubject(e.target.value)}
                         className="w-full bg-[#080D18] border border-[#1F2E43] rounded-lg px-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-[#009FE3]"
@@ -523,11 +523,11 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
 
                   <div>
                     <label className="block text-[11px] font-medium text-slate-300 mb-1">
-                      Keterangan Terperinci Isu
+                      Detailed Incident Description
                     </label>
                     <textarea
                       rows={3}
-                      placeholder="Terangkan masalah yang dihadapi, nombor batch atau masa kejadian berlaku..."
+                      placeholder="Describe the discrepancy, equipment status, lot number, or time of observation..."
                       value={ticketDescription}
                       onChange={(e) => setTicketDescription(e.target.value)}
                       className="w-full bg-[#080D18] border border-[#1F2E43] rounded-lg px-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-[#009FE3] resize-none"
@@ -537,7 +537,7 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
 
                   <div className="flex items-center justify-between pt-2">
                     <div className="text-[11px] text-slate-400 font-mono">
-                      Pelapor: <span className="text-[#009FE3] font-semibold">{currentUser?.full_name || 'Staff Loji'}</span> ({currentUser?.employee_no || 'OPR001'})
+                      Reporter: <span className="text-[#009FE3] font-semibold">{currentUser?.full_name || 'Plant Personnel'}</span> ({currentUser?.employee_no || 'OPR001'})
                     </div>
 
                     <button
@@ -548,12 +548,12 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
                       {isSubmittingTicket ? (
                         <>
                           <div className="h-3.5 w-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                          <span>Menghantar...</span>
+                          <span>Dispatching...</span>
                         </>
                       ) : (
                         <>
                           <Send className="h-3.5 w-3.5" />
-                          <span>Hantar Tiket Bantuan</span>
+                          <span>Submit Support Ticket</span>
                         </>
                       )}
                     </button>
@@ -568,7 +568,7 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
         <div className="flex items-center justify-between px-6 py-3.5 border-t border-[#1F2E43] bg-[#0E1726]/80 text-xs">
           <div className="flex items-center gap-2 text-slate-400 font-mono text-[11px]">
             <Info className="h-3.5 w-3.5 text-[#009FE3]" />
-            <span>Dokumentasi Rasmi Loji · Dikemaskini 2026-09-28</span>
+            <span>Official Plant Documentation · Updated 2026-09-28</span>
           </div>
 
           <button
@@ -576,7 +576,7 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
             onClick={onClose}
             className="px-4 py-1.5 rounded-lg bg-[#142032] hover:bg-[#1A283C] text-slate-200 font-mono text-xs border border-[#1F2E43] transition-colors cursor-pointer"
           >
-            Tutup (Close)
+            Close
           </button>
         </div>
       </div>

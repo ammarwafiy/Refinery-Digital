@@ -219,19 +219,19 @@ export default function AdminUserManagementView() {
       setDownloadedPackageInfo({ filename: pkg.filename, count: pkg.recordsArchivedCount });
       setPruneStatusMessage({
         type: 'success',
-        text: `✓ Sandaran dimuat turun (${pkg.recordsArchivedCount} rekod dibungkus). Anda kini boleh simpan fail ini ke Google Drive.`
+        text: `✓ Backup downloaded successfully (${pkg.recordsArchivedCount} records packaged). You may now store this file into Google Drive.`
       });
       showToast(
         'success',
-        'Sandaran Berjaya Dimuat Turun',
-        `${pkg.recordsArchivedCount} rekod (${pkg.counts.reports} Laporan QC, ${pkg.counts.deviations} Sisihan, ${pkg.counts.auditLogs} Audit Log, ${pkg.counts.sheets} Lembaran Syif) telah dieksport ke fail Excel (.csv) & .json!`
+        'Backup Downloaded Successfully',
+        `${pkg.recordsArchivedCount} records (${pkg.counts.reports} QC Reports, ${pkg.counts.deviations} Deviations, ${pkg.counts.auditLogs} Audit Logs, ${pkg.counts.sheets} Shift Sheets) exported to Excel (.csv) & .json!`
       );
     } catch (err: any) {
       setPruneStatusMessage({
         type: 'error',
         text: `Failed to generate archive package: ${err?.message || 'Unknown error'}`
       });
-      showToast('error', 'Ralat Muat Turun', err?.message || 'Gagal menjana fail sandaran');
+      showToast('error', 'Download Error', err?.message || 'Failed to generate backup package');
     }
   };
 
@@ -240,8 +240,8 @@ export default function AdminUserManagementView() {
     if (!hasDownloadedBackup) {
       showToast(
         'warning',
-        'Syarat Keselamatan ISO 9001',
-        'Anda mesti memuat turun pakej sandaran (backup) ke komputer / Google Drive terlebih dahulu sebelum melaksanakan pembersihan.'
+        'ISO 9001 Safety Protocol',
+        'You must download the cold backup package to your computer or Google Drive prior to executing database pruning.'
       );
       return;
     }
@@ -250,13 +250,13 @@ export default function AdminUserManagementView() {
     setConfirmModal({
       isOpen: true,
       type: 'danger',
-      title: 'Pengesahan Pembersihan Pangkalan Data',
+      title: 'Database Pruning Authorization',
       badgeText: 'ISO 9001 / HACCP RETENTION',
-      description: `Adakah anda pasti ingin membersihkan rekod Supabase yang lebih lama daripada ${cutoff}?`,
+      description: `Are you sure you want to permanently prune Supabase database records older than ${cutoff}?`,
       details: {
-        extraNote: `• Rekod laporan sampel & sisihan sebelum ${cutoff} akan dipadam secara kekal daripada Supabase.\n• Lembaran syif aktif, spesifikasi loji, kalibrasi tangki & akaun staf TIDAK akan disentuh.`
+        extraNote: `• Sample reports and deviations before ${cutoff} will be permanently removed from Supabase.\n• Active shift sheets, plant specifications, tank calibrations & staff accounts will NOT be touched.`
       },
-      confirmButtonText: 'Sahkan & Bersihkan Rekod',
+      confirmButtonText: 'Confirm & Prune Records',
       confirmButtonVariant: 'danger',
       onConfirm: async () => {
         setIsPruning(true);
@@ -265,31 +265,31 @@ export default function AdminUserManagementView() {
         try {
           const res = await executePruneRetentionPolicy(cutoff, prunePassword);
           if (res.success) {
-            const successMsg = res.message || 'Database pruning berjaya dilaksanakan!';
+            const successMsg = res.message || 'Database pruning executed successfully!';
             setPruneStatusMessage({
               type: 'success',
               text: successMsg
             });
-            showToast('success', 'Pembersihan Selesai', successMsg);
+            showToast('success', 'Prune Completed', successMsg);
             setPrunePassword('');
             setHasDownloadedBackup(false);
             refreshStorage();
             refreshData();
           } else {
-            const errorMsg = res.error || 'Pruning ditolak. Pengesahan gagal.';
+            const errorMsg = res.error || 'Pruning rejected. Verification failed.';
             setPruneStatusMessage({
               type: 'error',
               text: errorMsg
             });
-            showToast('error', 'Pruning Ditolak', errorMsg);
+            showToast('error', 'Pruning Rejected', errorMsg);
           }
         } catch (err: any) {
-          const errorMsg = err?.message || 'Ralat berlaku semasa pembersihan pangkalan data.';
+          const errorMsg = err?.message || 'An error occurred during database pruning.';
           setPruneStatusMessage({
             type: 'error',
             text: errorMsg
           });
-          showToast('error', 'Ralat Sistem', errorMsg);
+          showToast('error', 'System Error', errorMsg);
         } finally {
           setIsPruning(false);
         }
@@ -301,8 +301,8 @@ export default function AdminUserManagementView() {
     if (!isAdmin) {
       showToast(
         'error',
-        'Akses Ditolak',
-        'Hanya Pentadbir Loji (Plant Administrator) dibenarkan melaksanakan pengekalan data & pembersihan.'
+        'Access Denied',
+        'Only Plant Administrators are authorized to execute data retention policies & pruning.'
       );
       return;
     }
@@ -314,14 +314,14 @@ export default function AdminUserManagementView() {
       type: 'warning',
       title: '1-Click Auto Archive & Prune (Fast Track)',
       badgeText: 'FAST-TRACK MAINTENANCE',
-      description: 'Sistem akan memuat turun sandaran (.json & .csv) ke komputer anda dan membersihkan rekod lama di Supabase secara serentak.',
+      description: 'The system will download full backups (.json & .csv) to your computer and prune legacy records from Supabase simultaneously.',
       details: {
-        extraNote: `Tarikh had pengekalan: Rekod sebelum ${cutoff} akan diarkibkan & dipadam secara automatik.`
+        extraNote: `Retention cutoff: Records dated before ${cutoff} will be archived & purged automatically.`
       },
       requiresPassword: true,
       defaultPassword: 'password123',
-      passwordPlaceholder: 'Masukkan Kata Laluan Pentadbir...',
-      confirmButtonText: 'Muat Turun & Bersihkan Sekarang',
+      passwordPlaceholder: 'Enter Administrator Password...',
+      confirmButtonText: 'Download & Prune Now',
       confirmButtonVariant: 'warning',
       onConfirm: async (passwordInput?: string) => {
         const pass = passwordInput || 'password123';
@@ -357,12 +357,12 @@ export default function AdminUserManagementView() {
           const res = await executePruneRetentionPolicy(cutoff, pass);
 
           if (res.success) {
-            const successMsg = `⚡ 1-Click Auto Archive & Prune Selesai! Fail sandaran (${pkg.recordsArchivedCount} rekod) telah dimuat turun dan Supabase telah dibersihkan untuk rekod sebelum ${cutoff}.`;
+            const successMsg = `⚡ 1-Click Auto Archive & Prune Completed! Backup archive (${pkg.recordsArchivedCount} records) downloaded and Supabase database pruned for records before ${cutoff}.`;
             setPruneStatusMessage({
               type: 'success',
               text: successMsg
             });
-            showToast('success', 'Arkib & Prune Selesai', `Sandaran dimuat turun & ${pkg.recordsArchivedCount} rekod dibersihkan.`);
+            showToast('success', 'Archive & Prune Completed', `Backup downloaded & ${pkg.recordsArchivedCount} records pruned.`);
             refreshStorage();
             refreshData();
 
@@ -374,7 +374,7 @@ export default function AdminUserManagementView() {
               type: 'error',
               text: errorMsg
             });
-            showToast('error', 'Gagal Melaksanakan Prune', errorMsg);
+            showToast('error', 'Prune Execution Failed', errorMsg);
           }
         } catch (err: any) {
           const errorMsg = err?.message || 'Error during 1-click execution.';
@@ -382,7 +382,7 @@ export default function AdminUserManagementView() {
             type: 'error',
             text: errorMsg
           });
-          showToast('error', 'Ralat', errorMsg);
+          showToast('error', 'Error', errorMsg);
         } finally {
           setIsPruning(false);
         }
@@ -445,12 +445,12 @@ export default function AdminUserManagementView() {
         type: 'success', 
         text: successMsg 
       });
-      showToast('success', 'Pendaftaran Kakitangan Berjaya', successMsg);
+      showToast('success', 'Staff Member Registered', successMsg);
       setAutoId(generateNextEmployeeId(selectedRole));
     } catch (err: any) {
       const errMsg = err?.message || 'Failed to register staff member. Please try again.';
       setStatusMessage({ type: 'error', text: errMsg });
-      showToast('error', 'Gagal Mendaftar Staf', errMsg);
+      showToast('error', 'Failed to Register Staff', errMsg);
     } finally {
       setIsSubmitting(false);
     }
@@ -460,8 +460,8 @@ export default function AdminUserManagementView() {
     if (employeeNo === currentProfile.employee_no || employeeNo === currentProfile.id) {
       showToast(
         'warning',
-        'Tindakan Disekat',
-        'Anda tidak boleh menyahaktifkan akaun anda sendiri yang sedang digunakan.'
+        'Action Prohibited',
+        'You cannot deactivate your own active session profile.'
       );
       return;
     }
@@ -469,29 +469,29 @@ export default function AdminUserManagementView() {
     setConfirmModal({
       isOpen: true,
       type: currentActive ? 'warning' : 'info',
-      title: currentActive ? 'Nyahaktifkan Akaun Staff' : 'Aktifkan Semula Akaun Staff',
+      title: currentActive ? 'Deactivate Staff Account' : 'Reactivate Staff Account',
       badgeText: currentActive ? 'STATUS: UNACTIVE' : 'STATUS: ACTIVE',
       description: currentActive
-        ? `Adakah anda pasti ingin menyahaktifkan akaun kakitangan ini? Kakitangan tidak akan dapat log masuk ke sistem sehingga diaktifkan semula.`
-        : `Adakah anda pasti ingin mengaktifkan semula akaun kakitangan ini ke dalam sistem?`,
+        ? `Are you sure you want to deactivate this staff account? The user will not be able to log in until reactivated.`
+        : `Are you sure you want to reactivate this staff account in the system?`,
       details: {
         name,
         employeeNo,
         extraNote: currentActive
-          ? 'Kakitangan tidak boleh log masuk, tetapi semua sejarah rekod log audit terdahulu dikekalkan.'
-          : 'Kakitangan kini boleh log masuk semula menggunakan kelayakan ID staf mereka.'
+          ? 'Staff cannot log in, but all historical audit trails and signatures are permanently preserved.'
+          : 'Staff can now log in again using their employee ID credentials.'
       },
-      confirmButtonText: currentActive ? 'Nyahaktifkan Kakitangan' : 'Aktifkan Semula Kakitangan',
+      confirmButtonText: currentActive ? 'Deactivate Staff' : 'Reactivate Staff',
       confirmButtonVariant: currentActive ? 'warning' : 'primary',
       onConfirm: async () => {
         await toggleProfileActive(employeeNo);
         refreshData();
-        const msg = `✓ Status akaun "${name}" kini ditukar kepada: ${currentActive ? 'UNACTIVE' : 'ACTIVE'} dan dikemas kini ke Supabase.`;
+        const msg = `✓ Account status for "${name}" changed to: ${currentActive ? 'UNACTIVE' : 'ACTIVE'} and synchronized to Supabase.`;
         setStatusMessage({
           type: 'success',
           text: msg
         });
-        showToast('success', 'Status Kakitangan Dikemas Kini', msg);
+        showToast('success', 'Staff Status Updated', msg);
       }
     });
   };
@@ -500,8 +500,8 @@ export default function AdminUserManagementView() {
     if (employeeNo === currentProfile.employee_no || employeeNo === currentProfile.id) {
       showToast(
         'warning',
-        'Tindakan Disekat',
-        'Anda tidak boleh memadam akaun Administrator aktif anda sendiri.'
+        'Action Prohibited',
+        'You cannot delete your own active Administrator profile.'
       );
       return;
     }
@@ -509,30 +509,30 @@ export default function AdminUserManagementView() {
     setConfirmModal({
       isOpen: true,
       type: 'danger',
-      title: 'Sahkan Pemadaman Akaun Staff',
-      badgeText: 'TINDAKAN KEKAL / PERMANENT DELETE',
-      description: `Adakah anda pasti ingin memadam akaun kakitangan ini daripada sistem loji dan pangkalan data Supabase?`,
+      title: 'Confirm Staff Account Deletion',
+      badgeText: 'PERMANENT DELETION',
+      description: `Are you sure you want to delete this staff account from the plant system and Supabase database?`,
       details: {
         name,
         employeeNo,
-        extraNote: 'Tindakan ini adalah kekal. Akaun kakitangan ini akan dipadamkan daripada sistem dan Supabase serta tidak boleh dipulihkan semula.'
+        extraNote: 'This action is permanent. This staff account will be removed from the system and Supabase and cannot be restored.'
       },
-      confirmButtonText: 'Ya, Padam Akaun Ini',
+      confirmButtonText: 'Yes, Delete Account',
       confirmButtonVariant: 'danger',
       onConfirm: async () => {
         try {
           await deleteProfile(employeeNo);
           refreshData();
-          const msg = `✓ Akaun kakitangan "${name}" (${employeeNo}) berjaya dipadam dari sistem & Supabase.`;
+          const msg = `✓ Staff account "${name}" (${employeeNo}) deleted from system & Supabase successfully.`;
           setStatusMessage({
             type: 'success',
             text: msg
           });
-          showToast('success', 'Akaun Staff Dipadam', msg);
+          showToast('success', 'Staff Account Deleted', msg);
         } catch {
-          const errMsg = `Gagal memadam akaun kakitangan ${name}. Sila cuba lagi.`;
+          const errMsg = `Failed to delete staff account ${name}. Please try again.`;
           setStatusMessage({ type: 'error', text: errMsg });
-          showToast('error', 'Ralat Pemadaman', errMsg);
+          showToast('error', 'Deletion Error', errMsg);
         }
       }
     });
@@ -1201,14 +1201,14 @@ export default function AdminUserManagementView() {
               <div>
                 <div className="flex items-center gap-2">
                   <h3 className="text-sm font-bold text-slate-100 tracking-wide">
-                    1-Click Auto Archive & Prune (Automatik 2 Langkah Sekaligus)
+                    1-Click Auto Archive & Prune (Automated Dual-Action)
                   </h3>
                   <span className="px-2 py-0.5 text-[9px] font-mono bg-[#009FE3]/20 text-[#009FE3] border border-[#009FE3]/40 rounded font-bold">
                     FAST TRACK
                   </span>
                 </div>
                 <p className="text-xs text-slate-400 font-sans mt-0.5">
-                  Sistem akan menjana & memuat turun sandaran (.json & .csv), terus membersihkan rekod lama di Supabase, dan membuka Google Drive secara automatik.
+                  The system will generate & download cold backups (.json & .csv), prune legacy records from Supabase, and open Google Drive automatically.
                 </p>
               </div>
             </div>
@@ -1220,7 +1220,7 @@ export default function AdminUserManagementView() {
               className="flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-[#009FE3] hover:bg-[#0089C4] text-white font-semibold text-xs font-mono transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap border border-[#009FE3]/50"
             >
               <Zap className="h-4 w-4" />
-              <span>{isPruning ? 'Memproses...' : '⚡ Jalankan Auto Archive & Prune (1-Click)'}</span>
+              <span>{isPruning ? 'Processing...' : '⚡ Run Auto Archive & Prune (1-Click)'}</span>
             </button>
           </div>
 
@@ -1249,7 +1249,7 @@ export default function AdminUserManagementView() {
               </div>
 
               <p className="text-xs text-slate-400 leading-relaxed font-sans">
-                Sebelum rekod lama dibersihkan daripada Supabase, muat turun salinan sandaran (backup). Pakej ini mengandungi fail JSON data mentah lengkap beserta ringkasan CSV untuk disimpan ke dalam <b>Google Drive</b> atau simpanan awan syarikat anda.
+                Prior to clearing legacy data from Supabase, download a cold backup package. This package bundles full JSON raw data alongside a summary CSV for archiving in <b>Google Drive</b> or company cloud repositories.
               </p>
 
               {/* Retention Policy Period Selector */}
@@ -1259,11 +1259,11 @@ export default function AdminUserManagementView() {
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {[
-                    { id: 'all', label: 'Semua Rekod', desc: 'Full Backup (100% Data Semasa)' },
-                    { id: 'today', label: 'Hari Ini', desc: 'Sehingga 22 Sep 2026' },
-                    { id: '30', label: '30 Hari Lalu', desc: 'Rekod < 30 hari' },
-                    { id: '90', label: '90 Hari Lalu', desc: 'Suku Tahun (Lalai)' },
-                    { id: '180', label: '180 Hari Lalu', desc: 'Setengah Tahun' },
+                    { id: 'all', label: 'All Records', desc: 'Full Backup (100% Current Data)' },
+                    { id: 'today', label: 'Today', desc: 'Up to 22 Sep 2026' },
+                    { id: '30', label: 'Past 30 Days', desc: 'Records < 30 days old' },
+                    { id: '90', label: 'Past 90 Days', desc: 'Quarterly (Default)' },
+                    { id: '180', label: 'Past 180 Days', desc: 'Semi-Annual' },
                   ].map((preset) => (
                     <button
                       key={preset.id}
@@ -1288,8 +1288,8 @@ export default function AdminUserManagementView() {
                         : 'bg-slate-50 border-slate-200 text-slate-500 hover:text-sky-300 hover:bg-slate-100'
                     }`}
                   >
-                    <div className="font-bold text-xs">Tarikh Custom</div>
-                    <div className={`text-[10px] ${retentionPreset === 'custom' ? 'text-sky-100' : 'text-slate-500'}`}>Pilih Sendiri</div>
+                    <div className="font-bold text-xs">Custom Date</div>
+                    <div className={`text-[10px] ${retentionPreset === 'custom' ? 'text-sky-100' : 'text-slate-500'}`}>Select Date</div>
                   </button>
                 </div>
 
@@ -1311,7 +1311,7 @@ export default function AdminUserManagementView() {
               <div className="p-3 rounded-lg bg-[#0A1018] border border-[#1F2E43] flex items-center justify-between text-xs font-mono">
                 <span className="text-slate-400">Effective Prune Cutoff Date:</span>
                 <span className="text-[#009FE3] font-bold bg-[#101927] px-2.5 py-1 rounded border border-[#1F2E43]">
-                  {retentionPreset === 'all' ? 'SEMUA REKOD (TIADA HAD TARIKH)' : getEffectiveCutoffDate()}
+                  {retentionPreset === 'all' ? 'ALL RECORDS (NO CUTOFF LIMIT)' : getEffectiveCutoffDate()}
                 </span>
               </div>
 
@@ -1322,9 +1322,9 @@ export default function AdminUserManagementView() {
                 return (
                   <div className="p-3.5 rounded-lg bg-[#0A1018] border border-[#1F2E43] space-y-2.5">
                     <div className="flex items-center justify-between text-xs font-mono">
-                      <span className="text-slate-400 font-medium">Kandungan Rekod Untuk Dieksport:</span>
+                      <span className="text-slate-400 font-medium">Archive Package Contents:</span>
                       <span className={`px-2.5 py-0.5 rounded font-bold ${preview.total > 0 ? 'bg-[#009FE3]/20 text-[#009FE3] border border-[#009FE3]/40' : 'bg-amber-950/60 text-amber-300 border border-amber-800'}`}>
-                        {preview.total} Rekod Ditemui
+                        {preview.total} Records Found
                       </span>
                     </div>
                     <div className="grid grid-cols-4 gap-2 text-[10px] font-mono text-center">
@@ -1349,13 +1349,13 @@ export default function AdminUserManagementView() {
                       <div className="p-2.5 rounded-lg bg-amber-950/40 border border-amber-800/80 text-amber-200 text-[11px] font-sans flex items-start gap-2">
                         <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
                         <span>
-                          <b>Kenapa 0 Rekod?</b> Semua data loji dalam sistem sekarang bertarikh <b>September 2026</b>. Dasar had tarikh yang dipilih ({effectiveCutoff}) hanya mencari rekod lama sebelum tarikh tersebut. Sila pilih preset <b>"Semua Rekod"</b> atau <b>"Hari Ini"</b> di atas untuk memuat turun semua rekod ke dalam fail Excel & JSON anda.
+                          <b>Why 0 Records?</b> Current plant data is dated <b>September 2026</b>. The selected retention cutoff ({effectiveCutoff}) targets legacy data prior to that date. Select <b>"All Records"</b> or <b>"Today"</b> above to export all operational records to Excel & JSON.
                         </span>
                       </div>
                     ) : (
                       <div className="text-[10px] font-mono text-green-600 flex items-center gap-1.5 font-medium">
                         <CheckCircle2 className="h-3.5 w-3.5 text-green-600 shrink-0" />
-                        <span>Fail Excel (.csv) & .json akan mengandungi kesemua {preview.total} rekod ini secara lengkap.</span>
+                        <span>Excel (.csv) & .json backup will contain all {preview.total} records completely.</span>
                       </div>
                     )}
                   </div>
@@ -1370,7 +1370,7 @@ export default function AdminUserManagementView() {
                   className="w-full flex items-center justify-center gap-2 bg-[#009FE3] hover:bg-[#0089C4] text-white font-semibold py-3 px-4 rounded-lg text-xs font-mono transition-all cursor-pointer border border-[#009FE3]/50"
                 >
                   <Download className="h-4 w-4" />
-                  <span>📥 Muat Turun Full Plant Backup (.JSON + .CSV) — Semua Rekod Semasa</span>
+                  <span>📥 Download Full Plant Backup (.JSON + .CSV) — All Current Records</span>
                 </button>
 
                 {retentionPreset !== 'all' && (
@@ -1380,7 +1380,7 @@ export default function AdminUserManagementView() {
                     className="w-full flex items-center justify-center gap-2 border border-[#1F2E43] bg-[#0A1018] text-[#009FE3] hover:bg-[#172235] font-semibold py-2.5 px-4 rounded-lg text-xs font-mono transition-all cursor-pointer"
                   >
                     <Download className="h-4 w-4" />
-                    <span>Muat Turun Sandaran Mengikut Had ({getEffectiveCutoffDate()})</span>
+                    <span>Download Selective Backup ({getEffectiveCutoffDate()})</span>
                   </button>
                 )}
 
@@ -1452,17 +1452,17 @@ export default function AdminUserManagementView() {
                     <span>Safety Protection Active</span>
                   </div>
                   <p className="text-[11px] leading-relaxed">
-                    Tindakan pembersihan (prune) disekat sehingga anda menyelesaikan <b>STEP 1</b> (Muat Turun Sandaran). Ini bagi menjamin tiada kehilangan data operasi yang tidak disengajakan.
+                    Database pruning is locked until you complete <b>STEP 1</b> (Download Backup). This guarantees zero accidental loss of operational history.
                   </p>
                 </div>
               ) : (
                 <div className="p-3.5 rounded-lg bg-amber-950/40 border border-amber-800/80 text-amber-200 text-xs font-mono space-y-1">
                   <div className="font-bold flex items-center gap-1.5">
                     <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
-                    <span>Pengesahan Pembersihan Data:</span>
+                    <span>Data Pruning Verification:</span>
                   </div>
                   <p className="text-[11px] text-amber-200/90 leading-relaxed font-sans">
-                    Semua rekod Sample Reports (berstatus <i>decided</i>) dan Deviations sebelum <b>{getEffectiveCutoffDate()}</b> akan dipadam daripada Supabase. Shift Sheet aktif, profil pengguna, dan spesifikasi produk KEKAL selamat.
+                    All Sample Reports (with <i>decided</i> status) and Deviations dated before <b>{getEffectiveCutoffDate()}</b> will be pruned from Supabase. Active shift sheets, user profiles, and product specifications REMAIN safe.
                   </p>
                 </div>
               )}
@@ -1704,7 +1704,7 @@ export default function AdminUserManagementView() {
                   }}
                   className="px-4 py-2.5 rounded-lg border border-[#1F2E43] bg-[#0A1018] hover:bg-[#172235] text-slate-300 font-mono text-xs transition-colors cursor-pointer disabled:opacity-50"
                 >
-                  Batal / Cancel
+                  Cancel
                 </button>
 
                 <button
@@ -1731,7 +1731,7 @@ export default function AdminUserManagementView() {
                   {modalIsSubmitting ? (
                     <>
                       <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                      <span>Memproses...</span>
+                      <span>Processing...</span>
                     </>
                   ) : (
                     <>
