@@ -140,6 +140,83 @@ body {
   background: #EF4444;
 }
 
+/* Industrial Panel Hover Transitions — Subtle depth on interaction */
+.industrial-panel,
+.industrial-card,
+.industrial-well {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.industrial-panel:hover,
+.industrial-card:hover {
+  border-color: #263A52;
+}
+
+/* Keyboard Focus Ring — WCAG 2.1 AA visible focus for all interactive elements */
+.focus-ring:focus-visible {
+  outline: 2px solid #009FE3;
+  outline-offset: 2px;
+}
+
+/* Page Content Entrance — Smooth fade-in for main content areas */
+@keyframes contentReveal {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.page-transition {
+  animation: contentReveal 0.3s ease-out;
+}
+
+/* Glass Card — Standardized elevated glassmorphism card for login, modals, overlays */
+.glass-card {
+  background: rgba(10, 18, 32, 0.92);
+  backdrop-filter: blur(24px) saturate(1.3);
+  -webkit-backdrop-filter: blur(24px) saturate(1.3);
+  border: 1px solid rgba(28, 44, 64, 0.7);
+  box-shadow:
+    0 0 0 1px rgba(0, 159, 227, 0.04),
+    0 8px 32px -4px rgba(0, 0, 0, 0.5),
+    0 2px 8px -2px rgba(0, 0, 0, 0.3);
+}
+
+/* Active Nav Accent Bar — Thin left-edge accent for active navigation items */
+.accent-bar-active {
+  position: relative;
+}
+
+.accent-bar-active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+  background: #009FE3;
+  box-shadow: 0 0 8px rgba(0, 159, 227, 0.3);
+}
+
+/* Hero Text Shadow — Legibility boost for text over photographic backgrounds */
+.hero-text-shadow {
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* Subtle header accent underline */
+.header-accent-line {
+  position: relative;
+}
+
+.header-accent-line::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 159, 227, 0.2), transparent);
+}
+
 /* Print layout optimizations - strictly pure black & white */
 @media print {
   body {

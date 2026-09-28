@@ -119,8 +119,8 @@ export function SidebarShell({ profile, children }: { profile: Profile; children
       {/* Logo */}
       <div className="p-4 border-b border-[#1F2E43]">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-[#0A1018] border border-[#1F2E43] flex items-center justify-center shrink-0">
-            <Flame className="h-5 w-5 text-[#009FE3]" />
+          <div className="w-9 h-9 rounded-xl bg-[#E31B23]/10 border border-[#E31B23]/25 flex items-center justify-center shrink-0">
+            <Flame className="h-5 w-5 text-[#E31B23]" />
           </div>
           {!collapsed && (
             <div className="min-w-0">
@@ -133,12 +133,12 @@ export function SidebarShell({ profile, children }: { profile: Profile; children
 
       {/* Status Bar */}
       {!collapsed && (
-        <div className="px-4 py-2 border-b border-[#1F2E43] flex items-center justify-between text-[10px] text-slate-400 bg-[#0A1018]">
+        <div className="px-4 py-2 border-b border-[#1F2E43] flex items-center justify-between text-[11px] text-slate-400 bg-[#0A1018]">
           <span className="flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-[#10B981] animate-pulse" />
             <span className="text-[#10B981] font-mono">ONLINE</span>
           </span>
-          <span className="flex items-center gap-1 font-mono text-slate-300">
+          <span className="flex items-center gap-1 font-mono text-slate-200 font-medium">
             <Clock className="h-3 w-3 text-slate-500" />
             {timeString || '--:--:--'} MYT
           </span>
@@ -162,18 +162,18 @@ export function SidebarShell({ profile, children }: { profile: Profile; children
               onClick={() => setMobileOpen(false)}
               className={`group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                 active
-                  ? 'bg-[#009FE3] text-white border border-[#009FE3] shadow-sm'
+                  ? 'accent-bar-active bg-[#009FE3]/10 text-[#009FE3] border border-[#009FE3]/20 shadow-sm shadow-[#009FE3]/5'
                   : 'text-slate-400 hover:text-slate-100 hover:bg-[#172235] border border-transparent'
               }`}
               title={collapsed ? item.label : undefined}
             >
-              <Icon className={`h-4.5 w-4.5 shrink-0 ${active ? 'text-white' : 'text-slate-500 group-hover:text-slate-300'}`} />
+              <Icon className={`h-4.5 w-4.5 shrink-0 ${active ? 'text-[#009FE3]' : 'text-slate-500 group-hover:text-slate-300'}`} />
               {!collapsed && (
                 <>
                   <span className="truncate">{item.label}</span>
                   {item.badge && (
                     <span className={`ml-auto text-[9px] px-1.5 py-0.5 rounded font-mono shrink-0 ${
-                      active ? 'bg-black/25 text-white' : 'bg-[#0A1018] text-slate-400 border border-[#1F2E43]'
+                      active ? 'bg-[#009FE3]/15 text-[#009FE3] border border-[#009FE3]/20' : 'bg-[#0A1018] text-slate-400 border border-[#1F2E43]'
                     }`}>
                       {item.badge}
                     </span>
@@ -202,12 +202,12 @@ export function SidebarShell({ profile, children }: { profile: Profile; children
                   onClick={() => setMobileOpen(false)}
                   className={`group flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                     active
-                      ? 'bg-[#009FE3] text-white border border-[#009FE3]'
+                      ? 'accent-bar-active bg-[#009FE3]/10 text-[#009FE3] border border-[#009FE3]/20'
                       : 'text-slate-400 hover:text-slate-100 hover:bg-[#172235] border border-transparent'
                   }`}
                   title={collapsed ? item.label : undefined}
                 >
-                  <Icon className={`h-4 w-4 shrink-0 ${active ? 'text-white' : 'text-slate-500 group-hover:text-slate-300'}`} />
+                  <Icon className={`h-4 w-4 shrink-0 ${active ? 'text-[#009FE3]' : 'text-slate-500 group-hover:text-slate-300'}`} />
                   {!collapsed && <span className="truncate">{item.label}</span>}
                 </Link>
               )
@@ -287,7 +287,7 @@ export function SidebarShell({ profile, children }: { profile: Profile; children
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Top bar */}
-        <header className="h-12 shrink-0 border-b border-[#1F2E43] bg-[#0A1018] flex items-center justify-between px-4">
+        <header className="h-12 shrink-0 border-b border-[#1F2E43] bg-[#0A1018] flex items-center justify-between px-4 header-accent-line">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileOpen(true)}

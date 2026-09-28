@@ -139,14 +139,14 @@ export default function LoginView({ onLogin }: LoginViewProps) {
 
           {/* Top Brand Text Block */}
           <div className="max-w-xl z-10 relative">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="h-0.5 w-6 bg-[#E31B23] rounded-full inline-block"></span>
-              <span className="text-[11px] font-bold uppercase tracking-widest text-slate-300 font-mono">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="h-0.5 w-8 bg-[#E31B23] rounded-full inline-block"></span>
+              <span className="text-[11px] font-bold uppercase tracking-widest text-slate-300/90 font-mono">
                 REFINERY PROCESS MANAGEMENT SYSTEM
               </span>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-white tracking-tight leading-[1.12] mb-4">
+            <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-white tracking-tight leading-[1.12] mb-5 hero-text-shadow">
               Safe Operations.<br />
               Reliable Processes.<br />
               Consistent Quality.
@@ -161,8 +161,8 @@ export default function LoginView({ onLogin }: LoginViewProps) {
           <div className="space-y-3.5 max-w-md z-10 relative mt-6 lg:mt-0">
             {/* 1. Process Control */}
             <div className="flex items-center gap-3.5">
-              <div className="h-11 w-11 rounded-lg bg-[#0F1726]/60 border border-white/10 flex items-center justify-center backdrop-blur-md shrink-0 shadow-sm">
-                <Factory className="h-5 w-5 text-slate-200" />
+              <div className="h-11 w-11 rounded-lg bg-[#009FE3]/8 border border-[#009FE3]/15 flex items-center justify-center backdrop-blur-md shrink-0 shadow-sm">
+                <Factory className="h-5 w-5 text-[#009FE3]/80" />
               </div>
               <div>
                 <h3 className="text-sm font-semibold text-white leading-snug">Process Control</h3>
@@ -172,8 +172,8 @@ export default function LoginView({ onLogin }: LoginViewProps) {
 
             {/* 2. Quality Management */}
             <div className="flex items-center gap-3.5">
-              <div className="h-11 w-11 rounded-lg bg-[#0F1726]/60 border border-white/10 flex items-center justify-center backdrop-blur-md shrink-0 shadow-sm">
-                <ShieldCheck className="h-5 w-5 text-slate-200" />
+              <div className="h-11 w-11 rounded-lg bg-[#10B981]/8 border border-[#10B981]/15 flex items-center justify-center backdrop-blur-md shrink-0 shadow-sm">
+                <ShieldCheck className="h-5 w-5 text-[#10B981]/80" />
               </div>
               <div>
                 <h3 className="text-sm font-semibold text-white leading-snug">Quality Management</h3>
@@ -183,8 +183,8 @@ export default function LoginView({ onLogin }: LoginViewProps) {
 
             {/* 3. Digital Records */}
             <div className="flex items-center gap-3.5">
-              <div className="h-11 w-11 rounded-lg bg-[#0F1726]/60 border border-white/10 flex items-center justify-center backdrop-blur-md shrink-0 shadow-sm">
-                <FileText className="h-5 w-5 text-slate-200" />
+              <div className="h-11 w-11 rounded-lg bg-[#F59E0B]/8 border border-[#F59E0B]/15 flex items-center justify-center backdrop-blur-md shrink-0 shadow-sm">
+                <FileText className="h-5 w-5 text-[#F59E0B]/80" />
               </div>
               <div>
                 <h3 className="text-sm font-semibold text-white leading-snug">Digital Records</h3>
@@ -196,7 +196,7 @@ export default function LoginView({ onLogin }: LoginViewProps) {
 
         {/* Right Sign-In Form Column */}
         <div className="lg:w-1/2 bg-[#070C14] flex items-center justify-center p-4 sm:p-8 lg:p-12 relative">
-          <div className="w-full max-w-[460px] bg-[#0A1220]/95 rounded-2xl border border-[#1C2C40] p-6 sm:p-8 lg:p-9 shadow-2xl relative z-10 backdrop-blur-xl">
+          <div className="w-full max-w-[460px] glass-card rounded-2xl border-t-2 border-t-[#009FE3]/50 p-6 sm:p-8 lg:p-9 relative z-10">
             {/* Card Header Info */}
             <div className="flex items-center justify-between pb-3.5 border-b border-[#1C2C40] mb-5">
               <div className="flex items-center gap-2">
@@ -326,7 +326,7 @@ export default function LoginView({ onLogin }: LoginViewProps) {
             </div>
 
             {/* 3 Compliance / Trust Badges */}
-            <div className="grid grid-cols-3 gap-2 mt-6 pt-1 text-left">
+            <div className="grid grid-cols-3 gap-3 sm:gap-4 mt-6 pt-1 text-left">
               {/* Badge 1 */}
               <div className="flex items-center gap-2">
                 <ShieldCheck className="h-5 w-5 text-[#009FE3] shrink-0" />
@@ -359,7 +359,7 @@ export default function LoginView({ onLogin }: LoginViewProps) {
       </main>
 
       {/* 3. BOTTOM FOOTER BAR */}
-      <footer className="w-full border-t border-[#172538] bg-[#070C14] py-2.5 px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-400 font-mono z-10 shrink-0">
+      <footer className="w-full border-t border-[#172538] bg-[#070C14]/90 backdrop-blur-sm py-2.5 px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-400 font-mono z-10 shrink-0">
         <div className="flex items-center gap-3">
           <span>Lam Soon Edible Oils Sdn. Bhd.</span>
           <span className="text-slate-600">|</span>
