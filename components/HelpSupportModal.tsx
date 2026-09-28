@@ -20,9 +20,11 @@ import {
   Building2,
   Send,
   Sparkles,
-  Info
+  Info,
+  MessageSquare
 } from 'lucide-react';
 import { Profile } from '@/types/refinery';
+import { addAuditLog } from '@/lib/data-service';
 
 interface HelpSupportModalProps {
   isOpen: boolean;
@@ -37,21 +39,69 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
   const [ticketDescription, setTicketDescription] = useState('');
   const [isSubmittingTicket, setIsSubmittingTicket] = useState(false);
   const [ticketSuccessMessage, setTicketSuccessMessage] = useState<string | null>(null);
+  const [ticketWhatsAppUrl, setTicketWhatsAppUrl] = useState<string | null>(null);
+  const [ticketErrorMessage, setTicketErrorMessage] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
-  const handleTicketSubmit = (e: React.FormEvent) => {
+  const handleTicketSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!ticketSubject.trim() || !ticketDescription.trim()) return;
 
     setIsSubmittingTicket(true);
-    setTimeout(() => {
-      setIsSubmittingTicket(false);
-      const ticketId = `TCK-${new Date().toISOString().slice(2, 10).replace(/-/g, '')}-${Math.floor(100 + Math.random() * 900)}`;
-      setTicketSuccessMessage(`Ticket dispatched to Plant Engineering Support! Reference ID: [${ticketId}]. Duty engineers have been notified.`);
+    setTicketErrorMessage(null);
+    setTicketSuccessMessage(null);
+    setTicketWhatsAppUrl(null);
+
+    try {
+      const response = await fetch('/api/support/ticket', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subject: ticketSubject.trim(),
+          category: ticketCategory,
+          description: ticketDescription.trim(),
+          reporterName: currentUser?.full_name || 'Plant Personnel',
+          reporterId: currentUser?.employee_no || 'OPR001',
+          reporterRole: currentUser?.role || 'operator',
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Gagal menghantar tiket aduan.');
+      }
+
+      const ticketId = result.ticketId;
+      const targetPhone = result.dispatchedPhone || '+601161764934';
+
+      setTicketSuccessMessage(
+        `Tiket [${ticketId}] berjaya didaftarkan ke Log Audit Loji & disalurkan ke WhatsApp Pengurus (${targetPhone})!`
+      );
+
+      if (result.whatsappUrl) {
+        setTicketWhatsAppUrl(result.whatsappUrl);
+      }
+
+      // Append to immutable client audit trail for immediate UI sync
+      addAuditLog('incident_tickets', ticketId, 'insert', null, {
+        ticket_id: ticketId,
+        subject: ticketSubject.trim(),
+        category: ticketCategory,
+        description: ticketDescription.trim(),
+        reporter: `${currentUser?.full_name || 'Plant Personnel'} (${currentUser?.employee_no || 'OPR001'})`,
+        dispatched_to_whatsapp: targetPhone,
+      });
+
       setTicketSubject('');
       setTicketDescription('');
-    }, 600);
+    } catch (err: any) {
+      console.error('[Incident Ticket Dispatch Error]:', err);
+      setTicketErrorMessage(err.message || 'Ralat semasa menghantar tiket aduan.');
+    } finally {
+      setIsSubmittingTicket(false);
+    }
   };
 
   return (
@@ -477,13 +527,40 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
                   <span>Report Plant Incident or Technical Issue</span>
                 </h3>
                 <p className="text-xs text-slate-400 mb-4">
-                  Log operational issues, calculation discrepancies, database synchronization delays, or physical sensor errors directly with the Plant Engineering Desk.
+                  Log isu operasi, percanggahan nilai makmal, penderia SCADA atau sistem. Aduan akan terus disalurkan ke WhatsApp Pengurus/Jurutera Loji (<span className="text-emerald-400 font-mono font-semibold">+601161764934</span>).
                 </p>
 
                 {ticketSuccessMessage && (
-                  <div className="mb-4 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-start gap-2 animate-in fade-in">
-                    <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5" />
-                    <span>{ticketSuccessMessage}</span>
+                  <div className="mb-4 p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex flex-col gap-2.5 animate-in fade-in">
+                    <div className="flex items-start gap-2">
+                      <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5 text-emerald-400" />
+                      <span className="font-medium">{ticketSuccessMessage}</span>
+                    </div>
+
+                    {ticketWhatsAppUrl && (
+                      <div className="pt-2 border-t border-emerald-500/20 flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-[11px] text-emerald-400/90 font-mono">
+                          Salinan terus WhatsApp rasmi sedia dihantar.
+                        </span>
+                        <a
+                          href={ticketWhatsAppUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-[11px] transition-colors shadow-sm"
+                        >
+                          <MessageSquare className="h-3.5 w-3.5" />
+                          <span>Buka Salinan di WhatsApp (+601161764934)</span>
+                          <ExternalLink className="h-3 w-3 opacity-80" />
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {ticketErrorMessage && (
+                  <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300 text-xs flex items-start gap-2 animate-in fade-in">
+                    <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                    <span>{ticketErrorMessage}</span>
                   </div>
                 )}
 
