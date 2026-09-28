@@ -1285,7 +1285,7 @@ export default function OfficialFormsExportView() {
                   <div className="flex items-center justify-between border-b border-[#1F2E43] pb-3">
                     <div className="flex items-center gap-2 text-slate-100 font-semibold text-sm">
                       <History className="h-4 w-4 text-[#009FE3]" />
-                      <span>Audit Record Details — {formatAuditRecordId(expLog)} ({formatAuditTableName(expLog.table_name)})</span>
+                      <span>{formatAuditRecordId(expLog)} — {formatAuditTableName(expLog.table_name)}</span>
                     </div>
                     <button
                       type="button"
