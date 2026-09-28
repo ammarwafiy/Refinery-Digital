@@ -12,7 +12,12 @@ import {
   FileText,
   Database,
   Info,
-  ArrowRight
+  ArrowRight,
+  Clock,
+  Wifi,
+  Sparkles,
+  Layers,
+  CheckCircle2
 } from 'lucide-react';
 import { Profile } from '@/types/refinery';
 import { loginUser, authenticateUser } from '@/lib/data-service';
@@ -29,6 +34,7 @@ export default function LoginView({ onLogin }: LoginViewProps) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [formattedTime, setFormattedTime] = useState<string>('');
+  const [currentShift, setCurrentShift] = useState<string>('Shift B · 14:00–22:00');
   const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   useEffect(() => {
@@ -44,9 +50,27 @@ export default function LoginView({ onLogin }: LoginViewProps) {
         timeZone: 'Asia/Kuala_Lumpur',
         hour: '2-digit',
         minute: '2-digit',
-        hour12: true,
+        second: '2-digit',
+        hour12: false,
       });
-      setFormattedTime(`${datePart}  ${timePart}`);
+      setFormattedTime(`${datePart} · ${timePart} MYT`);
+
+      const hour = parseInt(
+        now.toLocaleTimeString('en-GB', {
+          timeZone: 'Asia/Kuala_Lumpur',
+          hour12: false,
+          hour: '2-digit',
+        }),
+        10
+      );
+
+      if (hour >= 6 && hour < 14) {
+        setCurrentShift('Shift A · 06:00–14:00');
+      } else if (hour >= 14 && hour < 22) {
+        setCurrentShift('Shift B · 14:00–22:00');
+      } else {
+        setCurrentShift('Shift C · 22:00–06:00');
+      }
     };
     updateTime();
     const interval = setInterval(updateTime, 1000);
@@ -78,11 +102,35 @@ export default function LoginView({ onLogin }: LoginViewProps) {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col justify-between bg-[#070C14] text-slate-100 select-none">
-      {/* 1. TOP HEADER BAR */}
-      <header className="w-full border-b border-[#172538] bg-[#070C14] px-4 sm:px-6 py-2.5 flex items-center justify-between text-slate-100 z-10 shrink-0">
+    <div className="min-h-screen w-full flex flex-col justify-between bg-[#080C14] text-slate-100 select-none relative overflow-x-hidden antialiased">
+      {/* Background Subtle Ambience & Technical Grid */}
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+        {/* Soft Industrial Backdrop with Deep Vignette */}
+        <div 
+          className="absolute inset-0 opacity-[0.14]"
+          style={{
+            backgroundImage: 'url(/refinery-dusk.jpg)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            filter: 'grayscale(60%) contrast(120%)'
+          }}
+        />
+        {/* Precision 40px Technical Grid */}
+        <div 
+          className="absolute inset-0 opacity-[0.08]"
+          style={{
+            backgroundImage: 'linear-gradient(to right, #334155 1px, transparent 1px), linear-gradient(to bottom, #334155 1px, transparent 1px)',
+            backgroundSize: '40px 40px'
+          }}
+        />
+        {/* Soft Radial Center Focus */}
+        <div className="absolute inset-0 bg-radial from-transparent via-[#080C14]/85 to-[#080C14]" />
+      </div>
+
+      {/* 1. TOP MINIMALIST STATUS HEADER */}
+      <header className="relative z-10 w-full border-b border-[#182335]/70 bg-[#080C14]/80 backdrop-blur-md px-4 sm:px-8 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-lg bg-[#E31B23] p-1 flex items-center justify-center shrink-0 shadow-sm overflow-hidden">
+          <div className="h-8 w-8 rounded-lg bg-[#E31B23] p-1 flex items-center justify-center shrink-0 shadow-xs border border-[#FF4D4D]/25">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/lam-soon-logo.png"
@@ -90,181 +138,127 @@ export default function LoginView({ onLogin }: LoginViewProps) {
               className="w-full h-full object-contain brightness-105"
             />
           </div>
-          <div className="text-left">
-            <span className="font-semibold text-sm text-white block leading-tight">
-              Lam Soon Edible Oils Sdn. Bhd.
-            </span>
-            <span className="text-[11px] text-slate-400 font-mono block leading-tight mt-0.5">
-              Nisshin Deodorizer Refinery
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-xs tracking-wider text-white uppercase font-sans">
+                Lam Soon Edible Oils
+              </span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded font-mono font-semibold bg-[#E31B23]/15 text-[#FF6B6B] border border-[#E31B23]/30">
+                PASIR GUDANG
+              </span>
+            </div>
+            <span className="text-[10px] text-slate-400 font-mono block leading-tight mt-0.5">
+              Nisshin Deodorizer Plant · PRD-REF-001
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5 sm:gap-3 text-xs font-mono text-slate-300">
-          <div className="flex items-center gap-1.5 text-emerald-400 font-medium">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span>System Online</span>
+        <div className="flex items-center gap-3 sm:gap-4 text-xs font-mono">
+          <div className="flex items-center gap-2 px-2.5 py-1 rounded bg-[#0E1524] border border-[#1A2536] text-slate-300">
+            <span className="h-2 w-2 rounded-full bg-[#10B981] animate-pulse"></span>
+            <span className="text-[#10B981] font-semibold text-[11px]">SYSTEM ONLINE</span>
           </div>
-          <span className="text-slate-600">|</span>
-          <span>{formattedTime || '25 Sept 2026  08:55 AM'}</span>
+          <div className="hidden md:flex items-center gap-1.5 text-slate-400 text-[11px]">
+            <Clock className="h-3.5 w-3.5 text-slate-500" />
+            <span>{formattedTime || '28 Sept 2026 · 23:30:00 MYT'}</span>
+          </div>
         </div>
       </header>
 
-      {/* 2. SPLIT-SCREEN MAIN CANVAS */}
-      <main className="flex-1 flex flex-col lg:flex-row min-h-0 w-full overflow-y-auto">
-        {/* Left Hero / Brand Column with Refinery Dusk Visual */}
-        <div className="lg:w-1/2 relative overflow-hidden flex flex-col justify-between p-6 sm:p-10 lg:p-14 border-b lg:border-b-0 lg:border-r border-[#172538] bg-[#070C14] min-h-[500px]">
-          {/* Background Industrial Dusk Visual */}
-          <div className="absolute inset-0 z-0">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/refinery-dusk.jpg"
-              alt="Industrial Refinery Plant"
-              className="w-full h-full object-cover object-center brightness-90 contrast-105"
-            />
-            {/* Dark Gradient Vignette for Text Legibility */}
-            <div className="absolute inset-0 bg-gradient-to-r from-[#070C14]/95 via-[#070C14]/75 to-[#070C14]/20 pointer-events-none" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#070C14]/90 via-transparent to-[#070C14]/60 pointer-events-none" />
+      {/* 2. CENTERED SWISS MODERN WORKSTATION CARD */}
+      <main className="relative z-10 flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8">
+        <div className="w-full max-w-[460px]">
+          {/* Main Card Chassis */}
+          <div className="bg-[#0C121D]/95 rounded-2xl border border-[#1C2B40] shadow-2xl p-6 sm:p-8 relative backdrop-blur-xl transition-all">
+            {/* Subtle Top Red Accent Edge */}
+            <div className="absolute top-0 left-6 right-6 h-0.5 bg-gradient-to-r from-transparent via-[#E31B23] to-transparent opacity-80" />
 
-            {/* Blurry Transition on Right Edge */}
-            <div 
-              className="absolute inset-y-0 right-0 w-28 pointer-events-none backdrop-blur-md hidden lg:block"
-              style={{
-                maskImage: 'linear-gradient(to left, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%)',
-                WebkitMaskImage: 'linear-gradient(to left, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%)'
-              }}
-            />
-            <div className="absolute inset-y-0 right-0 w-28 bg-gradient-to-l from-[#070C14] to-transparent pointer-events-none hidden lg:block" />
-          </div>
+            {/* Header: Brand Mark + Title */}
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center justify-center h-12 w-12 rounded-xl bg-[#E31B23]/10 border border-[#E31B23]/25 mb-3.5 text-[#E31B23]">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/lam-soon-logo.png"
+                  alt="Lam Soon"
+                  className="h-7 w-7 object-contain"
+                />
+              </div>
 
-          {/* Top Brand Text Block */}
-          <div className="max-w-xl z-10 relative">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="h-0.5 w-8 bg-[#E31B23] rounded-full inline-block"></span>
-              <span className="text-[11px] font-bold uppercase tracking-widest text-slate-300/90 font-mono">
-                REFINERY PROCESS MANAGEMENT SYSTEM
-              </span>
+              <div className="text-[10px] font-mono uppercase tracking-widest text-[#E31B23] font-bold mb-1">
+                LAM SOON EDIBLE OILS
+              </div>
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white font-sans">
+                Refinery Management System
+              </h1>
+              <p className="text-xs text-slate-400 mt-1.5 font-sans">
+                Authorized workstation access for plant operators, QC analysts and supervisors.
+              </p>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-extrabold text-white tracking-tight leading-[1.12] mb-5 hero-text-shadow">
-              Safe Operations.<br />
-              Reliable Processes.<br />
-              Consistent Quality.
-            </h1>
-
-            <p className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-lg mb-8">
-              Digital process recording, quality management and operational documentation for the Nisshin Deodorizer Refinery.
-            </p>
-          </div>
-
-          {/* 3 Industrial Feature Badges */}
-          <div className="space-y-3.5 max-w-md z-10 relative mt-6 lg:mt-0">
-            {/* 1. Process Control */}
-            <div className="flex items-center gap-3.5">
-              <div className="h-11 w-11 rounded-lg bg-[#009FE3]/8 border border-[#009FE3]/15 flex items-center justify-center backdrop-blur-md shrink-0 shadow-sm">
-                <Factory className="h-5 w-5 text-[#009FE3]/80" />
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold text-white leading-snug">Process Control</h3>
-                <p className="text-xs text-slate-400">Record and monitor process parameters</p>
-              </div>
-            </div>
-
-            {/* 2. Quality Management */}
-            <div className="flex items-center gap-3.5">
-              <div className="h-11 w-11 rounded-lg bg-[#10B981]/8 border border-[#10B981]/15 flex items-center justify-center backdrop-blur-md shrink-0 shadow-sm">
-                <ShieldCheck className="h-5 w-5 text-[#10B981]/80" />
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold text-white leading-snug">Quality Management</h3>
-                <p className="text-xs text-slate-400">Ensure product quality and regulatory compliance</p>
-              </div>
-            </div>
-
-            {/* 3. Digital Records */}
-            <div className="flex items-center gap-3.5">
-              <div className="h-11 w-11 rounded-lg bg-[#F59E0B]/8 border border-[#F59E0B]/15 flex items-center justify-center backdrop-blur-md shrink-0 shadow-sm">
-                <FileText className="h-5 w-5 text-[#F59E0B]/80" />
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold text-white leading-snug">Digital Records</h3>
-                <p className="text-xs text-slate-400">Centralized documentation for audit readiness</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Sign-In Form Column */}
-        <div className="lg:w-1/2 bg-[#070C14] flex items-center justify-center p-4 sm:p-8 lg:p-12 relative">
-          <div className="w-full max-w-[460px] glass-card rounded-2xl border-t-2 border-t-[#009FE3]/50 p-6 sm:p-8 lg:p-9 relative z-10">
-            {/* Card Header Info */}
-            <div className="flex items-center justify-between pb-3.5 border-b border-[#1C2C40] mb-5">
-              <div className="flex items-center gap-2">
-                <Factory className="h-4 w-4 text-[#009FE3]" />
-                <span className="text-[10px] font-mono uppercase tracking-wider text-slate-300 font-semibold">
-                  REFINERY PROCESS MANAGEMENT SYSTEM
-                </span>
-              </div>
-              <span className="text-[10px] font-mono text-slate-500">
-                PRD-REF-001
-              </span>
-            </div>
-
-            {/* Card Title */}
-            <h2 className="text-2xl sm:text-[26px] font-bold tracking-tight text-white mb-2">
-              Refinery System Sign In
-            </h2>
-            <p className="text-xs text-slate-400 leading-relaxed mb-6">
-              Sign in with your authorized employee credentials to access the Refinery Process Management System.
-            </p>
-
-            {/* Error Alert */}
+            {/* Error Message Box */}
             {errorMessage && (
-              <div className="mb-5 flex items-start gap-2.5 rounded-lg bg-red-950/40 p-3 text-xs text-red-300 border border-red-800/60">
+              <div className="mb-5 flex items-start gap-2.5 rounded-lg bg-red-950/40 p-3 text-xs text-red-300 border border-red-800/60 font-sans">
                 <AlertCircle className="h-4 w-4 shrink-0 text-red-400 mt-0.5" />
-                <span>{errorMessage}</span>
+                <span className="leading-snug">{errorMessage}</span>
               </div>
             )}
 
             {/* Form */}
             <form onSubmit={handleFormSubmit} className="space-y-4">
-              {/* Employee ID / Email */}
+              {/* Field 1: Refinery ID */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                  Employee ID / Email
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-semibold text-slate-200 font-sans">
+                    Refinery Employee ID
+                  </label>
+                  <span className="text-[10px] font-mono text-slate-500 uppercase">
+                    [SYS.USER_ID]
+                  </span>
+                </div>
+                <div className="relative flex items-center rounded-lg bg-[#070B12] border border-[#1E2B40] focus-within:border-[#009FE3] focus-within:ring-1 focus-within:ring-[#009FE3] transition-all overflow-hidden">
+                  <span className="px-3.5 py-3 text-slate-500">
+                    <User className="h-4 w-4" />
+                  </span>
                   <input
                     type="text"
                     required
                     placeholder="e.g. OPR001, SUP001, QCS001, ADM001"
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
-                    className="w-full bg-[#060A12] border border-[#1C2C40] rounded-lg pl-10 pr-3 py-3 text-xs sm:text-sm text-white placeholder-slate-500 focus:bg-[#080E1A] focus:outline-none focus:border-[#009FE3] focus:ring-1 focus:ring-[#009FE3] transition-all font-mono"
+                    className="w-full bg-transparent pr-3 py-3 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none font-mono"
                   />
+                  <span className="hidden sm:inline-block px-2 py-0.5 mr-2.5 rounded text-[9px] font-mono font-bold bg-[#111A29] text-slate-400 border border-[#1E2B40]">
+                    ID
+                  </span>
                 </div>
               </div>
 
-              {/* Password */}
+              {/* Field 2: Password */}
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
-                  Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" />
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-xs font-semibold text-slate-200 font-sans">
+                    Security Access Key
+                  </label>
+                  <span className="text-[10px] font-mono text-slate-500 uppercase">
+                    [SYS.PASSKEY]
+                  </span>
+                </div>
+                <div className="relative flex items-center rounded-lg bg-[#070B12] border border-[#1E2B40] focus-within:border-[#009FE3] focus-within:ring-1 focus-within:ring-[#009FE3] transition-all overflow-hidden">
+                  <span className="px-3.5 py-3 text-slate-500">
+                    <Lock className="h-4 w-4" />
+                  </span>
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
-                    placeholder="Enter your password"
+                    placeholder="Enter security password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-[#060A12] border border-[#1C2C40] rounded-lg pl-10 pr-10 py-3 text-xs sm:text-sm text-white placeholder-slate-500 focus:bg-[#080E1A] focus:outline-none focus:border-[#009FE3] focus:ring-1 focus:ring-[#009FE3] transition-all"
+                    className="w-full bg-transparent pr-10 py-3 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none font-mono"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+                    className="absolute right-3 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
                     title={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -272,105 +266,88 @@ export default function LoginView({ onLogin }: LoginViewProps) {
                 </div>
               </div>
 
-              {/* Remember & Forgot Password */}
-              <div className="flex items-center justify-between text-xs pt-1">
+              {/* Utility Row */}
+              <div className="flex items-center justify-between text-xs pt-0.5">
                 <label className="flex items-center gap-2 cursor-pointer select-none text-slate-400 hover:text-slate-300">
                   <input
                     type="checkbox"
                     defaultChecked
-                    className="h-3.5 w-3.5 rounded border-[#1C2C40] bg-[#060A12] text-[#009FE3] focus:ring-[#009FE3] cursor-pointer"
+                    className="h-3.5 w-3.5 rounded border-[#1E2B40] bg-[#070B12] text-[#E31B23] focus:ring-[#E31B23] cursor-pointer"
                   />
-                  <span className="flex items-center gap-1">
-                    Remember this device
-                    <Info className="h-3.5 w-3.5 text-slate-500 hover:text-slate-400" />
-                  </span>
+                  <span>Remember this workstation</span>
                 </label>
                 <span 
                   onClick={() => {
                     setErrorMessage(null);
                     alert('For security compliance (21 CFR Part 11), please contact your Plant System Administrator or Supervisor to reset your terminal credential.');
                   }}
-                  className="text-[#0095FF] hover:text-[#38BDF8] hover:underline cursor-pointer font-medium transition-colors"
+                  className="text-slate-400 hover:text-white hover:underline cursor-pointer font-medium transition-colors"
                 >
                   Forgot password?
                 </span>
               </div>
 
-              {/* Sign In Button */}
+              {/* Live Shift Status Pill */}
+              <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-[#080E18] border border-[#192436] text-[11px] font-mono text-slate-400">
+                <span className="flex items-center gap-1.5 text-slate-300">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#10B981]"></span>
+                  <span>{currentShift}</span>
+                </span>
+                <span className="text-[#009FE3] font-semibold">TERMINAL WS-04</span>
+              </div>
+
+              {/* Action Button: Lam Soon Brand Red with High Authority */}
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex items-center justify-center gap-2 bg-[#008AE6] hover:bg-[#007AC9] disabled:opacity-50 text-white font-semibold py-3.5 px-4 rounded-lg text-sm transition-all shadow-lg shadow-[#008AE6]/25 mt-4 cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 bg-[#E31B23] hover:bg-[#C9141B] disabled:opacity-50 text-white font-bold py-3.5 px-4 rounded-lg text-xs uppercase tracking-wider transition-all shadow-md shadow-[#E31B23]/20 cursor-pointer select-none"
               >
                 {isLoading ? (
-                  <span>Authenticating Credentials...</span>
+                  <span className="flex items-center gap-2">
+                    <span className="h-3.5 w-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin"></span>
+                    <span>Authorizing Credentials...</span>
+                  </span>
                 ) : (
-                  <span className="flex items-center justify-center gap-2 font-medium">
-                    Sign In to Refinery System
+                  <span className="flex items-center justify-center gap-2 font-medium tracking-wider">
+                    Access System
                     <ArrowRight className="h-4 w-4" />
                   </span>
                 )}
               </button>
             </form>
 
-            {/* Bottom Plant Notice Divider */}
-            <div className="relative mt-7 text-center">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-[#1C2C40]"></div>
+            {/* Industrial Compliance Badges */}
+            <div className="grid grid-cols-3 gap-2 mt-6 pt-4 border-t border-[#182335] text-center text-slate-400">
+              <div className="p-2 rounded bg-[#080D17] border border-[#162132]">
+                <div className="text-[10px] font-mono font-bold text-slate-200">ISO 22000</div>
+                <div className="text-[9px] text-slate-400">Food Safety</div>
               </div>
-              <div className="relative flex justify-center text-[10px]">
-                <span className="bg-[#0A1220] px-3 text-slate-400 font-medium uppercase tracking-widest font-mono">
-                  Authorized Refinery Personnel Only
-                </span>
+              <div className="p-2 rounded bg-[#080D17] border border-[#162132]">
+                <div className="text-[10px] font-mono font-bold text-slate-200">21 CFR P11</div>
+                <div className="text-[9px] text-slate-400">Audit Ready</div>
               </div>
-            </div>
-
-            {/* 3 Compliance / Trust Badges */}
-            <div className="grid grid-cols-3 gap-3 sm:gap-4 mt-6 pt-1 text-left">
-              {/* Badge 1 */}
-              <div className="flex items-center gap-2">
-                <ShieldCheck className="h-5 w-5 text-[#009FE3] shrink-0" />
-                <div className="text-[11px] leading-tight">
-                  <span className="text-white font-semibold block text-[11px]">21 CFR Part 11</span>
-                  <span className="text-slate-400 text-[10px]">Compliant</span>
-                </div>
-              </div>
-
-              {/* Badge 2 */}
-              <div className="flex items-center gap-2">
-                <Lock className="h-5 w-5 text-[#009FE3] shrink-0" />
-                <div className="text-[11px] leading-tight">
-                  <span className="text-white font-semibold block text-[11px]">Secure</span>
-                  <span className="text-slate-400 text-[10px]">Access Control</span>
-                </div>
-              </div>
-
-              {/* Badge 3 */}
-              <div className="flex items-center gap-2">
-                <Database className="h-5 w-5 text-[#009FE3] shrink-0" />
-                <div className="text-[11px] leading-tight">
-                  <span className="text-white font-semibold block text-[11px]">Audit-Ready</span>
-                  <span className="text-slate-400 text-[10px]">Digital Records</span>
-                </div>
+              <div className="p-2 rounded bg-[#080D17] border border-[#162132]">
+                <div className="text-[10px] font-mono font-bold text-slate-200">HACCP</div>
+                <div className="text-[9px] text-slate-400">Certified</div>
               </div>
             </div>
           </div>
         </div>
       </main>
 
-      {/* 3. BOTTOM FOOTER BAR */}
-      <footer className="w-full border-t border-[#172538] bg-[#070C14]/90 backdrop-blur-sm py-2.5 px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-400 font-mono z-10 shrink-0">
-        <div className="flex items-center gap-3">
-          <span>Lam Soon Edible Oils Sdn. Bhd.</span>
+      {/* 3. MINIMALIST INDUSTRIAL FOOTER */}
+      <footer className="relative z-10 w-full border-t border-[#182335]/70 bg-[#080C14]/80 backdrop-blur-md py-2.5 px-4 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-400 font-mono">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+          <span className="text-slate-300 font-semibold font-sans">Lam Soon Edible Oils Sdn. Bhd.</span>
           <span className="text-slate-600">|</span>
-          <span>Nisshin Deodorizer Refinery</span>
+          <span>Nisshin Deodorizer Plant</span>
+          <span className="text-slate-600 hidden md:inline">|</span>
+          <span className="hidden md:inline">Continuous Physical Refinery</span>
           <span className="text-slate-600">|</span>
-          <span>DOC: PRD-REF-001</span>
-          <span className="text-slate-600">|</span>
-          <span>Version 1.0.0</span>
+          <span>v1.0.4</span>
         </div>
 
-        <div className="flex items-center gap-3 font-sans">
+        <div className="flex items-center gap-3 font-sans text-xs">
           <span 
             onClick={() => setIsHelpOpen(true)} 
             className="hover:text-slate-200 cursor-pointer transition-colors"
@@ -378,9 +355,9 @@ export default function LoginView({ onLogin }: LoginViewProps) {
             Help & Support
           </span>
           <span className="text-slate-600">|</span>
-          <span className="hover:text-slate-200 cursor-pointer transition-colors">Privacy Policy</span>
+          <span className="hover:text-slate-200 cursor-pointer transition-colors">Plant SOP Guide</span>
           <span className="text-slate-600">|</span>
-          <span className="hover:text-slate-200 cursor-pointer transition-colors">Contact Administrator</span>
+          <span className="hover:text-slate-200 cursor-pointer transition-colors">Contact IT Admin</span>
         </div>
       </footer>
 
