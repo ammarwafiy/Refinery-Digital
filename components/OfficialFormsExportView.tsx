@@ -39,6 +39,26 @@ import {
 } from 'lucide-react';
 import { formatDateTime } from '@/lib/utils';
 
+// Sanitizes audit payload to replace ugly mock UUIDs with clean industrial traceability code (Idea 2)
+function cleanAuditRowPayload(row: any, stdCode: string) {
+  if (!row || typeof row !== 'object') return row;
+  const cleaned: Record<string, any> = { reference_no: stdCode };
+  for (const [key, val] of Object.entries(row)) {
+    if (typeof val === 'string' && /^[1-9]0000000-[0-9a-fA-F-]{27}$/i.test(val)) {
+      if (key === 'report_id') {
+        cleaned[key] = stdCode.replace(/^[A-Z]{2,4}/, 'SR');
+      } else if (key === 'sheet_id') {
+        cleaned[key] = stdCode.replace(/^[A-Z]{2,4}/, 'PR');
+      } else {
+        cleaned[key] = stdCode;
+      }
+    } else {
+      cleaned[key] = val;
+    }
+  }
+  return cleaned;
+}
+
 export default function OfficialFormsExportView() {
   const [selectedShiftDate, setSelectedShiftDate] = useState<string>(() => getRealtimeShiftDate());
   const [availableShiftDates, setAvailableShiftDates] = useState<string[]>(() => getAvailableShiftDates());
@@ -320,15 +340,18 @@ export default function OfficialFormsExportView() {
         'Record ID',
         'Audit Details'
       ];
-      const rows = filteredAuditLogs.map(log => [
-        `"${formatDateTime(log.occurred_at)}"`,
-        `"${formatAuditTableName(log.table_name)}"`,
-        `"${formatAuditRecordId(log)}"`,
-        String(log.action || '').toUpperCase(),
-        `"${(log.actor_name || 'System / DB Trigger').replace(/"/g, '""')}"`,
-        `"${String(log.record_id || log.id || '-').replace(/"/g, '""')}"`,
-        `"${JSON.stringify({ standard_code: formatAuditRecordId(log), ...(log.new_row || log.old_row || {}) }).replace(/"/g, '""')}"`
-      ]);
+      const rows = filteredAuditLogs.map(log => {
+        const stdCode = formatAuditRecordId(log);
+        return [
+          `"${formatDateTime(log.occurred_at)}"`,
+          `"${formatAuditTableName(log.table_name)}"`,
+          `"${stdCode}"`,
+          String(log.action || '').toUpperCase(),
+          `"${(log.actor_name || 'System / DB Trigger').replace(/"/g, '""')}"`,
+          `"${stdCode}"`,
+          `"${JSON.stringify(cleanAuditRowPayload(log.new_row || log.old_row || {}, stdCode)).replace(/"/g, '""')}"`
+        ];
+      });
 
       const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
       const encodedUri = encodeURI(csvContent);
@@ -1245,7 +1268,7 @@ export default function OfficialFormsExportView() {
                         <td className="py-2.5 px-3 whitespace-nowrap font-mono text-[11px]">
                           <span 
                             className="font-bold text-[#009FE3] bg-[#0A101D] border border-[#009FE3]/50 px-2.5 py-0.5 rounded shadow-sm inline-block font-mono text-[11px]"
-                            title={`Standard Operational Code: ${stdCode} (Database Record ID: ${String(log.record_id || log.id || '')})`}
+                            title={`Standard Operational Traceability Code: ${stdCode}`}
                           >
                             [{stdCode}]
                           </span>
@@ -1320,7 +1343,7 @@ export default function OfficialFormsExportView() {
                           NEW ROW DATA (State after operation):
                         </div>
                         <pre className="bg-[#0A1018] p-3 rounded-lg border border-[#1F2E43] text-[11px] text-slate-300 overflow-x-auto whitespace-pre-wrap">
-                          {JSON.stringify({ standard_code: formatAuditRecordId(expLog), ...expLog.new_row }, null, 2)}
+                          {JSON.stringify(cleanAuditRowPayload(expLog.new_row, formatAuditRecordId(expLog)), null, 2)}
                         </pre>
                       </div>
                     )}
@@ -1332,7 +1355,7 @@ export default function OfficialFormsExportView() {
                           OLD ROW DATA (State before operation):
                         </div>
                         <pre className="bg-[#0A1018] p-3 rounded-lg border border-[#1F2E43] text-[11px] text-slate-300 overflow-x-auto whitespace-pre-wrap">
-                          {JSON.stringify({ standard_code: formatAuditRecordId(expLog), ...expLog.old_row }, null, 2)}
+                          {JSON.stringify(cleanAuditRowPayload(expLog.old_row, formatAuditRecordId(expLog)), null, 2)}
                         </pre>
                       </div>
                     )}

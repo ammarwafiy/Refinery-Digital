@@ -233,13 +233,76 @@ export function formatAuditTableName(tableName: string): string {
   }
 }
 
-// Formats any record ID / audit row to standard prefix code (e.g. SR001, QC001, PR001, PL001, AL001)
-export function formatAuditRecordId(entry: AuditLogEntry | { table_name?: string; record_id?: string; id?: any }): string {
+// Formats any record ID / audit row to standard industrial traceability code (Idea 2: [PREFIX]-[YYMMDD]-[SIRI], e.g. SR-260928-007)
+export function formatAuditRecordId(entry: AuditLogEntry | { table_name?: string; record_id?: string; id?: any; occurred_at?: string; created_at?: string }): string {
   const table = (entry?.table_name || '').toLowerCase();
   const rawId = String(entry?.record_id || entry?.id || '').trim();
   
-  if (/^(SR|QC|ISO|BP|PR|PL|AR|AL|USR|ADM|OPR|QCS|SUP|MGR|DOC|SOP|WI|CRT|ATT|REV)\d+/i.test(rawId)) {
+  if (/^[A-Z]{2,4}-\d{6}-\d{3,4}$/i.test(rawId)) {
     return rawId.toUpperCase();
+  }
+
+  let prefix = 'AL';
+  switch (table) {
+    case 'sample_reports':
+      prefix = 'SR';
+      break;
+    case 'qc_decisions':
+      prefix = 'QC';
+      break;
+    case 'iso_certificates':
+    case 'certifications':
+      prefix = 'ISO';
+      break;
+    case 'batch_processes':
+    case 'process_batches':
+      prefix = 'BP';
+      break;
+    case 'process_sheets':
+      prefix = 'PR';
+      break;
+    case 'process_entries':
+      prefix = 'PL';
+      break;
+    case 'deviations':
+    case 'approval_records':
+      prefix = 'AR';
+      break;
+    case 'audit_log':
+    case 'audit_logs':
+      prefix = 'AL';
+      break;
+    case 'profiles':
+    case 'users':
+      prefix = 'USR';
+      break;
+    case 'documents':
+      prefix = 'DOC';
+      break;
+    default:
+      if (/^(SR|QC|ISO|BP|PR|PL|AR|AL|USR|ADM|OPR|QCS|SUP|MGR|DOC|SOP|WI|CRT|ATT|REV)/i.test(rawId)) {
+        const match = rawId.match(/^(SR|QC|ISO|BP|PR|PL|AR|AL|USR|ADM|OPR|QCS|SUP|MGR|DOC|SOP|WI|CRT|ATT|REV)/i);
+        prefix = match ? match[0].toUpperCase() : 'AL';
+      }
+      break;
+  }
+
+  // Extract date part (YYMMDD), e.g. 260928
+  let datePart = '260928';
+  const timestamp = (entry as any)?.occurred_at || (entry as any)?.created_at;
+  if (timestamp && typeof timestamp === 'string') {
+    const d = new Date(timestamp);
+    if (!isNaN(d.getTime())) {
+      const yy = String(d.getFullYear()).slice(-2);
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      datePart = `${yy}${mm}${dd}`;
+    }
+  } else if (rawId.includes('-')) {
+    const parts = rawId.split('-');
+    if (parts[1] && parts[1].length === 4 && /^\d{4}$/.test(parts[1])) {
+      datePart = `26${parts[1]}`;
+    }
   }
 
   let num = 1;
@@ -255,40 +318,17 @@ export function formatAuditRecordId(entry: AuditLogEntry | { table_name?: string
       const digits = rawId.replace(/\D/g, '');
       num = digits ? parseInt(digits.slice(-4), 10) : 1;
     }
+  } else {
+    const digits = rawId.replace(/\D/g, '');
+    if (digits) {
+      num = parseInt(digits, 10);
+    }
   }
 
   const displayNum = ((num - 1) % 999) + 1;
   const padded = String(displayNum).padStart(3, '0');
 
-  switch (table) {
-    case 'sample_reports':
-      return `SR${padded}`;
-    case 'qc_decisions':
-      return `QC${padded}`;
-    case 'iso_certificates':
-    case 'certifications':
-      return `ISO${padded}`;
-    case 'batch_processes':
-    case 'process_batches':
-      return `BP${padded}`;
-    case 'process_sheets':
-      return `PR${padded}`;
-    case 'process_entries':
-      return `PL${padded}`;
-    case 'deviations':
-    case 'approval_records':
-      return `AR${padded}`;
-    case 'audit_log':
-    case 'audit_logs':
-      return `AL${padded}`;
-    case 'profiles':
-    case 'users':
-      return `USR${padded}`;
-    case 'documents':
-      return `DOC${padded}`;
-    default:
-      return rawId ? `REC-${rawId.slice(0, 8)}` : `AL${padded}`;
-  }
+  return `${prefix}-${datePart}-${padded}`;
 }
 
 // Consistent Industrial Employee ID Configuration
