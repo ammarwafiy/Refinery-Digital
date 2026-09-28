@@ -1213,15 +1213,13 @@ export default function OfficialFormsExportView() {
                     <th className="py-2.5 px-3">Category / Table</th>
                     <th className="py-2.5 px-3">Action</th>
                     <th className="py-2.5 px-3">Authorized Actor</th>
-                    <th className="py-2.5 px-3">Audit Details &amp; Payload</th>
+                    <th className="py-2.5 px-3">Standard Code</th>
                     <th className="py-2.5 px-3 text-right">Inspect</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#1F2E43]">
                   {filteredAuditLogs.map(log => {
                     const stdCode = formatAuditRecordId(log);
-                    const rawPayload = (log.new_row || log.old_row || {}) as Record<string, any>;
-                    const payloadWithCode = { standard_code: stdCode, ...rawPayload };
 
                     return (
                       <tr key={log.id} className="hover:bg-[#101927] transition-colors">
@@ -1244,18 +1242,13 @@ export default function OfficialFormsExportView() {
                         <td className="py-2.5 px-3 text-slate-200 whitespace-nowrap font-medium text-[11px]">
                           {log.actor_name || 'System / DB Trigger'}
                         </td>
-                        <td className="py-2.5 px-3 text-slate-400 max-w-sm md:max-w-lg font-mono text-[11px]">
-                          <div className="flex items-center gap-2">
-                            <span 
-                              className="font-bold text-[#009FE3] bg-[#0A101D] border border-[#009FE3]/50 px-2 py-0.5 rounded shadow-sm shrink-0 font-mono text-[10.5px]"
-                              title={`Standard Operational Code: ${stdCode} (Database Record ID: ${String(log.record_id || log.id || '')})`}
-                            >
-                              [{stdCode}]
-                            </span>
-                            <span className="truncate text-slate-300 font-mono text-[10.5px]">
-                              {JSON.stringify(payloadWithCode)}
-                            </span>
-                          </div>
+                        <td className="py-2.5 px-3 whitespace-nowrap font-mono text-[11px]">
+                          <span 
+                            className="font-bold text-[#009FE3] bg-[#0A101D] border border-[#009FE3]/50 px-2.5 py-0.5 rounded shadow-sm inline-block font-mono text-[11px]"
+                            title={`Standard Operational Code: ${stdCode} (Database Record ID: ${String(log.record_id || log.id || '')})`}
+                          >
+                            [{stdCode}]
+                          </span>
                         </td>
                         <td className="py-2.5 px-3 text-right whitespace-nowrap">
                           <button
