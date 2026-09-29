@@ -14,17 +14,6 @@ import {
   getSampleReports, 
   getCurrentRole 
 } from '@/lib/data-service';
-import { 
-  Activity, 
-  AlertTriangle, 
-  Clock, 
-  CheckCircle2, 
-  Gauge, 
-  Thermometer, 
-  MessageSquare, 
-  ShieldAlert, 
-  FlaskConical
-} from 'lucide-react';
 
 export default function SupervisorBoardView() {
   const [sheet, setSheet] = useState<ProcessSheet>(getActiveProcessSheet());
@@ -93,320 +82,230 @@ export default function SupervisorBoardView() {
   const pendingSamples = reports.filter(r => r.status === 'awaiting_results');
 
   return (
-    <div className="space-y-6">
+    <div>
       {/* 1. Supervisor Dashboard Header */}
-      <div className="rounded-2xl border border-white/[0.08] bg-[#111724]/90 backdrop-blur-xl p-5 sm:p-6 shadow-xl relative overflow-hidden">
-        {/* Subtle Top-left Specular Glass Sheen */}
-        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/[0.05] via-transparent to-transparent pointer-events-none" />
+      <section className="panel head">
+        <div>
+          <h2 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text)' }}>Supervisor live operations board</h2>
+          <p className="meta">
+            Nisshin Deodorizer Plant, active shift date <span style={{ color: 'var(--text)', fontWeight: 500 }}>{sheet.shift_date}</span>
+          </p>
+        </div>
+        <span className="bd">
+          {latestEntry ? `Latest logged: ${latestEntry.slot_label} hrs (${latestEntry.recorded_by_name || 'Shift Operator'})` : 'Latest logged round: no readings yet'}
+        </span>
+      </section>
 
-        <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/[0.08] pb-4">
-          <div className="flex items-center gap-3.5">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-[#C52227]/30 bg-[#C52227]/10 text-[#C52227] shadow-sm">
-              <Activity className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-lg sm:text-xl font-extrabold tracking-tight text-white font-sans uppercase">
-                  Supervisor Live Operations Board
-                </h1>
-              </div>
-              <p className="text-xs text-slate-400 font-mono mt-1">
-                Nisshin Deodorizer Plant · Active Shift Date: <span className="text-slate-200 font-semibold">{sheet.shift_date}</span>
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 self-end sm:self-auto relative z-10">
-            <div className="text-right text-xs font-mono bg-[#0C121D] px-3.5 py-2 rounded-xl border border-white/[0.07] shadow-xs">
-              <div className="text-slate-500 text-[10px] font-semibold uppercase tracking-wider">LATEST LOGGED ROUND</div>
-              <div className="text-slate-100 font-semibold mt-0.5">
-                {latestEntry ? `${latestEntry.slot_label} hrs (${latestEntry.recorded_by_name || 'Shift Operator'})` : 'No readings yet'}
-              </div>
-            </div>
-          </div>
+      {/* Quick KPI Stat Cards */}
+      <div className="cards">
+        <div className="panel">
+          <label>Deodorizer vacuum</label>
+          <b>{latestEntry?.vacuum_torr ? latestEntry.vacuum_torr.toFixed(1) : '–'} <small>Torr</small></b>
+          <p>Spec 1.0 to 4.5 Torr</p>
         </div>
 
-        {/* Quick KPI Stat Cards matching Swiss Modern dashboard mockup */}
-        <div className="relative mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-          {/* Active Vacuum */}
-          <div className="rounded-xl border border-white/[0.07] bg-[#0C121D]/90 p-4 hover:border-slate-600/50 transition-all shadow-md">
-            <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1 font-mono">
-              <span className="uppercase tracking-wider font-semibold text-slate-400">DEOD VACUUM</span>
-              <Gauge className="h-4 w-4 text-[#C52227]" />
-            </div>
-            <div className="text-2xl sm:text-3xl font-extrabold font-mono text-white tracking-tight">
-              {latestEntry?.vacuum_torr ? `${latestEntry.vacuum_torr.toFixed(1)}` : '-'}
-              <span className="text-xs text-slate-400 font-normal ml-1 font-mono">Torr</span>
-            </div>
-            <div className="text-[10px] text-slate-400 font-mono mt-1">Spec: 1.0 – 4.5 Torr</div>
-          </div>
+        <div className="panel">
+          <label>Tray 4 temperature</label>
+          <b>{latestEntry?.tray_4_temp_c ? latestEntry.tray_4_temp_c.toFixed(1) : '–'} <small>°C</small></b>
+          <p>Spec 250 to 268 °C</p>
+        </div>
 
-          {/* Tray 4 Max Deod Temp */}
-          <div className="rounded-xl border border-white/[0.07] bg-[#0C121D]/90 p-4 hover:border-slate-600/50 transition-all shadow-md">
-            <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1 font-mono">
-              <span className="uppercase tracking-wider font-semibold text-slate-400">TRAY 4 TEMP</span>
-              <Thermometer className="h-4 w-4 text-[#C52227]" />
-            </div>
-            <div className="text-2xl sm:text-3xl font-extrabold font-mono text-white tracking-tight">
-              {latestEntry?.tray_4_temp_c ? `${latestEntry.tray_4_temp_c.toFixed(1)}` : '-'}
-              <span className="text-xs text-slate-400 font-normal ml-1 font-mono">°C</span>
-            </div>
-            <div className="text-[10px] text-slate-400 font-mono mt-1">Spec: 250 – 268°C</div>
-          </div>
+        <div className={`panel ${missingSlots.length > 0 ? 'al' : ''}`}>
+          <label>Missing slots</label>
+          <b>{missingSlots.length}</b>
+          <p>{missingSlots.length > 0 ? 'Shift round overdue' : 'All hours logged'}</p>
+        </div>
 
-          {/* Missing Slots */}
-          <div className={`rounded-xl border p-4 transition-all shadow-md ${
-            missingSlots.length > 0 ? 'border-red-500/40 bg-red-950/20' : 'border-white/[0.07] bg-[#0C121D]/90 hover:border-slate-600/50'
-          }`}>
-            <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1 font-mono">
-              <span className="uppercase tracking-wider font-semibold text-slate-400">MISSING SLOTS</span>
-              <Clock className={`h-4 w-4 ${missingSlots.length > 0 ? 'text-[#EF4444]' : 'text-slate-500'}`} />
-            </div>
-            <div className={`text-2xl sm:text-3xl font-extrabold font-mono tracking-tight ${missingSlots.length > 0 ? 'text-[#EF4444]' : 'text-white'}`}>
-              {missingSlots.length}
-            </div>
-            <div className="text-[10px] text-slate-400 font-mono mt-1">
-              {missingSlots.length > 0 ? 'Shift round overdue' : 'All hours logged'}
-            </div>
-          </div>
-
-          {/* Active Deviations */}
-          <div className={`rounded-xl border p-4 transition-all shadow-md ${
-            openDeviations.length > 0 ? 'border-amber-500/40 bg-amber-950/20' : 'border-white/[0.07] bg-[#0C121D]/90 hover:border-slate-600/50'
-          }`}>
-            <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1 font-mono">
-              <span className="uppercase tracking-wider font-semibold text-slate-400">OPEN DEVIATIONS</span>
-              <AlertTriangle className={`h-4 w-4 ${openDeviations.length > 0 ? 'text-[#F59E0B]' : 'text-slate-500'}`} />
-            </div>
-            <div className={`text-2xl sm:text-3xl font-extrabold font-mono tracking-tight ${openDeviations.length > 0 ? 'text-[#F59E0B]' : 'text-white'}`}>
-              {openDeviations.length}
-            </div>
-            <div className="text-[10px] text-slate-400 font-mono mt-1">
-              {openDeviations.length > 0 ? 'Action required' : 'Zero deviations'}
-            </div>
-          </div>
+        <div className={`panel ${openDeviations.length > 0 ? 'wa' : ''}`}>
+          <label>Open deviations</label>
+          <b>{openDeviations.length}</b>
+          <p>{openDeviations.length > 0 ? 'Action required' : 'Zero deviations'}</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* 2. Open Deviations & Corrective Action Log */}
-        <div className="rounded-2xl border border-white/[0.08] bg-[#111724]/90 backdrop-blur-xl p-5 sm:p-6 shadow-xl relative overflow-hidden">
-          <div className="flex items-center justify-between mb-4 border-b border-white/[0.08] pb-3">
-            <div className="flex items-center gap-2 font-semibold text-white font-mono text-xs uppercase tracking-wider">
-              <ShieldAlert className="h-4 w-4 text-[#C52227]" />
-              <span>Plant Deviations & Corrective Action Notes</span>
-            </div>
-            <span className="text-[10px] font-mono text-slate-300 font-semibold bg-[#0C121D] px-2 py-0.5 rounded border border-white/[0.07]">
-              COUNT: {deviations.length}
-            </span>
+      {/* Two Column Layout: Deviations & Queues */}
+      <div className="two">
+        {/* Plant Deviations & Corrective Action Notes */}
+        <section className="panel">
+          <div className="ph">
+            <span>Plant deviations and corrective action notes</span>
+            <span className="bd">{deviations.length}</span>
           </div>
 
-          {deviations.length === 0 ? (
-            <div className="p-8 text-center text-xs text-slate-400 font-mono bg-[#0A1018] rounded-lg border border-[#1F2E43]">
-              No process deviations logged. All parameters operating within normal threshold limits.
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {deviations.map(dev => {
+          <div>
+            {deviations.length === 0 ? (
+              <p className="empty">No process deviations logged. All parameters operating within normal threshold limits.</p>
+            ) : (
+              deviations.map(dev => {
                 const isAck = Boolean(dev.acknowledged_at);
                 return (
-                  <div
-                    key={dev.id}
-                    className={`p-3.5 rounded-lg border transition-colors ${
-                      isAck ? 'border-[#1F2E43] bg-[#0A1018]' : 'border-[#F59E0B]/40 bg-[#F59E0B]/10'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-mono font-bold text-xs text-white">
-                            Hour {dev.slot_label}
-                          </span>
-                          <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-[#101927] border border-[#1F2E43] text-slate-300 font-medium">
-                            {dev.field_label}
-                          </span>
-                          {isAck ? (
-                            <span className="text-[9px] font-mono text-[#10B981] bg-[#10B981]/15 px-1.5 py-0.5 rounded border border-[#10B981]/30 font-semibold">
-                              ACKNOWLEDGED
-                            </span>
-                          ) : (
-                            <span className="text-[9px] font-mono text-[#EF4444] bg-[#EF4444]/15 px-1.5 py-0.5 rounded border border-[#EF4444]/30 animate-pulse font-semibold">
-                              OPEN DEVIATION
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="mt-1.5 text-xs text-slate-300 font-mono">
-                          Observed value: <strong className="text-[#F59E0B]">{dev.observed}</strong> (Limit Band: {dev.soft_min || 0} - {dev.soft_max || 'N/A'})
-                        </div>
-
-                        {dev.action_taken ? (
-                          <div className="mt-2 text-xs text-slate-300 bg-[#101927] p-2.5 rounded border border-[#1F2E43] font-mono">
-                            <span className="font-semibold text-slate-100">Corrective action ({dev.acknowledged_by_name}):</span> {dev.action_taken}
-                          </div>
-                        ) : (
-                          <div className="mt-2 text-[11px] text-[#F59E0B] italic font-mono">
-                            Awaiting supervisor corrective sign-off...
-                          </div>
-                        )}
+                  <div key={dev.id} className={`li ${isAck ? 'ok' : 'dv'}`}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <b style={{ color: 'var(--text)' }}>Hour {dev.slot_label}</b>
+                        <span className="bd">{dev.field_label}</span>
+                        <span className={`bd ${isAck ? 'g' : 'r'}`}>
+                          {isAck ? 'Acknowledged' : 'Open deviation'}
+                        </span>
                       </div>
 
-                      {!isAck && (role === 'supervisor' || role === 'admin') && (
-                        <button
-                          onClick={() => {
-                            setSelectedDev(dev);
-                            setActionNarrative('');
-                          }}
-                          className="shrink-0 flex items-center gap-1.5 bg-[#009FE3]/15 hover:bg-[#009FE3]/25 text-[#08B5F5] text-xs font-mono font-medium uppercase tracking-wider px-3 py-1.5 rounded transition-all border border-[#009FE3]/40 shadow-xs cursor-pointer"
-                        >
-                          <MessageSquare className="h-3.5 w-3.5" />
-                          <span>Acknowledge</span>
-                        </button>
+                      <p style={{ marginTop: '4px' }}>
+                        Observed value: <strong style={{ color: isAck ? 'var(--text)' : 'var(--amber)' }}>{dev.observed}</strong> (Limit band: {dev.soft_min || 0} – {dev.soft_max || 'N/A'})
+                      </p>
+
+                      {dev.action_taken ? (
+                        <p style={{ marginTop: '6px', color: 'var(--text)', background: 'var(--raised)', padding: '6px 10px', borderRadius: '6px' }}>
+                          <span style={{ fontWeight: 600 }}>Action ({dev.acknowledged_by_name}):</span> {dev.action_taken}
+                        </p>
+                      ) : (
+                        <p style={{ marginTop: '4px', color: 'var(--amber)', fontStyle: 'italic', fontSize: '12px' }}>
+                          Awaiting supervisor corrective sign-off...
+                        </p>
                       )}
                     </div>
+
+                    {!isAck && (role === 'supervisor' || role === 'admin') && (
+                      <button
+                        type="button"
+                        className="ghost"
+                        onClick={() => {
+                          setSelectedDev(dev);
+                          setActionNarrative('');
+                        }}
+                      >
+                        Acknowledge
+                      </button>
+                    )}
                   </div>
                 );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* 3. Missing Entries & QC Lab Alert Queue */}
-        <div className="space-y-6">
-          {/* Missing Hourly Entries Box */}
-          <div className="rounded-2xl border border-white/[0.08] bg-[#111724]/90 backdrop-blur-xl p-5 sm:p-6 shadow-xl relative overflow-hidden">
-            <div className="flex items-center justify-between mb-4 border-b border-white/[0.08] pb-3">
-              <div className="flex items-center gap-2 font-semibold text-white font-mono text-xs uppercase tracking-wider">
-                <Clock className="h-4 w-4 text-[#EF4444]" />
-                <span>Overdue Hourly Log Entries</span>
-              </div>
-              <span className="text-[10px] font-mono text-slate-400 uppercase font-semibold">
-                SHIFT COMPLIANCE CHECK
-              </span>
-            </div>
-
-            {missingSlots.length === 0 ? (
-              <div className="p-3.5 text-center text-xs text-emerald-400 font-mono bg-emerald-500/10 rounded-xl border border-emerald-500/20">
-                <CheckCircle2 className="h-4 w-4 inline-block mr-1.5 text-emerald-400" />
-                Zero overdue slots. Operating shifts are completely up to date.
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {missingSlots.map(m => (
-                  <div key={m.index} className="flex items-center justify-between p-3 rounded-xl border border-red-500/30 bg-red-950/20">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono font-bold text-xs text-[#EF4444]">Hour {m.label}</span>
-                      <span className="text-xs text-slate-400 font-mono">Pending Entry</span>
-                    </div>
-                    <span className="text-[10px] font-mono text-red-300 bg-[#EF4444]/20 px-2 py-0.5 rounded border border-[#EF4444]/40 font-medium">
-                      Overdue by ~{m.overdueMin} mins
-                    </span>
-                  </div>
-                ))}
-              </div>
+              })
             )}
           </div>
+        </section>
 
-          {/* QC Lab Status in Realtime */}
-          <div className="rounded-2xl border border-white/[0.08] bg-[#111724]/90 backdrop-blur-xl p-5 sm:p-6 shadow-xl relative overflow-hidden">
-            <div className="flex items-center justify-between mb-4 border-b border-white/[0.08] pb-3">
-              <div className="flex items-center gap-2 font-semibold text-white font-mono text-xs uppercase tracking-wider">
-                <FlaskConical className="h-4 w-4 text-[#C52227]" />
-                <span>QC Lab Sample Queue</span>
-              </div>
-              <span className="text-[10px] font-mono text-slate-300 font-semibold bg-[#0C121D] px-2 py-0.5 rounded border border-white/[0.07]">
-                PENDING: {pendingSamples.length}
-              </span>
+        {/* Right Column: Overdue Slots and QC Lab Queue */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {/* Overdue Entries */}
+          <section className="panel">
+            <div className="ph">
+              <span>Overdue hourly log entries</span>
+              <span className="hint" style={{ fontWeight: 400 }}>Shift compliance check</span>
             </div>
 
-            <div className="space-y-2.5">
-              {reports.slice(0, 3).map(rep => {
-                const isRejected = rep.decision?.decision === 'reject';
-                const isAccepted = rep.decision?.decision === 'accept';
-                return (
-                  <div key={rep.id} className="flex items-center justify-between p-3 rounded-lg border border-[#1F2E43] bg-[#0A1018] hover:border-[#263A52] transition-colors">
+            <div>
+              {missingSlots.length === 0 ? (
+                <div style={{ padding: '20px', textAlign: 'center', color: 'var(--green)', fontSize: '13px' }}>
+                  Zero overdue slots. Operating shifts are completely up to date.
+                </div>
+              ) : (
+                missingSlots.map(m => (
+                  <div key={m.index} className="li od">
                     <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs font-semibold text-slate-100">
-                          {rep.lot_no}
-                        </span>
-                        <span className="text-xs text-slate-400 font-mono font-medium">({rep.product_name})</span>
-                      </div>
-                      <div className="text-[10px] text-slate-400 font-mono mt-0.5">
-                        Sampled: {rep.time_check} · {rep.sampling_point_name || 'Deodorizer Outlet'}
-                      </div>
+                      <b style={{ color: 'var(--text)' }}>Hour {m.label}</b>
+                      <p>Pending hourly process log entry</p>
                     </div>
-
-                    <div>
-                      {isRejected ? (
-                        <span className="text-[10px] font-mono text-[#EF4444] bg-[#EF4444]/15 px-2 py-0.5 rounded border border-[#EF4444]/30 font-semibold">
-                          REJECTED ({String(rep.decision?.disposition || 'REPROCESS').toUpperCase()})
-                        </span>
-                      ) : isAccepted ? (
-                        <span className="text-[10px] font-mono text-[#10B981] bg-[#10B981]/15 px-2 py-0.5 rounded border border-[#10B981]/30 font-semibold">
-                          ACCEPTED
-                        </span>
-                      ) : (
-                        <span className="text-[10px] font-mono text-[#F59E0B] bg-[#F59E0B]/15 px-2 py-0.5 rounded border border-[#F59E0B]/30 font-semibold">
-                          LAB TESTING
-                        </span>
-                      )}
-                    </div>
+                    <span className="bd r">Overdue ~{m.overdueMin}m</span>
                   </div>
-                );
-              })}
+                ))
+              )}
             </div>
-          </div>
+          </section>
+
+          {/* QC Lab Queue */}
+          <section className="panel">
+            <div className="ph">
+              <span>QC lab sample queue</span>
+              <span className="bd a">Pending {pendingSamples.length}</span>
+            </div>
+
+            <div>
+              {reports.length === 0 ? (
+                <p className="empty">No QC samples registered today.</p>
+              ) : (
+                reports.slice(0, 4).map(rep => {
+                  const isRejected = rep.decision?.decision === 'reject';
+                  const isAccepted = rep.decision?.decision === 'accept';
+                  return (
+                    <div key={rep.id} className="li">
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <b style={{ color: 'var(--text)' }}>{rep.lot_no}</b>
+                          <span className="hint">({rep.product_name})</span>
+                        </div>
+                        <p style={{ marginTop: '2px', fontSize: '12px' }}>
+                          Sampled: {rep.time_check} · {rep.sampling_point_name || 'Deodorizer Outlet'}
+                        </p>
+                      </div>
+
+                      <div>
+                        {isRejected ? (
+                          <span className="bd r">Rejected ({String(rep.decision?.disposition || 'REPROCESS').toUpperCase()})</span>
+                        ) : isAccepted ? (
+                          <span className="bd g">Accepted</span>
+                        ) : (
+                          <span className="bd a">Lab testing</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </section>
         </div>
       </div>
 
       {/* Acknowledge Deviation Modal */}
       {selectedDev && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-xs p-4">
-          <div className="w-full max-w-md rounded-xl border border-[#1F2E43] bg-[#101927] p-6 shadow-2xl shadow-black">
-            <div className="flex items-center gap-3 text-[#009FE3] mb-3">
-              <MessageSquare className="h-5 w-5" />
-              <h3 className="text-base font-bold text-slate-100 font-sans">
-                Acknowledge Deviation: Hour {selectedDev.slot_label}
-              </h3>
-            </div>
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 50,
+          display: 'grid',
+          placeItems: 'center',
+          background: 'rgba(0, 0, 0, 0.75)',
+          backdropFilter: 'blur(4px)',
+          padding: '20px'
+        }}>
+          <div className="panel" style={{ maxWidth: '480px', width: '100%', margin: 0, padding: '24px' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text)', marginBottom: '8px' }}>
+              Acknowledge Deviation: Hour {selectedDev.slot_label}
+            </h3>
 
-            <div className="text-xs text-slate-300 mb-4 p-3 rounded-lg bg-[#0A1018] border border-[#1F2E43] font-mono">
-              <span className="font-semibold text-slate-100">Parameter:</span> {selectedDev.field_label} ({selectedDev.observed})
+            <div style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: '16px', padding: '12px', background: 'var(--bg)', borderRadius: '8px', border: '1px solid var(--line)' }}>
+              <span style={{ fontWeight: 600, color: 'var(--text)' }}>Parameter:</span> {selectedDev.field_label} ({selectedDev.observed})
             </div>
 
             {ackError && (
-              <div className="mb-4 rounded-lg bg-[#EF4444]/15 p-2.5 text-xs text-red-300 border border-[#EF4444]/30 font-mono">
-                {ackError}
-              </div>
+              <p className="err" style={{ marginBottom: '12px' }}>{ackError}</p>
             )}
 
-            <form onSubmit={handleAcknowledge} className="space-y-4">
-              <div>
-                <label className="block text-[11px] font-mono text-slate-400 mb-1">
-                  Corrective Action Note (Auditor review narrative):
-                </label>
+            <form onSubmit={handleAcknowledge}>
+              <div className="fld">
+                <label htmlFor="dev-narrative">Corrective Action Note (Auditor review narrative):</label>
                 <textarea
+                  id="dev-narrative"
                   required
                   rows={3}
                   placeholder="Describe cause and correction made (e.g. Adjusted ejector steam bypass valve to 3.2 Bar)..."
                   value={actionNarrative}
                   onChange={e => setActionNarrative(e.target.value)}
-                  className="w-full bg-[#0A1018] border border-[#1F2E43] rounded-lg px-3 py-2 text-xs font-mono text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-[#009FE3] focus:ring-1 focus:ring-[#009FE3]/30 resize-none"
+                  className="rem"
+                  style={{ height: '80px', width: '100%' }}
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2.5 pt-2">
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '16px' }}>
                 <button
                   type="button"
                   onClick={() => setSelectedDev(null)}
-                  className="px-3.5 py-1.5 rounded text-xs font-mono text-slate-400 hover:text-slate-200 cursor-pointer"
+                  className="ghost"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="bg-[#009FE3] hover:bg-[#08B5F5] text-white font-mono font-medium text-xs uppercase px-4 py-1.5 rounded transition-all border border-[#009FE3] shadow-sm cursor-pointer"
+                  className="primary"
                 >
                   Save Corrective Note
                 </button>
@@ -418,3 +317,4 @@ export default function SupervisorBoardView() {
     </div>
   );
 }
+

@@ -529,91 +529,39 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
   });
 
   return (
-    <div className="space-y-6">
+    <div>
       {/* 1. Module Header & Sub-Navigation */}
-      <div className="rounded-xl border border-[#1F2E43] bg-[#101927] p-4 sm:p-5">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[#1F2E43] pb-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-[#009FE3]/40 bg-[#009FE3]/10 text-[#009FE3]">
-              <FlaskConical className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-100 font-sans">
-                  Sample Analysis Report & Quality Control
-                </h1>
-              </div>
-              <p className="text-xs text-slate-400 font-mono mt-1">
-                44 Standard Products · Parameter Tick-List · 9-Point SFC Series · QC Disposition
-              </p>
-            </div>
-          </div>
-
-          {/* Sub-Tabs Actions */}
-          <div className="flex items-center gap-1.5 bg-[#0A1018] p-1 rounded-lg border border-[#1F2E43]">
-            <button
-              onClick={() => setActiveSubTab('list')}
-              className={`px-3 py-1.5 rounded-md text-xs font-mono font-medium transition-all cursor-pointer ${
-                activeSubTab === 'list'
-                  ? 'bg-[#009FE3] text-white border border-[#009FE3]'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-[#172235]'
-              }`}
-            >
-              Lab Queue ({reports.length})
-            </button>
-
-            <button
-              onClick={() => setActiveSubTab('new')}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-mono font-medium transition-all cursor-pointer ${
-                activeSubTab === 'new'
-                  ? 'bg-[#009FE3] text-white border border-[#009FE3]'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-[#172235]'
-              }`}
-            >
-              <Plus className="h-3.5 w-3.5 text-inherit" />
-              <span>Raise Sample</span>
-            </button>
-          </div>
+      <section className="panel head">
+        <div>
+          <h2 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text)' }}>
+            Sample analysis report and quality control
+          </h2>
+          <p className="meta">
+            44 standard products, parameter tick list, 9-point SFC series, QC disposition
+          </p>
         </div>
 
-        {/* Search & Filter Bar */}
-        {activeSubTab !== 'new' && (
-          <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
-            <div className="relative w-full sm:w-80">
-              <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-500" />
-              <input
-                type="text"
-                placeholder="Search Lot No, Product, Report No..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className="w-full bg-[#0A1018] border border-[#1F2E43] rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-[#009FE3] font-mono transition-colors"
-              />
-            </div>
+        <div className="segs" style={{ '--c': 2, margin: 0, width: '280px' } as React.CSSProperties}>
+          <button
+            type="button"
+            className="seg"
+            aria-pressed={activeSubTab !== 'new'}
+            onClick={() => setActiveSubTab('list')}
+          >
+            Lab queue ({reports.length})
+          </button>
 
-            <div className="flex items-center gap-1.5 self-start sm:self-auto font-mono text-xs">
-              <span className="text-slate-400 text-[11px] uppercase mr-1">Filter:</span>
-              {[
-                { id: 'all', label: 'All' },
-                { id: 'awaiting', label: 'Awaiting Results' },
-                { id: 'accepted', label: 'Accepted' },
-                { id: 'rejected', label: 'Rejected' },
-              ].map(f => (
-                <button
-                  key={f.id}
-                  onClick={() => setFilterStatus(f.id)}
-                  className={`px-2.5 py-1 rounded-md text-[11px] border font-mono transition-all cursor-pointer ${
-                    filterStatus === f.id
-                      ? 'bg-[#009FE3] border-[#009FE3] text-white font-medium'
-                      : 'border-[#1F2E43] bg-[#0A1018] text-slate-400 hover:text-slate-200 hover:bg-[#172235]'
-                  }`}
-                >
-                  {f.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+          <button
+            type="button"
+            className="seg"
+            aria-pressed={activeSubTab === 'new'}
+            onClick={() => setActiveSubTab('new')}
+          >
+            Raise sample
+          </button>
+        </div>
+      </section>
+
 
       {/* Delete Success Alert Notification */}
       {deleteSuccessMessage && (
@@ -635,183 +583,186 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
 
       {/* VIEW A: Raise New Sample Report */}
       {activeSubTab === 'new' && (
-        <div className="rounded-xl border border-[#1F2E43] bg-[#101927] p-5 sm:p-6">
-          <h2 className="text-sm font-bold text-slate-100 mb-4 border-b border-[#1F2E43] pb-3 font-mono uppercase tracking-wider">
-            Sample Report Header & Parameter Request
-          </h2>
+        <section className="panel" style={{ padding: '28px' }}>
+          <div className="ph" style={{ padding: '0 0 16px', borderBottom: '1px solid var(--line)', marginBottom: '24px' }}>
+            <div>
+              <h2 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text)' }}>
+                Raise New Sample Report
+              </h2>
+              <p className="hint">Sample registration, initial operating conditions and parameter selection</p>
+            </div>
+          </div>
 
-          <form onSubmit={handleCreateSample} className="space-y-5">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="text-[11px] font-mono text-slate-500 uppercase tracking-wider font-semibold">Lot Number *</label>
-                  <span className="inline-flex items-center gap-1 text-[10px] font-mono text-[#009FE3] bg-[#009FE3]/10 px-2 py-0.5 rounded border border-[#009FE3]/30">
-                    <Sparkles className="h-3 w-3" /> Auto-Generated
-                  </span>
+          <form onSubmit={handleCreateSample}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '20px' }}>
+              <div className="fld">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <label style={{ margin: 0 }}>Lot Number *</label>
+                  <span className="bd a">Auto-Generated</span>
                 </div>
-                <div className="relative">
+                <div style={{ display: 'flex', gap: '8px' }}>
                   <input
                     type="text"
                     required
                     placeholder="e.g. LOT-PL65-2609-04"
                     value={newLotNo}
                     onChange={e => setNewLotNo(e.target.value)}
-                    className="w-full bg-[#0A1018] border border-[#1F2E43] rounded-lg pl-3 pr-20 py-2 text-xs font-mono text-slate-200 focus:outline-none focus:border-[#009FE3]"
+                    className="inp"
+                    style={{ flex: 1 }}
                   />
                   <button
                     type="button"
                     onClick={() => setNewLotNo(generateNextLotNo(newProductId, newDate, newProductOther))}
-                    className="absolute right-1 top-1 bottom-1 px-2.5 rounded-md bg-[#101927] hover:bg-[#172235] text-[#009FE3] text-[10px] font-mono transition-all flex items-center gap-1 border border-[#1F2E43] cursor-pointer"
+                    className="ghost"
                     title="Regenerate next sequential lot number based on selected product & date"
                   >
-                    <RefreshCw className="h-3 w-3" />
-                    <span>Sync</span>
+                    Sync
                   </button>
                 </div>
-                <p className="mt-1 text-[10px] text-slate-500 font-mono">
-                  Pattern: LOT-[PROD]-[YYMM]-[SEQ]
-                </p>
+                <p className="hint" style={{ marginTop: '4px', fontSize: '11px' }}>Pattern: LOT-[PROD]-[YYMM]-[SEQ]</p>
               </div>
 
-              <div>
-                <label className="block text-[11px] font-mono text-slate-500 mb-1 uppercase tracking-wider font-semibold">Sample Date</label>
+              <div className="fld">
+                <label>Sample Date</label>
                 <input
                   type="date"
                   value={newDate}
                   onChange={e => setNewDate(e.target.value)}
-                  className="w-full bg-[#0A1018] border border-[#1F2E43] rounded-lg px-3 py-2 text-xs font-mono text-slate-200 focus:outline-none focus:border-[#009FE3] cursor-pointer"
+                  className="inp"
+                  style={{ width: '100%' }}
                 />
               </div>
 
-              <div>
-                <label className="block text-[11px] font-mono text-slate-500 mb-1 uppercase tracking-wider font-semibold">Time Check</label>
+              <div className="fld">
+                <label>Time Check</label>
                 <input
                   type="time"
                   value={newTimeCheck}
                   onChange={e => setNewTimeCheck(e.target.value)}
-                  className="w-full bg-[#0A1018] border border-[#1F2E43] rounded-lg px-3 py-2 text-xs font-mono text-slate-200 focus:outline-none focus:border-[#009FE3] cursor-pointer"
+                  className="inp"
+                  style={{ width: '100%' }}
                 />
               </div>
             </div>
 
             {/* Product Picker */}
-            <div className="rounded-xl border border-[#1F2E43] bg-[#0A1018] p-4">
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2 font-mono">
-                Product Selection (Standard List)
-              </label>
+            <div className="fld" style={{ marginBottom: '20px' }}>
+              <label>Product Selection (Standard List)</label>
               <select
                 value={newProductId}
                 onChange={e => setNewProductId(e.target.value)}
-                className="w-full bg-[#101927] border border-[#1F2E43] rounded-lg px-3 py-2 text-xs text-slate-200 font-mono font-medium focus:outline-none focus:border-[#009FE3] cursor-pointer"
+                className="inp"
+                style={{ width: '100%' }}
               >
                 {products.map(p => (
-                  <option key={p.id} value={p.id} className="bg-[#101927] text-slate-200">
-                    {p.name}
-                  </option>
+                  <option key={p.id} value={p.id}>{p.name}</option>
                 ))}
-                <option value="others" className="bg-[#101927] text-slate-200">Others — Free Text Entry</option>
+                <option value="others">Others — Free Text Entry</option>
               </select>
 
               {newProductId === 'others' && (
-                <div className="mt-3">
-                  <label className="block text-[11px] font-mono text-slate-400 mb-1">Enter Custom Product Name:</label>
+                <div style={{ marginTop: '12px' }}>
+                  <label>Enter Custom Product Name:</label>
                   <input
                     type="text"
                     required
                     placeholder="Specify other product name..."
                     value={newProductOther}
                     onChange={e => setNewProductOther(e.target.value)}
-                    className="w-full bg-[#101927] border border-[#1F2E43] rounded-lg px-3 py-2 text-xs text-slate-200 font-mono focus:outline-none focus:border-[#009FE3]"
+                    className="inp"
+                    style={{ width: '100%' }}
                   />
                 </div>
               )}
             </div>
 
             {/* Tanks & Sampling Point */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-              <div>
-                <label className="block text-[11px] font-mono text-slate-500 mb-1 uppercase tracking-wider font-semibold">Feed Tank</label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '20px' }}>
+              <div className="fld">
+                <label>Feed Tank</label>
                 <select
                   value={newFeedTankId}
                   onChange={e => setNewFeedTankId(e.target.value)}
-                  className="w-full bg-[#0A1018] border border-[#1F2E43] rounded-lg px-3 py-2 text-xs font-mono text-slate-200 cursor-pointer focus:outline-none focus:border-[#009FE3]"
+                  className="inp"
+                  style={{ width: '100%' }}
                 >
                   {tanks.filter(t => t.kind === 'feed' || t.kind === 'both').map(t => (
-                    <option key={t.id} value={t.id} className="bg-[#101927] text-slate-200">{t.code}</option>
+                    <option key={t.id} value={t.id}>{t.code}</option>
                   ))}
                 </select>
               </div>
 
-              <div>
-                <label className="block text-[11px] font-mono text-slate-500 mb-1 uppercase tracking-wider font-semibold">Discharge Tank</label>
+              <div className="fld">
+                <label>Discharge Tank</label>
                 <select
                   value={newDischargeTankId}
                   onChange={e => setNewDischargeTankId(e.target.value)}
-                  className="w-full bg-[#0A1018] border border-[#1F2E43] rounded-lg px-3 py-2 text-xs font-mono text-slate-200 cursor-pointer focus:outline-none focus:border-[#009FE3]"
+                  className="inp"
+                  style={{ width: '100%' }}
                 >
                   {tanks.filter(t => t.kind === 'discharge' || t.kind === 'both').map(t => (
-                    <option key={t.id} value={t.id} className="bg-[#101927] text-slate-200">{t.code}</option>
+                    <option key={t.id} value={t.id}>{t.code}</option>
                   ))}
                 </select>
               </div>
 
-              <div>
-                <label className="block text-[11px] font-mono text-slate-500 mb-1 uppercase tracking-wider font-semibold">Crystallizer / Batch No</label>
+              <div className="fld">
+                <label>Crystallizer / Batch No</label>
                 <input
                   type="text"
                   placeholder="CR-04 / B260904"
                   value={newBatchNo}
                   onChange={e => setNewBatchNo(e.target.value)}
-                  className="w-full bg-[#0A1018] border border-[#1F2E43] rounded-lg px-3 py-2 text-xs font-mono text-slate-200 focus:outline-none focus:border-[#009FE3]"
+                  className="inp"
+                  style={{ width: '100%' }}
                 />
               </div>
 
-              <div>
-                <label className="block text-[11px] font-mono text-slate-500 mb-1 uppercase tracking-wider font-semibold">Sampling Point</label>
+              <div className="fld">
+                <label>Sampling Point</label>
                 <select
                   value={newSamplingPointId}
                   onChange={e => setNewSamplingPointId(e.target.value)}
-                  className="w-full bg-[#0A1018] border border-[#1F2E43] rounded-lg px-3 py-2 text-xs font-mono text-slate-200 cursor-pointer focus:outline-none focus:border-[#009FE3]"
+                  className="inp"
+                  style={{ width: '100%' }}
                 >
                   {samplingPoints.map(sp => (
-                    <option key={sp.id} value={sp.id} className="bg-[#101927] text-slate-200">{sp.name}</option>
+                    <option key={sp.id} value={sp.id}>{sp.name}</option>
                   ))}
                 </select>
               </div>
             </div>
 
             {/* Printed Remarks Checkboxes */}
-            <div className="rounded-xl border border-[#1F2E43] bg-[#0A1018] p-4">
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2 font-mono">
+            <div style={{ padding: '16px 20px', background: 'var(--raised)', borderRadius: '10px', marginBottom: '20px' }}>
+              <label style={{ display: 'block', fontWeight: 600, fontSize: '13px', color: 'var(--text)', marginBottom: '10px' }}>
                 Printed Remarks Tick-List
               </label>
-              <div className="flex flex-wrap items-center gap-6 text-xs text-slate-300 font-mono">
-                <label className="flex items-center gap-2 cursor-pointer">
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px', fontSize: '13px', color: 'var(--text)' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                   <input
                     type="checkbox"
                     checked={newRemarkFlushing}
                     onChange={e => setNewRemarkFlushing(e.target.checked)}
-                    className="h-4 w-4 rounded border-[#1F2E43] bg-[#101927] text-[#009FE3] focus:ring-[#009FE3] cursor-pointer"
+                    style={{ accentColor: 'var(--red)' }}
                   />
                   <span>Flushing</span>
                 </label>
-
-                <label className="flex items-center gap-2 cursor-pointer">
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                   <input
                     type="checkbox"
                     checked={newRemarkCooling}
                     onChange={e => setNewRemarkCooling(e.target.checked)}
-                    className="h-4 w-4 rounded border-[#1F2E43] bg-[#101927] text-[#009FE3] focus:ring-[#009FE3] cursor-pointer"
+                    style={{ accentColor: 'var(--red)' }}
                   />
                   <span>Cooling</span>
                 </label>
-
-                <label className="flex items-center gap-2 cursor-pointer">
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                   <input
                     type="checkbox"
                     checked={newRemarkPushover}
                     onChange={e => setNewRemarkPushover(e.target.checked)}
-                    className="h-4 w-4 rounded border-[#1F2E43] bg-[#101927] text-[#009FE3] focus:ring-[#009FE3] cursor-pointer"
+                    style={{ accentColor: 'var(--red)' }}
                   />
                   <span>Pushover</span>
                 </label>
@@ -819,404 +770,356 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
             </div>
 
             {/* Parameter Tick-List */}
-            <div className="rounded-xl border border-[#1F2E43] bg-[#0A1018] p-4">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono">
+            <div style={{ padding: '16px 20px', background: 'var(--raised)', borderRadius: '10px', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <span style={{ fontWeight: 600, fontSize: '13px', color: 'var(--text)' }}>
                   Requested Lab Parameters (Tick to include on testing sheet)
                 </span>
-                <span className="text-[10px] text-[#009FE3] font-mono font-semibold">
-                  {selectedParamIds.length} parameters selected
-                </span>
+                <span className="bd">{selectedParamIds.length} parameters selected</span>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 text-xs font-mono">
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
                 {parameters.filter(p => p.code !== 'TEMP').map(param => {
                   const isChecked = selectedParamIds.includes(param.id);
                   return (
                     <label
                       key={param.id}
                       onClick={() => toggleParam(param.id)}
-                      className={`flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer transition-all ${
-                        isChecked 
-                          ? 'border-[#009FE3]/50 bg-[#009FE3]/15 text-[#009FE3] font-semibold' 
-                          : 'border-[#1F2E43] bg-[#101927] text-slate-400 hover:border-slate-600'
-                      }`}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '10px 12px',
+                        borderRadius: '8px',
+                        border: '1px solid var(--line)',
+                        background: isChecked ? 'rgba(216,31,44,.12)' : 'var(--surface)',
+                        color: isChecked ? 'var(--text)' : 'var(--muted)',
+                        cursor: 'pointer',
+                        fontSize: '13px'
+                      }}
                     >
                       <input
                         type="checkbox"
                         checked={isChecked}
                         readOnly
-                        className="h-3.5 w-3.5 rounded border-slate-200 bg-slate-50 text-blue-600 focus:ring-blue-500 pointer-events-none"
+                        style={{ accentColor: 'var(--red)' }}
                       />
-                      <span className="text-[11px] truncate">{param.name} {param.unit ? `(${param.unit})` : ''}</span>
+                      <span>{param.name} {param.unit ? `(${param.unit})` : ''}</span>
                     </label>
                   );
                 })}
               </div>
 
               {/* Temperature Test Points Selection */}
-              <div className="mt-4 pt-3 border-t border-[#1F2E43]">
-                <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
-                  <div className="flex items-center gap-2">
+              <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--line)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <input
                       type="checkbox"
                       id="new-temp-master"
                       checked={selectedParamIds.includes('param-temp') && selectedTempKeys.length === 9}
                       onChange={e => handleToggleAllTempsForNew(e.target.checked)}
-                      className="h-3.5 w-3.5 rounded border-[#1F2E43] bg-[#101927] text-[#009FE3] focus:ring-[#009FE3] cursor-pointer"
+                      style={{ accentColor: 'var(--red)' }}
                     />
-                    <label htmlFor="new-temp-master" className="text-xs font-medium text-slate-200 font-mono cursor-pointer flex items-center gap-2">
-                      <span>Temperature Test Points</span>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#101927] text-[#009FE3] border border-[#1F2E43] font-semibold">
-                        {selectedTempKeys.length} / 9 Active
-                      </span>
+                    <label htmlFor="new-temp-master" style={{ margin: 0, fontWeight: 600, fontSize: '13px', color: 'var(--text)', cursor: 'pointer' }}>
+                      Temperature Test Points ({selectedTempKeys.length} / 9 Active)
                     </label>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => handleToggleAllTempsForNew(true)}
-                      className="text-[10px] font-mono px-2.5 py-1 rounded bg-[#101927] hover:bg-[#172235] text-slate-300 border border-[#1F2E43] transition-colors cursor-pointer"
-                    >
-                      Select All 9
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleToggleAllTempsForNew(false)}
-                      className="text-[10px] font-mono px-2.5 py-1 rounded bg-[#101927] hover:bg-[#172235] text-slate-400 border border-[#1F2E43] transition-colors cursor-pointer"
-                    >
-                      Deselect All
-                    </button>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button type="button" onClick={() => handleToggleAllTempsForNew(true)} className="ghost" style={{ height: '28px', fontSize: '11px', padding: '0 8px' }}>Select All 9</button>
+                    <button type="button" onClick={() => handleToggleAllTempsForNew(false)} className="ghost" style={{ height: '28px', fontSize: '11px', padding: '0 8px' }}>Deselect All</button>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-9 gap-2">
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(64px, 1fr))', gap: '8px' }}>
                   {[10, 15, 20, 25, 30, 35, 40, 45, 50].map(temp => {
                     const isTicked = selectedTempKeys.includes(temp);
                     return (
-                      <label
+                      <button
                         key={temp}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          toggleTempKey(temp);
-                        }}
-                        className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg border text-xs font-mono cursor-pointer transition-all ${
-                          isTicked
-                            ? 'border-[#009FE3]/50 bg-[#009FE3]/15 text-[#009FE3] font-semibold'
-                            : 'border-[#1F2E43] bg-[#101927] text-slate-400 hover:border-slate-600 hover:text-slate-200'
-                        }`}
+                        type="button"
+                        onClick={() => toggleTempKey(temp)}
+                        className={`seg ${isTicked ? 'active' : ''}`}
+                        aria-pressed={isTicked}
+                        style={{ height: '34px', fontSize: '12px' }}
                       >
-                        <input
-                          type="checkbox"
-                          checked={isTicked}
-                          readOnly
-                          className="h-3 w-3 rounded border-slate-200 bg-slate-50 text-blue-600 focus:ring-blue-500 pointer-events-none"
-                        />
-                        <span className="text-[11px]">{temp}°C</span>
-                      </label>
+                        {temp}°C
+                      </button>
                     );
                   })}
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[#1F2E43]">
+            <div className="foot" style={{ padding: '16px 0 0', borderTop: '1px solid var(--line)' }}>
               <button
                 type="button"
                 onClick={() => setActiveSubTab('list')}
-                className="px-3.5 py-1.5 rounded text-xs font-mono text-slate-400 hover:text-slate-200 cursor-pointer"
+                className="ghost"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="flex items-center gap-2 bg-[#009FE3] hover:bg-[#0089C4] text-white font-mono font-medium text-xs uppercase px-5 py-2 rounded-lg transition-all border border-[#009FE3]/50 cursor-pointer"
+                className="primary"
               >
-                <Save className="h-3.5 w-3.5" />
-                <span>Submit Sample to Lab Queue</span>
+                Submit Sample to Lab Queue
               </button>
             </div>
           </form>
-        </div>
+        </section>
       )}
 
       {/* VIEW B & C: Master-Detail Lab & Decision View */}
       {activeSubTab !== 'new' && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="qc">
           {/* Left Column: Sample Reports List */}
-          <div className="lg:col-span-4 rounded-xl border border-[#1F2E43] bg-[#101927] p-3.5 space-y-2.5 max-h-[850px] overflow-y-auto">
-            <div className="flex items-center justify-between pb-2 border-b border-[#1F2E43] text-[11px] font-mono text-slate-400">
-              <span className="uppercase tracking-wider font-semibold">REFINERY SAMPLES</span>
-              <span className="bg-[#0A1018] text-[#009FE3] px-2 py-0.5 rounded font-semibold border border-[#1F2E43]">{filteredReports.length} in queue</span>
+          <section className="panel" style={{ margin: 0, maxHeight: '850px', overflowY: 'auto' }}>
+            <div className="ph" style={{ flexDirection: 'column', alignItems: 'stretch', fontWeight: 400, gap: '10px' }}>
+              <input
+                className="inp w"
+                type="search"
+                placeholder="Search lot no, product, report no"
+                aria-label="Search samples"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+              />
+              <div className="chips">
+                {[
+                  { id: 'all', label: 'All' },
+                  { id: 'awaiting', label: 'Awaiting' },
+                  { id: 'accepted', label: 'Accepted' },
+                  { id: 'rejected', label: 'Rejected' },
+                ].map(f => (
+                  <button
+                    key={f.id}
+                    className="seg"
+                    aria-pressed={filterStatus === f.id}
+                    type="button"
+                    onClick={() => setFilterStatus(f.id)}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {filteredReports.map(rep => {
-              const isSelected = selectedReport?.id === rep.id;
-              const isRejected = rep.decision?.decision === 'reject';
-              const isAccepted = rep.decision?.decision === 'accept';
-              const isConcession = rep.decision?.decision === 'accept_concession';
+            <div>
+              {filteredReports.map(rep => {
+                const isSelected = selectedReport?.id === rep.id;
+                const isRejected = rep.decision?.decision === 'reject';
+                const isAccepted = rep.decision?.decision === 'accept';
+                const isConcession = rep.decision?.decision === 'accept_concession';
 
-              return (
-                <button
-                  key={rep.id}
-                  onClick={() => setSelectedReportId(rep.id)}
-                  className={`w-full text-left p-3 rounded-lg border transition-all cursor-pointer ${
-                    isSelected
-                      ? 'border-[#009FE3] bg-[#009FE3]/15'
-                      : 'border-[#1F2E43] bg-[#0A1018] hover:bg-[#172235]'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-2">
+                return (
+                  <button
+                    key={rep.id}
+                    className="lot"
+                    aria-pressed={isSelected}
+                    onClick={() => {
+                      setSelectedReportId(rep.id);
+                      setActiveSubTab('detail');
+                    }}
+                  >
                     <div>
-                      <div className="font-mono font-bold text-xs text-slate-100 flex items-center gap-1.5">
-                        <span>{rep.lot_no}</span>
-                      </div>
-                      <div className="text-[11px] text-slate-400 mt-0.5 font-medium flex items-center gap-1.5 font-mono">
-                        <span className="truncate max-w-[140px]">{rep.product_name}</span>
-                      </div>
+                      <b style={{ color: 'var(--text)' }}>{rep.lot_no}</b>
+                      <span className={`bd ${isAccepted ? 'g' : isRejected ? 'r' : isConcession ? 'a' : 'a'}`}>
+                        {isAccepted ? 'Accepted' : isRejected ? 'Rejected' : isConcession ? 'Concession' : 'Awaiting'}
+                      </span>
                     </div>
-
                     <div>
-                      {isRejected ? (
-                        <span className="text-[9px] font-mono text-red-400 bg-red-500/10 px-1.5 py-0.5 rounded border border-red-500/30 font-semibold">
-                          REJECT
-                        </span>
-                      ) : isAccepted ? (
-                        <span className="text-[9px] font-mono text-green-600 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/30 font-semibold">
-                          ACCEPT
-                        </span>
-                      ) : isConcession ? (
-                        <span className="text-[9px] font-mono text-amber-600 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/30 font-semibold">
-                          CONCESSION
-                        </span>
-                      ) : (
-                        <span className="text-[9px] font-mono text-blue-600 bg-blue-600/10 px-1.5 py-0.5 rounded border border-blue-500/30 font-semibold">
-                          AWAITING
-                        </span>
-                      )}
+                      <span>{rep.product_name}</span>
+                      <span>{rep.sample_date} {rep.time_check}</span>
                     </div>
-                  </div>
-
-                  <div className="mt-2 flex items-center justify-between text-[10px] font-mono text-slate-500 border-t border-[#1F2E43] pt-1.5">
-                    <span>{rep.report_no}</span>
-                    <span>{rep.sample_date} {rep.time_check}</span>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
 
           {/* Right Column: Active Sample Lab Result Input & QC Decision */}
-          <div className="lg:col-span-8 space-y-6">
+          <div>
             {selectedReport ? (
-              <div className="rounded-xl border border-[#1F2E43] bg-[#101927] p-5 sm:p-6 space-y-5">
+              <section className="panel" style={{ margin: 0 }}>
                 {/* Sample Header Summary */}
-                <div className="border-b border-[#1F2E43] pb-4 space-y-3">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                    <div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h2 className="text-lg font-bold text-slate-100 font-mono">
-                          {selectedReport.lot_no}
-                        </h2>
-                        <span className="text-xs text-slate-400 font-mono">({selectedReport.report_no})</span>
-                      </div>
-                      <div className="mt-1.5 text-xs text-slate-400 font-mono flex flex-wrap items-center gap-2.5">
-                        <span>Product: <strong className="text-slate-200">{selectedReport.product_name}</strong></span>
-                        <span>•</span>
-                        <span>Batch: <strong className="text-slate-200">{selectedReport.crystallizer_no || selectedReport.batch_no || 'BP-2609-01'}</strong></span>
-                        <span>•</span>
-                        <span>Submitted: <strong className="text-slate-400">{selectedReport.submitted_by_name}</strong></span>
-                      </div>
+                <div className="rh">
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                      <h2 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text)' }}>
+                        {selectedReport.lot_no}
+                      </h2>
+                      <span className="hint">({selectedReport.report_no})</span>
                     </div>
-
-                    {/* QC Decision Action or Badge */}
-                    <div className="flex items-center gap-2.5">
-                      {selectedReport.decision ? (
-                        <>
-                          <div className="text-right">
-                            <div className={`text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-lg border inline-block ${
-                              selectedReport.decision.decision === 'reject'
-                                ? 'bg-red-500/10 text-red-400 border-red-500/30'
-                                : selectedReport.decision.decision === 'accept'
-                                ? 'bg-emerald-500/10 text-green-600 border-emerald-500/30'
-                                : 'bg-amber-500/10 text-amber-600 border-amber-500/30'
-                            }`}>
-                              QC{String(reports.findIndex(r => r.id === selectedReport.id) + 1 || 1).padStart(3, '0')} : {String(selectedReport.decision?.decision || 'PENDING').toUpperCase()}
-                            </div>
-                            <div className="text-[9px] font-mono text-slate-500 mt-0.5">
-                              By: {selectedReport.decision.decided_by_name}
-                            </div>
-                          </div>
-
-                          {(role === 'qc_analyst' || role === 'qc_manager' || role === 'admin') && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setDecisionType(selectedReport.decision?.decision || 'accept');
-                                setIsDecisionModalOpen(true);
-                              }}
-                              className="flex items-center gap-1.5 bg-[#0A1018] hover:bg-[#172235] text-slate-300 hover:text-white border border-[#1F2E43] px-2.5 py-1.5 rounded-md text-xs font-mono transition-colors cursor-pointer"
-                              title="Update or re-record QC Decision"
-                            >
-                              <ShieldCheck className="h-3.5 w-3.5 text-[#009FE3]" />
-                              <span>Update Decision</span>
-                            </button>
-                          )}
-                        </>
-                      ) : (
-                        (role === 'qc_analyst' || role === 'qc_manager' || role === 'admin') && (
-                          <button
-                            onClick={() => setIsDecisionModalOpen(true)}
-                            className="flex items-center gap-1.5 bg-[#009FE3] hover:bg-[#0089C4] text-white font-mono font-medium text-xs uppercase px-3.5 py-2 rounded-lg transition-all border border-[#009FE3]/50 cursor-pointer"
-                          >
-                            <ShieldCheck className="h-3.5 w-3.5" />
-                            <span>Record Decision</span>
-                          </button>
-                        )
-                      )}
-
-                      {/* Direct Navigation to RF-FR-001 Certificate */}
-                      {onNavigateToCertificate && (
-                        <button
-                          type="button"
-                          onClick={() => onNavigateToCertificate(selectedReport.id)}
-                          className="flex items-center gap-1.5 bg-[#0A1018] hover:bg-[#172235] text-slate-300 hover:text-white border border-[#1F2E43] px-2.5 py-1.5 rounded-md text-xs font-mono transition-colors cursor-pointer"
-                          title="View & export official RF-FR-001 Certificate"
-                        >
-                          <FileText className="h-3.5 w-3.5 text-[#009FE3]" />
-                          <span>Certificate</span>
-                        </button>
-                      )}
-
-                      {/* Delete Sample Action for QC */}
-                      {canEdit && (
-                        <button
-                          type="button"
-                          onClick={() => setReportToDelete(selectedReport)}
-                          className="flex items-center gap-1.5 bg-red-950/40 hover:bg-red-900/60 text-red-300 hover:text-red-200 border border-red-800/60 px-2.5 py-1.5 rounded-md text-xs font-mono transition-colors cursor-pointer"
-                          title="Delete this sample analysis (QC correction)"
-                        >
-                          <Trash2 className="h-3.5 w-3.5 text-red-400" />
-                          <span>Delete Sample</span>
-                        </button>
-                      )}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '6px', fontSize: '13px', color: 'var(--muted)', flexWrap: 'wrap' }}>
+                      <span>Product: <strong style={{ color: 'var(--text)' }}>{selectedReport.product_name}</strong></span>
+                      <span>•</span>
+                      <span>Batch: <strong style={{ color: 'var(--text)' }}>{selectedReport.crystallizer_no || selectedReport.batch_no || 'BP-2609-01'}</strong></span>
+                      <span>•</span>
+                      <span>Submitted: <strong>{selectedReport.submitted_by_name}</strong></span>
                     </div>
                   </div>
 
-                  {/* QC Operational Sampling Point & Crystallizer / Batch No Selection Bar */}
-                  <div className="pt-3 border-t border-[#1F2E43]/60 grid grid-cols-1 sm:grid-cols-2 gap-3 bg-[#0A1018] p-3 rounded-lg border border-[#1F2E43]">
-                    <div>
-                      <label className="block text-[10px] font-mono text-slate-400 uppercase tracking-wider font-semibold mb-1 flex items-center gap-1.5">
-                        <span className="text-[#009FE3]">📍</span> Sampling Point (QC Selection):
-                      </label>
-                      <select
-                        value={qcSamplingPointId}
-                        disabled={!canEdit}
-                        onChange={e => {
-                          const val = e.target.value;
-                          setQcSamplingPointId(val);
-                          const matched = samplingPoints.find(sp => sp.id === val);
-                          if (selectedReport) {
-                            selectedReport.sampling_point_id = val;
-                            selectedReport.sampling_point_name = matched?.name || '';
-                          }
-                        }}
-                        className="w-full bg-[#101927] border border-[#1F2E43] rounded-md px-2.5 py-1.5 text-xs font-mono text-slate-200 cursor-pointer focus:outline-none focus:border-[#009FE3] disabled:opacity-50"
-                      >
-                        <option value="" className="bg-[#101927] text-slate-400">-- Select Sampling Point --</option>
-                        {samplingPoints.map(sp => (
-                          <option key={sp.id} value={sp.id} className="bg-[#101927] text-slate-200">
-                            {sp.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                  {/* Actions & Decision */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    {selectedReport.decision ? (
+                      <>
+                        <span className={`bd ${selectedReport.decision.decision === 'reject' ? 'r' : selectedReport.decision.decision === 'accept' ? 'g' : 'a'}`}>
+                          QC: {String(selectedReport.decision.decision).toUpperCase()}
+                        </span>
 
-                    <div>
-                      <label className="block text-[10px] font-mono text-slate-400 uppercase tracking-wider font-semibold mb-1 flex items-center gap-1.5">
-                        <span className="text-[#009FE3]">🏷️</span> Crystallizer / Batch No:
-                      </label>
-                      <input
-                        type="text"
-                        placeholder="e.g. CR-04 / B260904"
-                        disabled={!canEdit}
-                        value={qcCrystallizerBatch}
-                        onChange={e => {
-                          const val = e.target.value;
-                          setQcCrystallizerBatch(val);
-                          if (selectedReport) {
-                            if (val.includes('/')) {
-                              const [c, b] = val.split('/');
-                              selectedReport.crystallizer_no = c?.trim();
-                              selectedReport.batch_no = b?.trim();
-                            } else {
-                              selectedReport.crystallizer_no = val.trim();
-                              selectedReport.batch_no = val.trim();
-                            }
+                        {(role === 'qc_analyst' || role === 'qc_manager' || role === 'admin') && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDecisionType(selectedReport.decision?.decision || 'accept');
+                              setIsDecisionModalOpen(true);
+                            }}
+                            className="ghost"
+                          >
+                            Update Decision
+                          </button>
+                        )}
+                      </>
+                    ) : (
+                      (role === 'qc_analyst' || role === 'qc_manager' || role === 'admin') && (
+                        <button
+                          type="button"
+                          onClick={() => setIsDecisionModalOpen(true)}
+                          className="primary"
+                        >
+                          Record Decision
+                        </button>
+                      )
+                    )}
+
+                    {onNavigateToCertificate && (
+                      <button
+                        type="button"
+                        onClick={() => onNavigateToCertificate(selectedReport.id)}
+                        className="ghost"
+                      >
+                        Certificate
+                      </button>
+                    )}
+
+                    {canEdit && (
+                      <button
+                        type="button"
+                        onClick={() => setReportToDelete(selectedReport)}
+                        className="ghost dng"
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Sampling Point & Batch row */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', padding: '20px 28px', borderBottom: '1px solid var(--line)' }}>
+                  <div className="fld" style={{ margin: 0 }}>
+                    <label>Sampling Point (QC Selection):</label>
+                    <select
+                      value={qcSamplingPointId}
+                      disabled={!canEdit}
+                      onChange={e => {
+                        const val = e.target.value;
+                        setQcSamplingPointId(val);
+                        const matched = samplingPoints.find(sp => sp.id === val);
+                        if (selectedReport) {
+                          selectedReport.sampling_point_id = val;
+                          selectedReport.sampling_point_name = matched?.name || '';
+                        }
+                      }}
+                      className="inp"
+                      style={{ width: '100%' }}
+                    >
+                      <option value="">-- Select Sampling Point --</option>
+                      {samplingPoints.map(sp => (
+                        <option key={sp.id} value={sp.id}>{sp.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="fld" style={{ margin: 0 }}>
+                    <label>Crystallizer / Batch No:</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. CR-04 / B260904"
+                      disabled={!canEdit}
+                      value={qcCrystallizerBatch}
+                      onChange={e => {
+                        const val = e.target.value;
+                        setQcCrystallizerBatch(val);
+                        if (selectedReport) {
+                          if (val.includes('/')) {
+                            const [c, b] = val.split('/');
+                            selectedReport.crystallizer_no = c?.trim();
+                            selectedReport.batch_no = b?.trim();
+                          } else {
+                            selectedReport.crystallizer_no = val.trim();
+                            selectedReport.batch_no = val.trim();
                           }
-                        }}
-                        className="w-full bg-[#101927] border border-[#1F2E43] rounded-md px-2.5 py-1.5 text-xs font-mono text-slate-200 placeholder-slate-500 focus:outline-none focus:border-[#009FE3] disabled:opacity-50"
-                      />
-                    </div>
+                        }
+                      }}
+                      className="inp"
+                      style={{ width: '100%' }}
+                    />
                   </div>
                 </div>
 
                 {/* Rejection Alert Banner if lot was rejected */}
                 {selectedReport.decision?.decision === 'reject' && (
-                  <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3.5 font-mono">
-                    <div className="flex items-center gap-2 text-red-400 font-bold text-xs mb-1">
-                      <XCircle className="h-4 w-4" />
-                      <span>LOT REJECTED: {selectedReport.decision.reason_label}</span>
+                  <div style={{ margin: '20px 28px', padding: '16px', background: 'rgba(216,31,44,.12)', borderRadius: '10px', border: '1px solid rgba(216,31,44,.4)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--redt)', fontWeight: 600, fontSize: '13px' }}>
+                      <span className="bd r">REJECTED</span>
+                      <span>{selectedReport.decision.reason_label}</span>
                     </div>
-                    <p className="text-xs text-red-300 leading-relaxed">
+                    <p style={{ marginTop: '6px', fontSize: '13px', color: 'var(--text)' }}>
                       {selectedReport.decision.reason_detail}
                     </p>
-                    <div className="mt-2 text-[10px] text-red-400 flex items-center gap-3">
-                      <span>Disposition: <strong className="uppercase underline">{selectedReport.decision.disposition}</strong></span>
-                      <span>•</span>
-                      <span>Decided: {selectedReport.decision.decided_at}</span>
+                    <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--muted)' }}>
+                      Disposition: <strong style={{ color: 'var(--redt)', textTransform: 'uppercase' }}>{selectedReport.decision.disposition}</strong> · Decided: {selectedReport.decision.decided_at}
                     </div>
                   </div>
                 )}
 
                 {/* Success alert on result saving */}
                 {resultsSuccess && (
-                  <div className="rounded-lg bg-emerald-500/10 p-3 text-xs text-emerald-300 border border-emerald-500/30 flex items-center gap-2 font-mono">
-                    <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
-                    <span>{resultsSuccess}</span>
+                  <div style={{ margin: '20px 28px', padding: '14px', background: 'rgba(63,179,127,.12)', borderRadius: '10px', border: '1px solid rgba(63,179,127,.4)', color: 'var(--green)', fontSize: '13px' }}>
+                    {resultsSuccess}
                   </div>
                 )}
 
                 {/* Parameter Test Input Form */}
-                <form onSubmit={handleSaveResults} className="space-y-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 font-mono">
-                        Lab Analysis Results Entry
-                      </span>
-                    </div>
+                <form onSubmit={handleSaveResults}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 28px', borderBottom: '1px solid var(--line)' }}>
+                    <span style={{ fontWeight: 600, fontSize: '13px', color: 'var(--text)' }}>
+                      Laboratory Analytical Parameters
+                    </span>
 
                     {(role === 'qc_analyst' || role === 'qc_manager' || role === 'admin') && (
-                      <div className="flex flex-wrap items-center gap-1.5">
+                      <div style={{ display: 'flex', gap: '8px' }}>
                         <button
                           type="button"
                           onClick={handleApplyProductSpec}
-                          className="text-[10px] font-mono px-2.5 py-1 rounded-md bg-[#0A1018] hover:bg-[#172235] text-slate-300 hover:text-white border border-[#1F2E43] transition-colors cursor-pointer"
-                          title="Tick only parameters specified for this product"
+                          className="ghost"
+                          style={{ height: '30px', fontSize: '12px', padding: '0 10px' }}
                         >
                           Product Spec Only
                         </button>
                         <button
                           type="button"
                           onClick={handleTickAll}
-                          className="text-[10px] font-mono px-2.5 py-1 rounded-md bg-[#0A1018] hover:bg-[#172235] text-slate-300 hover:text-white border border-[#1F2E43] transition-colors cursor-pointer"
+                          className="ghost"
+                          style={{ height: '30px', fontSize: '12px', padding: '0 10px' }}
                         >
                           Tick All
                         </button>
                         <button
                           type="button"
                           onClick={handleUntickAll}
-                          className="text-[10px] font-mono px-2.5 py-1 rounded-md bg-[#0A1018] hover:bg-[#172235] text-slate-400 border border-[#1F2E43] transition-colors cursor-pointer"
+                          className="ghost"
+                          style={{ height: '30px', fontSize: '12px', padding: '0 10px' }}
                         >
                           Untick All
                         </button>
@@ -1224,19 +1127,17 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                     )}
                   </div>
 
-                  <div className="rounded-xl border border-[#1F2E43] bg-[#0A1018] overflow-hidden">
-                    <table className="w-full text-left text-xs">
-                      <thead className="bg-[#101927] text-slate-400 font-mono text-[10px] uppercase tracking-wider border-b border-[#1F2E43]">
+                  <div className="tw">
+                    <table>
+                      <thead>
                         <tr>
-                          <th className="py-2.5 px-3 text-center w-14" title="Tick to test parameter, untick if product does not require it">
-                            Test (✓)
-                          </th>
-                          <th className="py-2.5 px-3">Parameter Name</th>
-                          <th className="py-2.5 px-3 w-20">Unit</th>
-                          <th className="py-2.5 px-3 w-56">Lab Result</th>
+                          <th style={{ width: '60px', textAlign: 'center' }}>Test</th>
+                          <th>Parameter Name</th>
+                          <th style={{ width: '100px' }}>Unit</th>
+                          <th style={{ width: '220px' }}>Lab Result</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-[#1F2E43] font-mono text-xs">
+                      <tbody>
                         {/* 1. Standard Laboratory Parameters */}
                         {standardResults.map(res => {
                           const inputVal = resultInputs[res.id] || {};
@@ -1244,37 +1145,29 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                           const canEdit = (role === 'qc_analyst' || role === 'qc_manager' || role === 'admin');
 
                           return (
-                            <tr
-                              key={res.id}
-                              className={`transition-colors ${
-                                isUnticked
-                                  ? 'opacity-40 bg-[#070B12]'
-                                  : 'hover:bg-[#101927]'
-                              }`}
-                            >
-                              <td className="py-2.5 px-3 text-center">
+                            <tr key={res.id} style={{ opacity: isUnticked ? 0.45 : 1 }}>
+                              <td style={{ textAlign: 'center' }}>
                                 <input
                                   type="checkbox"
                                   checked={!isUnticked}
                                   onChange={e => handleToggleResultParam(res.id, e.target.checked)}
                                   disabled={!canEdit}
-                                  className="h-3.5 w-3.5 rounded border-[#1F2E43] bg-[#101927] text-[#009FE3] focus:ring-[#009FE3] cursor-pointer disabled:opacity-50"
-                                  title={isUnticked ? "Unticked: Test not applicable" : "Ticked: Active parameter"}
+                                  style={{ accentColor: 'var(--red)', width: '16px', height: '16px', cursor: 'pointer' }}
                                 />
                               </td>
-                              <td className={`py-2.5 px-3 font-sans ${isUnticked ? 'text-slate-500' : 'text-slate-200 font-medium'}`}>
+                              <td style={{ fontWeight: isUnticked ? 400 : 500, color: 'var(--text)' }}>
                                 {res.parameter_name}
                               </td>
-                              <td className={`py-2.5 px-3 ${isUnticked ? 'text-slate-500' : 'text-slate-400'}`}>
-                                {res.unit || '-'}
+                              <td style={{ color: 'var(--muted)', fontSize: '13px' }}>
+                                {res.unit || '–'}
                               </td>
-                              <td className="py-2.5 px-3">
+                              <td>
                                 {isUnticked ? (
                                   <input
                                     type="text"
                                     disabled
-                                    value="N/A - Unticked"
-                                    className="w-full bg-[#101927] border border-[#1F2E43] rounded-md px-2.5 py-1 text-xs text-slate-500 cursor-not-allowed font-mono italic"
+                                    value="N/A – Unticked"
+                                    style={{ color: 'var(--muted)', fontStyle: 'italic' }}
                                   />
                                 ) : res.parameter_code === 'ODOUR' ? (
                                   <select
@@ -1284,16 +1177,15 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                                       ...prev,
                                       [res.id]: { ...prev[res.id], text: e.target.value }
                                     }))}
-                                    className="w-full bg-[#101927] border border-[#1F2E43] rounded-md px-2.5 py-1 text-xs text-slate-200 focus:border-[#009FE3] disabled:opacity-50 font-mono cursor-pointer"
                                   >
-                                    <option value="bland" className="bg-[#101927] text-slate-200">Bland (Normal)</option>
-                                    <option value="acceptable" className="bg-[#101927] text-slate-200">Acceptable</option>
-                                    <option value="off" className="bg-[#101927] text-slate-200">Off / Burnt Odour</option>
+                                    <option value="bland">Bland (Normal)</option>
+                                    <option value="acceptable">Acceptable</option>
+                                    <option value="off">Off / Burnt Odour</option>
                                   </select>
                                 ) : (
                                   <input
                                     type="number"
-                                    step={res.parameter_code === 'SFC' || res.parameter_code === 'BPP' || res.parameter_code === 'SLIP_MELT' || res.parameter_code === 'CLOUD_POINT' || res.parameter_code === 'SOAP' || res.parameter_code === 'IV' || res.parameter_code === 'COLOUR_R' || res.parameter_code === 'COLOUR_Y' ? "0.1" : "0.001"}
+                                    step={res.parameter_code === 'SFC' || res.parameter_code === 'BPP' || res.parameter_code === 'SLIP_MELT' || res.parameter_code === 'CLOUD_POINT' || res.parameter_code === 'SOAP' || res.parameter_code === 'IV' || res.parameter_code === 'COLOUR_R' || res.parameter_code === 'COLOUR_Y' ? '0.1' : '0.001'}
                                     disabled={!canEdit}
                                     placeholder="Enter value"
                                     value={inputVal.num ?? ''}
@@ -1301,7 +1193,6 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                                       ...prev,
                                       [res.id]: { ...prev[res.id], num: e.target.value ? Number(e.target.value) : undefined }
                                     }))}
-                                    className="w-full bg-[#101927] border border-[#1F2E43] rounded-md px-2.5 py-1 text-xs text-slate-100 focus:border-[#009FE3] disabled:opacity-50 font-mono"
                                   />
                                 )}
                               </td>
@@ -1311,56 +1202,31 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
 
                         {/* 2. Master Temperature Row */}
                         {tempResults.length > 0 && (
-                          <tr className={`border-t border-[#1F2E43] transition-colors ${
-                            !isTempAnyTicked
-                              ? 'bg-[#070B12] opacity-60'
-                              : 'bg-[#101927]'
-                          }`}>
-                            <td className="py-2.5 px-3 text-center">
+                          <tr style={{ background: 'var(--raised)' }}>
+                            <td style={{ textAlign: 'center' }}>
                               <input
                                 type="checkbox"
                                 checked={isTempAllTicked}
                                 onChange={e => handleToggleMasterTemp(e.target.checked)}
                                 disabled={!(role === 'qc_analyst' || role === 'qc_manager' || role === 'admin')}
-                                className="h-3.5 w-3.5 rounded border-[#1F2E43] bg-[#0A1018] text-[#009FE3] focus:ring-[#009FE3] cursor-pointer disabled:opacity-50"
-                                title={isTempAllTicked ? "Untick all 9 temperatures" : "Tick all 9 temperatures"}
+                                style={{ accentColor: 'var(--red)', width: '16px', height: '16px', cursor: 'pointer' }}
                               />
                             </td>
-                            <td className="py-2.5 px-3">
-                              <div className="flex flex-wrap items-center gap-2">
-                                <span className={`font-semibold font-sans ${isTempAnyTicked ? 'text-slate-100' : 'text-slate-400'}`}>
-                                  Temperature
-                                </span>
-                              </div>
+                            <td>
+                              <span style={{ fontWeight: 600, color: 'var(--text)' }}>
+                                Temperature Test Series
+                              </span>
                             </td>
-                            <td className="py-2.5 px-3 text-slate-400 font-mono">
-                              -
-                            </td>
-                            <td className="py-2.5 px-3">
-                              <div className="flex items-center justify-between gap-2">
-                                <span className="text-[10px] font-mono text-slate-400 font-medium">
-                                  {activeTempCount === 9
-                                    ? 'All 9 Active'
-                                    : activeTempCount === 0
-                                    ? 'None Active'
-                                    : `${activeTempCount} / 9 Active`}
+                            <td style={{ color: 'var(--muted)' }}>–</td>
+                            <td>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span style={{ fontSize: '12px', color: 'var(--muted)' }}>
+                                  {activeTempCount === 9 ? 'All 9 Active' : activeTempCount === 0 ? 'None Active' : `${activeTempCount} / 9 Active`}
                                 </span>
                                 {(role === 'qc_analyst' || role === 'qc_manager' || role === 'admin') && (
-                                  <div className="flex items-center gap-1">
-                                    <button
-                                      type="button"
-                                      onClick={() => handleToggleMasterTemp(true)}
-                                      className="text-[9px] font-mono px-2 py-0.5 rounded bg-[#0A1018] hover:bg-[#172235] text-slate-300 hover:text-white border border-[#1F2E43] transition-colors cursor-pointer"
-                                    >
-                                      All
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleToggleMasterTemp(false)}
-                                      className="text-[9px] font-mono px-2 py-0.5 rounded bg-[#0A1018] hover:bg-[#172235] text-slate-400 border border-[#1F2E43] transition-colors cursor-pointer"
-                                    >
-                                      Clear
-                                    </button>
+                                  <div style={{ display: 'flex', gap: '6px' }}>
+                                    <button type="button" onClick={() => handleToggleMasterTemp(true)} className="ghost" style={{ height: '24px', fontSize: '11px', padding: '0 6px' }}>All</button>
+                                    <button type="button" onClick={() => handleToggleMasterTemp(false)} className="ghost" style={{ height: '24px', fontSize: '11px', padding: '0 6px' }}>Clear</button>
                                   </div>
                                 )}
                               </div>
@@ -1375,42 +1241,29 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                           const canEdit = (role === 'qc_analyst' || role === 'qc_manager' || role === 'admin');
 
                           return (
-                            <tr
-                              key={res.id}
-                              className={`transition-colors border-l-2 ${
-                                isUnticked
-                                  ? 'opacity-40 bg-[#070B12] border-l-[#1F2E43]'
-                                  : 'hover:bg-[#101927] border-l-[#009FE3] bg-[#009FE3]/5'
-                              }`}
-                            >
-                              <td className="py-2.5 px-3 text-center">
+                            <tr key={res.id} style={{ opacity: isUnticked ? 0.45 : 1 }}>
+                              <td style={{ textAlign: 'center' }}>
                                 <input
                                   type="checkbox"
                                   checked={!isUnticked}
                                   onChange={e => handleToggleResultParam(res.id, e.target.checked)}
                                   disabled={!canEdit}
-                                  className="h-3.5 w-3.5 rounded border-[#1F2E43] bg-[#101927] text-[#009FE3] focus:ring-[#009FE3] cursor-pointer disabled:opacity-50"
-                                  title={isUnticked ? `Unticked: Temperature ${res.series_key}°C not tested` : `Ticked: Test Temperature ${res.series_key}°C`}
+                                  style={{ accentColor: 'var(--red)', width: '16px', height: '16px', cursor: 'pointer' }}
                                 />
                               </td>
-                              <td className="py-2.5 px-3 font-sans">
-                                <div className="flex items-center gap-2 pl-3">
-                                  <span className="text-[#009FE3] font-mono text-xs select-none">↳</span>
-                                  <span className={`font-medium ${isUnticked ? 'text-slate-500' : 'text-slate-200'}`}>
-                                    Temperature {res.series_key}°C
-                                  </span>
-                                </div>
+                              <td style={{ paddingLeft: '28px', color: 'var(--text)' }}>
+                                ↳ Temperature {res.series_key}°C
                               </td>
-                              <td className={`py-2.5 px-3 ${isUnticked ? 'text-slate-500' : 'text-slate-400'}`}>
-                                {res.parameter_code === 'TEMP' ? '-' : (res.unit || '-')}
+                              <td style={{ color: 'var(--muted)', fontSize: '13px' }}>
+                                {res.parameter_code === 'TEMP' ? '–' : (res.unit || '–')}
                               </td>
-                              <td className="py-2.5 px-3">
+                              <td>
                                 {isUnticked ? (
                                   <input
                                     type="text"
                                     disabled
-                                    value="N/A - Unticked"
-                                    className="w-full bg-[#101927] border border-[#1F2E43] rounded-md px-2.5 py-1 text-xs text-slate-500 cursor-not-allowed font-mono italic"
+                                    value="N/A – Unticked"
+                                    style={{ color: 'var(--muted)', fontStyle: 'italic' }}
                                   />
                                 ) : (
                                   <input
@@ -1429,7 +1282,6 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                                         }
                                       }));
                                     }}
-                                    className="w-full bg-[#101927] border border-[#1F2E43] rounded-md px-2.5 py-1 text-xs text-slate-100 focus:border-[#009FE3] disabled:opacity-50 font-mono"
                                   />
                                 )}
                               </td>
@@ -1441,151 +1293,125 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                   </div>
 
                   {/* QC Operating Conditions & Remarks Section */}
-                  <div className="rounded-xl border border-[#1F2E43] bg-[#0A1018] p-4 space-y-3">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#1F2E43] pb-2">
-                      <div className="flex items-center gap-2">
-                        <FileText className="h-3.5 w-3.5 text-[#009FE3]" />
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono">
-                          QC OPERATING CONDITIONS & REMARKS
-                        </span>
-                      </div>
-                      <span className="text-[10px] font-mono text-slate-400">
-                        Tick operating conditions & record laboratory observations
-                      </span>
-                    </div>
+                  <div className="row">
+                    <label style={{ display: 'block', fontWeight: 600, marginBottom: '10px' }}>
+                      QC Operating Conditions & Remarks
+                    </label>
 
-                    {/* Checkboxes: Flushing, Cooling, Push over */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      <label className={`flex items-start gap-2.5 p-2.5 rounded-lg border transition-all cursor-pointer select-none ${
-                        qcRemarkFlushing 
-                          ? 'bg-amber-950/40 border-amber-800 text-amber-300' 
-                          : 'bg-[#101927] border-[#1F2E43] text-slate-400 hover:border-slate-600'
-                      }`}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px', marginBottom: '14px', fontSize: '13px', color: 'var(--text)' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                         <input
                           type="checkbox"
                           disabled={!canEdit}
                           checked={qcRemarkFlushing}
                           onChange={e => setQcRemarkFlushing(e.target.checked)}
-                          className="mt-0.5 h-3.5 w-3.5 rounded border-[#1F2E43] bg-[#0A1018] text-amber-500 focus:ring-amber-500 cursor-pointer"
+                          style={{ accentColor: 'var(--red)' }}
                         />
-                        <div className="font-mono text-xs">
-                          <div className="font-semibold text-slate-200 text-xs">Flushing</div>
-                          <div className="text-[10px] text-slate-400">Sampling line flushed</div>
-                        </div>
+                        <span>Flushing (Sampling line flushed)</span>
                       </label>
 
-                      <label className={`flex items-start gap-2.5 p-2.5 rounded-lg border transition-all cursor-pointer select-none ${
-                        qcRemarkCooling 
-                          ? 'bg-[#009FE3]/15 border-[#009FE3]/40 text-[#009FE3]' 
-                          : 'bg-[#101927] border-[#1F2E43] text-slate-400 hover:border-slate-600'
-                      }`}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                         <input
                           type="checkbox"
                           disabled={!canEdit}
                           checked={qcRemarkCooling}
                           onChange={e => setQcRemarkCooling(e.target.checked)}
-                          className="mt-0.5 h-3.5 w-3.5 rounded border-[#1F2E43] bg-[#0A1018] text-[#009FE3] focus:ring-[#009FE3] cursor-pointer"
+                          style={{ accentColor: 'var(--red)' }}
                         />
-                        <div className="font-mono text-xs">
-                          <div className="font-semibold text-slate-200 text-xs">Cooling</div>
-                          <div className="text-[10px] text-slate-400">Crystallizer active cooling</div>
-                        </div>
+                        <span>Cooling (Crystallizer active cooling)</span>
                       </label>
 
-                      <label className={`flex items-start gap-2.5 p-2.5 rounded-lg border transition-all cursor-pointer select-none ${
-                        qcRemarkPushover 
-                          ? 'bg-[#009FE3]/15 border-[#009FE3]/40 text-[#009FE3]' 
-                          : 'bg-[#101927] border-[#1F2E43] text-slate-400 hover:border-slate-600'
-                      }`}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                         <input
                           type="checkbox"
                           disabled={!canEdit}
                           checked={qcRemarkPushover}
                           onChange={e => setQcRemarkPushover(e.target.checked)}
-                          className="mt-0.5 h-3.5 w-3.5 rounded border-[#1F2E43] bg-[#0A1018] text-[#009FE3] focus:ring-[#009FE3] cursor-pointer"
+                          style={{ accentColor: 'var(--red)' }}
                         />
-                        <div className="font-mono text-xs">
-                          <div className="font-semibold text-slate-200 text-xs">Push over</div>
-                          <div className="text-[10px] text-slate-400">Pushover transfer operation</div>
-                        </div>
+                        <span>Push over (Transfer operation)</span>
                       </label>
                     </div>
 
-                    {/* Blank Remarks Box for QC to Type */}
-                    <div>
-                      <label className="block text-[11px] font-mono text-slate-400 mb-1">
-                        Remarks & Observations:
-                      </label>
-                      <textarea
-                        disabled={!canEdit}
-                        rows={2}
-                        placeholder="Type remarks here (appearance, clarity, moisture haze, process deviations)..."
-                        value={qcRemarksText}
-                        onChange={e => setQcRemarksText(e.target.value)}
-                        className="w-full bg-[#101927] border border-[#1F2E43] rounded-lg px-3 py-2 text-xs font-mono text-slate-100 placeholder-slate-500 focus:outline-none focus:border-[#009FE3] disabled:opacity-50 resize-none"
-                      />
-                    </div>
+                    <textarea
+                      disabled={!canEdit}
+                      rows={2}
+                      placeholder="Type remarks here (appearance, clarity, moisture haze, process deviations)..."
+                      value={qcRemarksText}
+                      onChange={e => setQcRemarksText(e.target.value)}
+                      className="rem"
+                    />
                   </div>
 
                   {(role === 'qc_analyst' || role === 'qc_manager' || role === 'admin') && (
-                    <div className="flex items-center justify-end pt-2">
+                    <div className="foot">
+                      <p>All recorded laboratory entries comply with ISO / 21 CFR Part 11 integrity standards.</p>
                       <button
                         type="submit"
-                        className="flex items-center gap-2 bg-[#009FE3] hover:bg-[#0089C4] text-white font-mono font-medium text-xs uppercase px-5 py-2 rounded-lg transition-all border border-[#009FE3]/50 cursor-pointer"
+                        className="primary"
                       >
-                        <Save className="h-3.5 w-3.5" />
-                        <span>Commit Lab Results</span>
+                        Commit Lab Results
                       </button>
                     </div>
                   )}
                 </form>
-              </div>
+              </section>
             ) : (
-              <div className="rounded-xl border border-[#1F2E43] bg-[#101927] p-12 text-center text-slate-400 text-xs font-mono">
+              <section className="panel empty">
                 Select a sample report from the queue on the left.
-              </div>
+              </section>
             )}
           </div>
         </div>
       )}
 
+
       {/* 3. QC Decision Modal with Electronic Signature */}
       {isDecisionModalOpen && selectedReport && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg rounded-xl border border-[#1F2E43] bg-[#101927] p-6 shadow-2xl space-y-4">
-            <div className="flex items-center gap-3 text-[#009FE3] border-b border-[#1F2E43] pb-3">
-              <ShieldCheck className="h-5 w-5" />
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 50,
+          display: 'grid',
+          placeItems: 'center',
+          background: 'rgba(0, 0, 0, 0.75)',
+          backdropFilter: 'blur(4px)',
+          padding: '20px'
+        }}>
+          <div className="panel" style={{ maxWidth: '500px', width: '100%', margin: 0, padding: '24px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', borderBottom: '1px solid var(--line)', pb: '12px' }}>
               <div>
-                <h3 className="text-base font-bold text-slate-100 font-sans">
+                <h3 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text)' }}>
                   QC Formal Decision: {selectedReport.lot_no}
                 </h3>
-                <p className="text-xs text-slate-400 font-mono">
+                <p className="hint" style={{ marginTop: '2px' }}>
                   {selectedReport.product_name} · Report {selectedReport.report_no}
                 </p>
               </div>
+              <button
+                type="button"
+                onClick={() => setIsDecisionModalOpen(false)}
+                className="ghost"
+                style={{ height: '30px', width: '30px', padding: 0 }}
+              >
+                ✕
+              </button>
             </div>
 
             {decisionError && (
-              <div className="rounded-lg bg-red-500/10 p-2.5 text-xs text-red-300 border border-red-500/30 font-mono">
-                {decisionError}
-              </div>
+              <p className="err" style={{ marginBottom: '12px' }}>{decisionError}</p>
             )}
 
-            <form onSubmit={handleSubmitDecision} className="space-y-4">
+            <form onSubmit={handleSubmitDecision}>
               {/* Decision Type Buttons */}
-              <div>
-                <label className="block text-[11px] font-mono text-slate-500 mb-1.5 uppercase tracking-wider font-semibold">
-                  Select QC Disposition:
-                </label>
-                <div className="grid grid-cols-3 gap-2">
+              <div className="fld">
+                <label>Select QC Disposition:</label>
+                <div className="segs" style={{ '--c': 3, margin: 0 } as React.CSSProperties}>
                   <button
                     type="button"
                     onClick={() => setDecisionType('accept')}
-                    className={`py-2 px-3 rounded-lg border text-xs font-mono font-medium transition-all cursor-pointer ${
-                      decisionType === 'accept'
-                        ? 'bg-emerald-950/60 border-emerald-500 text-emerald-300 font-semibold'
-                        : 'border-[#1F2E43] bg-[#0A1018] text-slate-400 hover:text-slate-200'
-                    }`}
+                    className="seg"
+                    aria-pressed={decisionType === 'accept'}
                   >
                     ACCEPT
                   </button>
@@ -1593,11 +1419,8 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                   <button
                     type="button"
                     onClick={() => setDecisionType('accept_concession')}
-                    className={`py-2 px-3 rounded-lg border text-xs font-mono font-medium transition-all cursor-pointer ${
-                      decisionType === 'accept_concession'
-                        ? 'bg-amber-950/60 border-amber-500 text-amber-300 font-semibold'
-                        : 'border-[#1F2E43] bg-[#0A1018] text-slate-400 hover:text-slate-200'
-                    }`}
+                    className="seg"
+                    aria-pressed={decisionType === 'accept_concession'}
                   >
                     CONCESSION
                   </button>
@@ -1605,11 +1428,8 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                   <button
                     type="button"
                     onClick={() => setDecisionType('reject')}
-                    className={`py-2 px-3 rounded-lg border text-xs font-mono font-medium transition-all cursor-pointer ${
-                      decisionType === 'reject'
-                        ? 'bg-rose-950/60 border-rose-500 text-rose-300 font-semibold'
-                        : 'border-[#1F2E43] bg-[#0A1018] text-slate-400 hover:text-slate-200'
-                    }`}
+                    className="seg"
+                    aria-pressed={decisionType === 'reject'}
                   >
                     REJECT
                   </button>
@@ -1619,84 +1439,80 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
               {/* Mandatory Rejection fields */}
               {decisionType !== 'accept' && (
                 <>
-                  <div>
-                    <label className="block text-[11px] font-mono text-slate-500 mb-1 uppercase tracking-wider font-semibold">
-                      Rejection Reason Code (Pareto categorized) *
-                    </label>
+                  <div className="fld">
+                    <label>Rejection Reason Code (Pareto categorized) *</label>
                     <select
                       required
                       value={decisionReasonId}
                       onChange={e => setDecisionReasonId(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono text-slate-900 cursor-pointer focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30"
+                      className="inp"
+                      style={{ width: '100%' }}
                     >
-                      <option value="" className="bg-slate-50 text-slate-900">-- Choose Reason Code --</option>
+                      <option value="">-- Choose Reason Code --</option>
                       {reasons.map(r => (
-                        <option key={r.id} value={r.id} className="bg-slate-50 text-slate-900">{r.label}</option>
+                        <option key={r.id} value={r.id}>{r.label}</option>
                       ))}
                     </select>
                   </div>
 
                   {decisionType === 'reject' && (
-                    <div>
-                      <label className="block text-[11px] font-mono text-slate-500 mb-1 uppercase tracking-wider font-semibold">
-                        Mandatory Product Disposition *
-                      </label>
+                    <div className="fld">
+                      <label>Mandatory Product Disposition *</label>
                       <select
                         value={decisionDisposition}
                         onChange={e => setDecisionDisposition(e.target.value as Disposition)}
-                        className="w-full bg-[#0A1018] border border-[#1F2E43] rounded-lg px-3 py-2 text-xs font-mono text-amber-400 font-semibold cursor-pointer focus:border-[#009FE3]"
+                        className="inp"
+                        style={{ width: '100%', color: 'var(--amber)', fontWeight: 600 }}
                       >
-                        <option value="reprocess" className="bg-[#101927] text-slate-200">Reprocess (Return to Deodorizer)</option>
-                        <option value="rework" className="bg-[#101927] text-slate-200">Rework (Bleaching/Pre-treatment)</option>
-                        <option value="downgrade" className="bg-[#101927] text-slate-200">Downgrade to Lower Grade Product</option>
-                        <option value="hold" className="bg-[#101927] text-slate-200">Quality Hold (Quarantine Tank)</option>
-                        <option value="scrap" className="bg-[#101927] text-slate-200">Scrap / By-product Tank</option>
+                        <option value="reprocess">Reprocess (Return to Deodorizer)</option>
+                        <option value="rework">Rework (Bleaching/Pre-treatment)</option>
+                        <option value="downgrade">Downgrade to Lower Grade Product</option>
+                        <option value="hold">Quality Hold (Quarantine Tank)</option>
+                        <option value="scrap">Scrap / By-product Tank</option>
                       </select>
                     </div>
                   )}
 
-                  <div>
-                    <label className="block text-[11px] font-mono text-slate-500 mb-1 uppercase tracking-wider font-semibold">
-                      Reason Narrative (Audit explanation, min 10 chars) *
-                    </label>
+                  <div className="fld">
+                    <label>Reason Narrative (Audit explanation, min 10 chars) *</label>
                     <textarea
                       required
                       rows={2}
                       placeholder="Detailed explanation of failure mode and analytical findings..."
                       value={decisionNarrative}
                       onChange={e => setDecisionNarrative(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono text-slate-900 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 resize-none"
+                      className="rem"
+                      style={{ height: '70px', width: '100%' }}
                     />
                   </div>
                 </>
               )}
 
               {/* Electronic Signature Password Confirmation */}
-              <div className="border-t border-[#1F2E43] pt-3">
-                <label className="block text-[11px] font-mono text-slate-400 mb-1 uppercase tracking-wider font-semibold">
-                  Electronic Signature: Enter QC Password *
-                </label>
+              <div className="fld" style={{ borderTop: '1px solid var(--line)', paddingTop: '16px', marginTop: '16px' }}>
+                <label>Electronic Signature: Enter QC Password *</label>
                 <input
                   type="password"
                   required
                   placeholder="••••••••"
                   value={decisionPassword}
                   onChange={e => setDecisionPassword(e.target.value)}
-                  className="w-full bg-[#0A1018] border border-[#1F2E43] rounded-lg px-3 py-2 text-xs font-mono text-slate-100 focus:outline-none focus:border-[#009FE3]"
+                  className="inp"
+                  style={{ width: '100%' }}
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2.5 pt-2">
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
                 <button
                   type="button"
                   onClick={() => setIsDecisionModalOpen(false)}
-                  className="px-3.5 py-1.5 rounded text-xs font-mono text-slate-400 hover:text-slate-200 cursor-pointer"
+                  className="ghost"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="bg-[#009FE3] hover:bg-[#0089C4] text-white font-mono font-medium text-xs uppercase px-4 py-1.5 rounded-lg transition-all border border-[#009FE3]/50 cursor-pointer"
+                  className="primary"
                 >
                   Sign & Commit Decision
                 </button>
@@ -1705,56 +1521,61 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
           </div>
         </div>
       )}
+
       {/* Modal: Delete Sample Confirmation (QC Correction) */}
       {reportToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg rounded-2xl border border-red-500/40 bg-[#0D1522] p-6 shadow-2xl space-y-4">
-            <div className="flex items-start justify-between border-b border-[#1F2E43] pb-3">
-              <div className="flex items-center gap-2.5">
-                <div className="h-9 w-9 rounded-lg bg-red-500/10 border border-red-500/30 flex items-center justify-center shrink-0">
-                  <Trash2 className="h-5 w-5 text-red-400" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-white font-mono">
-                    Delete Sample Analysis
-                  </h3>
-                  <p className="text-[11px] text-slate-400 font-mono">
-                    Quality Control Record Removal &bull; 21 CFR Part 11
-                  </p>
-                </div>
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 50,
+          display: 'grid',
+          placeItems: 'center',
+          background: 'rgba(0, 0, 0, 0.75)',
+          backdropFilter: 'blur(4px)',
+          padding: '20px'
+        }}>
+          <div className="panel" style={{ maxWidth: '500px', width: '100%', margin: 0, padding: '24px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', borderBottom: '1px solid var(--line)', paddingBottom: '12px' }}>
+              <div>
+                <h3 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--redt)' }}>
+                  Delete Sample Analysis
+                </h3>
+                <p className="hint">Quality Control Record Removal · 21 CFR Part 11</p>
               </div>
-              <span
+              <button
+                type="button"
                 onClick={() => {
                   setReportToDelete(null);
                   setDeleteError(null);
                 }}
-                className="text-slate-400 hover:text-slate-200 cursor-pointer text-lg font-bold"
+                className="ghost"
+                style={{ height: '30px', width: '30px', padding: 0 }}
               >
                 ✕
-              </span>
+              </button>
             </div>
 
             {/* Sample Information Summary */}
-            <div className="rounded-lg border border-[#1F2E43] bg-[#070B14] p-3.5 space-y-1.5 text-xs font-mono">
-              <div className="flex justify-between">
-                <span className="text-slate-400">Report No:</span>
-                <span className="text-slate-200 font-bold">{reportToDelete.report_no || '-'}</span>
+            <div style={{ background: 'var(--raised)', padding: '14px', borderRadius: '8px', fontSize: '13px', color: 'var(--muted)', display: 'grid', gap: '6px', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Report No:</span>
+                <span style={{ color: 'var(--text)', fontWeight: 600 }}>{reportToDelete.report_no || '-'}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Lot Number:</span>
-                <span className="text-[#009FE3] font-bold">{reportToDelete.lot_no || '-'}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Lot Number:</span>
+                <span style={{ color: 'var(--redt)', fontWeight: 600 }}>{reportToDelete.lot_no || '-'}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Product:</span>
-                <span className="text-slate-200">{reportToDelete.product_name || '-'}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Product:</span>
+                <span style={{ color: 'var(--text)' }}>{reportToDelete.product_name || '-'}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Sampling Time:</span>
-                <span className="text-slate-300">{reportToDelete.sample_date || ''} {reportToDelete.time_check || ''}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Sampling Time:</span>
+                <span style={{ color: 'var(--text)' }}>{reportToDelete.sample_date || ''} {reportToDelete.time_check || ''}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Current Status:</span>
-                <span className="text-amber-400 font-semibold">
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span>Current Status:</span>
+                <span className="bd a">
                   {String(reportToDelete.decision?.decision || reportToDelete.status || 'PENDING').toUpperCase()}
                 </span>
               </div>
@@ -1762,22 +1583,18 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
 
             {/* Error Message if any */}
             {deleteError && (
-              <div className="flex items-center gap-2 p-3 rounded-lg border border-red-500/40 bg-red-950/40 text-red-300 text-xs font-mono">
-                <AlertTriangle className="h-4 w-4 text-red-400 shrink-0" />
-                <span>{deleteError}</span>
-              </div>
+              <p className="err" style={{ marginBottom: '12px' }}>{deleteError}</p>
             )}
 
-            <form onSubmit={handleConfirmDelete} className="space-y-4">
-              <div>
-                <label className="block text-[11px] font-mono text-slate-300 mb-1.5 uppercase tracking-wider font-semibold">
-                  Reason for Deletion *
-                </label>
+            <form onSubmit={handleConfirmDelete}>
+              <div className="fld">
+                <label>Reason for Deletion *</label>
                 <select
                   required
                   value={deleteReason}
                   onChange={e => setDeleteReason(e.target.value)}
-                  className="w-full bg-[#070B14] border border-[#1F2E43] rounded-lg px-3 py-2 text-xs font-mono text-slate-100 cursor-pointer focus:border-[#009FE3] focus:outline-none"
+                  className="inp"
+                  style={{ width: '100%' }}
                 >
                   <option value="Wrong analytical readings entered">Wrong analytical readings / parameters entered</option>
                   <option value="Incorrect product or tank selection">Incorrect product or tank selection</option>
@@ -1789,43 +1606,42 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
               </div>
 
               {deleteReason === 'other' && (
-                <div>
-                  <label className="block text-[11px] font-mono text-slate-300 mb-1 uppercase tracking-wider font-semibold">
-                    Specific Reason Narrative *
-                  </label>
+                <div className="fld">
+                  <label>Specific Reason Narrative *</label>
                   <textarea
                     required
                     rows={2}
                     placeholder="Enter specific audit explanation for sample removal..."
                     value={deleteCustomReason}
                     onChange={e => setDeleteCustomReason(e.target.value)}
-                    className="w-full bg-[#070B14] border border-[#1F2E43] rounded-lg px-3 py-2 text-xs font-mono text-slate-100 placeholder-slate-500 focus:outline-none focus:border-[#009FE3] resize-none"
+                    className="rem"
+                    style={{ height: '60px', width: '100%' }}
                   />
                 </div>
               )}
 
-              <p className="text-[11px] text-amber-400/90 bg-amber-950/30 p-2.5 rounded-lg border border-amber-500/20 font-mono leading-relaxed">
+              <p className="hint" style={{ color: 'var(--amber)', margin: '12px 0 16px', fontSize: '12px' }}>
                 ⚠️ Notice: Deleting this sample will purge its analytical test results, update the QC queue, and sync across all refinery log sheets and Supabase cloud records.
               </p>
 
-              <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-[#1F2E43]">
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', borderTop: '1px solid var(--line)', paddingTop: '16px' }}>
                 <button
                   type="button"
                   onClick={() => {
                     setReportToDelete(null);
                     setDeleteError(null);
                   }}
-                  className="px-4 py-2 rounded-lg text-xs font-mono text-slate-400 hover:text-slate-200 cursor-pointer transition-colors"
+                  className="ghost"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isDeleting}
-                  className="flex items-center gap-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-mono font-medium text-xs uppercase px-4 py-2 rounded-lg transition-all border border-red-500/50 cursor-pointer shadow-lg shadow-red-950/50"
+                  className="primary"
+                  style={{ background: 'var(--red)' }}
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
-                  <span>{isDeleting ? 'Deleting Sample...' : 'Confirm & Delete Sample'}</span>
+                  {isDeleting ? 'Deleting Sample...' : 'Confirm & Delete Sample'}
                 </button>
               </div>
             </form>

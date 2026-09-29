@@ -370,378 +370,243 @@ export default function ReportExportView() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Top Header Card */}
-      <div className="rounded-xl border border-[#1F2E43] bg-[#101927] p-5 sm:p-6 shadow-xl shadow-black/20">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div className="flex items-start gap-4">
-            <div className="rounded-lg bg-[#0A1018] p-3 border border-[#1F2E43] text-[#009FE3] shadow-inner">
-              <FileSpreadsheet className="h-6 w-6" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2.5">
-                <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-100">
-                  Plant Operations & Quality Report Generator
-                </h1>
-              </div>
-              <p className="mt-1 text-xs text-slate-400">
-                Generate and download comprehensive SCADA operational records and QC laboratory results for daily shift rounds, monthly performance, or yearly audits.
-              </p>
-            </div>
-          </div>
+    <div className="space-y-4">
+      {/* 1. Header Banner */}
+      <section className="panel head">
+        <div>
+          <h2>Plant Operations and Quality Report Generator</h2>
+          <p className="meta">Download daily shift rounds, monthly performance or yearly audit records, including QC lab results.</p>
+        </div>
+        <div className="stats">
+          <button onClick={handleCopyToClipboard} className="ghost" type="button">
+            {copied ? 'Copied to Clipboard!' : 'Copy for Excel'}
+          </button>
+          <button onClick={handleDownloadCSV} className="primary" type="button">
+            Download CSV file
+          </button>
+        </div>
+      </section>
 
-          {/* Quick Action Buttons */}
-          <div className="flex items-center gap-2.5 self-end lg:self-auto font-mono">
-            <button
-              onClick={handleCopyToClipboard}
-              className="flex items-center gap-2 rounded-lg border border-[#1F2E43] bg-[#0A1018] hover:bg-[#172235] px-3.5 py-2 text-xs font-semibold text-[#009FE3] hover:border-[#009FE3]/50 transition-all cursor-pointer shadow-xs active:scale-95"
-              title="Copy filtered data directly to clipboard for instant Excel paste"
-            >
-              {copied ? (
-                <>
-                  <Check className="h-4 w-4 text-green-600" />
-                  <span className="text-green-600">Copied to Clipboard!</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="h-4 w-4 text-[#009FE3]" />
-                  <span>Copy for Excel</span>
-                </>
-              )}
-            </button>
+      {/* 2. KPI Overview Cards */}
+      <div className="cards">
+        <div className="panel">
+          <label>Filtered records</label>
+          <b>{category === 'process' || category === 'master' ? stats.totalEntries : category === 'qc' ? stats.totalQC : filteredDeviations.length}</b>
+          <p>{period === 'daily' ? `Daily Shift (${selectedDate})` : period === 'monthly' ? `Monthly (${selectedMonth})` : `Yearly (${selectedYear})`}</p>
+        </div>
 
-            <button
-              onClick={handleDownloadCSV}
-              className="flex items-center gap-2 rounded-lg border border-[#009FE3] bg-[#009FE3] hover:bg-[#08B5F5] text-white px-4 py-2 text-xs font-semibold transition-all cursor-pointer shadow-md shadow-black/40 active:scale-95"
-            >
-              <Download className="h-4 w-4" />
-              <span>Download CSV File</span>
-            </button>
-          </div>
+        <div className="panel">
+          <label>QC pass rate</label>
+          <b style={{ color: 'var(--green)' }}>{stats.passRate}%</b>
+          <p>{stats.acceptedQC} of {stats.totalQC} samples approved</p>
+        </div>
+
+        <div className="panel">
+          <label>Average deodorizer vacuum</label>
+          <b>{stats.avgVacuum} <small>Torr</small></b>
+          <p>Target: below 4.5 Torr</p>
+        </div>
+
+        <div className="panel">
+          <label>Average tray 4 temperature</label>
+          <b>{stats.avgTray4} <small>°C</small></b>
+          <p>Standard: 250 to 268 °C</p>
         </div>
       </div>
 
-      {/* KPI Overview Strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="rounded-lg border border-[#1F2E43] bg-[#131E2D] p-4 shadow-sm hover:border-[#263A52] transition-colors">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-mono font-semibold">
-            <span>FILTERED RECORDS</span>
-            <Layers className="h-4 w-4 text-[#009FE3]" />
-          </div>
-          <div className="mt-2 text-2xl font-bold font-mono text-slate-100">
-            {category === 'process' || category === 'master' ? stats.totalEntries : category === 'qc' ? stats.totalQC : filteredDeviations.length}
-          </div>
-          <div className="mt-1 text-[11px] text-slate-400 font-mono">
-            {period === 'daily' ? `Daily Shift (${selectedDate})` : period === 'monthly' ? `Monthly (${selectedMonth})` : `Yearly (${selectedYear})`}
-          </div>
-        </div>
-
-        <div className="rounded-lg border border-[#1F2E43] bg-[#131E2D] p-4 shadow-sm hover:border-[#263A52] transition-colors">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-mono font-semibold">
-            <span>QC PASS RATE</span>
-            <FlaskConical className="h-4 w-4 text-green-600" />
-          </div>
-          <div className="mt-2 text-2xl font-bold font-mono text-green-600">
-            {stats.passRate}%
-          </div>
-          <div className="mt-1 text-[11px] text-slate-400 font-mono">
-            {stats.acceptedQC} of {stats.totalQC} samples approved
-          </div>
-        </div>
-
-        <div className="rounded-lg border border-[#1F2E43] bg-[#131E2D] p-4 shadow-sm hover:border-[#263A52] transition-colors">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-mono font-semibold">
-            <span>AVG DEOD VACUUM</span>
-            <Activity className="h-4 w-4 text-[#009FE3]" />
-          </div>
-          <div className="mt-2 text-2xl font-bold font-mono text-[#009FE3]">
-            {stats.avgVacuum} <span className="text-xs font-normal text-slate-400">Torr</span>
-          </div>
-          <div className="mt-1 text-[11px] text-slate-400 font-mono">
-            Target: &lt; 4.5 Torr
-          </div>
-        </div>
-
-        <div className="rounded-lg border border-[#1F2E43] bg-[#131E2D] p-4 shadow-sm hover:border-[#263A52] transition-colors">
-          <div className="flex items-center justify-between text-slate-400 text-xs font-mono font-semibold">
-            <span>AVG TRAY 4 TEMP</span>
-            <BarChart3 className="h-4 w-4 text-amber-600" />
-          </div>
-          <div className="mt-2 text-2xl font-bold font-mono text-amber-600">
-            {stats.avgTray4} <span className="text-xs font-normal text-slate-400">°C</span>
-          </div>
-          <div className="mt-1 text-[11px] text-slate-400 font-mono">
-            Standard: 250 - 268°C
-          </div>
-        </div>
-      </div>
-
-      {/* Filter Selection Panel */}
-      <div className="rounded-xl border border-[#1F2E43] bg-[#101927] p-5 shadow-xl shadow-black/20">
-        <div className="flex items-center gap-2 mb-4 pb-3 border-b border-[#1F2E43] text-xs font-mono text-slate-500 uppercase tracking-wider font-semibold">
-          <SlidersHorizontal className="h-4 w-4 text-[#009FE3]" />
-          <span>Report Configuration & Parameters</span>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {/* 1. Period Selector (Daily / Monthly / Yearly) */}
+      {/* 3. Filter Configuration */}
+      <section className="panel">
+        <div className="cfg">
           <div>
-            <label className="block text-xs font-mono font-medium text-slate-500 mb-2">
-              1. Generation Timeframe:
-            </label>
-            <div className="grid grid-cols-3 gap-1.5 p-1 bg-[#0A1018] rounded-lg border border-[#1F2E43]">
+            <h3>Timeframe</h3>
+            <div className="segs">
               <button
+                className="seg"
+                aria-pressed={period === 'daily'}
                 type="button"
                 onClick={() => setPeriod('daily')}
-                className={`py-2 px-3 rounded-md text-xs font-mono transition-all cursor-pointer ${
-                  period === 'daily'
-                    ? 'bg-[#009FE3] text-white shadow-xs font-semibold border border-[#009FE3]'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-[#172235]'
-                }`}
               >
                 Daily
               </button>
               <button
+                className="seg"
+                aria-pressed={period === 'monthly'}
                 type="button"
                 onClick={() => setPeriod('monthly')}
-                className={`py-2 px-3 rounded-md text-xs font-mono transition-all cursor-pointer ${
-                  period === 'monthly'
-                    ? 'bg-[#009FE3] text-white shadow-xs font-semibold border border-[#009FE3]'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-[#172235]'
-                }`}
               >
                 Monthly
               </button>
               <button
+                className="seg"
+                aria-pressed={period === 'yearly'}
                 type="button"
                 onClick={() => setPeriod('yearly')}
-                className={`py-2 px-3 rounded-md text-xs font-mono transition-all cursor-pointer ${
-                  period === 'yearly'
-                    ? 'bg-[#009FE3] text-white shadow-xs font-semibold border border-[#009FE3]'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-[#172235]'
-                }`}
               >
                 Yearly
               </button>
             </div>
-
-            {/* Dynamic Date Inputs based on Period */}
-            <div className="mt-3">
+            <div className="dr">
               {period === 'daily' && (
-                <div className="flex items-center gap-2">
-                  <div className="relative flex-1">
-                    <input
-                      type="date"
-                      value={selectedDate}
-                      onChange={(e) => setSelectedDate(e.target.value)}
-                      className="w-full rounded-lg border border-[#1F2E43] bg-[#0A1018] px-3 py-2 text-xs font-mono text-slate-100 focus:border-[#009FE3] focus:outline-none shadow-xs"
-                    />
-                  </div>
-                  <button
-                    onClick={() => setSelectedDate(defaultDate)}
-                    className="px-2.5 py-2 text-[11px] font-mono rounded-lg bg-slate-50 text-[#009FE3] hover:bg-slate-100 border border-slate-200 cursor-pointer font-semibold"
-                  >
+                <>
+                  <input
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    aria-label="Report date"
+                  />
+                  <button className="ghost" type="button" onClick={() => setSelectedDate(defaultDate)}>
                     Today
                   </button>
-                </div>
+                </>
               )}
-
               {period === 'monthly' && (
-                <div>
-                  <input
-                    type="month"
-                    value={selectedMonth}
-                    onChange={(e) => setSelectedMonth(e.target.value)}
-                    className="w-full rounded-lg border border-[#1F2E43] bg-[#0A1018] px-3 py-2 text-xs font-mono text-slate-100 focus:border-[#009FE3] focus:outline-none shadow-xs"
-                  />
-                </div>
+                <input
+                  type="month"
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  aria-label="Report month"
+                />
               )}
-
               {period === 'yearly' && (
                 <select
                   value={selectedYear}
                   onChange={(e) => setSelectedYear(e.target.value)}
-                  className="w-full rounded-lg border border-[#1F2E43] bg-[#0A1018] px-3 py-2 text-xs font-mono text-slate-100 focus:border-[#009FE3] focus:outline-none shadow-xs"
+                  aria-label="Report year"
                 >
-                  <option value="2026" className="bg-[#101927] text-slate-100">2026 (Operational Year)</option>
-                  <option value="2025" className="bg-[#101927] text-slate-100">2025 (Historical Archive)</option>
-                  <option value="2024" className="bg-[#101927] text-slate-100">2024 (Baseline Year)</option>
+                  <option value="2026">2026 (Operational Year)</option>
+                  <option value="2025">2025 (Historical Archive)</option>
+                  <option value="2024">2024 (Baseline Year)</option>
                 </select>
               )}
             </div>
           </div>
 
-          {/* 2. Category Selector */}
           <div>
-            <label className="block text-xs font-mono font-medium text-slate-500 mb-2">
-              2. Data Category:
-            </label>
-            <div className="grid grid-cols-2 gap-1.5 p-1 bg-[#0A1018] rounded-lg border border-[#1F2E43]">
+            <h3>Data category</h3>
+            <div className="segs" style={{ '--c': 2 } as React.CSSProperties}>
               <button
+                className="seg"
+                aria-pressed={category === 'process'}
                 type="button"
                 onClick={() => setCategory('process')}
-                className={`py-2 px-2.5 rounded-md text-xs font-mono transition-all cursor-pointer text-left flex items-center gap-1.5 ${
-                  category === 'process'
-                    ? 'bg-[#009FE3] text-white shadow-xs font-semibold border border-[#009FE3]'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-[#172235]'
-                }`}
               >
-                <Layers className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate">Process Log</span>
+                Process Log
               </button>
               <button
+                className="seg"
+                aria-pressed={category === 'qc'}
                 type="button"
                 onClick={() => setCategory('qc')}
-                className={`py-2 px-2.5 rounded-md text-xs font-mono transition-all cursor-pointer text-left flex items-center gap-1.5 ${
-                  category === 'qc'
-                    ? 'bg-[#009FE3] text-white shadow-xs font-semibold border border-[#009FE3]'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-[#172235]'
-                }`}
               >
-                <FlaskConical className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate">QC Lab</span>
+                QC Lab
               </button>
               <button
+                className="seg"
+                aria-pressed={category === 'deviations'}
                 type="button"
                 onClick={() => setCategory('deviations')}
-                className={`py-2 px-2.5 rounded-md text-xs font-mono transition-all cursor-pointer text-left flex items-center gap-1.5 ${
-                  category === 'deviations'
-                    ? 'bg-[#009FE3] text-white shadow-xs font-semibold border border-[#009FE3]'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-[#172235]'
-                }`}
               >
-                <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate">Deviations</span>
+                Deviations
               </button>
               <button
+                className="seg"
+                aria-pressed={category === 'master'}
                 type="button"
                 onClick={() => setCategory('master')}
-                className={`py-2 px-2.5 rounded-md text-xs font-mono transition-all cursor-pointer text-left flex items-center gap-1.5 ${
-                  category === 'master'
-                    ? 'bg-[#009FE3] text-white shadow-xs font-semibold border border-[#009FE3]'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-[#172235]'
-                }`}
               >
-                <FileSpreadsheet className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate">Master Combined</span>
+                Master Combined
               </button>
             </div>
-
-            <div className="mt-3">
-              <select
-                value={selectedProductId}
-                onChange={(e) => setSelectedProductId(e.target.value)}
-                className="w-full rounded-lg border border-[#1F2E43] bg-[#0A1018] px-3 py-2 text-xs font-mono text-slate-100 focus:border-[#009FE3] focus:outline-none shadow-xs"
-              >
-                <option value="all" className="bg-[#101927] text-slate-100">All Products (Unfiltered)</option>
-                {products.map(p => (
-                  <option key={p.id} value={p.id} className="bg-[#101927] text-slate-100">
-                    {p.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <select
+              aria-label="Product"
+              value={selectedProductId}
+              onChange={(e) => setSelectedProductId(e.target.value)}
+            >
+              <option value="all">All products (unfiltered)</option>
+              {products.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
           </div>
 
-          {/* 3. Search & Quick Filters */}
           <div>
-            <label className="block text-xs font-mono font-medium text-slate-500 mb-2">
-              3. Search Filter & Live Preview:
-            </label>
-            <div className="relative">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
-              <input
-                type="text"
-                placeholder="Search slot, lot no, operator, remarks..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-lg border border-[#1F2E43] bg-[#0A1018] pl-9 pr-3 py-2 text-xs font-mono text-slate-100 placeholder:text-slate-500 focus:border-[#009FE3] focus:outline-none shadow-xs"
-              />
-            </div>
-
-            <div className="mt-3 rounded-lg bg-[#0A1018] p-2.5 border border-[#1F2E43] text-[11px] font-mono text-slate-400 space-y-1">
-              <div className="flex justify-between">
-                <span className="text-slate-400">Output File:</span>
-                <span className="text-[#009FE3] font-semibold truncate max-w-[170px]">
-                  {category === 'process' ? 'RF-FR-004' : category === 'qc' ? 'RF-FR-001' : category === 'deviations' ? 'Deviations' : 'Master'}_{period}_{period === 'daily' ? selectedDate : period === 'monthly' ? selectedMonth : selectedYear}.csv
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-slate-400">Matching Rows:</span>
-                <span className="text-slate-100 font-bold">
-                  {category === 'process' || category === 'master' ? filteredProcessEntries.length : category === 'qc' ? filteredQCReports.length : filteredDeviations.length} records
-                </span>
-              </div>
+            <h3>Search and preview</h3>
+            <input
+              type="search"
+              placeholder="Search slot, lot no, operator, remarks"
+              aria-label="Search records"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <div className="ob">
+              <span>Output file</span>
+              <b className="truncate">
+                {category === 'process' ? 'RF-FR-004' : category === 'qc' ? 'RF-FR-001' : category === 'deviations' ? 'Deviations' : 'Master'}_{period}_{period === 'daily' ? selectedDate : period === 'monthly' ? selectedMonth : selectedYear}.csv
+              </b>
+              <span>Matching rows: <b>{category === 'process' || category === 'master' ? filteredProcessEntries.length : category === 'qc' ? filteredQCReports.length : filteredDeviations.length}</b></span>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Live Data Table Preview */}
-      <div className="rounded-xl border border-[#1F2E43] bg-[#101927] shadow-xl shadow-black/20 overflow-hidden">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-5 py-3.5 border-b border-[#1F2E43] bg-[#0A1018] gap-2">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-mono font-semibold uppercase text-slate-200 tracking-wider">
-              {category === 'process' && 'Hourly Process Log Preview'}
-              {category === 'qc' && 'QC Lab Analysis Preview'}
-              {category === 'deviations' && 'Plant Deviations & Excursions Preview'}
-              {category === 'master' && 'Master Operations & Quality Merged Preview'}
-            </span>
-          </div>
-
-          <div className="text-[11px] font-mono text-slate-400">
-            Export format: <span className="text-[#009FE3] font-semibold">RFC-4180 CSV (Excel UTF-8 BOM Compliant)</span>
-          </div>
+      {/* 4. Live Data Table Preview */}
+      <section className="panel">
+        <div className="rh">
+          <h2>
+            {category === 'process' && 'Hourly process log preview'}
+            {category === 'qc' && 'QC lab analysis preview'}
+            {category === 'deviations' && 'Plant deviations & excursions preview'}
+            {category === 'master' && 'Master operations & quality merged preview'}
+          </h2>
+          <span className="hint">Excel-compatible CSV (UTF-8 with BOM)</span>
         </div>
 
-        <div className="overflow-x-auto max-h-[440px] scrollbar-thin">
-          {/* 1. PROCESS LOG TABLE PREVIEW */}
+        <div className="tw">
+          {/* 1. PROCESS LOG & MASTER PREVIEW */}
           {(category === 'process' || category === 'master') && (
-            <table className="w-full text-left text-xs font-mono">
-              <thead className="sticky top-0 z-10 border-b border-[#1F2E43] bg-[#070B12] text-[11px] font-semibold text-slate-400 uppercase">
+            <table>
+              <thead>
                 <tr>
-                  <th className="px-4 py-3">Slot</th>
-                  <th className="px-4 py-3">Product</th>
-                  <th className="px-3 py-3 text-right">Feed (L)</th>
-                  <th className="px-3 py-3 text-right">Vac (Torr)</th>
-                  <th className="px-3 py-3 text-right">Tray 4 (°C)</th>
-                  <th className="px-3 py-3 text-right">Tray 7 (°C)</th>
-                  <th className="px-3 py-3 text-right">Steam %</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Recorded By</th>
-                  <th className="px-4 py-3">Remarks</th>
+                  <th>Slot</th>
+                  <th>Product</th>
+                  <th style={{ textAlign: 'right' }}>Feed (L)</th>
+                  <th style={{ textAlign: 'right' }}>Vacuum (Torr)</th>
+                  <th style={{ textAlign: 'right' }}>Tray 4 (°C)</th>
+                  <th style={{ textAlign: 'right' }}>Tray 7 (°C)</th>
+                  <th style={{ textAlign: 'right' }}>Steam %</th>
+                  <th>Status</th>
+                  <th>Recorded By</th>
+                  <th>Remarks</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#1F2E43] bg-[#101927] text-slate-300">
+              <tbody>
                 {filteredProcessEntries.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="px-4 py-8 text-center text-slate-500">
-                      No operational process entries found matching the selected timeframe and filters.
+                    <td colSpan={10} style={{ textAlign: 'center', padding: '32px', color: 'var(--muted)' }}>
+                      No process entries match this timeframe and filters.
                     </td>
                   </tr>
                 ) : (
                   filteredProcessEntries.map((e) => (
-                    <tr key={e.id || e.slot_index} className="hover:bg-[#172235] transition-colors">
-                      <td className="px-4 py-2.5 font-bold text-[#009FE3]">{e.slot_label}</td>
-                      <td className="px-4 py-2.5 font-sans font-medium text-slate-200">{e.product_name || '-'}</td>
-                      <td className="px-3 py-2.5 text-right font-mono text-slate-500">{e.oil_feed_rate_litre?.toLocaleString() || '-'}</td>
-                      <td className="px-3 py-2.5 text-right font-mono text-[#009FE3]">{e.vacuum_torr?.toFixed(1) || '-'}</td>
-                      <td className="px-3 py-2.5 text-right font-mono text-amber-600 font-semibold">{e.tray_4_temp_c?.toFixed(1) || '-'}</td>
-                      <td className="px-3 py-2.5 text-right font-mono text-slate-500">{e.tray_7_temp_c?.toFixed(1) || '-'}</td>
-                      <td className="px-3 py-2.5 text-right font-mono text-slate-500">{e.strip_steam_pct_of_oil ?? '-'}%</td>
-                      <td className="px-4 py-2.5">
+                    <tr key={e.id || e.slot_index}>
+                      <td style={{ fontWeight: 600, color: 'var(--redt)' }}>{e.slot_label}</td>
+                      <td>{e.product_name || '-'}</td>
+                      <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{e.oil_feed_rate_litre?.toLocaleString() || '-'}</td>
+                      <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{e.vacuum_torr?.toFixed(1) || '-'}</td>
+                      <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--amber)' }}>{e.tray_4_temp_c?.toFixed(1) || '-'}</td>
+                      <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{e.tray_7_temp_c?.toFixed(1) || '-'}</td>
+                      <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{e.strip_steam_pct_of_oil ?? '-'}%</td>
+                      <td>
                         {e.has_deviation ? (
-                          <span className="inline-flex items-center gap-1 rounded bg-amber-950/40 px-2 py-0.5 text-[10px] text-amber-600 border border-amber-800/60 font-medium">
-                            <AlertTriangle className="h-3 w-3" /> Deviation
-                          </span>
+                          <span className="bd r">Deviation</span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 rounded bg-emerald-950/40 px-2 py-0.5 text-[10px] text-green-600 border border-emerald-800/60 font-medium">
-                            <CheckCircle2 className="h-3 w-3" /> Normal
-                          </span>
+                          <span className="bd g">Normal</span>
                         )}
                       </td>
-                      <td className="px-4 py-2.5 font-sans text-xs text-slate-500">{e.recorded_by_name || '-'}</td>
-                      <td className="px-4 py-2.5 text-[11px] text-slate-400 max-w-[200px] truncate" title={e.remarks || undefined}>
+                      <td>{e.recorded_by_name || '-'}</td>
+                      <td style={{ maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={e.remarks || undefined}>
                         {e.remarks || '-'}
                       </td>
                     </tr>
@@ -753,70 +618,56 @@ export default function ReportExportView() {
 
           {/* 2. QC LAB TABLE PREVIEW */}
           {category === 'qc' && (
-            <table className="w-full text-left text-xs font-mono">
-              <thead className="sticky top-0 z-10 border-b border-[#1F2E43] bg-[#070B12] text-[11px] font-semibold text-slate-400 uppercase">
+            <table>
+              <thead>
                 <tr>
-                  <th className="px-4 py-3">Report No</th>
-                  <th className="px-3 py-3">Time</th>
-                  <th className="px-4 py-3">Lot No</th>
-                  <th className="px-4 py-3">Product</th>
-                  <th className="px-3 py-3 text-right">FFA (%)</th>
-                  <th className="px-3 py-3 text-right">Moisture (%)</th>
-                  <th className="px-3 py-3 text-right">IV</th>
-                  <th className="px-3 py-3 text-right">Colour R/Y</th>
-                  <th className="px-4 py-3">QC Decision</th>
-                  <th className="px-4 py-3">Decided By</th>
+                  <th>Report No</th>
+                  <th>Time</th>
+                  <th>Lot No</th>
+                  <th>Product</th>
+                  <th style={{ textAlign: 'right' }}>FFA (%)</th>
+                  <th style={{ textAlign: 'right' }}>Moisture (%)</th>
+                  <th style={{ textAlign: 'right' }}>IV</th>
+                  <th style={{ textAlign: 'right' }}>Colour R/Y</th>
+                  <th>QC Decision</th>
+                  <th>Decided By</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#1F2E43] bg-[#101927] text-slate-300">
+              <tbody>
                 {filteredQCReports.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="px-4 py-8 text-center text-slate-500">
+                    <td colSpan={10} style={{ textAlign: 'center', padding: '32px', color: 'var(--muted)' }}>
                       No QC sample laboratory reports found matching the selected timeframe and filters.
                     </td>
                   </tr>
                 ) : (
                   filteredQCReports.map((r) => {
-                    const ffa = (r.results || []).find(res => res.parameter_code === 'FFA')?.value_numeric;
-                    const h2o = (r.results || []).find(res => res.parameter_code === 'H2O')?.value_numeric;
-                    const iv = (r.results || []).find(res => res.parameter_code === 'IV')?.value_numeric;
-                    const colR = (r.results || []).find(res => res.parameter_code === 'COLOUR_R')?.value_numeric;
-                    const colY = (r.results || []).find(res => res.parameter_code === 'COLOUR_Y')?.value_numeric;
+                    const ffa = (r.results || []).find((res) => res.parameter_code === 'FFA')?.value_numeric;
+                    const h2o = (r.results || []).find((res) => res.parameter_code === 'H2O')?.value_numeric;
+                    const iv = (r.results || []).find((res) => res.parameter_code === 'IV')?.value_numeric;
+                    const colR = (r.results || []).find((res) => res.parameter_code === 'COLOUR_R')?.value_numeric;
+                    const colY = (r.results || []).find((res) => res.parameter_code === 'COLOUR_Y')?.value_numeric;
                     const isAccepted = r.decision?.decision === 'accept';
                     const isRejected = r.decision?.decision === 'reject';
 
                     return (
-                      <tr key={r.id} className="hover:bg-[#172235] transition-colors">
-                        <td className="px-4 py-2.5 font-bold text-[#009FE3]">{r.report_no}</td>
-                        <td className="px-3 py-2.5 text-slate-400">{r.time_check}</td>
-                        <td className="px-4 py-2.5 font-semibold text-slate-200">{r.lot_no}</td>
-                        <td className="px-4 py-2.5 font-sans text-slate-500">{r.product_name}</td>
-                        <td className="px-3 py-2.5 text-right font-mono font-semibold text-green-600">{ffa ?? '-'}%</td>
-                        <td className="px-3 py-2.5 text-right font-mono text-slate-500">{h2o ?? '-'}%</td>
-                        <td className="px-3 py-2.5 text-right font-mono text-slate-500">{iv ?? '-'}</td>
-                        <td className="px-3 py-2.5 text-right font-mono text-amber-600">
+                      <tr key={r.id}>
+                        <td style={{ fontWeight: 600, color: 'var(--redt)' }}>{r.report_no}</td>
+                        <td style={{ color: 'var(--muted)' }}>{r.time_check}</td>
+                        <td style={{ fontWeight: 500 }}>{r.lot_no}</td>
+                        <td>{r.product_name}</td>
+                        <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--green)' }}>{ffa ?? '-'}%</td>
+                        <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{h2o ?? '-'}%</td>
+                        <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{iv ?? '-'}</td>
+                        <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--amber)' }}>
                           {colR ?? '-'}/{colY ?? '-'}
                         </td>
-                        <td className="px-4 py-2.5">
-                          {isAccepted && (
-                            <span className="inline-flex items-center gap-1 rounded bg-emerald-950/40 px-2 py-0.5 text-[10px] font-bold text-green-600 border border-emerald-800/60">
-                              <CheckCircle2 className="h-3 w-3" /> ACCEPTED
-                            </span>
-                          )}
-                          {isRejected && (
-                            <span className="inline-flex items-center gap-1 rounded bg-rose-950/40 px-2 py-0.5 text-[10px] font-bold text-red-600 border border-rose-800/60">
-                              <XCircle className="h-3 w-3" /> REJECTED
-                            </span>
-                          )}
-                          {!isAccepted && !isRejected && (
-                            <span className="inline-flex items-center gap-1 rounded bg-amber-950/40 px-2 py-0.5 text-[10px] font-bold text-amber-600 border border-amber-800/60">
-                              PENDING
-                            </span>
-                          )}
+                        <td>
+                          {isAccepted && <span className="bd g">Accepted</span>}
+                          {isRejected && <span className="bd r">Rejected</span>}
+                          {!isAccepted && !isRejected && <span className="bd a">Pending</span>}
                         </td>
-                        <td className="px-4 py-2.5 font-sans text-xs text-slate-500">
-                          {r.decision?.decided_by_name || r.submitted_by_name || '-'}
-                        </td>
+                        <td>{r.decision?.decided_by_name || r.submitted_by_name || '-'}</td>
                       </tr>
                     );
                   })
@@ -827,45 +678,41 @@ export default function ReportExportView() {
 
           {/* 3. DEVIATIONS TABLE PREVIEW */}
           {category === 'deviations' && (
-            <table className="w-full text-left text-xs font-mono">
-              <thead className="sticky top-0 z-10 border-b border-[#1F2E43] bg-[#070B12] text-[11px] font-semibold text-slate-400 uppercase">
+            <table>
+              <thead>
                 <tr>
-                  <th className="px-4 py-3">Slot</th>
-                  <th className="px-4 py-3">Parameter</th>
-                  <th className="px-3 py-3 text-right">Observed</th>
-                  <th className="px-3 py-3 text-right">Soft Limit</th>
-                  <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Acknowledged By</th>
-                  <th className="px-4 py-3">Action Taken</th>
+                  <th>Slot</th>
+                  <th>Parameter</th>
+                  <th style={{ textAlign: 'right' }}>Observed</th>
+                  <th style={{ textAlign: 'right' }}>Soft Limit</th>
+                  <th>Status</th>
+                  <th>Acknowledged By</th>
+                  <th>Action Taken</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#1F2E43] bg-[#101927] text-slate-300">
+              <tbody>
                 {filteredDeviations.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
+                    <td colSpan={7} style={{ textAlign: 'center', padding: '32px', color: 'var(--muted)' }}>
                       No deviation or operational excursion records found.
                     </td>
                   </tr>
                 ) : (
                   filteredDeviations.map((d) => (
-                    <tr key={d.id} className="hover:bg-[#172235] transition-colors">
-                      <td className="px-4 py-2.5 font-bold text-[#009FE3]">{d.slot_label}</td>
-                      <td className="px-4 py-2.5 font-medium text-slate-200">{d.field_label}</td>
-                      <td className="px-3 py-2.5 text-right font-bold text-red-600">{d.observed}</td>
-                      <td className="px-3 py-2.5 text-right text-slate-400">{d.soft_min ?? '-'} - {d.soft_max ?? '-'}</td>
-                      <td className="px-4 py-2.5 font-semibold text-slate-500">
+                    <tr key={d.id}>
+                      <td style={{ fontWeight: 600, color: 'var(--redt)' }}>{d.slot_label}</td>
+                      <td>{d.field_label}</td>
+                      <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--redt)', fontWeight: 600 }}>{d.observed}</td>
+                      <td style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--muted)' }}>{d.soft_min ?? '-'} - {d.soft_max ?? '-'}</td>
+                      <td>
                         {d.acknowledged_by ? (
-                          <span className="text-green-600 flex items-center gap-1 font-medium">
-                            <CheckCircle2 className="h-3 w-3" /> Acknowledged
-                          </span>
+                          <span className="bd g">Acknowledged</span>
                         ) : (
-                          <span className="text-amber-600 flex items-center gap-1 font-medium">
-                            <AlertTriangle className="h-3 w-3" /> Open
-                          </span>
+                          <span className="bd a">Open</span>
                         )}
                       </td>
-                      <td className="px-4 py-2.5 text-slate-500">{d.acknowledged_by_name || '-'}</td>
-                      <td className="px-4 py-2.5 text-slate-400 max-w-[200px] truncate" title={d.action_taken || undefined}>
+                      <td>{d.acknowledged_by_name || '-'}</td>
+                      <td style={{ maxWidth: '240px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={d.action_taken || undefined}>
                         {d.action_taken || '-'}
                       </td>
                     </tr>
@@ -876,24 +723,14 @@ export default function ReportExportView() {
           )}
         </div>
 
-        {/* Table Footer Download Banner */}
-        <div className="flex flex-col sm:flex-row items-center justify-between p-4 border-t border-[#1F2E43] bg-[#0A1018] text-xs font-mono text-slate-400 gap-3">
-          <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
-            <span>Historical record buffer ready for export into Microsoft Excel / CSV spreadsheet</span>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleDownloadCSV}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#009FE3] hover:bg-[#08B5F5] text-white font-semibold transition-all cursor-pointer shadow-md shadow-black/40 active:scale-95 border border-[#009FE3]"
-            >
-              <Download className="h-4 w-4" />
-              <span>Export {category.toUpperCase()} to CSV</span>
-            </button>
-          </div>
+        {/* Table Footer */}
+        <div className="foot">
+          <p>Historical records are ready to export to Excel or CSV.</p>
+          <button onClick={handleDownloadCSV} className="primary" type="button">
+            Export {category.toUpperCase()} to CSV
+          </button>
         </div>
-      </div>
+      </section>
     </div>
   );
 }

@@ -101,7 +101,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-[#070B12] text-slate-100 flex flex-col">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] flex flex-col">
       {/* Sidebar (Desktop) + Mobile Topbar / Drawer */}
       <Navbar 
         activeTab={currentTab} 
@@ -111,37 +111,28 @@ export default function Home() {
         onLogout={handleLogout}
       />
 
-      {/* Main Content Area (Offset by sidebar width on desktop and topbar height) */}
-      <div className="flex-1 flex flex-col min-w-0 lg:pl-64 xl:pl-72 lg:pt-14">
-        {/* Dynamic Page Header & Breadcrumbs matching Swiss Modern design */}
-        <div className="px-4 sm:px-6 lg:px-8 pt-5 pb-3 border-b border-white/[0.08] bg-[#090E17]/85 backdrop-blur-md">
-          <div className="flex items-center gap-2 text-xs text-slate-400 mb-1.5 font-medium">
+      {/* Main Content Area (Offset by sidebar width 248px on desktop and topbar height 64px) */}
+      <div className="flex-1 flex flex-col min-w-0 lg:pl-[248px] lg:pt-16">
+        {/* Dynamic Page Header & Breadcrumbs matching redesign */}
+        <div className="px-6 lg:px-10 pt-8 pb-2">
+          <p className="crumb-redesign">
             <span 
               onClick={() => setActiveTab('process')}
-              className="hover:text-slate-200 cursor-pointer transition-colors"
+              className="hover:underline cursor-pointer"
             >
               Home
-            </span>
-            <span className="text-slate-500">&gt;</span>
-            <span className="text-[#C52227] font-semibold">
-              {currentHeaderInfo.title}
-            </span>
-          </div>
-
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white font-sans">
-                {currentHeaderInfo.title}
-              </h1>
-              <p className="text-xs text-slate-400 mt-0.5 font-sans">
-                {currentHeaderInfo.subtitle}
-              </p>
-            </div>
-          </div>
+            </span> / <b>{currentHeaderInfo.title}</b>
+          </p>
+          <h1 className="h1-redesign">
+            {currentHeaderInfo.title}
+          </h1>
+          <p className="lede-redesign">
+            {currentHeaderInfo.subtitle}.
+          </p>
         </div>
 
         {/* Main Work Area - Strictly renders only the view allowed for current role */}
-        <main className="flex-1 w-full max-w-[1720px] mx-auto p-3 sm:p-4 lg:p-6 pb-20 lg:pb-8 page-transition">
+        <main className="content-redesign pt-0">
           {currentTab === 'process' && allowedTabs.includes('process') && (
             <ProcessLogView currentRole={authUser.role} currentUser={authUser} />
           )}
@@ -160,14 +151,10 @@ export default function Home() {
         </main>
 
         {/* Industrial Plant Footer */}
-        <footer className="w-full border-t border-[#1F2E43]/60 bg-[#0A1018] py-2.5 px-4 text-[11px] text-slate-400 font-sans no-print header-accent-line">
-          <div className="max-w-[1720px] mx-auto flex flex-wrap items-center justify-center gap-2 text-center">
-            <Flame className="h-3.5 w-3.5 text-[#009FE3] shrink-0" />
-            <span className="text-slate-200 font-semibold">
-              Lam Soon Edible Oils Sdn. Bhd.
-            </span>
-            <span className="text-[#1F2E43]">·</span>
-            <span className="text-slate-400">Nisshin Deodorizer Plant Refinery Management System (PRD-REF-001) · ISO 22000 & HACCP Certified</span>
+        <footer className="w-full border-t border-[var(--line)] bg-[var(--bg)] py-4 px-10 text-xs text-[var(--muted)] font-sans no-print mt-auto">
+          <div className="max-w-[1400px] mx-auto flex flex-wrap items-center justify-between gap-2">
+            <span>Lam Soon Edible Oils Sdn. Bhd. · Nisshin Deodorizer Plant Refinery Management System (PRD-REF-001)</span>
+            <span>ISO 22000 &amp; HACCP Certified · 21 CFR Part 11</span>
           </div>
         </footer>
       </div>

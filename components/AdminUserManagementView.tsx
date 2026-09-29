@@ -590,453 +590,303 @@ export default function AdminUserManagementView() {
 
   return (
     <div className="space-y-6">
-      {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 rounded-xl bg-[#101927] border border-[#1F2E43]">
-        <div className="flex items-start sm:items-center gap-3.5">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#0A1018] border border-[#1F2E43] text-[#009FE3]">
-            <ShieldCheck className="h-5 w-5" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-base sm:text-lg font-bold text-slate-100 tracking-wide">
-                Plant Administration & User Management
-              </h1>
-            </div>
-            <p className="text-xs text-slate-400 font-sans mt-0.5">
-              Role-Based Access Control (RBAC), Consistent Sequential ID Generation & Nisshin Deodorizer Personnel Directory
-            </p>
-          </div>
+      {/* 1. Header Banner */}
+      <section className="panel head">
+        <div>
+          <h2>Plant administration and user management</h2>
+          <p className="meta">
+            Role-based access control, sequential ID generation and the deodorizer personnel directory
+          </p>
         </div>
-
-        {/* Current Admin Badge & Supabase Sync */}
-        <div className="flex items-center gap-3 flex-wrap justify-end">
+        <div className="stats">
           <button
             type="button"
             onClick={handleManualSync}
             disabled={isSyncing}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#172235] hover:bg-[#1F2E43] text-slate-200 border border-[#1F2E43] hover:border-[#009FE3]/50 text-xs font-mono font-semibold transition-all cursor-pointer disabled:opacity-50"
-            title="Fetch and synchronize latest user profiles directly with Supabase"
+            className="ghost"
           >
-            <RefreshCw className={`h-3.5 w-3.5 text-[#009FE3] ${isSyncing ? 'animate-spin' : ''}`} />
-            <span>{isSyncing ? 'Syncing...' : 'Sync Supabase'}</span>
+            {isSyncing ? 'Syncing...' : 'Sync Supabase'}
           </button>
-
-          <div className="text-right">
-            <span className="text-[10px] font-mono uppercase text-slate-400 block font-medium">Current User:</span>
-            <span className="text-xs font-semibold text-slate-200 font-mono">
-              {currentProfile.full_name} ({currentProfile.employee_no})
-            </span>
-          </div>
-          <span className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold uppercase border ${roleStyles[currentRole]?.bg} ${roleStyles[currentRole]?.text} ${roleStyles[currentRole]?.border}`}>
-            {currentRole}
+          <span className="hint">
+            Current user <b style={{ color: 'var(--text)', fontWeight: 500 }}>{currentProfile.full_name} ({currentProfile.employee_no})</b>
           </span>
+          <span className="bd r">{currentRole}</span>
         </div>
-      </div>
+      </section>
 
-      {/* Admin Section Navigation Sub-Tabs */}
-      <div className="flex items-center gap-2 border-b border-[#1F2E43] pb-3 flex-wrap">
+      {/* 2. Admin Section Navigation Sub-Tabs */}
+      <div className="segs" style={{ '--c': 2, maxWidth: '520px' } as React.CSSProperties}>
         <button
+          className="seg"
+          aria-pressed={activeAdminSubTab === 'personnel'}
           type="button"
           onClick={() => setActiveAdminSubTab('personnel')}
-          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all cursor-pointer ${
-            activeAdminSubTab === 'personnel'
-              ? 'bg-[#009FE3] text-white border border-[#009FE3]'
-              : 'bg-[#101927] text-slate-400 hover:text-slate-200 hover:bg-[#172235] border border-[#1F2E43]'
-          }`}
         >
-          <Users className="h-4 w-4" />
-          <span>Personnel & Access Control</span>
+          Personnel and access control
         </button>
-
         <button
+          className="seg"
+          aria-pressed={activeAdminSubTab === 'retention'}
           type="button"
           onClick={() => {
             setActiveAdminSubTab('retention');
             refreshStorage();
           }}
-          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all cursor-pointer ${
-            activeAdminSubTab === 'retention'
-              ? 'bg-[#009FE3] text-white border border-[#009FE3]'
-              : 'bg-[#101927] text-slate-400 hover:text-slate-200 hover:bg-[#172235] border border-[#1F2E43]'
-          }`}
         >
-          <HardDrive className="h-4 w-4" />
-          <span>Data Retention & Supabase Prune Policy</span>
+          Data retention and prune policy
         </button>
       </div>
 
       {activeAdminSubTab === 'personnel' ? (
         <>
           {/* RBAC Warning Banner if not Admin */}
-      {!isAdmin && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-amber-950/30 border border-amber-800/60 text-amber-300 text-xs font-mono">
-          <div className="flex items-center gap-2.5">
-            <ShieldAlert className="h-5 w-5 text-amber-400 shrink-0" />
-            <div>
-              <span className="font-bold">RESTRICTED VIEW MODE:</span> You are logged in with role <span className="uppercase text-amber-400 font-bold">[{currentRole}]</span>. Staff registration and status modification are restricted to the Plant Administrator (*Admin*).
-            </div>
-          </div>
-          <button
-            onClick={handleSwitchToAdmin}
-            className="px-3 py-1.5 rounded-lg bg-[#009FE3] hover:bg-[#0089C4] text-white font-semibold whitespace-nowrap transition-all cursor-pointer text-xs border border-[#009FE3]/50"
-          >
-            Switch to Admin Profile (AD-5010)
-          </button>
-        </div>
-      )}
-
-      {/* Notification Banner */}
-      {statusMessage && (
-        <div className={`flex items-center justify-between p-3.5 rounded-xl border text-xs font-mono ${
-          statusMessage.type === 'success' 
-            ? 'bg-emerald-950/40 border-emerald-800/60 text-emerald-300' 
-            : 'bg-rose-950/40 border-rose-800/60 text-rose-300'
-        }`}>
-          <div className="flex items-center gap-2">
-            {statusMessage.type === 'success' ? (
-              <CheckCircle2 className="h-4 w-4 text-green-600 shrink-0" />
-            ) : (
-              <AlertTriangle className="h-4 w-4 text-red-600 shrink-0" />
-            )}
-            <span>{statusMessage.text}</span>
-          </div>
-          <button 
-            onClick={() => setStatusMessage(null)}
-            className="text-slate-400 hover:text-slate-800 font-bold ml-2 cursor-pointer"
-          >
-            ×
-          </button>
-        </div>
-      )}
-
-      {/* KPI Stats Strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        <div className="p-3.5 rounded-lg bg-[#101927] border border-[#1F2E43] hover:border-slate-600 transition-colors">
-          <div className="text-[11px] font-mono text-slate-400 uppercase font-medium">Total Staff</div>
-          <div className="text-xl font-bold font-mono text-slate-100 mt-1">{totalCount}</div>
-          <div className="text-[10px] text-slate-500 mt-0.5">Registered in plant</div>
-        </div>
-
-        <div className="p-3.5 rounded-lg bg-[#101927] border border-[#1F2E43] hover:border-slate-600 transition-colors">
-          <div className="text-[11px] font-mono text-emerald-400 uppercase font-semibold">Operator (OP)</div>
-          <div className="text-xl font-bold font-mono text-emerald-400 mt-1">{operatorCount}</div>
-          <div className="text-[10px] text-slate-500 mt-0.5">Series OP-1xxx</div>
-        </div>
-
-        <div className="p-3.5 rounded-lg bg-[#101927] border border-[#1F2E43] hover:border-slate-600 transition-colors">
-          <div className="text-[11px] font-mono text-amber-400 uppercase font-semibold">Supervisor (SV)</div>
-          <div className="text-xl font-bold font-mono text-amber-400 mt-1">{supervisorCount}</div>
-          <div className="text-[10px] text-slate-500 mt-0.5">Series SV-2xxx</div>
-        </div>
-
-        <div className="p-3.5 rounded-lg bg-[#101927] border border-[#1F2E43] hover:border-slate-600 transition-colors">
-          <div className="text-[11px] font-mono text-[#009FE3] uppercase font-semibold">QC Laboratory (QC/QM)</div>
-          <div className="text-xl font-bold font-mono text-[#009FE3] mt-1">{qcCount}</div>
-          <div className="text-[10px] text-slate-500 mt-0.5">Series QC-3xxx / QM-4xxx</div>
-        </div>
-
-        <div className="p-3.5 rounded-lg bg-[#101927] border border-[#1F2E43] hover:border-slate-600 transition-colors">
-          <div className="text-[11px] font-mono text-blue-400 uppercase font-semibold">Admin & Audit (AD/AU)</div>
-          <div className="text-xl font-bold font-mono text-blue-400 mt-1">{adminCount}</div>
-          <div className="text-[10px] text-slate-500 mt-0.5">Series AD-5xxx / AU-9xxx</div>
-        </div>
-      </div>
-
-      {/* Main Grid: Add User (Admin Exclusive) & ID Standards */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Left Column: Add User Form (Admin Exclusive) */}
-        <div className="lg:col-span-1 rounded-xl border border-[#1F2E43] bg-[#101927] p-5">
-          <div className="flex items-center gap-2.5 mb-4 border-b border-[#1F2E43] pb-3">
-            <UserPlus className="h-5 w-5 text-[#009FE3]" />
-            <div>
-              <h2 className="text-sm font-bold text-slate-100 tracking-wide">
-                Register New Staff Member
-              </h2>
-              <span className="text-[10px] font-mono text-slate-400">
-                Exclusive Plant Administrator Function (Admin)
+          {!isAdmin && (
+            <div className="panel" style={{ borderColor: 'var(--amber)', background: 'rgba(224,160,48,.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', gap: '12px' }}>
+              <span style={{ color: 'var(--amber)', fontSize: '12px' }}>
+                <b>RESTRICTED VIEW MODE:</b> Logged in as <span className="bd a">[{currentRole}]</span>. Staff registration and status modification require Administrator privileges.
               </span>
-            </div>
-          </div>
-
-          <form onSubmit={handleAddUserSubmit} className="space-y-4 text-xs font-mono">
-            {/* Role Select */}
-            <div>
-              <label className="block text-slate-500 mb-1 font-semibold">
-                Assigned Role / Department:
-              </label>
-              <select
-                disabled={!isAdmin}
-                value={selectedRole}
-                onChange={(e) => handleRoleSelectChange(e.target.value as UserRole)}
-                className="w-full bg-[#0A1018] border border-[#1F2E43] rounded-lg px-3 py-2 text-slate-200 focus:outline-none focus:border-[#009FE3] disabled:opacity-50 cursor-pointer"
+              <button
+                type="button"
+                onClick={handleSwitchToAdmin}
+                className="ghost"
+                style={{ borderColor: 'var(--amber)', color: 'var(--amber)' }}
               >
-                <option value="operator" className="bg-[#101927] text-slate-200">Plant Operator (RF-FR-004 · Series OP-1xxx)</option>
-                <option value="supervisor" className="bg-[#101927] text-slate-200">Shift Supervisor (Series SV-2xxx)</option>
-                <option value="qc_analyst" className="bg-[#101927] text-slate-200">QC Laboratory Analyst (Series QC-3xxx)</option>
-                <option value="qc_manager" className="bg-[#101927] text-slate-200">Quality Control Manager (Series QM-4xxx)</option>
-                <option value="admin" className="bg-[#101927] text-slate-200">Plant Administrator / Admin (Series AD-5xxx)</option>
-                <option value="viewer" className="bg-[#101927] text-slate-200">Quality Auditor (ISO/HACCP · Series AU-9xxx)</option>
-              </select>
+                Switch to Admin Profile
+              </button>
             </div>
+          )}
 
-            {/* Auto Generated Consistent ID Preview */}
-            <div>
-              <label className="block text-slate-500 mb-1 font-semibold">
-                Auto-Generated Sequential Employee ID (Plant Standard):
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  readOnly
-                  value={autoId}
-                  className="w-full bg-[#0A1018] border border-[#1F2E43] rounded-lg px-3 py-2 text-[#009FE3] font-bold tracking-wider cursor-not-allowed font-mono"
-                />
-                <span className="text-[10px] font-mono text-[#009FE3] bg-[#009FE3]/10 px-2.5 py-2 rounded-lg border border-[#009FE3]/30 whitespace-nowrap font-semibold">
-                  Auto-Sequential
-                </span>
-              </div>
-              <span className="text-[10px] text-slate-400 mt-1 block">
-                System detects highest existing series ID and auto-increments by +1.
+          {/* Notification Banner */}
+          {statusMessage && (
+            <div className={`panel ${statusMessage.type === 'error' ? 'al' : ''}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px' }}>
+              <span style={{ fontSize: '12px', color: statusMessage.type === 'error' ? 'var(--redt)' : 'var(--green)' }}>
+                {statusMessage.text}
               </span>
+              <button
+                type="button"
+                onClick={() => setStatusMessage(null)}
+                className="ghost"
+                style={{ padding: '2px 8px' }}
+              >
+                ✕
+              </button>
             </div>
+          )}
 
-            {/* Full Name */}
-            <div>
-              <label className="block text-slate-500 mb-1 font-semibold">
-                Staff Full Name:
-              </label>
-              <input
-                type="text"
-                disabled={!isAdmin}
-                required
-                placeholder="e.g. Muhammad Faizal bin Roslan"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                className="w-full bg-[#0A1018] border border-[#1F2E43] rounded-lg px-3 py-2 text-sm font-sans text-slate-100 placeholder-slate-500 focus:outline-none focus:border-[#009FE3] disabled:opacity-50"
-              />
+          {/* KPI Stats Strip */}
+          <div className="cards c5">
+            <div className="panel">
+              <label>Total staff</label>
+              <b>{totalCount}</b>
+              <p>Registered in plant</p>
             </div>
-
-            {/* Temporary Initial Password */}
-            <div>
-              <label className="block text-slate-500 mb-1 font-semibold">
-                Initial Default Password:
-              </label>
-              <div className="relative">
-                <KeyRound className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-500" />
-                <input
-                  type="text"
-                  disabled={!isAdmin}
-                  value={customPassword}
-                  onChange={(e) => setCustomPassword(e.target.value)}
-                  className="w-full bg-[#0A1018] border border-[#1F2E43] rounded-lg pl-9 pr-3 py-2 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-[#009FE3] disabled:opacity-50"
-                />
-              </div>
-              <span className="text-[10px] text-slate-400 mt-1 block">
-                Default standard: `password123`. Personnel can change after sign-in.
-              </span>
+            <div className="panel">
+              <label>Operators</label>
+              <b>{operatorCount}</b>
+              <p>Series OP-1xxx</p>
             </div>
-
-            <button
-              type="submit"
-              disabled={!isAdmin || isSubmitting}
-              className="w-full flex items-center justify-center gap-2 bg-[#009FE3] hover:bg-[#0089C4] disabled:opacity-50 text-white font-semibold py-2.5 px-4 rounded-lg text-xs transition-all mt-2 cursor-pointer disabled:cursor-not-allowed border border-[#009FE3]/50"
-            >
-              <UserPlus className="h-4 w-4" />
-              <span>{isSubmitting ? 'Registering...' : 'Register Staff & Generate Credentials'}</span>
-            </button>
-          </form>
-
-          {/* Standards Summary Card */}
-          <div className="mt-5 p-3.5 rounded-lg bg-[#0A1018] border border-[#1F2E43] text-[11px] font-mono">
-            <div className="flex items-center gap-1.5 text-[#009FE3] font-bold mb-2">
-              <Sparkles className="h-3.5 w-3.5" />
-              <span>CONSISTENT NUMBERING SCHEME:</span>
+            <div className="panel">
+              <label>Supervisors</label>
+              <b>{supervisorCount}</b>
+              <p>Series SV-2xxx</p>
             </div>
-            <ul className="space-y-1 text-slate-400 text-[10px]">
-              <li>• <b className="text-emerald-400 font-semibold">OP-1xxx</b>: Plant Shift Operator (Morning/Evening/Night)</li>
-              <li>• <b className="text-amber-400 font-semibold">SV-2xxx</b>: Shift Supervisor (Sheet Verification)</li>
-              <li>• <b className="text-sky-400 font-semibold">QC-3xxx</b>: Lab Analyst (FFA/IV/Colour/SFC Testing)</li>
-              <li>• <b className="text-cyan-400 font-semibold">QM-4xxx</b>: Quality Manager (Product Disposition)</li>
-              <li>• <b className="text-blue-400 font-semibold">AD-5xxx</b>: Plant Administrator & Specification Config</li>
-              <li>• <b className="text-slate-400 font-semibold">AU-9xxx</b>: External Auditor (ISO Record Audits)</li>
-            </ul>
+            <div className="panel">
+              <label>QC laboratory</label>
+              <b>{qcCount}</b>
+              <p>Series QC / QM</p>
+            </div>
+            <div className="panel">
+              <label>Admin & audit</label>
+              <b>{adminCount}</b>
+              <p>Series AD / AU</p>
+            </div>
           </div>
-        </div>
 
-        {/* Right Column: Plant Staff Directory Table */}
-        <div className="lg:col-span-2 rounded-xl border border-[#1F2E43] bg-[#101927] p-5 flex flex-col justify-between">
-          <div>
-            {/* Table Controls */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-              <div>
-                <h2 className="text-sm font-bold text-slate-100 tracking-wide flex items-center gap-2">
-                  <Users className="h-4 w-4 text-[#009FE3]" />
-                  <span>Active Plant Personnel Directory ({filteredProfiles.length})</span>
-                </h2>
-                <span className="text-[10px] font-mono text-slate-400">
-                  Synchronized with Supabase PostgreSQL & Local Storage
-                </span>
+          {/* Main Grid: Add User & Personnel Directory */}
+          <div className="two" style={{ gridTemplateColumns: '360px minmax(0, 1fr)' }}>
+            {/* Left Column: Register Staff */}
+            <section className="panel">
+              <div className="ph">Register new staff member</div>
+              <div style={{ padding: '20px' }}>
+                <form onSubmit={handleAddUserSubmit}>
+                  <div className="fld">
+                    <label htmlFor="ro">Assigned role</label>
+                    <select
+                      id="ro"
+                      disabled={!isAdmin}
+                      value={selectedRole}
+                      onChange={(e) => handleRoleSelectChange(e.target.value as UserRole)}
+                    >
+                      <option value="operator">Plant Operator (Series OP-1xxx)</option>
+                      <option value="supervisor">Shift Supervisor (Series SV-2xxx)</option>
+                      <option value="qc_analyst">QC Laboratory Analyst (Series QC-3xxx)</option>
+                      <option value="qc_manager">Quality Control Manager (Series QM-4xxx)</option>
+                      <option value="admin">Plant Administrator / Admin (Series AD-5xxx)</option>
+                      <option value="viewer">Quality Auditor (Series AU-9xxx)</option>
+                    </select>
+                  </div>
+
+                  <div className="fld">
+                    <label htmlFor="ri">Employee ID (auto-generated)</label>
+                    <input id="ri" value={autoId} readOnly />
+                  </div>
+
+                  <div className="fld">
+                    <label htmlFor="rn">Full name</label>
+                    <input
+                      id="rn"
+                      disabled={!isAdmin}
+                      required
+                      placeholder="e.g. Muhammad Faizal bin Roslan"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="fld">
+                    <label htmlFor="rp">Initial password</label>
+                    <input
+                      id="rp"
+                      disabled={!isAdmin}
+                      type="password"
+                      value={customPassword}
+                      onChange={(e) => setCustomPassword(e.target.value)}
+                      autoComplete="new-password"
+                    />
+                  </div>
+
+                  <button
+                    className="primary wide"
+                    type="submit"
+                    disabled={!isAdmin || isSubmitting}
+                  >
+                    {isSubmitting ? 'Registering...' : 'Register staff and generate credentials'}
+                  </button>
+
+                  <p className="hint" style={{ marginTop: '12px', fontSize: '12px' }}>
+                    Staff can change the initial password after signing in.
+                  </p>
+                </form>
               </div>
+            </section>
 
-              {/* Filters */}
-              <div className="flex items-center gap-2">
-                {/* Search */}
-                <div className="relative">
-                  <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-slate-500" />
+            {/* Right Column: Personnel Directory Table */}
+            <section className="panel">
+              <div className="ph">
+                <span>
+                  Active plant personnel <span className="bd">{filteredProfiles.length}</span>
+                </span>
+                <div className="dr">
                   <input
-                    type="text"
-                    placeholder="Search ID or name..."
+                    className="inp"
+                    type="search"
+                    style={{ width: '190px' }}
+                    placeholder="Search ID or name"
+                    aria-label="Search staff"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="bg-[#0A1018] border border-[#1F2E43] rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-[#009FE3] w-36 sm:w-48 font-mono"
                   />
+                  <select
+                    className="inp"
+                    style={{ width: '150px' }}
+                    aria-label="Filter by role"
+                    value={roleFilter}
+                    onChange={(e) => setRoleFilter(e.target.value)}
+                  >
+                    <option value="all">All roles</option>
+                    <option value="operator">Operator (OP)</option>
+                    <option value="supervisor">Supervisor (SV)</option>
+                    <option value="qc_analyst">QC Analyst (QC)</option>
+                    <option value="qc_manager">QC Manager (QM)</option>
+                    <option value="admin">Admin (AD)</option>
+                    <option value="viewer">Viewer (AU)</option>
+                  </select>
                 </div>
-
-                {/* Role Filter */}
-                <select
-                  value={roleFilter}
-                  onChange={(e) => setRoleFilter(e.target.value)}
-                  className="bg-[#0A1018] border border-[#1F2E43] rounded-lg px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-[#009FE3] font-mono cursor-pointer"
-                >
-                  <option value="all" className="bg-[#101927] text-slate-200">All Roles</option>
-                  <option value="operator" className="bg-[#101927] text-slate-200">Operator (OP)</option>
-                  <option value="supervisor" className="bg-[#101927] text-slate-200">Supervisor (SV)</option>
-                  <option value="qc_analyst" className="bg-[#101927] text-slate-200">QC Analyst (QC)</option>
-                  <option value="qc_manager" className="bg-[#101927] text-slate-200">QC Manager (QM)</option>
-                  <option value="admin" className="bg-[#101927] text-slate-200">Admin (AD)</option>
-                  <option value="viewer" className="bg-[#101927] text-slate-200">Viewer / Audit (AU)</option>
-                </select>
               </div>
-            </div>
 
-            {/* Table Container */}
-            <div className="rounded-xl border border-[#1F2E43] overflow-x-auto bg-[#0A1018]">
-              <table className="w-full text-left text-xs font-mono min-w-[700px]">
-                <thead className="bg-[#101927] border-b border-[#1F2E43] text-slate-400 text-[11px] font-semibold uppercase tracking-wider">
-                  <tr>
-                    <th className="py-2.5 px-3.5">Employee ID (employee_no)</th>
-                    <th className="py-2.5 px-3.5 font-sans font-semibold">Staff Name (full_name)</th>
-                    <th className="py-2.5 px-3.5">Role (role)</th>
-                    <th className="py-2.5 px-3.5">Status (status)</th>
-                    <th className="py-2.5 px-3.5">Password (password)</th>
-                    <th className="py-2.5 px-3.5">Created Date (created_at)</th>
-                    <th className="py-2.5 px-3.5 text-right">Admin Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#1F2E43] bg-[#0A1018]">
-                  {filteredProfiles.length === 0 ? (
+              <div className="tw">
+                <table>
+                  <thead>
                     <tr>
-                      <td colSpan={7} className="py-6 text-center text-slate-500">
-                        No personnel found matching search criteria.
-                      </td>
+                      <th>Employee ID</th>
+                      <th>Name</th>
+                      <th>Role</th>
+                      <th>Status</th>
+                      <th>Password</th>
+                      <th>Created</th>
+                      <th style={{ textAlign: 'right' }}>Actions</th>
                     </tr>
-                  ) : (
-                    filteredProfiles.map((p) => {
-                      const badge = roleStyles[p.role] || roleStyles.operator;
-                      const isCurrent = p.employee_no === currentProfile.employee_no || p.id === currentProfile.id;
-                      const isActive = p.status === 'active' || (p.status !== 'unactive' && p.active !== false);
+                  </thead>
+                  <tbody>
+                    {filteredProfiles.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} style={{ textAlign: 'center', padding: '32px', color: 'var(--muted)' }}>
+                          No personnel found matching search criteria.
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredProfiles.map((p) => {
+                        const isCurrent = p.employee_no === currentProfile.employee_no || p.id === currentProfile.id;
+                        const isActive = p.status === 'active' || (p.status !== 'unactive' && p.active !== false);
 
-                      return (
-                        <tr key={p.employee_no || p.id} className="hover:bg-[#101927] transition-colors">
-                          <td className="py-2.5 px-3.5 font-bold font-mono">
-                            <span className="text-[#009FE3] bg-[#0A1018] border border-[#1F2E43] px-2 py-0.5 rounded shadow-xs inline-block">
-                              {p.employee_no}
-                            </span>
-                          </td>
-                          <td className="py-2.5 px-3.5 text-slate-200 font-sans font-medium">
-                            <div className="flex items-center gap-1.5">
-                              <span>{p.full_name}</span>
-                              {isCurrent && (
-                                <span className="text-[9px] bg-[#009FE3]/20 text-[#009FE3] border border-[#009FE3]/40 px-1.5 py-0.2 rounded font-mono font-semibold">
-                                  You
-                                </span>
+                        return (
+                          <tr key={p.employee_no || p.id}>
+                            <td><b>{p.employee_no}</b></td>
+                            <td>
+                              {p.full_name}
+                              {isCurrent && <span className="bd" style={{ marginLeft: '6px' }}>You</span>}
+                            </td>
+                            <td><span className="bd">{p.role}</span></td>
+                            <td>
+                              <span className={`bd ${isActive ? 'g' : 'r'}`}>
+                                {isActive ? 'Active' : 'Inactive'}
+                              </span>
+                            </td>
+                            <td><span className="bd a">{p.password ? 'Custom' : 'Default'}</span></td>
+                            <td style={{ color: 'var(--muted)' }}>
+                              {p.created_at ? new Date(p.created_at).toLocaleDateString('en-GB', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric'
+                              }) : '26 Sep 2026'}
+                            </td>
+                            <td style={{ textAlign: 'right' }}>
+                              {isAdmin ? (
+                                <div className="dr" style={{ justifyContent: 'flex-end' }}>
+                                  <button
+                                    type="button"
+                                    className="ghost"
+                                    disabled={isCurrent}
+                                    onClick={() => handleToggleStatus(p.employee_no, isActive, p.full_name)}
+                                  >
+                                    {isActive ? 'Set inactive' : 'Reactivate'}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="ghost dng"
+                                    disabled={isCurrent}
+                                    onClick={() => handleDeleteUser(p.employee_no, p.full_name)}
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
+                              ) : (
+                                <span className="hint">Admin Only</span>
                               )}
-                            </div>
-                          </td>
-                          <td className="py-2.5 px-3.5">
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${badge.bg} ${badge.text} ${badge.border} font-mono`}>
-                              {p.role === 'operator' ? 'Operator' : p.role === 'supervisor' ? 'Supervisor' : p.role === 'qc_analyst' ? 'QC Staff' : p.role === 'qc_manager' ? 'QC Manager' : p.role === 'admin' ? 'Admin' : 'User'}
-                            </span>
-                          </td>
-                          <td className="py-2.5 px-3.5">
-                            {isActive ? (
-                              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-950/60 border border-emerald-800 text-emerald-400 text-[10px] font-semibold">
-                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                                active
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-rose-950/60 border border-rose-800 text-rose-400 text-[10px] font-semibold">
-                                <span className="h-1.5 w-1.5 rounded-full bg-rose-400"></span>
-                                unactive
-                              </span>
-                            )}
-                          </td>
-                          <td className="py-2.5 px-3.5">
-                            <span className="inline-block px-2 py-0.5 rounded bg-[#101927] border border-[#1F2E43] text-slate-300 text-[11px] font-mono">
-                              {p.password || 'password123'}
-                            </span>
-                          </td>
-                          <td className="py-2.5 px-3.5 text-slate-400 text-[11px]">
-                            {p.created_at ? new Date(p.created_at).toLocaleDateString('en-GB', {
-                              day: '2-digit',
-                              month: 'short',
-                              year: 'numeric'
-                            }) : '-'}
-                          </td>
-                          <td className="py-2.5 px-3.5 text-right">
-                            {isAdmin ? (
-                              <div className="flex items-center justify-end gap-1.5">
-                                <button
-                                  onClick={() => handleToggleStatus(p.employee_no, isActive, p.full_name)}
-                                  disabled={isCurrent}
-                                  className={`text-[10px] px-2 py-1 rounded transition-colors font-semibold ${
-                                    isCurrent
-                                      ? 'opacity-30 cursor-not-allowed text-slate-500'
-                                      : isActive
-                                        ? 'text-red-600 hover:bg-rose-950/50 border border-rose-800/60 cursor-pointer'
-                                        : 'text-green-600 hover:bg-emerald-950/50 border border-emerald-800/60 cursor-pointer'
-                                  }`}
-                                  title={isCurrent ? 'Cannot deactivate your own active account' : undefined}
-                                >
-                                  {isActive ? 'Set Unactive' : 'Set Active'}
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteUser(p.employee_no, p.full_name)}
-                                  disabled={isCurrent}
-                                  className={`text-[10px] px-2 py-1 rounded transition-colors font-semibold flex items-center gap-1 ${
-                                    isCurrent
-                                      ? 'opacity-30 cursor-not-allowed text-slate-500'
-                                      : 'text-red-600 hover:bg-rose-950/50 border border-rose-800/60 cursor-pointer shadow-xs'
-                                  }`}
-                                  title={isCurrent ? 'Cannot delete your own active administrator account' : `Permanently delete ${p.full_name} (${p.employee_no})`}
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                  <span>Delete</span>
-                                </button>
-                              </div>
-                            ) : (
-                              <span className="text-[10px] text-slate-500">Admin Only</span>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              <p className="foot">
+                21 CFR Part 11 audit trail: all personnel additions and status changes are permanently logged.
+              </p>
+            </section>
           </div>
-
-          {/* Security Footer Note */}
-          <div className="mt-4 pt-3 border-t border-[#1F2E43] flex items-center justify-between text-[11px] font-mono text-slate-400">
-            <span>21 CFR Part 11 Audit Trail: All personnel additions and status modifications are permanently logged.</span>
-            <span className="text-slate-500 font-medium">Nisshin Deodorizer · Lam Soon</span>
-          </div>
-        </div>
-
-      </div>
-      </>
+        </>
       ) : (
         /* Retention & Supabase Prune Sub-Tab View */
         <div className="space-y-6">

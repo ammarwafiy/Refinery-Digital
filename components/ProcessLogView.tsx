@@ -335,40 +335,22 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
   const isTraySteamSynced = latestEntryWithTraySteam != null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* 1. Sheet Header Banner (RF-FR-004 Rev. 02) */}
-      <div className="rounded-lg border border-[#1F2E43] bg-[#101927] p-4 sm:p-5 shadow-lg">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#1F2E43] pb-4">
+      <section className="panel">
+        <div className="head">
           <div>
             <div className="flex items-center gap-2.5 flex-wrap">
-              <h1 className="text-lg sm:text-xl font-bold tracking-tight text-white font-sans">
-                Hourly Deodorizer Process Control Log
-              </h1>
+              <h2>Hourly Deodorizer Process Control Log</h2>
               {sheet.status === 'verified' && (
-                <div className="flex items-center gap-2">
-                  <span className="flex items-center gap-1.5 text-[11px] font-mono px-2 py-0.5 rounded border border-[#10B981]/40 bg-[#10B981]/15 text-green-600 font-medium">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span> VERIFIED & LOCKED
-                  </span>
-                  {role === 'admin' && (
-                    <button
-                      onClick={() => {
-                        setIsUnlockModalOpen(true);
-                        setUnlockError(null);
-                        setUnlockReason('');
-                        setUnlockPassword('');
-                      }}
-                      className="flex items-center gap-1.5 text-[11px] font-mono px-2.5 py-0.5 rounded border border-[#F59E0B]/40 bg-[#F59E0B]/15 text-amber-300 hover:bg-amber-900/40 transition-colors cursor-pointer font-medium"
-                      title="Unlock this process sheet"
-                    >
-                      <Unlock className="h-3 w-3 text-amber-600" />
-                      <span>UNLOCK SHEET</span>
-                    </button>
-                  )}
-                </div>
+                <span className="bd g">
+                  Verified &amp; Locked
+                </span>
               )}
             </div>
-            <p className="mt-1 text-xs text-slate-400 font-sans">
-              Unit: Deodorizer 01 · Cycle: 07:00 (Start) → 06:00 (Next Day)
+            <p className="meta">
+              <span className="live-dot"></span>
+              Deodorizer 01, cycle runs 07:00 to 06:00 the next day
               {sheet.status === 'verified' && sheet.verified_by_name && (
                 <span className="ml-2 text-green-600 font-medium">
                   · Verified by: {sheet.verified_by_name}
@@ -377,239 +359,135 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
             </p>
           </div>
 
-          {/* Header Setpoints */}
-          <div className="flex flex-wrap items-center gap-2.5 text-xs font-mono">
+          {/* Header Setpoints & Controls */}
+          <div className="stats">
             {/* Shift Date Selector */}
-            <div className="bg-[#0A1018] px-3 py-2 rounded border border-[#1F2E43] min-w-[190px]">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-slate-500 block text-[9px] uppercase tracking-wider font-mono">LOG DATE</span>
-              </div>
-              <div className="flex items-center gap-2 mt-1">
-                <select
-                  value={activeShiftDate}
-                  onChange={(e) => handleDateChange(e.target.value)}
-                  className="bg-transparent text-slate-100 font-medium font-mono text-xs border-0 focus:ring-0 p-0 cursor-pointer hover:text-[#009FE3]"
-                  title="Select Shift Date to view log"
-                >
-                  {availableDates.map(d => (
-                    <option key={d} value={d} className="bg-[#0A1018] text-slate-100">
-                      {d} {d === getRealtimeShiftDate() ? '(Today · Live)' : ''}
-                    </option>
-                  ))}
-                  {!availableDates.includes(activeShiftDate) && (
-                    <option value={activeShiftDate} className="bg-[#0A1018] text-slate-100">
-                      {activeShiftDate} (Custom)
-                    </option>
-                  )}
-                </select>
-
-                <input
-                  type="date"
-                  value={activeShiftDate}
-                  onChange={(e) => e.target.value && handleDateChange(e.target.value)}
-                  className="bg-[#0A1018] border border-[#1F2E43] text-slate-300 rounded px-1.5 py-0.5 text-[10px] font-mono focus:border-[#009FE3] focus:outline-none cursor-pointer"
-                  title="Pick historical date"
-                />
-
-                {!isLiveShift && (
-                  <button
-                    type="button"
-                    onClick={() => handleDateChange(getRealtimeShiftDate())}
-                    className="text-[9px] font-mono font-medium uppercase tracking-wider px-1.5 py-0.5 rounded border border-[#009FE3]/40 bg-[#009FE3]/15 hover:bg-[#009FE3]/25 text-[#08B5F5] transition-colors cursor-pointer"
-                    title="Return to today's active live shift"
-                  >
-                    Go Live
-                  </button>
-                )}
-              </div>
+            <div className="f">
+              <label htmlFor="d">Log date</label>
+              <input
+                id="d"
+                type="date"
+                value={activeShiftDate}
+                onChange={(e) => e.target.value && handleDateChange(e.target.value)}
+                className="cursor-pointer"
+                title="Pick shift date"
+              />
             </div>
 
-            {/* Stripping Steam Setpoint Tile */}
-            <div className="bg-[#0A1018] px-3 py-2 rounded border border-[#1F2E43] flex flex-col justify-center min-w-[130px]">
-              <div className="flex items-center justify-between gap-1.5">
-                <span className="text-slate-500 block text-[9px] uppercase tracking-wider font-mono">STRIPPING STEAM</span>
-                {isStripSteamSynced && (
-                  <span className="text-[8px] font-mono px-1 rounded border border-[#009FE3]/40 bg-[#009FE3]/15 text-[#009FE3] font-medium">
-                    SYNC
-                  </span>
-                )}
-              </div>
-              <span className="text-slate-100 font-semibold font-mono text-xs mt-0.5">
-                {Number(liveStrippingSteam).toFixed(2)} <span className="text-slate-400 font-normal">% oil</span>
-              </span>
+            {/* Stripping Steam Metric */}
+            <div className="m">
+              <label>Stripping steam</label>
+              <strong>{Number(liveStrippingSteam).toFixed(2)}</strong>
+              <span>% oil</span>
             </div>
 
-            {/* Tray Steam Supply Tile */}
-            <div className="bg-[#0A1018] px-3 py-2 rounded border border-[#1F2E43] flex flex-col justify-center min-w-[130px]">
-              <div className="flex items-center justify-between gap-1.5">
-                <span className="text-slate-500 block text-[9px] uppercase tracking-wider font-mono">TRAY STEAM</span>
-                {isTraySteamSynced && (
-                  <span className="text-[8px] font-mono px-1 rounded border border-[#F59E0B]/40 bg-[#F59E0B]/15 text-amber-600 font-medium">
-                    SYNC
-                  </span>
-                )}
-              </div>
-              <span className="text-slate-100 font-semibold font-mono text-xs mt-0.5">
-                {Number(liveTraySteam).toFixed(2)} <span className="text-slate-400 font-normal">Bar</span>
-              </span>
+            {/* Tray Steam Metric */}
+            <div className="m">
+              <label>Tray steam</label>
+              <strong>{Number(liveTraySteam).toFixed(2)}</strong>
+              <span>bar</span>
             </div>
 
             {/* Supervisor Action Button */}
             {(role === 'supervisor' || role === 'admin') && sheet.status !== 'verified' && (
               <button
+                type="button"
                 onClick={() => setIsVerifyModalOpen(true)}
-                className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-mono font-medium text-xs uppercase tracking-wider px-3.5 py-2 rounded transition-all border border-emerald-500 shadow-sm cursor-pointer"
+                className="primary"
               >
-                <FileCheck2 className="h-3.5 w-3.5" />
-                <span>Verify Shift</span>
+                Verify shift
               </button>
             )}
 
             {/* Admin Unlock Action Button */}
             {role === 'admin' && sheet.status === 'verified' && (
               <button
+                type="button"
                 onClick={() => {
                   setIsUnlockModalOpen(true);
                   setUnlockError(null);
                   setUnlockReason('');
                   setUnlockPassword('');
                 }}
-                className="flex items-center gap-1.5 bg-amber-600 hover:bg-[#F59E0B]/150 text-white font-mono font-medium text-xs uppercase tracking-wider px-3.5 py-2 rounded transition-all border border-amber-500 shadow-sm cursor-pointer"
+                className="ghost"
                 title="Unlock process sheet for corrections"
               >
-                <Unlock className="h-3.5 w-3.5" />
-                <span>Admin Unlock</span>
+                Unlock shift
               </button>
             )}
           </div>
         </div>
 
         {/* 2. 24-Hour Time Slot Navigator Strip */}
-        <div className="mt-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2.5">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono">
-                24-HOUR TIMELINE RIBBON:
-              </span>
-              {role === 'operator' && isLiveShift && (
-                <span className="text-[9px] font-mono text-[#009FE3] bg-[#101927] px-2 py-0.5 rounded border border-[#1F2E43]">
-                  Operator Lock: Restricted to active live slot
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-3 text-[10px] font-mono text-slate-400">
-              <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-[#009FE3]"></span> Live</span>
-              <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-[#10b981]"></span> Recorded</span>
-              <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-[#f59e0b]"></span> Deviation</span>
-              <span className="flex items-center gap-1"><Lock className="h-2.5 w-2.5 text-slate-500" /> Locked</span>
+        <div className="tl">
+          <div className="tlh">
+            <b>24-hour timeline</b>
+            <div className="legend">
+              <span><i style={{ background: 'var(--red)' }}></i>Live</span>
+              <span><i style={{ background: 'var(--green)' }}></i>Recorded</span>
+              <span><i style={{ background: 'var(--amber)' }}></i>Deviation</span>
+              <span>Locked hours are read-only</span>
             </div>
           </div>
 
-          <div className="grid grid-cols-6 sm:grid-cols-12 lg:grid-cols-24 gap-1.5 overflow-x-auto pb-1">
+          <div className="ribbon-grid" role="group" aria-label="Select hour">
             {Array.from({ length: 24 }).map((_, idx) => {
               const label = String(((idx + 7) % 24) * 100).padStart(4, '0');
               const entry = sheet.entries?.find(e => e.slot_index === idx);
               const isSelected = selectedSlotIndex === idx;
               const isLive = isLiveShift && idx === currentSlotIndex;
               const isPast = isLiveShift ? idx < currentSlotIndex : true;
-              const isFuture = isLiveShift ? idx > currentSlotIndex : false;
               const hasDev = Boolean(entry?.has_deviation);
               const isFilled = Boolean(entry && (entry.recorded_by || entry.product_id || entry.vacuum_torr != null || entry.oil_feed_rate_litre != null || entry.no_production_reason != null));
 
-              let slotColor = 'border-[#1F2E43] bg-[#101927] text-slate-400 hover:border-slate-300 hover:text-slate-200';
+              let statusClass = 'locked';
+              let statusIndicator: React.ReactNode = <i className="dot" />;
+
               if (isLive) {
-                if (isFilled) {
-                  slotColor = 'border-emerald-500/70 bg-[#10B981]/15 text-emerald-300 font-medium shadow-[0_0_8px_rgba(16,185,129,0.3)]';
-                } else {
-                  slotColor = 'border-blue-600 bg-[#009FE3]/15 text-[#08B5F5] font-semibold shadow-[0_0_12px_rgba(0,159,227,0.35)]';
-                }
-              } else if (isFuture) {
-                slotColor = 'border-dashed border-[#1F2E43]/60 bg-[#101927] text-slate-500';
+                statusClass = 'live';
+                statusIndicator = 'Live';
               } else if (hasDev) {
-                slotColor = 'border-[#F59E0B]/70 bg-[#F59E0B]/15 text-amber-300 font-medium';
+                statusClass = 'dev';
+                statusIndicator = <span className="h-1.5 w-1.5 rounded-full bg-[var(--amber)] inline-block" />;
               } else if (isFilled) {
-                slotColor = 'border-[#1F2E43] bg-[#0A1018] text-slate-100 hover:border-slate-300 hover:bg-[#101927]';
+                statusClass = 'recorded';
+                statusIndicator = <span className="h-1.5 w-1.5 rounded-full bg-[var(--green)] inline-block" />;
               } else if (isPast) {
-                slotColor = 'border-[#1F2E43]/60 bg-[#101927] text-slate-500';
-              } else {
-                slotColor = 'border-dashed border-[#1F2E43]/60 bg-[#101927] text-slate-500';
+                statusClass = 'locked';
+                statusIndicator = <Lock className="h-2.5 w-2.5 text-[var(--muted)]" />;
               }
-
-              if (isSelected) {
-                slotColor = 'border-2 border-blue-600 bg-[#009FE3] text-white font-bold shadow-sm ring-2 ring-blue-300';
-              }
-
-              const isShiftBoundary = idx === 8 || idx === 16;
 
               return (
                 <button
                   key={idx}
+                  type="button"
                   onClick={() => loadSlot(idx)}
-                  className={`flex flex-col items-center justify-center p-1.5 rounded border text-xs font-mono transition-colors relative cursor-pointer ${slotColor} ${
-                    isShiftBoundary ? 'mr-1 sm:mr-1.5' : ''
-                  }`}
+                  className={`ribbon-cell ${statusClass} ${isSelected ? 'sel' : ''}`}
                   title={`Slot ${label} (${label.slice(0, 2)}:00)`}
+                  aria-pressed={isSelected}
                 >
-                  <span className="text-[11px] font-mono tracking-tight">{label}</span>
-                  <div className="mt-0.5 flex items-center justify-center">
-                    {isLive ? (
-                      isFilled ? (
-                        <span className={`text-[7.5px] px-1 py-0.2 rounded font-medium leading-none flex items-center gap-0.5 ${isSelected ? 'bg-[#101927] text-slate-100' : 'bg-emerald-600 text-white'}`}>
-                          <Check className="h-2 w-2 stroke-[3]" />
-                          LIVE
-                        </span>
-                      ) : (
-                        <span className={`text-[7.5px] px-1 py-0.2 rounded font-medium leading-none animate-pulse ${isSelected ? 'bg-[#101927] text-slate-100' : 'bg-[#009FE3] text-white'}`}>
-                          LIVE
-                        </span>
-                      )
-                    ) : isFuture ? (
-                      <span className={`h-1 w-1 rounded-full inline-block ${isSelected ? 'bg-[#101927]' : 'bg-slate-600'}`} />
-                    ) : hasDev ? (
-                      <span className="h-1.5 w-1.5 rounded-full bg-amber-400 inline-block" />
-                    ) : isFilled ? (
-                      <Check className={`h-2.5 w-2.5 ${isSelected ? 'text-white' : 'text-green-600'}`} />
-                    ) : isPast ? (
-                      <Lock className={`h-2 w-2 ${isSelected ? 'text-slate-200' : 'text-slate-500'}`} />
-                    ) : (
-                      <span className={`h-1 w-1 rounded-full inline-block ${isSelected ? 'bg-[#101927]' : 'bg-slate-600'}`} />
-                    )}
-                  </div>
+                  <span>{label}</span>
+                  <small>{statusIndicator}</small>
                 </button>
               );
             })}
           </div>
         </div>
-      </div>
+      </section>
 
       {/* 3. Hourly Data Entry Form Panel */}
-      <div className="rounded-lg border border-[#1F2E43] bg-[#101927] p-5 sm:p-6 shadow-lg">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[#1F2E43] pb-4 mb-6">
-          <div className="flex items-center gap-3.5">
-            <div className="flex h-10 w-14 items-center justify-center rounded border border-[#1F2E43] bg-[#131E2D] text-white font-mono text-xs font-bold tracking-tight shadow-inner">
-              <span>{selectedSlotLabel}</span>
+      <section className="panel">
+        <div className="rh">
+          <div className="rt">
+            <div className="badge">
+              {selectedSlotLabel.slice(0, 2)}:00
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2 flex-wrap font-sans">
-                <span>Hourly Readings for {currentSlotTimeStr} hrs</span>
-                {!isLiveSlot && isPastSlot && (
-                  <span className="inline-flex items-center gap-1 rounded border border-[#1F2E43] bg-[#131E2D] px-2 py-0.5 text-[11px] font-mono text-slate-400">
-                    <Lock className="h-3 w-3 text-slate-500" /> CLOSED (READ-ONLY)
-                  </span>
-                )}
-                {!isLiveSlot && !isPastSlot && (
-                  <span className="inline-flex items-center gap-1 rounded border border-[#1F2E43] bg-[#131E2D] px-2 py-0.5 text-[11px] font-mono text-slate-400">
-                    <Clock className="h-3 w-3 text-slate-500" /> AWAITING SHIFT HOUR
-                  </span>
-                )}
-                {formData.has_deviation && (
-                  <span className="inline-flex items-center gap-1 rounded border border-[#F59E0B]/40 bg-[#F59E0B]/15 px-2 py-0.5 text-[11px] font-mono text-amber-300">
-                    <AlertTriangle className="h-3 w-3 text-amber-600" /> Soft Deviation
-                  </span>
-                )}
+              <h2 className="text-lg font-semibold tracking-tight text-[var(--text)]">
+                Hourly readings for {currentSlotTimeStr} hrs
               </h2>
-              <p className="text-xs text-slate-400 font-sans mt-0.5">
-                Ghost numbers indicate previous hour readings.
+              <p className="text-xs text-[var(--muted)] mt-0.5">
+                Ghost numbers show the previous hour&apos;s readings.
               </p>
             </div>
           </div>
@@ -620,23 +498,16 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
               type="button"
               onClick={handleCopyPrevious}
               disabled={selectedSlotIndex === 0 || isSlotDisabled}
-              className={`flex items-center gap-2 px-3 py-2 rounded text-xs font-mono font-medium transition-colors border cursor-pointer disabled:cursor-not-allowed ${
-                copiedSlotLabel
-                  ? 'bg-emerald-600 text-white border-emerald-500'
-                  : 'bg-[#101927] hover:bg-[#101927] disabled:opacity-40 disabled:hover:bg-[#0A1018] text-slate-100 border-[#1F2E43]'
-              }`}
+              className="ghost"
               title={isSlotDisabled ? "Slot locked from copying" : "Copy readings from previous recorded hour"}
             >
               {copiedSlotLabel ? (
                 <>
-                  <Check className="h-3.5 w-3.5 text-white" />
-                  <span>Copied From Hour {copiedSlotLabel}!</span>
+                  <Check className="h-3.5 w-3.5 text-[var(--green)] mr-1" />
+                  <span>Copied from Hour {copiedSlotLabel}!</span>
                 </>
               ) : (
-                <>
-                  <Copy className="h-3.5 w-3.5 text-[#009FE3]" />
-                  <span>Copy Prev Hour ({String((((selectedSlotIndex - 1 + 24) % 24) + 7) % 24 * 100).padStart(4, '0')})</span>
-                </>
+                <span>Copy readings from {String((((selectedSlotIndex - 1 + 24) % 24) + 7) % 24 * 100).padStart(4, '0').slice(0, 2)}:00</span>
               )}
             </button>
           </div>
@@ -771,54 +642,40 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
         )}
 
         {/* Form Inputs Grid */}
-        <form onSubmit={handleSaveEntry} className="space-y-5">
+        <form onSubmit={handleSaveEntry}>
           {/* Section A: Product Picker */}
-          <div className="rounded border border-[#1F2E43] bg-[#131E2D] p-4">
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5 font-mono">
-              SECTION 1: PRODUCT SPECIFICATION & OIL TYPE
-            </label>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-center">
+          <div className="row">
+            <label htmlFor="prod">Product specification and oil type</label>
+            <div className="sel-wrap">
               <select
+                id="prod"
                 value={formData.product_id || ''}
                 onChange={e => handleProductChange(e.target.value)}
                 disabled={isSlotDisabled}
-                className="col-span-2 bg-[#0A1018] border border-[#1F2E43] rounded px-3 py-2 text-xs text-slate-100 font-mono font-medium focus:outline-none focus:border-[#009FE3] focus:ring-1 focus:ring-[#009FE3]/30 disabled:opacity-50 disabled:bg-[#070B12]"
+                className="bg-[var(--bg)] border border-[var(--line)] rounded-lg px-3 py-2 text-sm text-[var(--text)]"
               >
                 {products.map(p => (
-                  <option key={p.id} value={p.id} className="bg-[#0A1018] text-slate-100">
+                  <option key={p.id} value={p.id} className="bg-[var(--bg)] text-[var(--text)]">
                     {p.name}
                   </option>
                 ))}
               </select>
-              <div className="text-[11px] text-slate-400 font-mono">
-                Auto-carried from previous hour if unchanged.
-              </div>
+              <span className="hint">
+                Carried over from previous hour unless changed.
+              </span>
             </div>
           </div>
 
-          {/* Section A.1: Auto-Dispatch to RF-FR-001 QC Lab (Mandatory Plant SOP · Locked) */}
-          <div className="rounded border border-[#1F2E43] bg-[#131E2D] p-3.5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="rounded border border-[#1F2E43] bg-[#101927] p-2 text-[#009FE3] shrink-0">
-                  <FlaskConical className="h-4 w-4" />
-                </div>
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-xs font-bold tracking-tight text-white font-mono">
-                      Auto-Dispatch Sample Lot to QC Lab
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-slate-400 mt-0.5 font-mono">
-                    Sample lot auto-routed to QC Lab queue upon hour activation. Operator override locked per plant QA manual.
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-1.5 self-start sm:self-auto text-[10px] text-slate-500 font-mono bg-[#101927] px-2.5 py-1 rounded border border-[#1F2E43]">
-                <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
-                <span>SYNCED WITH SHIFT TIMELINE</span>
-              </div>
+          {/* Section A.1: Auto-Dispatch to RF-FR-001 QC Lab */}
+          <div className="row dispatch">
+            <div>
+              <b>Auto-dispatch sample lot to QC Lab</b>
+              <p>The sample lot is sent to the QC Lab queue when the hour starts. Operators cannot override this, per the plant QA manual.</p>
             </div>
+            <span className="sync">
+              <i></i>
+              <span>Synced with shift timeline</span>
+            </span>
           </div>
 
           {/* Section B: Processing Conditions (Feed Rate, Deod Time, Vacuum) */}
@@ -1145,40 +1002,41 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
           </div>
 
           {/* Section F: Remarks & Shift Notes */}
-          <div className="rounded border border-[#1F2E43] bg-[#131E2D] p-4">
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5 font-mono">
-              REMARKS & PROCESS DEVIATION NOTES (MANDATORY IF OUT-OF-BAND EVENT)
+          <div className="row">
+            <label htmlFor="remarks">
+              Remarks and process deviation notes <span className="hint" style={{ fontWeight: 400 }}>(required for out-of-band readings)</span>
             </label>
             <textarea
-              rows={2}
-              placeholder="Record valve adjustments, filter regeneration, feed transitions, or plant equipment states..."
+              id="remarks"
+              rows={3}
+              placeholder="Valve adjustments, filter regeneration, feed transitions or equipment states..."
               value={formData.remarks || ''}
               onChange={e => handleFieldChange('remarks', e.target.value)}
               disabled={isSlotDisabled}
-              className="w-full bg-[#0A1018] border border-[#1F2E43] rounded px-3 py-2 text-xs font-mono text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-[#009FE3] focus:ring-1 focus:ring-[#009FE3]/30 disabled:opacity-50 disabled:bg-[#070B12] disabled:cursor-not-allowed resize-none"
+              className="rem"
             />
           </div>
 
           {/* Submit Save Button */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-3 border-t border-[#1F2E43]">
-            <div className="text-[11px] text-slate-400 font-mono">
+          <div className="foot">
+            <div className="text-[12px] text-[var(--muted)]">
               {isJustSaved ? (
-                <span className="flex items-center gap-1.5 text-green-600 font-medium">
-                  <CheckCircle2 className="h-4 w-4 shrink-0 text-green-600" />
+                <span className="flex items-center gap-1.5 text-[var(--green)] font-medium">
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-[var(--green)]" />
                   Hour {selectedSlotLabel} telemetry committed to immutable audit trail!
                 </span>
               ) : successMessage ? (
-                <span className="flex items-center gap-1.5 text-green-600">
-                  <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-green-600" />
+                <span className="flex items-center gap-1.5 text-[var(--green)]">
+                  <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-[var(--green)]" />
                   {successMessage}
                 </span>
               ) : validationError ? (
-                <span className="flex items-center gap-1.5 text-red-400">
-                  <AlertCircle className="h-3.5 w-3.5 shrink-0 text-red-400" />
+                <span className="flex items-center gap-1.5 text-[var(--amber)]">
+                  <AlertCircle className="h-3.5 w-3.5 shrink-0 text-[var(--amber)]" />
                   {validationError}
                 </span>
               ) : (
-                <span>All committed entries logged with operator credentials and cryptographic timestamp.</span>
+                <span>Committed entries are logged with your credentials and a timestamp.</span>
               )}
             </div>
 
@@ -1186,27 +1044,21 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
               <button
                 type="submit"
                 disabled={isSlotDisabled || isSaving}
-                className={`flex items-center gap-2 font-mono font-medium text-xs uppercase tracking-wider px-6 py-2.5 rounded transition-all border ${
-                  isJustSaved
-                    ? 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-500 cursor-pointer'
-                    : isSlotDisabled
-                    ? 'bg-[#101927] text-slate-500 border-[#1F2E43] cursor-not-allowed opacity-60'
-                    : 'bg-[#009FE3] hover:bg-[#08B5F5] text-white border-[#009FE3] cursor-pointer shadow-xs'
-                }`}
+                className="primary"
               >
                 {isJustSaved ? (
                   <>
-                    <Check className="h-3.5 w-3.5 text-white" />
+                    <Check className="h-3.5 w-3.5 text-white mr-1.5" />
                     <span>Hour {selectedSlotLabel} Recorded!</span>
                   </>
                 ) : isSaving ? (
                   <>
-                    <Clock className="h-3.5 w-3.5 animate-spin text-white" />
+                    <Clock className="h-3.5 w-3.5 animate-spin text-white mr-1.5" />
                     <span>Committing Hour {selectedSlotLabel}...</span>
                   </>
                 ) : isSlotDisabled ? (
                   <>
-                    <Lock className="h-3.5 w-3.5 text-slate-500" />
+                    <Lock className="h-3.5 w-3.5 text-white/70 mr-1.5" />
                     <span>
                       {sheet.status === 'verified'
                         ? 'Sheet Locked (Verified)'
@@ -1221,7 +1073,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                   </>
                 ) : (
                   <>
-                    <Save className="h-3.5 w-3.5" />
+                    <Save className="h-3.5 w-3.5 mr-1.5" />
                     <span>Commit Hour {selectedSlotLabel} Log</span>
                   </>
                 )}
@@ -1229,7 +1081,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
             </div>
           </div>
         </form>
-      </div>
+      </section>
 
       {/* Supervisor Verification Modal */}
       {isVerifyModalOpen && (

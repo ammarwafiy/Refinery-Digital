@@ -365,86 +365,57 @@ export default function OfficialFormsExportView() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Top SCADA Control Masthead & Document Console */}
-      <div className="rounded-lg border border-[#1F2E43] bg-[#101927] p-4 sm:p-5 no-print">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#0A1018] border border-[#1F2E43] text-[#009FE3]">
-              <FileText className="h-5 w-5" />
-            </div>
-            <div>
-              <h1 className="text-base sm:text-lg font-bold tracking-tight text-slate-100 mt-0.5">
-                Official Controlled Forms & Regulatory Audit Trail
-              </h1>
-              <p className="text-xs text-slate-400">
-                Production Records, QC Analytical Reports, Audit Logs & ISO Compliance Exports
-              </p>
-            </div>
+      <section className="panel no-print">
+        <div className="head">
+          <div>
+            <h2>Official controlled forms and regulatory audit trail</h2>
+            <p className="meta">
+              Production records, QC analytical reports, audit logs and ISO compliance exports
+            </p>
           </div>
-
-          <div className="flex items-center gap-2 font-mono text-xs w-full sm:w-auto justify-end">
-            <button
-              onClick={handlePrint}
-              className="flex items-center gap-1.5 bg-[#0A1018] hover:bg-[#172235] text-slate-200 px-3.5 py-2 rounded-lg transition-all border border-[#1F2E43] hover:border-[#009FE3]/50 cursor-pointer font-mono"
-            >
-              <Printer className="h-4 w-4 text-[#009FE3]" />
-              <span>Print Official PDF</span>
+          <div className="stats">
+            <button onClick={handlePrint} className="ghost" type="button">
+              Print official PDF
             </button>
-
-            <button
-              onClick={handleExportCSV}
-              className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-lg transition-all border border-emerald-500/60 cursor-pointer font-mono font-semibold"
-            >
-              <Download className="h-4 w-4" />
-              <span>Export CSV</span>
+            <button onClick={handleExportCSV} className="primary" type="button">
+              Export CSV
             </button>
           </div>
         </div>
 
         {/* Industrial Segmented Document Switcher */}
-        <div className="mt-4 flex items-center gap-1.5 border-t border-[#1F2E43] pt-3 text-xs font-mono flex-wrap">
-          <button
-            onClick={() => setActiveFormType('rf_fr_004')}
-            className={`px-3.5 py-1.5 rounded-lg border transition-all cursor-pointer font-mono text-xs flex items-center gap-2 ${
-              activeFormType === 'rf_fr_004'
-                ? 'bg-[#009FE3] text-white border-[#009FE3] font-semibold'
-                : 'bg-[#0A1018] border-[#1F2E43] text-slate-400 hover:text-slate-200 hover:bg-[#172235]'
-            }`}
-          >
-            <span className={`h-1.5 w-1.5 rounded-full ${activeFormType === 'rf_fr_004' ? 'bg-white' : 'bg-slate-500'}`}></span>
-            RF-FR-004 : 24-Hour Process Sheet
-          </button>
-
-          <button
-            onClick={() => setActiveFormType('rf_fr_001')}
-            className={`px-3.5 py-1.5 rounded-lg border transition-all cursor-pointer font-mono text-xs flex items-center gap-2 ${
-              activeFormType === 'rf_fr_001'
-                ? 'bg-[#009FE3] text-white border-[#009FE3] font-semibold'
-                : 'bg-[#0A1018] border-[#1F2E43] text-slate-400 hover:text-slate-200 hover:bg-[#172235]'
-            }`}
-          >
-            <span className={`h-1.5 w-1.5 rounded-full ${activeFormType === 'rf_fr_001' ? 'bg-white' : 'bg-slate-500'}`}></span>
-            RF-FR-001 : Sample Analysis Certificate
-          </button>
-
-          <button
-            onClick={() => {
-              setActiveFormType('audit');
-              syncAuditLogsFromSupabase().catch(() => {});
-            }}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg border transition-all cursor-pointer font-mono text-xs ${
-              activeFormType === 'audit'
-                ? 'bg-[#009FE3] text-white border-[#009FE3] font-semibold'
-                : 'bg-[#0A1018] border-[#1F2E43] text-slate-400 hover:text-slate-200 hover:bg-[#172235]'
-            }`}
-          >
-            <History className="h-3.5 w-3.5" />
-            <span>
-              Immutable Audit Trail ({filteredAuditLogs.length !== auditLogs.length ? `${filteredAuditLogs.length}/${auditLogs.length}` : auditLogs.length})
-            </span>
-          </button>
-        </div>
+        <div className="tl">
+          <div className="segs" style={{ '--c': 3, maxWidth: '780px' } as React.CSSProperties}>
+            <button
+              className="seg"
+              aria-pressed={activeFormType === 'rf_fr_004'}
+              type="button"
+              onClick={() => setActiveFormType('rf_fr_004')}
+            >
+              RF-FR-004: 24-hour process sheet
+            </button>
+            <button
+              className="seg"
+              aria-pressed={activeFormType === 'rf_fr_001'}
+              type="button"
+              onClick={() => setActiveFormType('rf_fr_001')}
+            >
+              RF-FR-001: sample analysis certificate
+            </button>
+            <button
+              className="seg"
+              aria-pressed={activeFormType === 'audit'}
+              type="button"
+              onClick={() => {
+                setActiveFormType('audit');
+                syncAuditLogsFromSupabase().catch(() => {});
+              }}
+            >
+              Immutable audit trail ({filteredAuditLogs.length !== auditLogs.length ? `${filteredAuditLogs.length}/${auditLogs.length}` : auditLogs.length})
+            </button>
+          </div>
 
         {/* When activeFormType === 'rf_fr_004', show Shift Date Selector */}
         {activeFormType === 'rf_fr_004' && (
@@ -734,11 +705,12 @@ export default function OfficialFormsExportView() {
             </div>
           </div>
         )}
-      </div>
+        </div>
+      </section>
 
       {/* FORM 1: RF-FR-004 Layout */}
       {activeFormType === 'rf_fr_004' && (
-        <div className="rounded-xl border border-[#222e44] bg-white text-slate-900 p-6 sm:p-8 shadow-2xl overflow-x-auto print:border-none print:shadow-none print:p-0">
+        <div className="paper overflow-x-auto print:border-none print:shadow-none print:p-0">
           {/* Form Header */}
           <div className="border-b-2 border-slate-900 pb-4 mb-4">
             <div className="flex items-start justify-between">
@@ -888,7 +860,7 @@ export default function OfficialFormsExportView() {
 
       {/* FORM 2: RF-FR-001 Layout */}
       {activeFormType === 'rf_fr_001' && activeReport && (
-        <div className="rounded-xl border border-[#222e44] bg-white text-slate-900 p-6 sm:p-8 shadow-2xl max-w-4xl mx-auto print:border-none print:shadow-none print:p-0">
+        <div className="paper max-w-4xl mx-auto print:border-none print:shadow-none print:p-0">
           <div className="border-b-2 border-slate-900 pb-4 mb-4 flex items-start justify-between">
             <div>
               <h2 className="text-xl font-bold tracking-tight uppercase">
@@ -1073,37 +1045,29 @@ export default function OfficialFormsExportView() {
 
       {/* FORM 3: Audit Trail Viewer */}
       {activeFormType === 'audit' && (
-        <div className="rounded-lg border border-[#1F2E43] bg-[#101927] p-4 sm:p-5 space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#1F2E43] pb-3">
-            <div className="flex items-center gap-2.5 text-slate-100 font-semibold">
-              <div className="p-2 rounded-lg bg-[#0A1018] border border-[#1F2E43] text-[#009FE3]">
-                <History className="h-4 w-4" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-sm text-slate-100">Immutable Regulatory Audit Trail</span>
-                </div>
-                <div className="text-[11px] text-slate-400 font-mono font-normal">
-                  Database trigger-level tamper-proof append-only ledger for regulatory compliance
-                </div>
-              </div>
+        <section className="panel space-y-4">
+          <div className="ph" style={{ flexWrap: 'wrap', gap: '8px' }}>
+            <div>
+              <span style={{ fontWeight: 600 }}>Immutable regulatory audit trail</span>
+              <p className="hint" style={{ fontWeight: 400, margin: 0 }}>
+                Database trigger-level tamper-proof append-only ledger for regulatory compliance
+              </p>
             </div>
 
-            <div className="flex items-center gap-2 font-mono text-xs">
+            <div className="stats" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <button
                 type="button"
                 onClick={async () => {
                   const res = await syncAuditLogsFromSupabase();
                   setAuditLogs([...getAuditLogs()]);
                 }}
-                className="flex items-center gap-1.5 bg-[#0A1018] hover:bg-[#172235] text-[#009FE3] px-3 py-1.5 rounded-lg border border-[#1F2E43] hover:border-[#009FE3]/50 transition-all cursor-pointer text-xs"
+                className="ghost"
                 title="Fetch latest audit logs directly from Supabase"
               >
-                <RotateCcw className="h-3.5 w-3.5 text-[#009FE3]" />
-                <span>Sync Supabase</span>
+                Sync Supabase
               </button>
 
-              <span className="text-xs font-mono text-[#009FE3] bg-[#0A1018] border border-[#1F2E43] px-3 py-1.5 rounded-lg font-semibold">
+              <span className="bd">
                 Showing {filteredAuditLogs.length} of {auditLogs.length} Records
               </span>
             </div>
@@ -1352,7 +1316,7 @@ export default function OfficialFormsExportView() {
               </div>
             );
           })()}
-        </div>
+        </section>
       )}
 
       {/* Quick Edit Remarks Modal (RF-FR-001) */}

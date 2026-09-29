@@ -264,222 +264,109 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
       </header>
 
       {/* ========================================================================= */}
-      {/* 2. DESKTOP LEFT SIDEBAR (Fixed left, width 256px / 280px)                 */}
+      {/* 2. DESKTOP LEFT SIDEBAR (Fixed left, width 248px)                         */}
       {/* ========================================================================= */}
-      <aside className="hidden lg:flex fixed inset-y-0 left-0 w-64 xl:w-72 bg-[#080E18] border-r border-[#1F2E43] flex-col justify-between z-40 select-none overflow-hidden">
+      <aside className="hidden lg:flex fixed inset-y-0 left-0 w-[248px] bg-[var(--bg)] border-r border-[var(--line)] flex-col justify-between z-40 select-none p-6 pt-6">
         {/* Brand Header */}
-        <div className="p-4 border-b border-white/[0.08] bg-[#070A10]/60 relative z-10">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 flex items-center justify-center shrink-0">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/lam-soon-badge.png"
-                alt="Lam Soon Brand Logo"
-                className="w-full h-full object-contain drop-shadow-md"
-              />
-            </div>
-            <div className="min-w-0">
-              <div className="font-extrabold text-xs xl:text-sm text-white tracking-wider truncate uppercase font-sans">
-                Lam Soon Edible Oils
-              </div>
-              <div className="text-[9px] xl:text-[10px] text-slate-400 font-mono tracking-wider truncate uppercase">
-                Refinery Management System
-              </div>
-            </div>
+        <div className="brand-redesign px-2 pb-7">
+          <div className="mark-redesign">LS</div>
+          <div>
+            <b>Lam Soon Edible Oils</b>
+            <span>Refinery Management System</span>
           </div>
         </div>
 
         {/* Navigation Items List */}
-        <div className="flex-1 px-3 py-3 space-y-1 overflow-y-auto relative z-10">
-          <div className="text-[10px] uppercase font-mono tracking-wider text-slate-400 px-3 py-1">
-            Menu Navigation
-          </div>
-
-          <nav className="space-y-1">
-            {/* Desktop Navigation Tab Button (Button #1) */}
+        <div className="flex-1 overflow-y-auto">
+          <nav aria-label="Main" className="flex flex-col gap-[2px]">
             {visibleNavItems.map((item) => {
-              const Icon = item.icon;
               const isActive = activeTab === item.id;
               return (
                 <button
                   key={item.id}
+                  type="button"
                   onClick={() => setActiveTab(item.id)}
-                  className={`group relative flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-medium font-sans transition-all w-full cursor-pointer ${
-                    isActive
-                      ? 'bg-[#162030] text-white border-l-2 border-[#C52227] shadow-sm font-semibold'
-                      : 'text-slate-400 hover:text-slate-100 hover:bg-[#111824]'
-                  }`}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`nav-link-redesign ${isActive ? 'active' : ''}`}
                 >
-                  <Icon
-                    className={`h-4 w-4 shrink-0 transition-colors ${
-                      isActive ? 'text-[#C52227]' : 'text-slate-400 group-hover:text-slate-200'
-                    }`}
-                  />
-                  <span className="truncate flex-1 text-left">{item.label}</span>
+                  <span className="truncate">{item.label}</span>
                 </button>
               );
             })}
 
-            {/* Admin Management Tab Button (Button #2) - Admin Only */}
+            {/* Admin Management Tab Button - Admin Only */}
             {role === 'admin' && (
               <button
+                type="button"
                 onClick={() => setActiveTab('admin')}
-                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-medium transition-all w-full cursor-pointer ${
-                  activeTab === 'admin'
-                    ? 'bg-[#162030] text-white border-l-2 border-[#C52227] shadow-sm font-semibold'
-                    : 'text-slate-400 hover:text-slate-100 hover:bg-[#111824]'
-                }`}
+                aria-current={activeTab === 'admin' ? 'page' : undefined}
+                className={`nav-link-redesign ${activeTab === 'admin' ? 'active' : ''}`}
                 title="Plant Administration & User Management Panel"
               >
-                <Users className={`h-4 w-4 shrink-0 ${activeTab === 'admin' ? 'text-[#C52227]' : 'text-slate-400'}`} />
-                <span className="truncate flex-1 text-left">User Management</span>
+                <span className="truncate">User Management</span>
               </button>
             )}
-          </nav>
 
-          {/* Divider */}
-          <div className="pt-3 pb-2">
-            <div className="h-px bg-[#1F2E43]/60 w-full" />
-          </div>
+            <hr className="border-0 border-t border-[var(--line)] my-3" />
 
-          {/* Auxiliary Menu Items */}
-          <div className="space-y-1.5">
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={() => {
-                console.log('Sidebar Settings clicked');
-                setIsSettingsOpen(true);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  setIsSettingsOpen(true);
-                }
-              }}
-              className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-medium text-slate-200 bg-[#101927] border border-[#1F2E43] hover:border-[#009FE3]/70 hover:bg-[#152338] hover:text-white cursor-pointer transition-all select-none active:scale-[0.98] shadow-xs focus:outline-none focus:ring-1 focus:ring-[#009FE3]"
+            {/* Auxiliary Menu Items */}
+            <button
+              type="button"
+              onClick={() => setIsSettingsOpen(true)}
+              className="nav-link-redesign"
               title="Refinery System Settings & Preferences"
             >
-              <div className="flex items-center gap-2.5">
-                <Settings className="h-4 w-4 text-[#009FE3]" />
-                <span className="font-sans">Settings</span>
-              </div>
-            </div>
-            <div
-              role="button"
-              tabIndex={0}
-              onClick={() => {
-                setIsHelpOpen(true);
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  setIsHelpOpen(true);
-                }
-              }}
-              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-slate-400 hover:text-slate-200 hover:bg-[#121D2C] cursor-pointer transition-colors select-none focus:outline-none focus:ring-1 focus:ring-[#009FE3]"
+              <span>Settings</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsHelpOpen(true)}
+              className="nav-link-redesign"
               title="Help & Support Documentation & Plant SOP"
             >
-              <HelpCircle className="h-4 w-4 text-slate-400" />
               <span>Help & Support</span>
-            </div>
-          </div>
+            </button>
+          </nav>
         </div>
 
-        {/* ===================================================================== */}
-        {/* BOTTOM LEFT OF SIDEBAR: SEAMLESS REFINERY PLANT BLEND (NO BOX/FRAME) */}
-        {/* ===================================================================== */}
-        <div className="relative mt-auto pt-24 pb-4 px-3.5 overflow-hidden z-10">
-          {/* Seamless Refinery Plant Background Image with Smooth Gradient Mask */}
-          <div className="absolute inset-0 pointer-events-none -z-10 overflow-hidden">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/refinery-plant.jpg"
-              alt="Lam Soon Refinery Plant"
-              className="w-full h-full object-cover object-bottom brightness-90 contrast-115 saturate-110"
-              style={{
-                maskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 45%, rgba(0,0,0,0.3) 75%, rgba(0,0,0,0) 100%)',
-                WebkitMaskImage: 'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 45%, rgba(0,0,0,0.3) 75%, rgba(0,0,0,0) 100%)',
-              }}
-            />
-            {/* Gradient wash to seamlessly blend top and bottom into sidebar dark navy background */}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#080E18]/40 via-transparent to-[#080E18]" />
-            <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-[#080E18] to-transparent" />
+        {/* Bottom Shift Card & Plant Version Details */}
+        <div className="mt-auto pt-4">
+          <div className="shift-card-redesign">
+            <div>
+              <span>{currentShiftName}</span>
+              <span className="tag-redesign">{roleBadgeLabel}</span>
+            </div>
+            <p>{currentShiftHours}</p>
           </div>
-
-          {/* Shift Badge Card (Glassmorphism Pill floating directly on top of the plant blend) */}
-          <div className="relative z-10 p-2.5 rounded-xl bg-[#070F1C]/85 backdrop-blur-md border border-white/10 shadow-lg flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10B981] opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#10B981]"></span>
-              </span>
-              <div>
-                <div className="text-[11px] font-bold text-white font-mono tracking-wider">
-                  {currentShiftName}
-                </div>
-                <div className="text-[10px] text-slate-300 font-mono">
-                  {currentShiftHours}
-                </div>
-              </div>
-            </div>
-            <span
-              className={`px-2 py-0.5 rounded text-[9px] font-semibold uppercase border font-mono ${safeRoleColor.bg} ${safeRoleColor.text} ${safeRoleColor.border}`}
-            >
-              {roleBadgeLabel}
-            </span>
-          </div>
-
-          {/* Plant Footer Details (Matching screenshot layout: 2 lines company name + version) */}
-          <div className="relative z-10 mt-3 px-1 text-left">
-            <div className="text-[11px] font-medium text-slate-300 leading-tight">
-              Lam Soon Edible Oils
-            </div>
-            <div className="text-[11px] font-medium text-slate-400 leading-tight">
-              Sdn Bhd
-            </div>
-            <div className="text-[10px] text-slate-400 font-mono mt-1">
-              Version 1.0.0
-            </div>
-          </div>
+          <p className="ver-redesign">
+            Lam Soon Edible Oils Sdn Bhd, version 1.0.0
+          </p>
         </div>
       </aside>
 
       {/* ========================================================================= */}
       {/* 3. DESKTOP TOP HEADER BAR (Spans content area, offset by sidebar width)   */}
       {/* ========================================================================= */}
-      <header className="hidden lg:flex fixed top-0 right-0 left-64 xl:left-72 h-14 bg-[#090E17]/90 backdrop-blur-xl border-b border-white/[0.08] z-30 items-center justify-between px-6">
+      <header className="hidden lg:flex fixed top-0 right-0 left-[248px] h-16 bg-[var(--bg)] border-b border-[var(--line)] z-30 items-center justify-between px-10 gap-6">
         {/* Global Search Bar */}
-        <div className="relative w-80 xl:w-96">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-4 w-4 text-slate-400" />
-          </div>
-          <input
-            type="text"
-            placeholder="Search process, batch, equipment..."
-            className="w-full pl-9 pr-12 py-1.5 bg-[#121826] border border-slate-700/60 rounded-lg text-xs text-slate-200 placeholder-slate-400 focus:outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500 transition-all font-sans"
-            readOnly
-          />
-          <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none">
-            <kbd className="px-1.5 py-0.5 text-[10px] font-mono text-slate-400 bg-[#182232] border border-slate-700/60 rounded">
-              ⌘K
-            </kbd>
-          </div>
-        </div>
+        <input
+          type="search"
+          placeholder="Search process, batch, equipment"
+          aria-label="Search"
+          className="search-redesign"
+          readOnly
+        />
 
-        {/* Status, Clock, User Profile & Sign Out */}
-        <div className="flex items-center gap-4">
+        <div className="flex-1" />
 
-
+        {/* Clock, User Profile & Sign Out */}
+        <div className="flex items-center gap-6">
           {/* Formatted Date & Time */}
-          <div className="flex items-center gap-1.5 text-xs text-slate-300 font-mono">
-            <Clock className="h-3.5 w-3.5 text-slate-400" />
-            <span>{formattedDateTime || '08 Dec 2024 14:25'}</span>
-          </div>
+          <span id="clock" className="font-mono text-xs text-[var(--muted)] tabular-nums">
+            {formattedDateTime || '08/12/2024 14:25:00'}
+          </span>
 
-          <span className="text-[#1F2E43]">|</span>
-
-          {/* User Profile Chip (Clickable for Settings) */}
+          {/* User Profile Chip */}
           <div 
             role="button"
             tabIndex={0}
@@ -490,58 +377,37 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
                 setIsSettingsOpen(true);
               }
             }}
-            className="flex items-center gap-2.5 pl-1 py-1 pr-2 rounded-lg hover:bg-[#121D2C] border border-transparent hover:border-[#1F2E43] cursor-pointer transition-colors select-none"
+            className="user-redesign cursor-pointer select-none"
             title="Click to view & edit Profile / Settings"
           >
-            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#1E2D42] to-[#121B29] border border-[#2D415E] flex items-center justify-center font-bold text-xs text-[#009FE3] shadow-sm overflow-hidden shrink-0">
+            <div className="av-redesign">
               {profile.avatar_url ? (
                 <img
                   src={profile.avatar_url}
                   alt={profile.full_name}
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-cover rounded-full"
                 />
               ) : (
                 userInitials
               )}
             </div>
-            <div className="text-left">
-              <div className="text-xs font-semibold text-slate-100 leading-tight">
-                {profile.full_name}
-              </div>
-              <div className="text-[10px] text-slate-400 font-mono">
-                {profile.employee_no ? `${profile.employee_no} · ` : ''}
+            <div>
+              <b>{profile.full_name}</b>
+              <span>
                 {role === 'operator' ? 'Plant Operator' : role === 'supervisor' ? 'Operations Supervisor' : role === 'qc_analyst' ? 'QC Chemist' : role === 'qc_manager' ? 'Quality Manager' : role === 'admin' ? 'System Administrator' : 'Viewer'}
-              </div>
+              </span>
             </div>
           </div>
 
-          {/* Quick Header Settings Button */}
-          <div
-            role="button"
-            tabIndex={0}
-            onClick={() => setIsSettingsOpen(true)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                setIsSettingsOpen(true);
-              }
-            }}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium text-slate-300 bg-[#121D2C] border border-[#1F2E43] hover:border-[#009FE3]/60 hover:bg-[#18263A] hover:text-white transition-all cursor-pointer select-none active:scale-95 shadow-xs"
-            title="Open Workstation Settings"
-          >
-            <Settings className="h-3.5 w-3.5 text-[#009FE3]" />
-            <span className="hidden xl:inline">Settings</span>
-          </div>
-
-          {/* Sign Out Button (Button #3) */}
+          {/* Sign Out Button */}
           {onLogout && (
             <button
               onClick={onLogout}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium text-[#EF4444] bg-[#EF4444]/10 border border-[#EF4444]/30 hover:bg-[#EF4444]/20 hover:text-red-300 transition-colors ml-1 cursor-pointer shrink-0"
+              className="ghost out"
+              type="button"
               title="Sign Out"
             >
-              <LogOut className="h-3.5 w-3.5" />
-              <span className="hidden md:inline">Sign Out</span>
+              Sign out
             </button>
           )}
         </div>

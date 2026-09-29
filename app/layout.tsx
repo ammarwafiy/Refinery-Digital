@@ -42,7 +42,18 @@ export default function RootLayout({
       lang="en"
       className={`dark ${inter.variable} h-full`}
     >
-      <body className="min-h-full flex flex-col bg-[#070B12] text-slate-100 selection:bg-[#009FE3]/25 selection:text-[#08B5F5] antialiased">
+      <body className="min-h-full flex flex-col bg-[#0a0e18] text-[#f3f5f9] selection:bg-[#d81f2c]/25 selection:text-[#f47b83] antialiased">
+        <div className="bgfx" aria-hidden="true">
+          <svg viewBox="0 0 520 700" preserveAspectRatio="xMaxYMax meet">
+            <rect x="300" y="120" width="80" height="560" rx="40" />
+            <path d="M300 200h80M300 260h80M300 320h80M300 380h80M300 440h80M300 500h80M300 560h80" />
+            <rect x="420" y="380" width="70" height="300" rx="10" />
+            <path d="M420 450h70M420 520h70" />
+            <rect x="180" y="460" width="90" height="220" rx="45" />
+            <path d="M340 120V70h70v40M410 70V40M380 320h40v60M270 560h30M340 680V640H110V560h70M60 680h440" />
+            <circle cx="130" cy="600" r="20" />
+          </svg>
+        </div>
         {children}
       </body>
     </html>
