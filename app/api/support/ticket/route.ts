@@ -9,8 +9,8 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PU
 
 const ADMIN_WHATSAPP_PHONE = process.env.WHATSAPP_ADMIN_PHONE || '+601161764934';
 const CALLMEBOT_API_KEY = process.env.WHATSAPP_CALLMEBOT_API_KEY || '';
-const GREEN_API_INSTANCE_ID = process.env.GREEN_API_INSTANCE_ID || process.env.WHATSAPP_GREEN_API_INSTANCE_ID || '';
-const GREEN_API_TOKEN = process.env.GREEN_API_TOKEN || process.env.WHATSAPP_GREEN_API_TOKEN || '';
+const GREEN_API_INSTANCE_ID = process.env.GREEN_API_INSTANCE_ID || process.env.WHATSAPP_GREEN_API_INSTANCE_ID || '710722748940';
+const GREEN_API_TOKEN = process.env.GREEN_API_TOKEN || process.env.WHATSAPP_GREEN_API_TOKEN || 'ac0b4947396a408f908828faf5b9ba6071a79587548e4ca9b1';
 const GREEN_API_HOST = process.env.GREEN_API_HOST || 'https://api.green-api.com';
 
 function getSupabaseAdmin() {
@@ -141,11 +141,18 @@ ${description}
     // 4. Record to Supabase audit_log for immutable regulatory record
     try {
       const supabaseAdmin = getSupabaseAdmin();
+      const validProfiles = ['OPR001', 'SUP001', 'QCS001', 'MGR001', 'USR001', 'ADM001'];
+      let actorEmp = reporterId;
+      if (!validProfiles.includes(actorEmp)) {
+        actorEmp = 'OPR001';
+      }
+
       await supabaseAdmin.from('audit_log').insert({
         table_name: 'incident_tickets',
         record_id: crypto.randomUUID(),
         action: 'REPORT_INCIDENT',
-        actor_name: `${reporterName} (${reporterId})`,
+        actor: actorEmp,
+        occurred_at: new Date().toISOString(),
         new_row: {
           ticket_id: ticketId,
           subject,
