@@ -2023,6 +2023,29 @@ export function generateNextLotNo(productId?: string, sampleDate?: string, custo
   return `${prefix}${nextSeq}`;
 }
 
+// Automatically sync / re-derive standard Lot number when Product is changed by QC
+export function syncLotNumberWithProduct(
+  currentLotNo?: string | null,
+  productId?: string | null,
+  sampleDate?: string | null,
+  timeCheck?: string | null
+): string {
+  const products = getProducts();
+  const prod = products.find(p => p.id === productId || p.code === productId);
+  const code = deriveProductLotCode(prod).replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+
+  const cur = (currentLotNo || '').trim();
+  // If currentLot matches LOT-<CODE>-<REST>, replace the code segment
+  if (cur && /^LOT-[A-Za-z0-9_]+-/i.test(cur)) {
+    return cur.replace(/^LOT-[A-Za-z0-9_]+-/i, `LOT-${code}-`);
+  }
+
+  const dateStr = sampleDate || getRealtimeShiftDate();
+  const cleanDate = dateStr.replace(/-/g, '').slice(2);
+  const timeStr = (timeCheck || '11:00').replace(/[^0-9]/g, '').slice(0, 4) || '01';
+  return `LOT-${code}-${cleanDate}-${timeStr}`;
+}
+
 // Background Synchronization of QC Decision to Supabase qc_decisions table
 export async function syncQCDecisionToSupabase(decision: QCDecision): Promise<{ success: boolean; error?: string }> {
   if (!supabase) return { success: false, error: 'Supabase client unavailable' };
@@ -2560,6 +2583,7 @@ export function updateSampleResults(
     batch_no?: string | null;
     product_id?: string | null;
     product_name?: string | null;
+    lot_no?: string | null;
   }
 ): { success: boolean; error?: string } {
   const reports = getSampleReports();
@@ -2581,6 +2605,7 @@ export function updateSampleResults(
     if (remarksData.batch_no !== undefined) report.batch_no = remarksData.batch_no;
     if (remarksData.product_id !== undefined && remarksData.product_id) report.product_id = remarksData.product_id;
     if (remarksData.product_name !== undefined && remarksData.product_name) report.product_name = remarksData.product_name;
+    if (remarksData.lot_no !== undefined && remarksData.lot_no) report.lot_no = remarksData.lot_no;
   }
 
   const specs = getProductSpecs(report.product_id || undefined);

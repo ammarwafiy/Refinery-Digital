@@ -28,6 +28,7 @@ import {
   ensureAutoDispatchedQC,
   syncAllProcessEntriesToQC,
   generateNextLotNo,
+  syncLotNumberWithProduct,
   deleteSampleReport,
   syncSampleReportsFromSupabase
 } from '@/lib/data-service';
@@ -106,6 +107,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
   const [qcCrystallizerBatch, setQcCrystallizerBatch] = useState<string>('');
   const [qcProductId, setQcProductId] = useState<string>('');
   const [qcProductName, setQcProductName] = useState<string>('');
+  const [qcLotNo, setQcLotNo] = useState<string>('');
 
   // Auto-generate next sequential Lot Number whenever Product or Date changes
   useEffect(() => {
@@ -323,6 +325,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
     if (selectedReport) {
       setQcProductId(selectedReport.product_id || '');
       setQcProductName(selectedReport.product_name || '');
+      setQcLotNo(selectedReport.lot_no || '');
       setQcRemarkFlushing(selectedReport.remark_flushing ?? false);
       setQcRemarkCooling(selectedReport.remark_cooling ?? false);
       setQcRemarkPushover(selectedReport.remark_pushover ?? false);
@@ -488,6 +491,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
       batch_no: batchNo || (qcCrystallizerBatch.includes('/') ? null : crystNo || null),
       product_id: qcProductId || undefined,
       product_name: qcProductName || undefined,
+      lot_no: qcLotNo || selectedReport.lot_no || undefined,
     });
     if (res.success) {
       setResultsSuccess('Laboratory test results, operating remarks & checkboxes saved and synced with Supabase!');
@@ -987,7 +991,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                       <h2 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text)' }}>
-                        {selectedReport.lot_no}
+                        {qcLotNo || selectedReport.lot_no}
                       </h2>
                       <span className="hint">({selectedReport.report_no})</span>
                     </div>
@@ -1058,11 +1062,11 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                   </div>
                 </div>
 
-                {/* Product, Sampling Point & Batch row */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', padding: '20px 28px', borderBottom: '1px solid var(--line)' }}>
+                {/* Product, Lot Number, Sampling Point & Batch row */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', padding: '20px 28px', borderBottom: '1px solid var(--line)' }}>
                   <div className="fld" style={{ margin: 0 }}>
                     <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span>Product (QC Selection / Correction):</span>
+                      <span>Product (QC Selection):</span>
                       <span className="hint" style={{ fontSize: '10px', color: 'var(--amber)' }}>Boleh ubah jika silap key-in</span>
                     </label>
                     <select
@@ -1074,9 +1078,26 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                         const matched = products.find(p => p.id === val || p.code === val);
                         const newName = matched?.name || val;
                         setQcProductName(newName);
+
+                        // Auto-sync Lot Number immediately with newly selected product
+                        const syncedLot = syncLotNumberWithProduct(
+                          qcLotNo || selectedReport?.lot_no,
+                          val,
+                          selectedReport?.sample_date,
+                          selectedReport?.time_check
+                        );
+                        setQcLotNo(syncedLot);
+
                         if (selectedReport) {
                           selectedReport.product_id = val;
                           selectedReport.product_name = newName;
+                          selectedReport.lot_no = syncedLot;
+                          setReports(prev => prev.map(r => r.id === selectedReport.id ? { 
+                            ...r, 
+                            product_id: val, 
+                            product_name: newName, 
+                            lot_no: syncedLot 
+                          } : r));
                         }
                       }}
                       className="inp"
@@ -1089,6 +1110,29 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                         </option>
                       ))}
                     </select>
+                  </div>
+
+                  <div className="fld" style={{ margin: 0 }}>
+                    <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span>Lot Number:</span>
+                      <span className="hint" style={{ fontSize: '10px', color: '#009FE3' }}>✓ Auto-sync produk</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={qcLotNo || selectedReport.lot_no || ''}
+                      disabled={!canEdit}
+                      onChange={e => {
+                        const val = e.target.value;
+                        setQcLotNo(val);
+                        if (selectedReport) {
+                          selectedReport.lot_no = val;
+                          setReports(prev => prev.map(r => r.id === selectedReport.id ? { ...r, lot_no: val } : r));
+                        }
+                      }}
+                      placeholder="LOT-CODE-YYMMDD-TIME"
+                      className="inp font-mono"
+                      style={{ width: '100%', fontWeight: 700 }}
+                    />
                   </div>
 
                   <div className="fld" style={{ margin: 0 }}>
