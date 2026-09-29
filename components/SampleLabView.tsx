@@ -104,6 +104,8 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
   const [qcRemarksText, setQcRemarksText] = useState('');
   const [qcSamplingPointId, setQcSamplingPointId] = useState<string>('');
   const [qcCrystallizerBatch, setQcCrystallizerBatch] = useState<string>('');
+  const [qcProductId, setQcProductId] = useState<string>('');
+  const [qcProductName, setQcProductName] = useState<string>('');
 
   // Auto-generate next sequential Lot Number whenever Product or Date changes
   useEffect(() => {
@@ -113,6 +115,8 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
 
   // Enter results state
   const [resultInputs, setResultInputs] = useState<Record<string, { num?: number; text?: string }>>({});
+  const [paramNameInputs, setParamNameInputs] = useState<Record<string, string>>({});
+  const [customParamRows, setCustomParamRows] = useState<{ id: string; parameter_name: string; result_text: string; requested: boolean }[]>([]);
   const [requestedMap, setRequestedMap] = useState<Record<string, boolean>>({});
   const [resultsSuccess, setResultsSuccess] = useState<string | null>(null);
 
@@ -317,6 +321,8 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
   // Initialize result inputs
   useEffect(() => {
     if (selectedReport) {
+      setQcProductId(selectedReport.product_id || '');
+      setQcProductName(selectedReport.product_name || '');
       setQcRemarkFlushing(selectedReport.remark_flushing ?? false);
       setQcRemarkCooling(selectedReport.remark_cooling ?? false);
       setQcRemarkPushover(selectedReport.remark_pushover ?? false);
@@ -326,20 +332,24 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
       const batch = selectedReport.batch_no || '';
       const combined = cryst && batch ? `${cryst} / ${batch}` : (cryst || batch || '');
       setQcCrystallizerBatch(combined);
+      setCustomParamRows([]);
     }
     if (displayResults.length > 0) {
       const inputs: Record<string, { num?: number; text?: string }> = {};
+      const names: Record<string, string> = {};
       const reqs: Record<string, boolean> = {};
 
       displayResults.forEach(r => {
         inputs[r.id] = {
           num: r.value_numeric ?? undefined,
-          text: r.value_text ?? undefined,
+          text: r.value_text ?? (r.value_numeric !== undefined && r.value_numeric !== null ? String(r.value_numeric) : undefined),
         };
+        names[r.id] = r.parameter_name || '';
         reqs[r.id] = r.requested !== false;
       });
 
       setResultInputs(inputs);
+      setParamNameInputs(names);
       setRequestedMap(reqs);
     }
   }, [selectedReport?.id, displayResults.length]);
@@ -421,17 +431,40 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
     const payload = displayResults.map(res => {
       const val = resultInputs[res.id] || {};
       const isReq = requestedMap[res.id] !== false;
+      const customName = paramNameInputs[res.id]?.trim() || res.parameter_name;
+      const rawText = val.text !== undefined ? val.text : (val.num !== undefined ? String(val.num) : '');
+      const numVal = isReq && rawText.trim() !== '' && !isNaN(Number(rawText)) ? Number(rawText) : (val.num ?? null);
+
       return {
         resultId: res.id,
         parameter_id: res.parameter_id,
         parameter_code: res.parameter_code,
-        parameter_name: res.parameter_name,
-        unit: res.unit,
+        parameter_name: customName,
+        unit: null,
         series_key: res.series_key,
-        value_numeric: isReq && val.num !== undefined ? Number(val.num) : null,
-        value_text: isReq ? (val.text ?? null) : null,
+        value_numeric: isReq ? numVal : null,
+        value_text: isReq ? (rawText.trim() !== '' ? rawText : null) : null,
         requested: isReq,
       };
+    });
+
+    // Also include any newly added custom parameter rows
+    customParamRows.forEach(crow => {
+      if (crow.parameter_name.trim() !== '' || crow.result_text.trim() !== '') {
+        const rawText = crow.result_text.trim();
+        const numVal = rawText !== '' && !isNaN(Number(rawText)) ? Number(rawText) : null;
+        payload.push({
+          resultId: crow.id,
+          parameter_id: crow.id,
+          parameter_code: 'CUSTOM',
+          parameter_name: crow.parameter_name.trim() || 'Custom Parameter',
+          unit: null,
+          series_key: null,
+          value_numeric: crow.requested ? numVal : null,
+          value_text: crow.requested ? (rawText !== '' ? rawText : null) : null,
+          requested: crow.requested,
+        });
+      }
     });
 
     let crystNo = qcCrystallizerBatch.trim();
@@ -453,6 +486,8 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
       sampling_point_name: matchedSp?.name || undefined,
       crystallizer_no: crystNo || null,
       batch_no: batchNo || (qcCrystallizerBatch.includes('/') ? null : crystNo || null),
+      product_id: qcProductId || undefined,
+      product_name: qcProductName || undefined,
     });
     if (res.success) {
       setResultsSuccess('Laboratory test results, operating remarks & checkboxes saved and synced with Supabase!');
@@ -957,7 +992,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                       <span className="hint">({selectedReport.report_no})</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '6px', fontSize: '13px', color: 'var(--muted)', flexWrap: 'wrap' }}>
-                      <span>Product: <strong style={{ color: 'var(--text)' }}>{selectedReport.product_name}</strong></span>
+                      <span>Product: <strong style={{ color: 'var(--text)' }}>{qcProductName || selectedReport.product_name}</strong></span>
                       <span>•</span>
                       <span>Batch: <strong style={{ color: 'var(--text)' }}>{selectedReport.crystallizer_no || selectedReport.batch_no || 'BP-2609-01'}</strong></span>
                       <span>•</span>
@@ -1023,8 +1058,39 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                   </div>
                 </div>
 
-                {/* Sampling Point & Batch row */}
+                {/* Product, Sampling Point & Batch row */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', padding: '20px 28px', borderBottom: '1px solid var(--line)' }}>
+                  <div className="fld" style={{ margin: 0 }}>
+                    <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span>Product (QC Selection / Correction):</span>
+                      <span className="hint" style={{ fontSize: '10px', color: 'var(--amber)' }}>Boleh ubah jika silap key-in</span>
+                    </label>
+                    <select
+                      value={qcProductId}
+                      disabled={!canEdit}
+                      onChange={e => {
+                        const val = e.target.value;
+                        setQcProductId(val);
+                        const matched = products.find(p => p.id === val || p.code === val);
+                        const newName = matched?.name || val;
+                        setQcProductName(newName);
+                        if (selectedReport) {
+                          selectedReport.product_id = val;
+                          selectedReport.product_name = newName;
+                        }
+                      }}
+                      className="inp"
+                      style={{ width: '100%', fontWeight: 600 }}
+                    >
+                      <option value="">-- Pilih Produk Lain --</option>
+                      {products.map(p => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} {p.code ? `(${p.code})` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
                   <div className="fld" style={{ margin: 0 }}>
                     <label>Sampling Point (QC Selection):</label>
                     <select
@@ -1110,6 +1176,21 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                       <div style={{ display: 'flex', gap: '8px' }}>
                         <button
                           type="button"
+                          onClick={() => {
+                            const newId = `custom-param-${Date.now()}`;
+                            setCustomParamRows(prev => [
+                              ...prev,
+                              { id: newId, parameter_name: '', result_text: '', requested: true }
+                            ]);
+                          }}
+                          className="ghost"
+                          style={{ height: '30px', fontSize: '12px', padding: '0 10px', display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--blue)' }}
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                          <span>+ Add Parameter</span>
+                        </button>
+                        <button
+                          type="button"
                           onClick={handleApplyProductSpec}
                           className="ghost"
                           style={{ height: '30px', fontSize: '12px', padding: '0 10px' }}
@@ -1141,17 +1222,19 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                       <thead>
                         <tr>
                           <th style={{ width: '60px', textAlign: 'center' }}>Test</th>
-                          <th>Parameter Name</th>
-                          <th style={{ width: '100px' }}>Unit</th>
-                          <th style={{ width: '220px' }}>Lab Result</th>
+                          <th style={{ minWidth: '240px' }}>Parameter Name</th>
+                          <th style={{ minWidth: '240px' }}>Lab Result [blank box]</th>
+                          <th style={{ width: '48px', textAlign: 'center' }}></th>
                         </tr>
                       </thead>
                       <tbody>
-                        {/* 1. Standard Laboratory Parameters */}
+                        {/* 1. Standard Laboratory Parameters with Blank Box Inputs */}
                         {standardResults.map(res => {
                           const inputVal = resultInputs[res.id] || {};
                           const isUnticked = requestedMap[res.id] === false;
                           const canEdit = (role === 'qc_analyst' || role === 'qc_manager' || role === 'admin');
+                          const currentName = paramNameInputs[res.id] !== undefined ? paramNameInputs[res.id] : res.parameter_name;
+                          const currentResult = inputVal.text !== undefined ? inputVal.text : (inputVal.num !== undefined ? String(inputVal.num) : '');
 
                           return (
                             <tr key={res.id} style={{ opacity: isUnticked ? 0.45 : 1 }}>
@@ -1162,47 +1245,58 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                                   onChange={e => handleToggleResultParam(res.id, e.target.checked)}
                                   disabled={!canEdit}
                                   style={{ accentColor: 'var(--red)', width: '16px', height: '16px', cursor: 'pointer' }}
+                                  title="Tick/untick test parameter"
                                 />
                               </td>
-                              <td style={{ fontWeight: isUnticked ? 400 : 500, color: 'var(--text)' }}>
-                                {res.parameter_name}
-                              </td>
-                              <td style={{ color: 'var(--muted)', fontSize: '13px' }}>
-                                {res.unit || '–'}
+                              <td>
+                                <input
+                                  type="text"
+                                  disabled={!canEdit}
+                                  placeholder="Parameter Name..."
+                                  value={currentName}
+                                  onChange={e => {
+                                    const val = e.target.value;
+                                    setParamNameInputs(prev => ({ ...prev, [res.id]: val }));
+                                  }}
+                                  className="inp"
+                                  style={{
+                                    width: '100%',
+                                    height: '34px',
+                                    fontWeight: 500,
+                                    color: isUnticked ? 'var(--muted)' : 'var(--text)',
+                                    background: isUnticked ? 'transparent' : 'var(--surface)',
+                                  }}
+                                />
                               </td>
                               <td>
-                                {isUnticked ? (
-                                  <input
-                                    type="text"
-                                    disabled
-                                    value="N/A – Unticked"
-                                    style={{ color: 'var(--muted)', fontStyle: 'italic' }}
-                                  />
-                                ) : res.parameter_code === 'ODOUR' ? (
-                                  <select
-                                    disabled={!canEdit}
-                                    value={inputVal.text || 'bland'}
-                                    onChange={e => setResultInputs(prev => ({
+                                <input
+                                  type="text"
+                                  disabled={!canEdit || isUnticked}
+                                  placeholder={isUnticked ? "N/A – Unticked" : "Enter lab result..."}
+                                  value={isUnticked ? "" : currentResult}
+                                  onChange={e => {
+                                    const raw = e.target.value;
+                                    const numVal = raw.trim() !== '' && !isNaN(Number(raw)) ? Number(raw) : undefined;
+                                    setResultInputs(prev => ({
                                       ...prev,
-                                      [res.id]: { ...prev[res.id], text: e.target.value }
-                                    }))}
-                                  >
-                                    <option value="bland">Bland (Normal)</option>
-                                    <option value="acceptable">Acceptable</option>
-                                    <option value="off">Off / Burnt Odour</option>
-                                  </select>
-                                ) : (
-                                  <input
-                                    type="number"
-                                    step={res.parameter_code === 'SFC' || res.parameter_code === 'BPP' || res.parameter_code === 'SLIP_MELT' || res.parameter_code === 'CLOUD_POINT' || res.parameter_code === 'SOAP' || res.parameter_code === 'IV' || res.parameter_code === 'COLOUR_R' || res.parameter_code === 'COLOUR_Y' ? '0.1' : '0.001'}
-                                    disabled={!canEdit}
-                                    placeholder="Enter value"
-                                    value={inputVal.num ?? ''}
-                                    onChange={e => setResultInputs(prev => ({
-                                      ...prev,
-                                      [res.id]: { ...prev[res.id], num: e.target.value ? Number(e.target.value) : undefined }
-                                    }))}
-                                  />
+                                      [res.id]: {
+                                        num: numVal,
+                                        text: raw,
+                                      }
+                                    }));
+                                  }}
+                                  className="inp"
+                                  style={{
+                                    width: '100%',
+                                    height: '34px',
+                                    color: isUnticked ? 'var(--muted)' : 'var(--text)',
+                                    background: isUnticked ? 'transparent' : 'var(--surface)',
+                                  }}
+                                />
+                              </td>
+                              <td style={{ textAlign: 'center' }}>
+                                {!isUnticked && currentResult.trim() !== '' && (
+                                  <span title="Result recorded" style={{ color: 'var(--green)', fontSize: '14px', fontWeight: 'bold' }}>✓</span>
                                 )}
                               </td>
                             </tr>
@@ -1226,8 +1320,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                                 Temperature Test Series
                               </span>
                             </td>
-                            <td style={{ color: 'var(--muted)' }}>–</td>
-                            <td>
+                            <td colSpan={2}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <span style={{ fontSize: '12px', color: 'var(--muted)' }}>
                                   {activeTempCount === 9 ? 'All 9 Active' : activeTempCount === 0 ? 'None Active' : `${activeTempCount} / 9 Active`}
@@ -1248,6 +1341,8 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                           const inputVal = resultInputs[res.id] || {};
                           const isUnticked = requestedMap[res.id] === false;
                           const canEdit = (role === 'qc_analyst' || role === 'qc_manager' || role === 'admin');
+                          const currentName = paramNameInputs[res.id] !== undefined ? paramNameInputs[res.id] : res.parameter_name;
+                          const currentResult = inputVal.text !== undefined ? inputVal.text : (inputVal.num !== undefined ? String(inputVal.num) : '');
 
                           return (
                             <tr key={res.id} style={{ opacity: isUnticked ? 0.45 : 1 }}>
@@ -1260,43 +1355,117 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                                   style={{ accentColor: 'var(--red)', width: '16px', height: '16px', cursor: 'pointer' }}
                                 />
                               </td>
-                              <td style={{ paddingLeft: '28px', color: 'var(--text)' }}>
-                                ↳ Temperature {res.series_key}°C
-                              </td>
-                              <td style={{ color: 'var(--muted)', fontSize: '13px' }}>
-                                {res.parameter_code === 'TEMP' ? '–' : (res.unit || '–')}
+                              <td style={{ paddingLeft: '28px' }}>
+                                <input
+                                  type="text"
+                                  disabled={!canEdit}
+                                  placeholder="Parameter Name..."
+                                  value={currentName}
+                                  onChange={e => {
+                                    const val = e.target.value;
+                                    setParamNameInputs(prev => ({ ...prev, [res.id]: val }));
+                                  }}
+                                  className="inp"
+                                  style={{
+                                    width: '100%',
+                                    height: '34px',
+                                    fontWeight: 500,
+                                    color: isUnticked ? 'var(--muted)' : 'var(--text)',
+                                    background: isUnticked ? 'transparent' : 'var(--surface)',
+                                  }}
+                                />
                               </td>
                               <td>
-                                {isUnticked ? (
-                                  <input
-                                    type="text"
-                                    disabled
-                                    value="N/A – Unticked"
-                                    style={{ color: 'var(--muted)', fontStyle: 'italic' }}
-                                  />
-                                ) : (
-                                  <input
-                                    type="text"
-                                    disabled={!canEdit}
-                                    placeholder=""
-                                    value={inputVal.text !== undefined ? inputVal.text : (inputVal.num !== undefined ? String(inputVal.num) : '')}
-                                    onChange={e => {
-                                      const raw = e.target.value;
-                                      const numVal = raw.trim() !== '' && !isNaN(Number(raw)) ? Number(raw) : undefined;
-                                      setResultInputs(prev => ({
-                                        ...prev,
-                                        [res.id]: {
-                                          num: numVal,
-                                          text: raw,
-                                        }
-                                      }));
-                                    }}
-                                  />
+                                <input
+                                  type="text"
+                                  disabled={!canEdit || isUnticked}
+                                  placeholder={isUnticked ? "N/A – Unticked" : "Enter lab result..."}
+                                  value={isUnticked ? "" : currentResult}
+                                  onChange={e => {
+                                    const raw = e.target.value;
+                                    const numVal = raw.trim() !== '' && !isNaN(Number(raw)) ? Number(raw) : undefined;
+                                    setResultInputs(prev => ({
+                                      ...prev,
+                                      [res.id]: {
+                                        num: numVal,
+                                        text: raw,
+                                      }
+                                    }));
+                                  }}
+                                  className="inp"
+                                  style={{
+                                    width: '100%',
+                                    height: '34px',
+                                    color: isUnticked ? 'var(--muted)' : 'var(--text)',
+                                    background: isUnticked ? 'transparent' : 'var(--surface)',
+                                  }}
+                                />
+                              </td>
+                              <td style={{ textAlign: 'center' }}>
+                                {!isUnticked && currentResult.trim() !== '' && (
+                                  <span title="Result recorded" style={{ color: 'var(--green)', fontSize: '14px', fontWeight: 'bold' }}>✓</span>
                                 )}
                               </td>
                             </tr>
                           );
                         })}
+
+                        {/* 4. Custom Parameter Rows Added by QC Analyst */}
+                        {customParamRows.map((crow) => (
+                          <tr key={crow.id} style={{ background: 'rgba(0, 159, 227, 0.04)' }}>
+                            <td style={{ textAlign: 'center' }}>
+                              <input
+                                type="checkbox"
+                                checked={crow.requested}
+                                onChange={e => {
+                                  const checked = e.target.checked;
+                                  setCustomParamRows(prev => prev.map(r => r.id === crow.id ? { ...r, requested: checked } : r));
+                                }}
+                                disabled={!canEdit}
+                                style={{ accentColor: 'var(--red)', width: '16px', height: '16px', cursor: 'pointer' }}
+                              />
+                            </td>
+                            <td>
+                              <input
+                                type="text"
+                                disabled={!canEdit}
+                                placeholder="Nama Parameter Baru..."
+                                value={crow.parameter_name}
+                                onChange={e => {
+                                  const val = e.target.value;
+                                  setCustomParamRows(prev => prev.map(r => r.id === crow.id ? { ...r, parameter_name: val } : r));
+                                }}
+                                className="inp"
+                                style={{ width: '100%', height: '34px', fontWeight: 500 }}
+                              />
+                            </td>
+                            <td>
+                              <input
+                                type="text"
+                                disabled={!canEdit || !crow.requested}
+                                placeholder="Lab Result [blank box]..."
+                                value={crow.result_text}
+                                onChange={e => {
+                                  const val = e.target.value;
+                                  setCustomParamRows(prev => prev.map(r => r.id === crow.id ? { ...r, result_text: val } : r));
+                                }}
+                                className="inp"
+                                style={{ width: '100%', height: '34px' }}
+                              />
+                            </td>
+                            <td style={{ textAlign: 'center' }}>
+                              <button
+                                type="button"
+                                onClick={() => setCustomParamRows(prev => prev.filter(r => r.id !== crow.id))}
+                                className="ghost dng"
+                                style={{ height: '28px', width: '28px', padding: 0, fontSize: '14px' }}
+                                title="Hapus baris parameter ini"
+                              >
+                                ✕
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
                       </tbody>
                     </table>
                   </div>

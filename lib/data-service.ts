@@ -2529,6 +2529,8 @@ export function updateSampleResults(
     sampling_point_name?: string;
     crystallizer_no?: string | null;
     batch_no?: string | null;
+    product_id?: string | null;
+    product_name?: string | null;
   }
 ): { success: boolean; error?: string } {
   const reports = getSampleReports();
@@ -2537,7 +2539,6 @@ export function updateSampleResults(
   if (!report.results) report.results = [];
 
   const profile = getCurrentProfile();
-  const specs = getProductSpecs(report.product_id || undefined);
 
   // Update remarks and operational condition checkboxes if provided
   if (remarksData) {
@@ -2549,18 +2550,21 @@ export function updateSampleResults(
     if (remarksData.sampling_point_name !== undefined) report.sampling_point_name = remarksData.sampling_point_name;
     if (remarksData.crystallizer_no !== undefined) report.crystallizer_no = remarksData.crystallizer_no;
     if (remarksData.batch_no !== undefined) report.batch_no = remarksData.batch_no;
+    if (remarksData.product_id !== undefined && remarksData.product_id) report.product_id = remarksData.product_id;
+    if (remarksData.product_name !== undefined && remarksData.product_name) report.product_name = remarksData.product_name;
   }
+
+  const specs = getProductSpecs(report.product_id || undefined);
 
   resultsData.forEach(item => {
     let res = report.results!.find(r => r.id === item.resultId);
     if (!res) {
-      if (!item.parameter_id) return;
       res = {
         id: item.resultId,
         report_id: reportId,
-        parameter_id: item.parameter_id,
-        parameter_code: item.parameter_code || '',
-        parameter_name: item.parameter_name || '',
+        parameter_id: item.parameter_id || item.resultId,
+        parameter_code: item.parameter_code || 'CUSTOM',
+        parameter_name: item.parameter_name || 'Custom Parameter',
         unit: item.unit ?? null,
         series_key: item.series_key ?? null,
         requested: item.requested !== false,
@@ -2568,6 +2572,9 @@ export function updateSampleResults(
       report.results!.push(res);
     }
 
+    if (item.parameter_name !== undefined && item.parameter_name.trim() !== '') {
+      res.parameter_name = item.parameter_name.trim();
+    }
     if (item.requested !== undefined) {
       res.requested = item.requested;
     }
