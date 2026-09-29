@@ -269,7 +269,14 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
       <aside className="hidden lg:flex fixed inset-y-0 left-0 w-[248px] bg-[var(--bg)] border-r border-[var(--line)] flex-col justify-between z-40 select-none p-6 pt-6">
         {/* Brand Header */}
         <div className="brand-redesign px-2 pb-7">
-          <div className="mark-redesign">LS</div>
+          <div className="mark-redesign">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img 
+              src="/lamsoon-logo.png" 
+              alt="Lam Soon Badge" 
+              className="w-full h-full object-contain" 
+            />
+          </div>
           <div>
             <b>Lam Soon Edible Oils</b>
             <span>Refinery Management System</span>

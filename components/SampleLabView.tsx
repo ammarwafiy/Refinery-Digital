@@ -1062,127 +1062,155 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                   </div>
                 </div>
 
-                {/* Product, Lot Number, Sampling Point & Batch row */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', padding: '20px 28px', borderBottom: '1px solid var(--line)' }}>
-                  <div className="fld" style={{ margin: 0 }}>
-                    <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span>Product (QC Selection):</span>
-                      <span className="hint" style={{ fontSize: '10px', color: 'var(--amber)' }}>Boleh ubah jika silap key-in</span>
-                    </label>
-                    <select
-                      value={qcProductId}
-                      disabled={!canEdit}
-                      onChange={e => {
-                        const val = e.target.value;
-                        setQcProductId(val);
-                        const matched = products.find(p => p.id === val || p.code === val);
-                        const newName = matched?.name || val;
-                        setQcProductName(newName);
+                {/* Product, Lot Number, Sampling Point & Batch row (Balanced 2x2 Card Grid) */}
+                <div style={{ padding: '16px 28px', borderBottom: '1px solid var(--line)' }}>
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', 
+                    gap: '14px',
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    padding: '16px 18px',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(255, 255, 255, 0.06)'
+                  }}>
+                    {/* 1. Product Selection */}
+                    <div className="fld" style={{ margin: 0 }}>
+                      <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                        <span style={{ fontWeight: 600, color: 'var(--text)' }}>Product (QC Selection):</span>
+                        <span style={{ fontSize: '10px', color: '#f59e0b', background: 'rgba(245, 158, 11, 0.12)', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(245, 158, 11, 0.25)', fontWeight: 500 }}>
+                          Boleh ubah jika silap key-in
+                        </span>
+                      </label>
+                      <select
+                        value={qcProductId}
+                        disabled={!canEdit}
+                        onChange={e => {
+                          const val = e.target.value;
+                          setQcProductId(val);
+                          const matched = products.find(p => p.id === val || p.code === val);
+                          const newName = matched?.name || val;
+                          setQcProductName(newName);
 
-                        // Auto-sync Lot Number immediately with newly selected product
-                        const syncedLot = syncLotNumberWithProduct(
-                          qcLotNo || selectedReport?.lot_no,
-                          val,
-                          selectedReport?.sample_date,
-                          selectedReport?.time_check
-                        );
-                        setQcLotNo(syncedLot);
+                          // Auto-sync Lot Number immediately with newly selected product
+                          const syncedLot = syncLotNumberWithProduct(
+                            qcLotNo || selectedReport?.lot_no,
+                            val,
+                            selectedReport?.sample_date,
+                            selectedReport?.time_check
+                          );
+                          setQcLotNo(syncedLot);
 
-                        if (selectedReport) {
-                          selectedReport.product_id = val;
-                          selectedReport.product_name = newName;
-                          selectedReport.lot_no = syncedLot;
-                          setReports(prev => prev.map(r => r.id === selectedReport.id ? { 
-                            ...r, 
-                            product_id: val, 
-                            product_name: newName, 
-                            lot_no: syncedLot 
-                          } : r));
-                        }
-                      }}
-                      className="inp"
-                      style={{ width: '100%', fontWeight: 600 }}
-                    >
-                      <option value="">-- Pilih Produk Lain --</option>
-                      {products.map(p => (
-                        <option key={p.id} value={p.id}>
-                          {p.name} {p.code ? `(${p.code})` : ''}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="fld" style={{ margin: 0 }}>
-                    <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span>Lot Number:</span>
-                      <span className="hint" style={{ fontSize: '10px', color: '#009FE3' }}>✓ Auto-sync produk</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={qcLotNo || selectedReport.lot_no || ''}
-                      disabled={!canEdit}
-                      onChange={e => {
-                        const val = e.target.value;
-                        setQcLotNo(val);
-                        if (selectedReport) {
-                          selectedReport.lot_no = val;
-                          setReports(prev => prev.map(r => r.id === selectedReport.id ? { ...r, lot_no: val } : r));
-                        }
-                      }}
-                      placeholder="LOT-CODE-YYMMDD-TIME"
-                      className="inp font-mono"
-                      style={{ width: '100%', fontWeight: 700 }}
-                    />
-                  </div>
-
-                  <div className="fld" style={{ margin: 0 }}>
-                    <label>Sampling Point (QC Selection):</label>
-                    <select
-                      value={qcSamplingPointId}
-                      disabled={!canEdit}
-                      onChange={e => {
-                        const val = e.target.value;
-                        setQcSamplingPointId(val);
-                        const matched = samplingPoints.find(sp => sp.id === val);
-                        if (selectedReport) {
-                          selectedReport.sampling_point_id = val;
-                          selectedReport.sampling_point_name = matched?.name || '';
-                        }
-                      }}
-                      className="inp"
-                      style={{ width: '100%' }}
-                    >
-                      <option value="">-- Select Sampling Point --</option>
-                      {samplingPoints.map(sp => (
-                        <option key={sp.id} value={sp.id}>{sp.name}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="fld" style={{ margin: 0 }}>
-                    <label>Crystallizer / Batch No:</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. CR-04 / B260904"
-                      disabled={!canEdit}
-                      value={qcCrystallizerBatch}
-                      onChange={e => {
-                        const val = e.target.value;
-                        setQcCrystallizerBatch(val);
-                        if (selectedReport) {
-                          if (val.includes('/')) {
-                            const [c, b] = val.split('/');
-                            selectedReport.crystallizer_no = c?.trim();
-                            selectedReport.batch_no = b?.trim();
-                          } else {
-                            selectedReport.crystallizer_no = val.trim();
-                            selectedReport.batch_no = val.trim();
+                          if (selectedReport) {
+                            selectedReport.product_id = val;
+                            selectedReport.product_name = newName;
+                            selectedReport.lot_no = syncedLot;
+                            setReports(prev => prev.map(r => r.id === selectedReport.id ? { 
+                              ...r, 
+                              product_id: val, 
+                              product_name: newName, 
+                              lot_no: syncedLot 
+                            } : r));
                           }
-                        }
-                      }}
-                      className="inp"
-                      style={{ width: '100%' }}
-                    />
+                        }}
+                        className="inp"
+                        style={{ width: '100%', fontWeight: 600, height: '38px' }}
+                      >
+                        <option value="">-- Pilih Produk Lain --</option>
+                        {products.map(p => (
+                          <option key={p.id} value={p.id}>
+                            {p.name} {p.code ? `(${p.code})` : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* 2. Lot Number */}
+                    <div className="fld" style={{ margin: 0 }}>
+                      <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                        <span style={{ fontWeight: 600, color: 'var(--text)' }}>Lot Number:</span>
+                        <span style={{ fontSize: '10px', color: '#009fe3', background: 'rgba(0, 159, 227, 0.12)', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(0, 159, 227, 0.25)', fontWeight: 500 }}>
+                          ✓ Auto-sync produk
+                        </span>
+                      </label>
+                      <input
+                        type="text"
+                        value={qcLotNo || selectedReport.lot_no || ''}
+                        disabled={!canEdit}
+                        onChange={e => {
+                          const val = e.target.value;
+                          setQcLotNo(val);
+                          if (selectedReport) {
+                            selectedReport.lot_no = val;
+                            setReports(prev => prev.map(r => r.id === selectedReport.id ? { ...r, lot_no: val } : r));
+                          }
+                        }}
+                        placeholder="LOT-CODE-YYMMDD-TIME"
+                        className="inp font-mono"
+                        style={{ width: '100%', fontWeight: 700, height: '38px', letterSpacing: '0.02em' }}
+                      />
+                    </div>
+
+                    {/* 3. Sampling Point */}
+                    <div className="fld" style={{ margin: 0 }}>
+                      <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                        <span style={{ fontWeight: 600, color: 'var(--text)' }}>Sampling Point (QC Selection):</span>
+                        <span style={{ fontSize: '10px', color: 'var(--muted)', background: 'rgba(255, 255, 255, 0.04)', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(255, 255, 255, 0.08)', fontWeight: 500 }}>
+                          Titik persampelan
+                        </span>
+                      </label>
+                      <select
+                        value={qcSamplingPointId}
+                        disabled={!canEdit}
+                        onChange={e => {
+                          const val = e.target.value;
+                          setQcSamplingPointId(val);
+                          const matched = samplingPoints.find(sp => sp.id === val);
+                          if (selectedReport) {
+                            selectedReport.sampling_point_id = val;
+                            selectedReport.sampling_point_name = matched?.name || '';
+                          }
+                        }}
+                        className="inp"
+                        style={{ width: '100%', height: '38px' }}
+                      >
+                        <option value="">-- Select Sampling Point --</option>
+                        {samplingPoints.map(sp => (
+                          <option key={sp.id} value={sp.id}>{sp.name}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* 4. Crystallizer / Batch No */}
+                    <div className="fld" style={{ margin: 0 }}>
+                      <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                        <span style={{ fontWeight: 600, color: 'var(--text)' }}>Crystallizer / Batch No:</span>
+                        <span style={{ fontSize: '10px', color: 'var(--muted)', background: 'rgba(255, 255, 255, 0.04)', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(255, 255, 255, 0.08)', fontWeight: 500 }}>
+                          CR-XX / Batch
+                        </span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. CR-04 / B260904"
+                        disabled={!canEdit}
+                        value={qcCrystallizerBatch}
+                        onChange={e => {
+                          const val = e.target.value;
+                          setQcCrystallizerBatch(val);
+                          if (selectedReport) {
+                            if (val.includes('/')) {
+                              const [c, b] = val.split('/');
+                              selectedReport.crystallizer_no = c?.trim();
+                              selectedReport.batch_no = b?.trim();
+                            } else {
+                              selectedReport.crystallizer_no = val.trim();
+                              selectedReport.batch_no = val.trim();
+                            }
+                          }
+                        }}
+                        className="inp font-mono"
+                        style={{ width: '100%', height: '38px' }}
+                      />
+                    </div>
                   </div>
                 </div>
 

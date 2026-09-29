@@ -52,7 +52,14 @@ export default function LoginView({ onLogin }: LoginViewProps) {
       {/* Left Column: Brand & Hero Display */}
       <div className="lg-l">
         <div className="brand-redesign" style={{ padding: 0 }}>
-          <div className="mark-redesign">LS</div>
+          <div className="mark-redesign">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img 
+              src="/lamsoon-logo.png" 
+              alt="Lam Soon Badge" 
+              className="w-full h-full object-contain" 
+            />
+          </div>
           <div>
             <b>Lam Soon Edible Oils</b>
             <span>Refinery Management System</span>
