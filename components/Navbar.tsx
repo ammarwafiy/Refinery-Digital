@@ -469,13 +469,7 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
 
         {/* Status, Clock, User Profile & Sign Out */}
         <div className="flex items-center gap-4">
-          {/* DCS Online Indicator */}
-          <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400 font-medium font-mono">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span>ONLINE · 2.4 MBAR</span>
-          </div>
 
-          <span className="text-slate-700">|</span>
 
           {/* Formatted Date & Time */}
           <div className="flex items-center gap-1.5 text-xs text-slate-300 font-mono">

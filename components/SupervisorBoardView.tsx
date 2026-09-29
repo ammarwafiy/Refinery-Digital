@@ -109,9 +109,6 @@ export default function SupervisorBoardView() {
                 <h1 className="text-lg sm:text-xl font-extrabold tracking-tight text-white font-sans uppercase">
                   Supervisor Live Operations Board
                 </h1>
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-mono text-emerald-400 font-semibold">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> LIVE TELEMETRY
-                </span>
               </div>
               <p className="text-xs text-slate-400 font-mono mt-1">
                 Nisshin Deodorizer Plant · Active Shift Date: <span className="text-slate-200 font-semibold">{sheet.shift_date}</span>

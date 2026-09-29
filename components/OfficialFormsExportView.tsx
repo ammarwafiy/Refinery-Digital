@@ -374,12 +374,6 @@ export default function OfficialFormsExportView() {
               <FileText className="h-5 w-5" />
             </div>
             <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="flex items-center gap-1 font-mono text-[10px] text-emerald-400 font-semibold bg-emerald-950/50 px-2 py-0.5 rounded border border-emerald-800/60">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                  CONTROLLED REPOSITORY
-                </span>
-              </div>
               <h1 className="text-base sm:text-lg font-bold tracking-tight text-slate-100 mt-0.5">
                 Official Controlled Forms & Regulatory Audit Trail
               </h1>
@@ -1087,11 +1081,7 @@ export default function OfficialFormsExportView() {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold text-sm text-slate-100">AL001 · Immutable Regulatory Audit Trail</span>
-                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-950/50 text-emerald-400 border border-emerald-800/60 text-[10px] font-mono font-medium">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                    Live Supabase Ledger
-                  </span>
+                  <span className="font-semibold text-sm text-slate-100">Immutable Regulatory Audit Trail</span>
                 </div>
                 <div className="text-[11px] text-slate-400 font-mono font-normal">
                   Database trigger-level tamper-proof append-only ledger for regulatory compliance

@@ -601,9 +601,6 @@ export default function AdminUserManagementView() {
               <h1 className="text-base sm:text-lg font-bold text-slate-100 tracking-wide">
                 Plant Administration & User Management
               </h1>
-              <span className="rounded bg-[#0A1018] px-2 py-0.5 text-[10px] font-mono text-[#009FE3] border border-[#009FE3]/30 font-semibold">
-                ADMIN ACCESS ONLY
-              </span>
             </div>
             <p className="text-xs text-slate-400 font-sans mt-0.5">
               Role-Based Access Control (RBAC), Consistent Sequential ID Generation & Nisshin Deodorizer Personnel Directory
@@ -665,9 +662,6 @@ export default function AdminUserManagementView() {
         >
           <HardDrive className="h-4 w-4" />
           <span>Data Retention & Supabase Prune Policy</span>
-          <span className="px-1.5 py-0.5 text-[9px] bg-[#0A1018] text-[#009FE3] border border-[#009FE3]/40 rounded font-mono font-bold">
-            500 MB PROTECT
-          </span>
         </button>
       </div>
 
@@ -1100,10 +1094,6 @@ export default function AdminUserManagementView() {
                     <h2 className="text-base font-bold text-slate-100 tracking-wide">
                       Supabase PostgreSQL Storage Capacity & Health
                     </h2>
-                    <span className="rounded-full bg-emerald-950/60 px-2.5 py-0.5 text-[10px] font-mono text-emerald-400 border border-emerald-800 font-semibold flex items-center gap-1.5">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                      OPTIMAL SAFE ZONE
-                    </span>
                   </div>
                   <p className="text-xs text-slate-400 font-sans mt-0.5">
                     Continuous monitoring against Supabase Free Tier cap (500.0 MB). Tabular refinery data generates ~8.7 MB/year.
@@ -1240,9 +1230,6 @@ export default function AdminUserManagementView() {
                     </span>
                   </div>
                 </div>
-                <span className="px-2 py-0.5 text-[10px] font-mono bg-[#009FE3]/10 text-[#009FE3] border border-[#009FE3]/30 rounded font-semibold">
-                  SAFETY LOCK
-                </span>
               </div>
 
               <p className="text-xs text-slate-400 leading-relaxed font-sans">

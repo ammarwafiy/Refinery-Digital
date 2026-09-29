@@ -307,10 +307,6 @@ export default function AnalyticsTrendsView() {
               <span>Monthly QC Rejection Pareto (Reason Codes)</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1 rounded bg-[#10B981]/10 px-2 py-0.5 text-[10px] font-mono text-[#10B981] border border-[#10B981]/30">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#10B981] animate-pulse" />
-                Live Synced
-              </span>
               <span className="text-[11px] font-mono text-slate-400 hidden sm:inline">
                 80/20 Rule Analysis
               </span>
@@ -360,10 +356,6 @@ export default function AnalyticsTrendsView() {
               <span>Lot Rejection Frequency by Product</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1 rounded bg-[#10B981]/10 px-2 py-0.5 text-[10px] font-mono text-[#10B981] border border-[#10B981]/30">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#10B981] animate-pulse" />
-                Live Synced
-              </span>
               <span className="text-[11px] font-mono text-slate-400 hidden sm:inline">
                 Volume vs Rejection
               </span>

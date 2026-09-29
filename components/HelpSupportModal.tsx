@@ -130,9 +130,6 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
                 <h2 className="text-base font-bold text-white tracking-wide">
                   Refinery Support & Knowledge Center
                 </h2>
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-[#101927] text-[#009FE3] border border-[#009FE3]/30">
-                  REF-SOP-V1.0
-                </span>
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
                 Lam Soon Edible Oils · Digital Operations Manual, Traceability Directory & Technical Helpdesk

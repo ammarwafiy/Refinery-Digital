@@ -973,11 +973,6 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                       </div>
                       <div className="text-[11px] text-slate-400 mt-0.5 font-medium flex items-center gap-1.5 font-mono">
                         <span className="truncate max-w-[140px]">{rep.product_name}</span>
-                        {(rep.remarks?.toLowerCase().includes('auto-dispatched') || rep.remarks?.includes('Process Log')) && (
-                          <span className="text-[8px] font-mono px-1.5 py-0.2 rounded border border-[#1F2E43] bg-[#0A1018] text-[#009FE3] font-semibold">
-                            AUTO
-                          </span>
-                        )}
                       </div>
                     </div>
 
@@ -1020,22 +1015,10 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded border border-[#009FE3]/50 bg-[#0A1018] text-[#009FE3] font-bold">
-                          SR{String(reports.findIndex(r => r.id === selectedReport.id) + 1 || 1).padStart(3, '0')} · {selectedReport.report_no}
-                        </span>
                         <h2 className="text-lg font-bold text-slate-100 font-mono">
                           {selectedReport.lot_no}
                         </h2>
-                        {selectedReport.decision && (
-                          <span className="text-[10px] font-mono px-2 py-0.5 rounded border border-emerald-500/40 bg-emerald-950/40 text-emerald-400 font-bold">
-                            QC Decision
-                          </span>
-                        )}
-                        {(selectedReport.remarks?.toLowerCase().includes('auto-dispatched') || selectedReport.remarks?.includes('Process Log')) && (
-                          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#009FE3]/10 text-[#009FE3] border border-[#009FE3]/30 flex items-center gap-1 font-semibold">
-                            ⚡ Auto-Dispatched ({selectedReport.time_check})
-                          </span>
-                        )}
+                        <span className="text-xs text-slate-400 font-mono">({selectedReport.report_no})</span>
                       </div>
                       <div className="mt-1.5 text-xs text-slate-400 font-mono flex flex-wrap items-center gap-2.5">
                         <span>Product: <strong className="text-slate-200">{selectedReport.product_name}</strong></span>
@@ -1211,10 +1194,6 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                       <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 font-mono">
                         Lab Analysis Results Entry
                       </span>
-                      <span className="rounded bg-[#0A1018] px-2 py-0.5 font-mono text-[10px] text-[#009FE3] border border-[#1F2E43] font-semibold">
-                        {standardResults.filter(r => requestedMap[r.id] !== false).length + (isTempAnyTicked ? 1 : 0)} / {standardResults.length + (tempResults.length > 0 ? 1 : 0)} Active
-                        {isTempAnyTicked && ` · ${activeTempCount}/9 Temps`}
-                      </span>
                     </div>
 
                     {(role === 'qc_analyst' || role === 'qc_manager' || role === 'admin') && (
@@ -1352,9 +1331,6 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                                 <span className={`font-semibold font-sans ${isTempAnyTicked ? 'text-slate-100' : 'text-slate-400'}`}>
                                   Temperature
                                 </span>
-                                <span className="text-[9px] font-mono px-2 py-0.5 rounded bg-[#0A1018] text-[#009FE3] border border-[#1F2E43] font-semibold">
-                                  9 Test Points: 10, 15, 20, 25, 30, 35, 40, 45, 50°C
-                                </span>
                               </div>
                             </td>
                             <td className="py-2.5 px-3 text-slate-400 font-mono">
@@ -1422,9 +1398,6 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                                   <span className="text-[#009FE3] font-mono text-xs select-none">↳</span>
                                   <span className={`font-medium ${isUnticked ? 'text-slate-500' : 'text-slate-200'}`}>
                                     Temperature {res.series_key}°C
-                                  </span>
-                                  <span className="text-[9px] font-mono text-[#009FE3] bg-[#009FE3]/10 px-1.5 py-0.2 rounded border border-[#009FE3]/30">
-                                    Pt {res.series_key}
                                   </span>
                                 </div>
                               </td>

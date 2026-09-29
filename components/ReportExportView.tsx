@@ -687,9 +687,6 @@ export default function ReportExportView() {
               {category === 'deviations' && 'Plant Deviations & Excursions Preview'}
               {category === 'master' && 'Master Operations & Quality Merged Preview'}
             </span>
-            <span className="rounded bg-[#009FE3]/15 px-2 py-0.5 text-[10px] font-mono font-semibold text-[#009FE3] border border-[#009FE3]/30">
-              {category === 'process' || category === 'master' ? filteredProcessEntries.length : category === 'qc' ? filteredQCReports.length : filteredDeviations.length} rows ready
-            </span>
           </div>
 
           <div className="text-[11px] font-mono text-slate-400">
