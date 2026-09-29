@@ -2728,6 +2728,35 @@ export function submitQCDecision(data: {
     console.warn('[Supabase Sync] Decision direct sync warning on submitQCDecision:', err);
   });
 
+  // Dispatch Telegram alert for QC Decisions
+  if (typeof window !== 'undefined') {
+    const alertType = data.decision === 'reject' ? 'qc_reject' : data.decision === 'accept_concession' ? 'qc_concession' : 'qc_accept';
+    const alertTitle = data.decision === 'reject' 
+      ? `LOT REJECTED: ${report.lot_no}` 
+      : data.decision === 'accept_concession' 
+      ? `CONCESSION ACCEPTANCE: ${report.lot_no}` 
+      : `QC ACCEPTED: ${report.lot_no}`;
+    
+    fetch('/api/telegram/alert', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: alertTitle,
+        type: alertType,
+        message: data.decision === 'reject'
+          ? `Lot ${report.lot_no} bagi produk ${report.product_name} telah DITOLAK oleh pihak QC.\nSebab: ${reasonObj?.label || 'Deviation'}\nPelupusan: ${(data.disposition || 'Hold').toUpperCase()}`
+          : `Lot ${report.lot_no} bagi produk ${report.product_name} telah disahkan (${data.decision.toUpperCase()}) oleh ${profile.full_name}.`,
+        metadata: {
+          'Lot No': report.lot_no,
+          'Product': report.product_name,
+          'Decision': data.decision.toUpperCase(),
+          'Inspector': profile.full_name,
+          ...(data.disposition ? { 'Disposition': data.disposition.toUpperCase() } : {}),
+        }
+      })
+    }).catch(e => console.warn('[Telegram Alert Error]:', e));
+  }
+
   return { success: true };
 }
 
