@@ -259,19 +259,151 @@ body {
   background: linear-gradient(90deg, transparent, rgba(0, 159, 227, 0.2), transparent);
 }
 
-/* Print layout optimizations - strictly pure black & white */
+/* ========================================================================= */
+/* OFFICIAL CERTIFICATES & FORMS PRINT STYLING ENGINE                       */
+/* ========================================================================= */
 @media print {
-  body {
+  /* 1. Global Reset for Printing */
+  html, body {
     background: #ffffff !important;
     color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    font-size: 10pt !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
-  .no-print {
+
+  /* 2. Hide ALL application chrome (Navbar, Sidebar, Topbars, Mobile Menus, Breadcrumbs, Mastheads, Footers) */
+  header,
+  aside,
+  nav,
+  footer,
+  .no-print,
+  .panel.no-print,
+  .crumb-redesign,
+  .h1-redesign,
+  .lede-redesign,
+  .search-redesign,
+  .brand-redesign,
+  .nav-link-redesign,
+  .shift-card-redesign,
+  .ver-redesign,
+  .user-redesign,
+  [class*="crumb-"],
+  [class*="h1-"],
+  [class*="lede-"] {
     display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
   }
-  .print-only {
-    display: block !important;
+
+  /* 3. Reset main wrappers so they take 100% paper width with zero sidebar offset */
+  .min-h-screen,
+  .flex-1,
+  main,
+  .content-redesign,
+  div[class*="lg:pl-"],
+  div[class*="lg:pt-"] {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  /* 4. Reset .paper container for crisp official document printing */
+  .paper {
+    background: #ffffff !important;
+    color: #000000 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* 5. Override .paper table so it does NOT stretch to 1100px */
+  .paper table {
+    min-width: unset !important;
+    width: 100% !important;
+  }
+
+  /* 6. RF-FR-004 : 24-Hour Process Control Sheet (Landscape) */
+  .rf-fr-004-sheet {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    width: 100% !important;
+  }
+  .rf-fr-004-table {
+    min-width: unset !important;
+    width: 100% !important;
+    table-layout: fixed !important;
+    font-size: 6.8pt !important;
+    border-collapse: collapse !important;
+    page-break-inside: avoid !important;
+  }
+  .rf-fr-004-table th,
+  .rf-fr-004-table td {
+    padding: 1.2px 1px !important;
+    border: 1px solid #000000 !important;
+    color: #000000 !important;
+    background: #ffffff !important;
+    line-height: 1.12 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  .rf-fr-004-table thead tr th {
+    background: #f1f5f9 !important;
+    font-weight: 700 !important;
+  }
+
+  /* 7. RF-FR-001 : Sample Analysis Certificate (Portrait) */
+  .rf-fr-001-sheet {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+  }
+  .rf-fr-001-table {
+    min-width: unset !important;
+    width: 100% !important;
+    table-layout: fixed !important;
+    font-size: 8pt !important;
+    border-collapse: collapse !important;
+    page-break-inside: avoid !important;
+  }
+  .rf-fr-001-table th,
+  .rf-fr-001-table td {
+    padding: 2.5px 5px !important;
+    border: 1px solid #000000 !important;
+    color: #000000 !important;
+    line-height: 1.2 !important;
+  }
+  .rf-fr-001-table thead th {
+    background: #f1f5f9 !important;
+    font-weight: 700 !important;
+  }
+
+  /* Ensure page breaks don't split single-page certificates awkwardly */
+  .paper > div {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 }
+
 
 /* ========================================================================= */
 /* HIGH-CONTRAST INDUSTRIAL DAYLIGHT THEME (Daylight SCADA Control Room)     */
@@ -1454,11 +1586,18 @@ html.light-theme ::-webkit-scrollbar-thumb:hover {
   color: #333;
 }
 .paper table {
+  width: 100%;
+  margin: 16px 0;
+  border-collapse: collapse;
+}
+.paper table.rf-fr-004-table {
   min-width: 1100px;
   font-size: 11px;
-  margin: 16px 0;
-  width: 100%;
-  border-collapse: collapse;
+}
+.paper table.rf-fr-001-table {
+  min-width: unset;
+  table-layout: fixed;
+  font-size: 12px;
 }
 .paper th, .paper td {
   border: 1px solid #222;

@@ -13,7 +13,8 @@ import {
   syncSampleReportsFromSupabase,
   syncProcessSheetsFromSupabase,
   formatAuditRecordId,
-  formatAuditTableName
+  formatAuditTableName,
+  getProductSpecs
 } from '@/lib/data-service';
 import type { SampleReport, ProcessSheet, AuditLogEntry } from '@/types/refinery';
 import { 
@@ -215,6 +216,35 @@ export default function OfficialFormsExportView() {
 
   const activeReport = reports.find(r => r.id === selectedReportId) || reports[0];
 
+  // Resolve standard product specifications for the selected sample lot
+  const activeReportSpecs = useMemo(() => {
+    if (!activeReport?.product_id) return [];
+    return getProductSpecs(activeReport.product_id);
+  }, [activeReport?.product_id]);
+
+  // Formats human-readable ISO/GMP standard specifications string
+  const getSpecString = (paramId: string, seriesKey?: number | null, unit?: string | null) => {
+    const spec = activeReportSpecs.find(s => 
+      s.parameter_id === paramId && 
+      (seriesKey != null ? Number(s.series_key) === Number(seriesKey) : s.series_key == null)
+    );
+    if (!spec) return '—';
+    const u = unit ? ` ${unit}` : '';
+    if (spec.min_value != null && spec.max_value != null) {
+      return `${spec.min_value} – ${spec.max_value}${u}`;
+    }
+    if (spec.min_value != null) {
+      return `Min ${spec.min_value}${u}`;
+    }
+    if (spec.max_value != null) {
+      return `Max ${spec.max_value}${u}`;
+    }
+    if (spec.target_value != null) {
+      return `Target ${spec.target_value}${u}`;
+    }
+    return '—';
+  };
+
   const openEditRemarks = () => {
     if (!activeReport) return;
     setEditFlushing(Boolean(activeReport.remark_flushing));
@@ -260,6 +290,19 @@ export default function OfficialFormsExportView() {
   };
 
   const handlePrint = () => {
+    // Dynamic @page orientation: RF-FR-004 is Landscape (wide process sheet), RF-FR-001 is Portrait (official certificate)
+    const styleId = 'official-form-print-style';
+    let styleEl = document.getElementById(styleId);
+    if (!styleEl) {
+      styleEl = document.createElement('style');
+      styleEl.id = styleId;
+      document.head.appendChild(styleEl);
+    }
+    if (activeFormType === 'rf_fr_004') {
+      styleEl.textContent = `@page { size: landscape; margin: 4mm 5mm; }`;
+    } else {
+      styleEl.textContent = `@page { size: portrait; margin: 8mm 10mm; }`;
+    }
     window.print();
   };
 
@@ -718,7 +761,7 @@ export default function OfficialFormsExportView() {
 
       {/* FORM 1: RF-FR-004 Layout */}
       {activeFormType === 'rf_fr_004' && (
-        <div className="paper overflow-x-auto print:border-none print:shadow-none print:p-0">
+        <div className="paper rf-fr-004-sheet overflow-x-auto print:border-none print:shadow-none print:p-0">
           {/* Form Header */}
           <div className="border-b-2 border-slate-900 pb-4 mb-4">
             <div className="flex items-start justify-between">
@@ -766,7 +809,7 @@ export default function OfficialFormsExportView() {
 
           {/* 24-Row × 21-Column Data Table */}
           <div className="overflow-x-auto">
-            <table className="w-full text-center border-collapse border border-slate-900 text-[10px] font-mono">
+            <table className="rf-fr-004-table w-full text-center border-collapse border border-slate-900 text-[10px] font-mono">
               <thead>
                 <tr className="bg-slate-100 font-bold border-b border-slate-900 text-slate-800">
                   <th className="border border-slate-900 p-1" rowSpan={2}>Time</th>
@@ -868,7 +911,7 @@ export default function OfficialFormsExportView() {
 
       {/* FORM 2: RF-FR-001 Layout */}
       {activeFormType === 'rf_fr_001' && activeReport && (
-        <div className="paper max-w-4xl mx-auto print:border-none print:shadow-none print:p-0">
+        <div className="paper rf-fr-001-sheet max-w-4xl mx-auto print:border-none print:shadow-none print:p-0">
           <div className="border-b-2 border-slate-900 pb-4 mb-4 flex items-start justify-between">
             <div>
               <h2 className="text-xl font-bold tracking-tight uppercase">
@@ -908,27 +951,80 @@ export default function OfficialFormsExportView() {
             <div><span className="text-slate-500">SAMPLING POINT:</span> <strong>{activeReport.sampling_point_name || 'Outlet'}</strong></div>
           </div>
 
-          {/* Parameters Table */}
-          <table className="w-full text-left border-collapse border border-slate-900 text-xs font-mono mb-4">
+          {/* Parameters Table - 5 Columns: No, Tested Parameter, Standard Spec, Analytical Result, Compliance */}
+          <table 
+            className="rf-fr-001-table w-full text-left border-collapse border border-slate-900 text-xs font-mono mb-4"
+            style={{ tableLayout: 'fixed', width: '100%', minWidth: 'unset' }}
+          >
+            <colgroup>
+              <col style={{ width: '42px' }} />
+              <col style={{ width: '38%' }} />
+              <col style={{ width: '22%' }} />
+              <col style={{ width: '22%' }} />
+              <col style={{ width: '18%' }} />
+            </colgroup>
             <thead>
-              <tr className="bg-slate-100 border-b border-slate-900">
-                <th className="border border-slate-900 p-2">Tested Parameter</th>
-                <th className="border border-slate-900 p-2 w-32">Unit</th>
-                <th className="border border-slate-900 p-2 w-52">Analytical Result</th>
+              <tr className="bg-slate-100 border-b border-slate-900 text-slate-900 font-bold">
+                <th className="border border-slate-900 p-2 text-center">No.</th>
+                <th className="border border-slate-900 p-2">Analytical Parameter Tested</th>
+                <th className="border border-slate-900 p-2 text-center">Standard Specification</th>
+                <th className="border border-slate-900 p-2 text-center">Analytical Result</th>
+                <th className="border border-slate-900 p-2 text-center">Compliance Status</th>
               </tr>
             </thead>
             <tbody>
-              {activeReport.results?.filter(res => res.requested !== false).map(res => (
-                <tr key={res.id}>
-                  <td className="border border-slate-900 p-2 font-sans">
-                    {res.parameter_name.includes('°C') || !res.series_key
-                      ? res.parameter_name
-                      : `${res.parameter_name} (${res.series_key}°C)`}
-                  </td>
-                  <td className="border border-slate-900 p-2 text-slate-500">{res.unit || '-'}</td>
-                  <td className="border border-slate-900 p-2 font-bold">{res.value_numeric ?? res.value_text ?? '-'}</td>
-                </tr>
-              ))}
+              {activeReport.results?.filter(res => res.requested !== false).map((res, idx) => {
+                const specText = getSpecString(res.parameter_id, res.series_key, res.unit);
+                const hasVal = (res.value_numeric !== null && res.value_numeric !== undefined) || (res.value_text && res.value_text.trim() !== '');
+                const displayVal = (res.value_numeric !== null && res.value_numeric !== undefined)
+                  ? `${res.value_numeric}${res.unit ? ` ${res.unit}` : ''}`
+                  : (res.value_text || '—');
+
+                let statusBadge = (
+                  <span className="text-slate-400 font-normal text-[11px]">—</span>
+                );
+                if (hasVal) {
+                  if (res.in_spec === true) {
+                    statusBadge = (
+                      <span className="inline-flex items-center gap-1 font-bold text-emerald-800 bg-emerald-50 border border-emerald-300 px-2 py-0.5 rounded text-[10px] tracking-wide">
+                        <span>✓</span> <span>IN SPEC</span>
+                      </span>
+                    );
+                  } else if (res.in_spec === false) {
+                    statusBadge = (
+                      <span className="inline-flex items-center gap-1 font-bold text-rose-800 bg-rose-50 border border-rose-300 px-2 py-0.5 rounded text-[10px] tracking-wide">
+                        <span>✗</span> <span>OUT OF SPEC</span>
+                      </span>
+                    );
+                  } else {
+                    statusBadge = (
+                      <span className="inline-flex items-center font-bold text-slate-700 bg-slate-100 border border-slate-300 px-2 py-0.5 rounded text-[10px] tracking-wide">
+                        <span>RECORDED</span>
+                      </span>
+                    );
+                  }
+                }
+
+                return (
+                  <tr key={res.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/70'}>
+                    <td className="border border-slate-900 p-2 text-center font-bold text-slate-600">{idx + 1}</td>
+                    <td className="border border-slate-900 p-2 font-sans font-medium text-slate-900">
+                      {res.parameter_name.includes('°C') || !res.series_key
+                        ? res.parameter_name
+                        : `${res.parameter_name} (${res.series_key}°C)`}
+                    </td>
+                    <td className="border border-slate-900 p-2 text-center text-slate-700 font-mono text-[11px]">
+                      {specText}
+                    </td>
+                    <td className="border border-slate-900 p-2 text-center font-bold text-slate-900 font-mono text-[11px]">
+                      {displayVal}
+                    </td>
+                    <td className="border border-slate-900 p-2 text-center">
+                      {statusBadge}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
 
@@ -1033,7 +1129,7 @@ export default function OfficialFormsExportView() {
               </span>
             </div>
 
-            {activeReport.decision && (
+            {activeReport.decision ? (
               <div className="space-y-1">
                 <div><span className="text-slate-500">REASON CODE:</span> <strong>{activeReport.decision.reason_label || 'None (Accepted)'}</strong></div>
                 {activeReport.decision.disposition && (
@@ -1045,6 +1141,10 @@ export default function OfficialFormsExportView() {
                 <div className="pt-2 border-t border-slate-200 text-[11px] text-slate-500">
                   Electronic Signature: {activeReport.decision.decided_by_name} · Timestamp: {activeReport.decision.decided_at}
                 </div>
+              </div>
+            ) : (
+              <div className="text-slate-400 italic py-1 text-center">
+                Pending QC Chemist / Manager final review and electronic sign-off disposition.
               </div>
             )}
           </div>

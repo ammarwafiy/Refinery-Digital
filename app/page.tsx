@@ -103,18 +103,20 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] flex flex-col">
       {/* Sidebar (Desktop) + Mobile Topbar / Drawer */}
-      <Navbar 
-        activeTab={currentTab} 
-        setActiveTab={setActiveTab} 
-        currentUser={authUser}
-        onRoleChange={setAuthUserState}
-        onLogout={handleLogout}
-      />
+      <div className="no-print">
+        <Navbar 
+          activeTab={currentTab} 
+          setActiveTab={setActiveTab} 
+          currentUser={authUser}
+          onRoleChange={setAuthUserState}
+          onLogout={handleLogout}
+        />
+      </div>
 
       {/* Main Content Area (Offset by sidebar width 248px on desktop and topbar height 64px) */}
       <div className="flex-1 flex flex-col min-w-0 lg:pl-[248px] lg:pt-16">
         {/* Dynamic Page Header & Breadcrumbs matching redesign */}
-        <div className="px-6 lg:px-10 pt-8 pb-2">
+        <div className="px-6 lg:px-10 pt-8 pb-2 no-print">
           <p className="crumb-redesign">
             <span 
               onClick={() => setActiveTab('process')}
