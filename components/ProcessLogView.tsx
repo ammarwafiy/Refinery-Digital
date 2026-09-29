@@ -679,17 +679,17 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
           </div>
 
           {/* Section B: Processing Conditions (Feed Rate, Deod Time, Vacuum) */}
-          <div className="rounded border border-[#1F2E43] bg-[#131E2D] p-4">
-            <div className="flex items-center gap-2 mb-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 font-mono">
-              <Gauge className="h-3.5 w-3.5 text-[#009FE3]" />
+          <div className="rounded-[10px] border border-[var(--line)] bg-[var(--surface)] p-4">
+            <div className="flex items-center gap-2 mb-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--text)]">
+              <Gauge className="h-3.5 w-3.5 text-[var(--red)]" />
               <span>Processing Controls</span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {/* Oil Feed Rate */}
               <div>
-                <label className="block text-[11px] text-slate-500 mb-1 font-mono">
-                  Oil Feed Rate <span className="text-slate-500">(Litre)</span>
+                <label className="block text-[11px] text-[var(--muted)] mb-1 font-medium">
+                  Oil Feed Rate <span>(Litre)</span>
                 </label>
                 <div className="relative">
                   <input
@@ -699,10 +699,10 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     value={formData.oil_feed_rate_litre ?? ''}
                     onChange={e => handleFieldChange('oil_feed_rate_litre', e.target.value ? Number(e.target.value) : null)}
                     disabled={isSlotDisabled}
-                    className="w-full bg-[#0A1018] border border-[#1F2E43] rounded px-3 py-1.5 text-xs font-mono text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-[#009FE3] focus:ring-1 focus:ring-[#009FE3]/30 disabled:opacity-50 disabled:bg-[#070B12] disabled:cursor-not-allowed"
+                    className="w-full bg-[var(--bg)] border border-[var(--line)] rounded-lg px-3 py-2 text-xs font-mono text-[var(--text)] placeholder:text-[var(--muted)]/50 focus:outline-none focus:border-[var(--red)] disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                   {ghostData.oil_feed_rate_litre !== undefined && (
-                    <span className="absolute right-2.5 top-1.5 text-[10px] font-mono text-slate-500 pointer-events-none">
+                    <span className="absolute right-2.5 top-2 text-[10px] font-mono text-[var(--muted)] pointer-events-none">
                       Prev: {ghostData.oil_feed_rate_litre}
                     </span>
                   )}
@@ -711,8 +711,8 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
 
               {/* Deod Time Set */}
               <div>
-                <label className="block text-[11px] text-slate-500 mb-1 font-mono">
-                  Deod Time Set <span className="text-slate-500">(Hr)</span>
+                <label className="block text-[11px] text-[var(--muted)] mb-1 font-medium">
+                  Deod Time Set <span>(Hr)</span>
                 </label>
                 <input
                   type="number"
@@ -721,15 +721,15 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                   value={formData.deod_time_set_hr ?? ''}
                   onChange={e => handleFieldChange('deod_time_set_hr', e.target.value ? Number(e.target.value) : null)}
                   disabled={isSlotDisabled}
-                  className="w-full bg-[#0A1018] border border-[#1F2E43] rounded px-3 py-1.5 text-xs font-mono text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-[#009FE3] focus:ring-1 focus:ring-[#009FE3]/30 disabled:opacity-50 disabled:bg-[#070B12] disabled:cursor-not-allowed"
+                  className="w-full bg-[var(--bg)] border border-[var(--line)] rounded-lg px-3 py-2 text-xs font-mono text-[var(--text)] placeholder:text-[var(--muted)]/50 focus:outline-none focus:border-[var(--red)] disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
 
               {/* Vacuum Reach */}
               <div>
-                <label className="block text-[11px] text-slate-500 mb-1 flex items-center justify-between font-mono">
-                  <span>Vacuum Reach <span className="text-slate-500">(Torr)</span></span>
-                  <span className="text-[10px] text-[#009FE3] font-medium">Band: 1.0 - 4.5</span>
+                <label className="block text-[11px] text-[var(--muted)] mb-1 flex items-center justify-between font-medium">
+                  <span>Vacuum Reach <span>(Torr)</span></span>
+                  <span className="text-[10px] text-[var(--redt)] font-medium">Band: 1.0 - 4.5</span>
                 </label>
                 <div className="relative">
                   <input
@@ -739,16 +739,16 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     value={formData.vacuum_torr ?? ''}
                     onChange={e => handleFieldChange('vacuum_torr', e.target.value ? Number(e.target.value) : null)}
                     disabled={isSlotDisabled}
-                    className={`w-full bg-[#101927] border rounded px-3 py-1.5 text-xs font-mono text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500/20 disabled:opacity-50 disabled:bg-[#101927] disabled:cursor-not-allowed ${
+                    className={`w-full bg-[var(--bg)] border rounded-lg px-3 py-2 text-xs font-mono text-[var(--text)] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${
                       checkLimit('vacuum_torr', formData.vacuum_torr) === 'soft_warn'
-                        ? 'border-amber-500/70 bg-[#F59E0B]/15 text-amber-200'
+                        ? 'border-[var(--amber)] bg-[rgba(224,160,48,0.12)] text-[var(--amber)]'
                         : checkLimit('vacuum_torr', formData.vacuum_torr) === 'hard_error'
-                        ? 'border-red-500/70 bg-[#EF4444]/15 text-red-200'
-                        : 'border-[#1F2E43] focus:border-[#009FE3]'
+                        ? 'border-[var(--red)] bg-[rgba(216,31,44,0.12)] text-[var(--redt)]'
+                        : 'border-[var(--line)] focus:border-[var(--red)]'
                     }`}
                   />
                   {ghostData.vacuum_torr !== undefined && (
-                    <span className="absolute right-2.5 top-1.5 text-[10px] font-mono text-slate-500 pointer-events-none">
+                    <span className="absolute right-2.5 top-2 text-[10px] font-mono text-[var(--muted)] pointer-events-none">
                       Prev: {ghostData.vacuum_torr}
                     </span>
                   )}
@@ -758,13 +758,13 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
           </div>
 
           {/* Section C: Temperature Recorder — Trays 1 to 7 (°C) */}
-          <div className="rounded border border-[#1F2E43] bg-[#131E2D] p-4">
-            <div className="flex items-center justify-between mb-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 font-mono">
+          <div className="rounded-[10px] border border-[var(--line)] bg-[var(--surface)] p-4">
+            <div className="flex items-center justify-between mb-3 text-[11px] font-semibold uppercase tracking-wider text-[var(--text)]">
               <div className="flex items-center gap-2">
-                <Thermometer className="h-3.5 w-3.5 text-[#009FE3]" />
+                <Thermometer className="h-3.5 w-3.5 text-[var(--red)]" />
                 <span>SECTION 3: DEODORIZER TEMPERATURE PROFILE — TRAYS 1 TO 7 (°C)</span>
               </div>
-              <span className="text-[10px] text-slate-400 font-mono">TAB to cycle left → right</span>
+              <span className="text-[10px] text-[var(--muted)] font-normal normal-case">TAB to cycle left → right</span>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
@@ -776,8 +776,8 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
 
                 return (
                   <div key={trayNum}>
-                    <label className="block text-[11px] text-slate-500 mb-1 font-mono">
-                      Tray {trayNum} <span className="text-[10px] text-slate-500">°C</span>
+                    <label className="block text-[11px] text-[var(--muted)] mb-1 font-medium">
+                      Tray {trayNum} <span>°C</span>
                     </label>
                     <div className="relative">
                       <input
@@ -787,12 +787,12 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                         value={val ?? ''}
                         onChange={e => handleFieldChange(key, e.target.value ? Number(e.target.value) : null)}
                         disabled={isSlotDisabled}
-                        className={`w-full bg-[#101927] border rounded px-2.5 py-1.5 text-xs font-mono text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500/20 disabled:opacity-50 disabled:bg-[#101927] disabled:cursor-not-allowed ${
+                        className={`w-full bg-[var(--bg)] border rounded-lg px-2.5 py-2 text-xs font-mono text-[var(--text)] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${
                           status === 'soft_warn'
-                            ? 'border-amber-500/70 text-amber-200 bg-[#F59E0B]/15'
+                            ? 'border-[var(--amber)] text-[var(--amber)] bg-[rgba(224,160,48,0.12)]'
                             : status === 'hard_error'
-                            ? 'border-red-500/70 text-red-200 bg-[#EF4444]/15'
-                            : 'border-[#1F2E43] focus:border-[#009FE3]'
+                            ? 'border-[var(--red)] text-[var(--redt)] bg-[rgba(216,31,44,0.12)]'
+                            : 'border-[var(--line)] focus:border-[var(--red)]'
                         }`}
                       />
                     </div>
@@ -805,13 +805,13 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
           {/* Section D: Cooling, Steam Supply & Stripping Steam */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* BC 101 Water Temperatures */}
-            <div className="rounded border border-[#1F2E43] bg-[#131E2D] p-4">
-              <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-3 font-mono">
+            <div className="rounded-[10px] border border-[var(--line)] bg-[var(--surface)] p-4">
+              <span className="block text-[11px] font-semibold uppercase tracking-wider text-[var(--text)] mb-3">
                 BC 101 CONDENSER (°C)
               </span>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] text-slate-500 mb-1 font-mono">Water In</label>
+                  <label className="block text-[11px] text-[var(--muted)] mb-1 font-medium">Water In</label>
                   <input
                     type="number"
                     step="0.1"
@@ -819,11 +819,11 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     value={formData.bc101_water_in_c ?? ''}
                     onChange={e => handleFieldChange('bc101_water_in_c', e.target.value ? Number(e.target.value) : null)}
                     disabled={isSlotDisabled}
-                    className="w-full bg-[#0A1018] border border-[#1F2E43] rounded px-2.5 py-1.5 text-xs font-mono text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-[#009FE3] focus:ring-1 focus:ring-[#009FE3]/30 disabled:opacity-50 disabled:bg-[#070B12] disabled:cursor-not-allowed"
+                    className="w-full bg-[var(--bg)] border border-[var(--line)] rounded-lg px-2.5 py-2 text-xs font-mono text-[var(--text)] placeholder:text-[var(--muted)]/50 focus:outline-none focus:border-[var(--red)] disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] text-slate-500 mb-1 font-mono">Water Out</label>
+                  <label className="block text-[11px] text-[var(--muted)] mb-1 font-medium">Water Out</label>
                   <input
                     type="number"
                     step="0.1"
@@ -831,20 +831,20 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     value={formData.bc101_water_out_c ?? ''}
                     onChange={e => handleFieldChange('bc101_water_out_c', e.target.value ? Number(e.target.value) : null)}
                     disabled={isSlotDisabled}
-                    className="w-full bg-[#0A1018] border border-[#1F2E43] rounded px-2.5 py-1.5 text-xs font-mono text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-[#009FE3] focus:ring-1 focus:ring-[#009FE3]/30 disabled:opacity-50 disabled:bg-[#070B12] disabled:cursor-not-allowed"
+                    className="w-full bg-[var(--bg)] border border-[var(--line)] rounded-lg px-2.5 py-2 text-xs font-mono text-[var(--text)] placeholder:text-[var(--muted)]/50 focus:outline-none focus:border-[var(--red)] disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
             </div>
 
             {/* Chilling Water */}
-            <div className="rounded border border-[#1F2E43] bg-[#131E2D] p-4">
-              <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-3 font-mono">
+            <div className="rounded-[10px] border border-[var(--line)] bg-[var(--surface)] p-4">
+              <span className="block text-[11px] font-semibold uppercase tracking-wider text-[var(--text)] mb-3">
                 CHILLING WATER (°C)
               </span>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] text-slate-500 mb-1 font-mono">Water In</label>
+                  <label className="block text-[11px] text-[var(--muted)] mb-1 font-medium">Water In</label>
                   <input
                     type="number"
                     step="0.1"
@@ -852,11 +852,11 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     value={formData.chill_water_in_c ?? ''}
                     onChange={e => handleFieldChange('chill_water_in_c', e.target.value ? Number(e.target.value) : null)}
                     disabled={isSlotDisabled}
-                    className="w-full bg-[#0A1018] border border-[#1F2E43] rounded px-2.5 py-1.5 text-xs font-mono text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-[#009FE3] focus:ring-1 focus:ring-[#009FE3]/30 disabled:opacity-50 disabled:bg-[#070B12] disabled:cursor-not-allowed"
+                    className="w-full bg-[var(--bg)] border border-[var(--line)] rounded-lg px-2.5 py-2 text-xs font-mono text-[var(--text)] placeholder:text-[var(--muted)]/50 focus:outline-none focus:border-[var(--red)] disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] text-slate-500 mb-1 font-mono">Water Out</label>
+                  <label className="block text-[11px] text-[var(--muted)] mb-1 font-medium">Water Out</label>
                   <input
                     type="number"
                     step="0.1"
@@ -864,25 +864,25 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     value={formData.chill_water_out_c ?? ''}
                     onChange={e => handleFieldChange('chill_water_out_c', e.target.value ? Number(e.target.value) : null)}
                     disabled={isSlotDisabled}
-                    className="w-full bg-[#0A1018] border border-[#1F2E43] rounded px-2.5 py-1.5 text-xs font-mono text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-[#009FE3] focus:ring-1 focus:ring-[#009FE3]/30 disabled:opacity-50 disabled:bg-[#070B12] disabled:cursor-not-allowed"
+                    className="w-full bg-[var(--bg)] border border-[var(--line)] rounded-lg px-2.5 py-2 text-xs font-mono text-[var(--text)] placeholder:text-[var(--muted)]/50 focus:outline-none focus:border-[var(--red)] disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
             </div>
 
             {/* Steam Supply Pressures */}
-            <div className="rounded border border-[#1F2E43] bg-[#131E2D] p-4">
+            <div className="rounded-[10px] border border-[var(--line)] bg-[var(--surface)] p-4">
               <div className="flex items-center justify-between mb-3">
-                <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 font-mono">
+                <span className="block text-[11px] font-semibold uppercase tracking-wider text-[var(--text)]">
                   STEAM SUPPLY (BAR)
                 </span>
-                <span className="text-[10px] text-amber-600 font-medium font-mono">
+                <span className="text-[10px] text-[var(--amber)] font-medium font-mono">
                   Set: {Number(liveTraySteam).toFixed(2)} Bar
                 </span>
               </div>
               <div className="grid grid-cols-3 gap-2">
                 <div>
-                  <label className="block text-[10px] text-slate-400 mb-1 font-mono truncate" title="Tray Steam Supply (Bar)">
+                  <label className="block text-[10px] text-[var(--muted)] mb-1 truncate" title="Tray Steam Supply (Bar)">
                     Tray Steam
                   </label>
                   <input
@@ -892,11 +892,11 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     value={formData.tray_steam_supply_bar ?? ''}
                     onChange={e => handleFieldChange('tray_steam_supply_bar', e.target.value ? Number(e.target.value) : null)}
                     disabled={isSlotDisabled}
-                    className="w-full bg-[#101927] border border-amber-700/60 focus:border-amber-500 rounded px-2 py-1.5 text-xs font-mono text-slate-100 focus:outline-none focus:ring-1 focus:ring-amber-500/30 disabled:opacity-50 disabled:bg-[#101927] disabled:cursor-not-allowed"
+                    className="w-full bg-[var(--bg)] border border-[rgba(224,160,48,0.5)] focus:border-[var(--amber)] rounded-lg px-2 py-2 text-xs font-mono text-[var(--text)] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] text-slate-400 mb-1 font-mono truncate" title="Booster Press (Bar)">
+                  <label className="block text-[10px] text-[var(--muted)] mb-1 truncate" title="Booster Press (Bar)">
                     Booster
                   </label>
                   <input
@@ -906,11 +906,11 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     value={formData.booster_press_bar ?? ''}
                     onChange={e => handleFieldChange('booster_press_bar', e.target.value ? Number(e.target.value) : null)}
                     disabled={isSlotDisabled}
-                    className="w-full bg-[#0A1018] border border-[#1F2E43] rounded px-2 py-1.5 text-xs font-mono text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-[#009FE3] focus:ring-1 focus:ring-[#009FE3]/30 disabled:opacity-50 disabled:bg-[#070B12] disabled:cursor-not-allowed"
+                    className="w-full bg-[var(--bg)] border border-[var(--line)] rounded-lg px-2 py-2 text-xs font-mono text-[var(--text)] placeholder:text-[var(--muted)]/50 focus:outline-none focus:border-[var(--red)] disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] text-slate-400 mb-1 font-mono truncate" title="Ejector Press (Bar)">
+                  <label className="block text-[10px] text-[var(--muted)] mb-1 truncate" title="Ejector Press (Bar)">
                     Ejector
                   </label>
                   <input
@@ -920,7 +920,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     value={formData.ejector_press_bar ?? ''}
                     onChange={e => handleFieldChange('ejector_press_bar', e.target.value ? Number(e.target.value) : null)}
                     disabled={isSlotDisabled}
-                    className="w-full bg-[#0A1018] border border-[#1F2E43] rounded px-2 py-1.5 text-xs font-mono text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-[#009FE3] focus:ring-1 focus:ring-[#009FE3]/30 disabled:opacity-50 disabled:bg-[#070B12] disabled:cursor-not-allowed"
+                    className="w-full bg-[var(--bg)] border border-[var(--line)] rounded-lg px-2 py-2 text-xs font-mono text-[var(--text)] placeholder:text-[var(--muted)]/50 focus:outline-none focus:border-[var(--red)] disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
@@ -930,18 +930,18 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
           {/* Section E: Stripping Steam & Filtration Pressures */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Stripping Steam */}
-            <div className="rounded border border-[#1F2E43] bg-[#131E2D] p-4">
+            <div className="rounded-[10px] border border-[var(--line)] bg-[var(--surface)] p-4">
               <div className="flex items-center justify-between mb-3">
-                <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 font-mono">
+                <span className="block text-[11px] font-semibold uppercase tracking-wider text-[var(--text)]">
                   STRIPPING STEAM RATIO
                 </span>
-                <span className="text-[10px] text-[#009FE3] font-medium font-mono">
+                <span className="text-[10px] text-[var(--redt)] font-medium font-mono">
                   Set: {Number(liveStrippingSteam).toFixed(2)} %
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] text-slate-500 mb-1 font-mono">% of Oil Feed</label>
+                  <label className="block text-[11px] text-[var(--muted)] mb-1 font-medium">% of Oil Feed</label>
                   <input
                     type="number"
                     step="0.01"
@@ -949,11 +949,11 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     value={formData.strip_steam_pct_of_oil ?? ''}
                     onChange={e => handleFieldChange('strip_steam_pct_of_oil', e.target.value ? Number(e.target.value) : null)}
                     disabled={isSlotDisabled}
-                    className="w-full bg-[#101927] border border-[#1F2E43] focus:border-[#009FE3] rounded px-2.5 py-1.5 text-xs font-mono text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500/20 disabled:opacity-50 disabled:bg-[#101927] disabled:cursor-not-allowed"
+                    className="w-full bg-[var(--bg)] border border-[var(--line)] focus:border-[var(--red)] rounded-lg px-2.5 py-2 text-xs font-mono text-[var(--text)] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] text-slate-500 mb-1 font-mono">Flow (kg/hr)</label>
+                  <label className="block text-[11px] text-[var(--muted)] mb-1 font-medium">Flow (kg/hr)</label>
                   <input
                     type="number"
                     step="0.1"
@@ -961,20 +961,20 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     value={formData.strip_steam_flow_kghr ?? ''}
                     onChange={e => handleFieldChange('strip_steam_flow_kghr', e.target.value ? Number(e.target.value) : null)}
                     disabled={isSlotDisabled}
-                    className="w-full bg-[#0A1018] border border-[#1F2E43] rounded px-2.5 py-1.5 text-xs font-mono text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-[#009FE3] focus:ring-1 focus:ring-[#009FE3]/30 disabled:opacity-50 disabled:bg-[#070B12] disabled:cursor-not-allowed"
+                    className="w-full bg-[var(--bg)] border border-[var(--line)] rounded-lg px-2.5 py-2 text-xs font-mono text-[var(--text)] placeholder:text-[var(--muted)]/50 focus:outline-none focus:border-[var(--red)] disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
             </div>
 
             {/* Filtration FP 101A/B Pressures */}
-            <div className="rounded border border-[#1F2E43] bg-[#131E2D] p-4">
-              <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-3 font-mono">
+            <div className="rounded-[10px] border border-[var(--line)] bg-[var(--surface)] p-4">
+              <span className="block text-[11px] font-semibold uppercase tracking-wider text-[var(--text)] mb-3">
                 POLISHING FILTRATION FP-101 (BAR)
               </span>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] text-slate-500 mb-1 font-mono">FP 101A Press</label>
+                  <label className="block text-[11px] text-[var(--muted)] mb-1 font-medium">FP 101A Press</label>
                   <input
                     type="number"
                     step="0.01"
@@ -982,11 +982,11 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     value={formData.fp101a_press_bar ?? ''}
                     onChange={e => handleFieldChange('fp101a_press_bar', e.target.value ? Number(e.target.value) : null)}
                     disabled={isSlotDisabled}
-                    className="w-full bg-[#0A1018] border border-[#1F2E43] rounded px-2.5 py-1.5 text-xs font-mono text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-[#009FE3] focus:ring-1 focus:ring-[#009FE3]/30 disabled:opacity-50 disabled:bg-[#070B12] disabled:cursor-not-allowed"
+                    className="w-full bg-[var(--bg)] border border-[var(--line)] rounded-lg px-2.5 py-2 text-xs font-mono text-[var(--text)] placeholder:text-[var(--muted)]/50 focus:outline-none focus:border-[var(--red)] disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] text-slate-500 mb-1 font-mono">FP 101B Press</label>
+                  <label className="block text-[11px] text-[var(--muted)] mb-1 font-medium">FP 101B Press</label>
                   <input
                     type="number"
                     step="0.01"
@@ -994,7 +994,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     value={formData.fp101b_press_bar ?? ''}
                     onChange={e => handleFieldChange('fp101b_press_bar', e.target.value ? Number(e.target.value) : null)}
                     disabled={isSlotDisabled}
-                    className="w-full bg-[#0A1018] border border-[#1F2E43] rounded px-2.5 py-1.5 text-xs font-mono text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-[#009FE3] focus:ring-1 focus:ring-[#009FE3]/30 disabled:opacity-50 disabled:bg-[#070B12] disabled:cursor-not-allowed"
+                    className="w-full bg-[var(--bg)] border border-[var(--line)] rounded-lg px-2.5 py-2 text-xs font-mono text-[var(--text)] placeholder:text-[var(--muted)]/50 focus:outline-none focus:border-[var(--red)] disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>

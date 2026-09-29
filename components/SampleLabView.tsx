@@ -961,7 +961,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
 
                   {/* Actions & Decision */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                    {selectedReport.decision ? (
+                    {selectedReport.decision?.decision ? (
                       <>
                         <span className={`bd ${selectedReport.decision.decision === 'reject' ? 'r' : selectedReport.decision.decision === 'accept' ? 'g' : 'a'}`}>
                           QC: {String(selectedReport.decision.decision).toUpperCase()}
@@ -981,15 +981,18 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                         )}
                       </>
                     ) : (
-                      (role === 'qc_analyst' || role === 'qc_manager' || role === 'admin') && (
-                        <button
-                          type="button"
-                          onClick={() => setIsDecisionModalOpen(true)}
-                          className="primary"
-                        >
-                          Record Decision
-                        </button>
-                      )
+                      <>
+                        <span className="bd a">Awaiting</span>
+                        {(role === 'qc_analyst' || role === 'qc_manager' || role === 'admin') && (
+                          <button
+                            type="button"
+                            onClick={() => setIsDecisionModalOpen(true)}
+                            className="primary"
+                          >
+                            Record Decision
+                          </button>
+                        )}
+                      </>
                     )}
 
                     {onNavigateToCertificate && (
