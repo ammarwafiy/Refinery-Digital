@@ -14,14 +14,12 @@ import {
   AlertTriangle, 
   Clock, 
   Radio, 
-  ExternalLink,
   ChevronRight,
   Database,
   Building2,
   Send,
   Sparkles,
-  Info,
-  MessageSquare
+  Info
 } from 'lucide-react';
 import { Profile } from '@/types/refinery';
 import { addAuditLog } from '@/lib/data-service';
@@ -39,7 +37,8 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
   const [ticketDescription, setTicketDescription] = useState('');
   const [isSubmittingTicket, setIsSubmittingTicket] = useState(false);
   const [ticketSuccessMessage, setTicketSuccessMessage] = useState<string | null>(null);
-  const [ticketWhatsAppUrl, setTicketWhatsAppUrl] = useState<string | null>(null);
+  const [ticketWhatsAppSent, setTicketWhatsAppSent] = useState(false);
+  const [ticketWhatsAppProvider, setTicketWhatsAppProvider] = useState<string | null>(null);
   const [ticketErrorMessage, setTicketErrorMessage] = useState<string | null>(null);
 
   if (!isOpen) return null;
@@ -51,7 +50,8 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
     setIsSubmittingTicket(true);
     setTicketErrorMessage(null);
     setTicketSuccessMessage(null);
-    setTicketWhatsAppUrl(null);
+    setTicketWhatsAppSent(false);
+    setTicketWhatsAppProvider(null);
 
     try {
       const response = await fetch('/api/support/ticket', {
@@ -74,16 +74,24 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
       }
 
       const ticketId = result.ticketId;
+      const wasSent = result.whatsappSent === true;
+      const provider = result.whatsappProvider || null;
 
-      setTicketSuccessMessage(
-        `Tiket [${ticketId}] berjaya didaftarkan ke Log Audit Loji & disalurkan ke WhatsApp Pengurus Loji!`
-      );
+      setTicketWhatsAppSent(wasSent);
+      setTicketWhatsAppProvider(provider);
 
-      if (result.whatsappUrl) {
-        setTicketWhatsAppUrl(result.whatsappUrl);
+      if (wasSent) {
+        setTicketSuccessMessage(
+          `✅ Tiket [${ticketId}] berjaya didaftarkan & telah diforward secara automatik ke WhatsApp Pengurus Loji via ${(provider || 'bot').toUpperCase()}.`
+        );
+      } else {
+        setTicketSuccessMessage(
+          `Tiket [${ticketId}] berjaya didaftarkan ke Audit Log. WhatsApp auto-forward tidak berjaya — sila hubungi Pengurus Loji secara manual.`
+        );
       }
 
       // Append to immutable client audit trail for immediate UI sync
+      const targetPhone = result.dispatchedPhone || '+601161764934';
       addAuditLog('incident_tickets', ticketId, 'insert', null, {
         ticket_id: ticketId,
         subject: ticketSubject.trim(),
@@ -91,6 +99,8 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
         description: ticketDescription.trim(),
         reporter: `${currentUser?.full_name || 'Plant Personnel'} (${currentUser?.employee_no || 'OPR001'})`,
         dispatched_to_whatsapp: targetPhone,
+        whatsapp_auto_sent: wasSent,
+        whatsapp_provider: provider,
       });
 
       setTicketSubject('');
@@ -530,27 +540,31 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
                 </p>
 
                 {ticketSuccessMessage && (
-                  <div className="mb-4 p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex flex-col gap-2.5 animate-in fade-in">
+                  <div className={`mb-4 p-3.5 rounded-xl border text-xs flex flex-col gap-2.5 animate-in fade-in ${
+                    ticketWhatsAppSent 
+                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                      : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+                  }`}>
                     <div className="flex items-start gap-2">
-                      <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5 text-emerald-400" />
+                      <CheckCircle2 className={`h-4 w-4 shrink-0 mt-0.5 ${ticketWhatsAppSent ? 'text-emerald-400' : 'text-amber-400'}`} />
                       <span className="font-medium">{ticketSuccessMessage}</span>
                     </div>
 
-                    {ticketWhatsAppUrl && (
-                      <div className="pt-2 border-t border-emerald-500/20 flex flex-wrap items-center justify-between gap-2">
+                    {ticketWhatsAppSent && (
+                      <div className="pt-2 border-t border-emerald-500/20 flex items-center gap-2">
+                        <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
                         <span className="text-[11px] text-emerald-400/90 font-mono">
-                          Salinan terus WhatsApp rasmi sedia dihantar.
+                          WhatsApp bot auto-forwarded via {(ticketWhatsAppProvider || 'GREEN-API').toUpperCase()} · Tiada tindakan lanjut diperlukan
                         </span>
-                        <a
-                          href={ticketWhatsAppUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-[11px] transition-colors shadow-sm"
-                        >
-                          <MessageSquare className="h-3.5 w-3.5" />
-                          <span>Buka Salinan di WhatsApp Pengurus</span>
-                          <ExternalLink className="h-3 w-3 opacity-80" />
-                        </a>
+                      </div>
+                    )}
+
+                    {!ticketWhatsAppSent && (
+                      <div className="pt-2 border-t border-amber-500/20 flex items-center gap-2">
+                        <AlertTriangle className="h-3.5 w-3.5 text-amber-400" />
+                        <span className="text-[11px] text-amber-400/90 font-mono">
+                          Sila hubungi Pengurus Loji melalui Ext. 201/202 atau VHF Channel 4
+                        </span>
                       </div>
                     )}
                   </div>
