@@ -23,7 +23,9 @@ import {
   getAllProcessSheets,
   getSampleReports,
   getDeviations,
-  getProducts
+  getProducts,
+  syncSampleReportsFromSupabase,
+  syncProcessSheetsFromSupabase
 } from '@/lib/data-service';
 import { ProcessEntry } from '@/types/refinery';
 
@@ -40,10 +42,16 @@ export default function ReportExportView() {
     const handleUpdate = () => {
       setSampleReports(getSampleReports());
     };
+
+    syncSampleReportsFromSupabase().then(() => handleUpdate()).catch(() => {});
+    syncProcessSheetsFromSupabase().catch(() => {});
+
     window.addEventListener('refinery_reports_updated', handleUpdate);
+    window.addEventListener('refinery_sheet_updated', handleUpdate);
     window.addEventListener('storage', handleUpdate);
     return () => {
       window.removeEventListener('refinery_reports_updated', handleUpdate);
+      window.removeEventListener('refinery_sheet_updated', handleUpdate);
       window.removeEventListener('storage', handleUpdate);
     };
   }, []);

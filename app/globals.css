@@ -1084,6 +1084,10 @@ html.light-theme ::-webkit-scrollbar-thumb:hover {
 .cell.dev, .ribbon-cell.dev {
   border-color: rgba(224, 160, 48, 0.5) !important;
 }
+.cell.rejected, .ribbon-cell.rejected {
+  border-color: rgba(239, 68, 68, 0.6) !important;
+  background: rgba(239, 68, 68, 0.08) !important;
+}
 .cell.live, .ribbon-cell.live {
   background: var(--red) !important;
   border-color: var(--red) !important;

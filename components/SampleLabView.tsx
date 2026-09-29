@@ -28,7 +28,8 @@ import {
   ensureAutoDispatchedQC,
   syncAllProcessEntriesToQC,
   generateNextLotNo,
-  deleteSampleReport
+  deleteSampleReport,
+  syncSampleReportsFromSupabase
 } from '@/lib/data-service';
 import {
   DEFAULT_PRODUCT_ID,
@@ -141,15 +142,20 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
     setParameters(getParameters());
     setReasons(getRejectionReasons());
     refreshReports();
+    syncSampleReportsFromSupabase().then(() => {
+      refreshReports();
+    }).catch(() => {});
 
     const handleUpdate = () => {
       refreshReports();
     };
 
     window.addEventListener('refinery_reports_updated', handleUpdate);
+    window.addEventListener('refinery_sheet_updated', handleUpdate);
     window.addEventListener('storage', handleUpdate);
     return () => {
       window.removeEventListener('refinery_reports_updated', handleUpdate);
+      window.removeEventListener('refinery_sheet_updated', handleUpdate);
       window.removeEventListener('storage', handleUpdate);
     };
   }, []);

@@ -12,7 +12,9 @@ import {
   getDeviations, 
   acknowledgeDeviation, 
   getSampleReports, 
-  getCurrentRole 
+  getCurrentRole,
+  syncSampleReportsFromSupabase,
+  syncProcessSheetsFromSupabase
 } from '@/lib/data-service';
 
 export default function SupervisorBoardView() {
@@ -26,23 +28,28 @@ export default function SupervisorBoardView() {
   const [actionNarrative, setActionNarrative] = useState('');
   const [ackError, setAckError] = useState<string | null>(null);
 
-  useEffect(() => {
-    setRole(getCurrentRole());
-    refreshData();
-
-    window.addEventListener('refinery_reports_updated', refreshData);
-    window.addEventListener('storage', refreshData);
-    return () => {
-      window.removeEventListener('refinery_reports_updated', refreshData);
-      window.removeEventListener('storage', refreshData);
-    };
-  }, []);
-
   const refreshData = () => {
     setSheet(getActiveProcessSheet());
     setDeviations(getDeviations());
     setReports(getSampleReports());
   };
+
+  useEffect(() => {
+    setRole(getCurrentRole());
+    refreshData();
+
+    syncSampleReportsFromSupabase().then(() => refreshData()).catch(() => {});
+    syncProcessSheetsFromSupabase().then(() => refreshData()).catch(() => {});
+
+    window.addEventListener('refinery_reports_updated', refreshData);
+    window.addEventListener('refinery_sheet_updated', refreshData);
+    window.addEventListener('storage', refreshData);
+    return () => {
+      window.removeEventListener('refinery_reports_updated', refreshData);
+      window.removeEventListener('refinery_sheet_updated', refreshData);
+      window.removeEventListener('storage', refreshData);
+    };
+  }, []);
 
   const handleAcknowledge = (e: React.FormEvent) => {
     e.preventDefault();
@@ -222,9 +229,10 @@ export default function SupervisorBoardView() {
               {reports.length === 0 ? (
                 <p className="empty">No QC samples registered today.</p>
               ) : (
-                reports.slice(0, 4).map(rep => {
+                reports.slice(0, 6).map(rep => {
                   const isRejected = rep.decision?.decision === 'reject';
                   const isAccepted = rep.decision?.decision === 'accept';
+                  const isConcession = rep.decision?.decision === 'accept_concession';
                   return (
                     <div key={rep.id} className="li">
                       <div>
@@ -242,6 +250,8 @@ export default function SupervisorBoardView() {
                           <span className="bd r">Rejected ({String(rep.decision?.disposition || 'REPROCESS').toUpperCase()})</span>
                         ) : isAccepted ? (
                           <span className="bd g">Accepted</span>
+                        ) : isConcession ? (
+                          <span className="bd a">Concession</span>
                         ) : (
                           <span className="bd a">Lab testing</span>
                         )}

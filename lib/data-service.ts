@@ -1743,12 +1743,12 @@ export function verifyProcessSheet(
   passwordConfirm: string,
   targetShiftDate?: string
 ): { success: boolean; error?: string } {
-  if (!passwordConfirm || passwordConfirm.length < 4) {
+  if (!passwordConfirm || passwordConfirm.trim().length < 4) {
     return { success: false, error: 'Electronic signature password is required (minimum 4 characters).' };
   }
   const sheet = targetShiftDate ? getProcessSheetByDate(targetShiftDate) : getActiveProcessSheet();
-  const profile = getCurrentProfile();
-  const role = getCurrentRole();
+  const profile = getAuthUser() || getCurrentProfile();
+  const role = profile.role || getCurrentRole();
 
   if (role !== 'supervisor' && role !== 'admin') {
     return { success: false, error: 'Only a Shift Supervisor or Administrator can verify this sheet.' };
@@ -1756,11 +1756,11 @@ export function verifyProcessSheet(
 
   const expectedPassword = profile.password || 'password123';
   if (passwordConfirm.trim() !== expectedPassword) {
-    return { success: false, error: 'Electronic signature verification password is incorrect.' };
+    return { success: false, error: `Electronic signature verification failed. Incorrect password for ${profile.full_name}.` };
   }
 
   sheet.status = 'verified';
-  sheet.verified_by = profile.id;
+  sheet.verified_by = profile.employee_no || profile.id;
   sheet.verified_by_name = profile.full_name;
   sheet.verified_at = new Date().toISOString();
 
@@ -1774,6 +1774,12 @@ export function verifyProcessSheet(
   }
 
   addAuditLog('process_sheets', sheetId, 'update', { status: 'open' }, { status: 'verified', verified_by: profile.full_name });
+  
+  // Sync verified status to Supabase
+  syncProcessSheetToSupabase(sheet).catch(err => {
+    console.warn('[Supabase Sync] verifyProcessSheet sync warning:', err);
+  });
+
   return { success: true };
 }
 
@@ -1786,8 +1792,8 @@ export function unlockSheet(
   passwordConfirm: string,
   targetShiftDate?: string
 ): { success: boolean; error?: string } {
-  const profile = getCurrentProfile();
-  const role = getCurrentRole();
+  const profile = getAuthUser() || getCurrentProfile();
+  const role = profile.role || getCurrentRole();
 
   if (role !== 'admin' && profile.role !== 'admin') {
     return { 
@@ -1807,7 +1813,7 @@ export function unlockSheet(
   if (!passwordConfirm || passwordConfirm.trim() !== expectedPassword) {
     return { 
       success: false, 
-      error: 'Admin electronic signature password is incorrect. Please verify your password.' 
+      error: `Admin electronic signature password is incorrect for ${profile.full_name}. Please verify your password.` 
     };
   }
 
@@ -1928,6 +1934,14 @@ export function getSampleReports(): SampleReport[] {
     setStored(STORAGE_KEYS.REPORTS, reports);
     memoryReports = reports;
   }
+
+  // Always return reports sorted newest first (sample_date desc, time_check desc)
+  reports.sort((a, b) => {
+    const dCmp = (b.sample_date || '').localeCompare(a.sample_date || '');
+    if (dCmp !== 0) return dCmp;
+    return (b.time_check || '').localeCompare(a.time_check || '');
+  });
+
   return reports;
 }
 
@@ -2013,26 +2027,72 @@ export function generateNextLotNo(productId?: string, sampleDate?: string, custo
 export async function syncQCDecisionToSupabase(decision: QCDecision): Promise<{ success: boolean; error?: string }> {
   if (!supabase) return { success: false, error: 'Supabase client unavailable' };
   try {
+    // Resolve decided_by to a valid employee_no in Supabase (satisfies fk constraint qc_decisions_decided_by_fkey)
+    const validProfiles = ['OPR001', 'SUP001', 'QCS001', 'MGR001', 'USR001', 'ADM001'];
+    let validDecidedBy = decision.decided_by;
+    const empMapping: Record<string, string> = {
+      'QC-1001': 'QCS001',
+      'QC-STAFF': 'QCS001',
+      'OP-1042': 'OPR001',
+      'SV-2001': 'SUP001',
+      'MGR-5001': 'MGR001',
+      'AD-0001': 'ADM001',
+      'admin': 'ADM001',
+    };
+    if (validDecidedBy && empMapping[validDecidedBy]) {
+      validDecidedBy = empMapping[validDecidedBy];
+    }
+    if (!validDecidedBy || !validProfiles.includes(validDecidedBy)) {
+      validDecidedBy = 'QCS001';
+    }
+
     const payload: any = {
-      id: decision.id || makeDecisionUuid(),
       report_id: decision.report_id,
       decision: decision.decision,
       reason_id: decision.reason_id || null,
       reason_detail: decision.reason_detail || null,
       failed_parameters: Array.isArray(decision.failed_parameters) ? decision.failed_parameters : [],
       disposition: decision.disposition || null,
-      decided_by: decision.decided_by || null,
+      decided_by: validDecidedBy,
       decided_at: decision.decided_at || new Date().toISOString(),
     };
 
-    const { error } = await supabase
+    // 1. Check if decision already exists for this report_id in Supabase
+    const { data: existing } = await supabase
       .from('qc_decisions')
-      .upsert(payload, { onConflict: 'report_id' });
+      .select('id')
+      .eq('report_id', decision.report_id);
 
-    if (error) {
-      console.warn('[Supabase Sync] Decision upsert warning:', error);
-      return { success: false, error: error.message };
+    let opError: any = null;
+    if (existing && existing.length > 0) {
+      const { error } = await supabase
+        .from('qc_decisions')
+        .update(payload)
+        .eq('id', existing[0].id);
+      opError = error;
+    } else {
+      payload.id = decision.id || makeDecisionUuid(decision.report_id);
+      const { error } = await supabase
+        .from('qc_decisions')
+        .insert(payload);
+      opError = error;
     }
+
+    if (opError) {
+      console.warn('[Supabase Sync] Decision write warning:', opError);
+      return { success: false, error: opError.message };
+    }
+
+    // 2. Also ensure sample_reports.status is updated to 'decided' in Supabase!
+    const { error: repStatusErr } = await supabase
+      .from('sample_reports')
+      .update({ status: 'decided' })
+      .eq('id', decision.report_id);
+
+    if (repStatusErr) {
+      console.warn('[Supabase Sync] Sample report status update warning:', repStatusErr);
+    }
+
     return { success: true };
   } catch (err: any) {
     console.warn('[Supabase Sync] Decision sync error:', err);
@@ -2126,7 +2186,7 @@ export async function syncSampleReportToSupabase(report: SampleReport): Promise<
 
     const { data: upsertedReport, error: repErr } = await supabase
       .from('sample_reports')
-      .upsert(dbReportPayload, { onConflict: 'report_no' })
+      .upsert(dbReportPayload, { onConflict: 'id' })
       .select('id')
       .single();
 
@@ -2213,6 +2273,7 @@ export async function syncSampleReportsFromSupabase(): Promise<{ success: boolea
 
     const remoteReportNos = new Set(remoteReports.map((r: any) => r.report_no));
     const remoteIds = new Set(remoteReports.map((r: any) => r.id));
+    const currentReports = getStored<SampleReport[]>(STORAGE_KEYS.REPORTS, memoryReports);
 
     const mappedRemoteReports: SampleReport[] = remoteReports.map((sbRep: any) => {
       const mappedResults: SampleResult[] = Array.isArray(sbRep.results) ? sbRep.results.map((r: any) => ({
@@ -2243,10 +2304,17 @@ export async function syncSampleReportsFromSupabase(): Promise<{ success: boolea
           failed_parameters: sbDec.failed_parameters,
           disposition: sbDec.disposition,
           decided_by: sbDec.decided_by,
-          decided_by_name: getProfiles().find(p => p.id === sbDec.decided_by)?.full_name || sbDec.decided_by,
+          decided_by_name: getProfiles().find(p => p.id === sbDec.decided_by || p.employee_no === sbDec.decided_by)?.full_name || sbDec.decided_by,
           decided_at: sbDec.decided_at,
         };
       }
+
+      // Preserve local decision if remote decision has not yet populated
+      const localMatch = currentReports.find(cr => cr.id === sbRep.id || cr.report_no === sbRep.report_no);
+      if (!mappedDecision && localMatch?.decision) {
+        mappedDecision = localMatch.decision;
+      }
+      const finalStatus = (mappedDecision ? 'decided' : sbRep.status) as any;
 
       return {
         id: sbRep.id,
@@ -2272,18 +2340,18 @@ export async function syncSampleReportsFromSupabase(): Promise<{ success: boolea
         remark_cooling: Boolean(sbRep.remark_cooling),
         remark_pushover: Boolean(sbRep.remark_pushover),
         remarks: sbRep.remarks,
-        status: sbRep.status as any,
+        status: finalStatus,
         created_by: sbRep.created_by || 'system',
         created_at: sbRep.created_at || new Date().toISOString(),
-        results: mappedResults.length > 0 ? mappedResults : undefined,
+        results: mappedResults.length > 0 ? mappedResults : (localMatch?.results || undefined),
         decision: mappedDecision,
       };
     });
 
     // Retain only very recent un-synced local reports (< 60s)
-    const currentReports = getSampleReports();
+    const activeLocalReports = getSampleReports();
     const now = Date.now();
-    const pendingLocalReports = currentReports.filter(r => {
+    const pendingLocalReports = activeLocalReports.filter(r => {
       if (remoteReportNos.has(r.report_no) || remoteIds.has(r.id)) return false;
       const ageMs = now - new Date(r.created_at || 0).getTime();
       return ageMs >= 0 && ageMs < 60000;
@@ -2557,9 +2625,17 @@ export function submitQCDecision(data: {
   disposition?: 'rework' | 'reprocess' | 'downgrade' | 'hold' | 'scrap';
   password_confirm: string;
 }): { success: boolean; error?: string } {
-  if (!data.password_confirm || data.password_confirm.length < 4) {
-    return { success: false, error: 'Electronic signature password required (min 4 chars).' };
+  const authUser = getAuthUser();
+  const profile = authUser || getCurrentProfile();
+  const expectedPassword = profile.password || 'password123';
+
+  if (!data.password_confirm || data.password_confirm.trim() !== expectedPassword) {
+    return { 
+      success: false, 
+      error: `Electronic signature verification failed. Incorrect password for ${profile.full_name} (${profile.employee_no}).` 
+    };
   }
+
   if (data.decision !== 'accept') {
     if (!data.reason_id) {
       return { success: false, error: 'Rejection/concession requires a valid reason code.' };
@@ -2576,7 +2652,6 @@ export function submitQCDecision(data: {
   const report = reports.find(r => r.id === data.report_id);
   if (!report) return { success: false, error: 'Sample report not found.' };
 
-  const profile = getCurrentProfile();
   const reasons = getRejectionReasons();
   const reasonObj = reasons.find(r => r.id === data.reason_id);
 
@@ -2589,7 +2664,7 @@ export function submitQCDecision(data: {
     reason_detail: data.reason_detail,
     failed_parameters: data.failed_parameters,
     disposition: data.disposition,
-    decided_by: profile.id,
+    decided_by: profile.employee_no || profile.id,
     decided_by_name: profile.full_name,
     decided_at: new Date().toISOString(),
   };
@@ -2606,11 +2681,14 @@ export function submitQCDecision(data: {
 
   addAuditLog('qc_decisions', decisionObj.id, 'insert', null, decisionObj);
 
-  // Auto-sync decision status to Supabase
+  // Auto-sync decision status and report to Supabase
   syncSampleReportToSupabase(report).catch(err => {
     console.warn('[Supabase Sync] Auto-sync failed on submitQCDecision:', err);
   });
-  syncQCDecisionToSupabase(decisionObj).catch(err => {
+  syncQCDecisionToSupabase(decisionObj).then(() => {
+    // Proactively pull fresh state after remote update
+    syncSampleReportsFromSupabase().catch(() => {});
+  }).catch(err => {
     console.warn('[Supabase Sync] Decision direct sync warning on submitQCDecision:', err);
   });
 

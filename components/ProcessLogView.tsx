@@ -7,7 +7,8 @@ import {
   Product, 
   UserRole,
   Profile,
-  Parameter
+  Parameter,
+  SampleReport
 } from '@/types/refinery';
 import { 
   getProcessSheetByDate,
@@ -23,7 +24,10 @@ import {
   getCurrentRole,
   getRealtimeSlotIndex,
   ensureAutoDispatchedQC,
-  syncAllProcessEntriesToQC
+  syncAllProcessEntriesToQC,
+  getSampleReports,
+  syncSampleReportsFromSupabase,
+  syncProcessSheetsFromSupabase
 } from '@/lib/data-service';
 import { DEFAULT_PRODUCT_ID } from '@/lib/mock-data';
 import { 
@@ -61,6 +65,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
   const [currentMinutesRemaining, setCurrentMinutesRemaining] = useState<number>(60);
   const [currentTimeStr, setCurrentTimeStr] = useState<string>('');
   const [role, setRole] = useState<UserRole>(currentRole || currentUser?.role || getCurrentRole());
+  const [sampleReports, setSampleReports] = useState<SampleReport[]>(() => getSampleReports());
 
   // Active entry form state
   const [formData, setFormData] = useState<Partial<ProcessEntry>>({});
@@ -129,6 +134,34 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
     setParameters(getParameters());
     setRole(currentRole || currentUser?.role || getCurrentRole());
     refreshSheet();
+    setSampleReports(getSampleReports());
+
+    // Hydrate Supabase on mount/shift change
+    syncSampleReportsFromSupabase().then(() => {
+      setSampleReports(getSampleReports());
+    });
+    syncProcessSheetsFromSupabase().then(() => {
+      refreshSheet();
+    });
+
+    const handleReportsUpdated = (e: any) => {
+      if (e?.detail && Array.isArray(e.detail)) {
+        setSampleReports(e.detail);
+      } else {
+        setSampleReports(getSampleReports());
+      }
+    };
+    const handleSheetUpdated = () => {
+      refreshSheet();
+    };
+
+    window.addEventListener('refinery_reports_updated', handleReportsUpdated);
+    window.addEventListener('refinery_sheet_updated', handleSheetUpdated);
+
+    return () => {
+      window.removeEventListener('refinery_reports_updated', handleReportsUpdated);
+      window.removeEventListener('refinery_sheet_updated', handleSheetUpdated);
+    };
   }, [currentRole, currentUser, activeShiftDate]);
 
   const handleDateChange = (newDate: string) => {
@@ -334,6 +367,11 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
   const isStripSteamSynced = latestEntryWithStripSteam != null;
   const isTraySteamSynced = latestEntryWithTraySteam != null;
 
+  // Real-time synchronization of QC Lab Decision for the selected hour slot
+  const matchingQCReport = sampleReports.find(
+    r => r.sample_date === activeShiftDate && (r.time_check === currentSlotTimeStr || r.time_check === selectedSlotLabel.slice(0, 2) + ':00')
+  );
+
   return (
     <div className="space-y-5">
       {/* 1. Sheet Header Banner (RF-FR-004 Rev. 02) */}
@@ -424,8 +462,9 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
             <b>24-hour timeline</b>
             <div className="legend">
               <span><i style={{ background: 'var(--red)' }}></i>Live</span>
-              <span><i style={{ background: 'var(--green)' }}></i>Recorded</span>
+              <span><i style={{ background: 'var(--green)' }}></i>Recorded / QC Pass</span>
               <span><i style={{ background: 'var(--amber)' }}></i>Deviation</span>
+              <span><i style={{ background: '#EF4444' }}></i>QC Rejected</span>
               <span>Locked hours are read-only</span>
             </div>
           </div>
@@ -433,6 +472,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
           <div className="ribbon-grid" role="group" aria-label="Select hour">
             {Array.from({ length: 24 }).map((_, idx) => {
               const label = String(((idx + 7) % 24) * 100).padStart(4, '0');
+              const slotTime = `${label.slice(0, 2)}:00`;
               const entry = sheet.entries?.find(e => e.slot_index === idx);
               const isSelected = selectedSlotIndex === idx;
               const isLive = isLiveShift && idx === currentSlotIndex;
@@ -440,15 +480,25 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
               const hasDev = Boolean(entry?.has_deviation);
               const isFilled = Boolean(entry && (entry.recorded_by || entry.product_id || entry.vacuum_torr != null || entry.oil_feed_rate_litre != null || entry.no_production_reason != null));
 
+              const qcRep = sampleReports.find(r => r.sample_date === activeShiftDate && r.time_check === slotTime);
+              const isQCRejected = qcRep?.decision?.decision === 'reject';
+              const isQCAccepted = qcRep?.decision?.decision === 'accept' || qcRep?.decision?.decision === 'accept_concession';
+
               let statusClass = 'locked';
               let statusIndicator: React.ReactNode = <i className="dot" />;
 
               if (isLive) {
                 statusClass = 'live';
                 statusIndicator = 'Live';
+              } else if (isQCRejected) {
+                statusClass = 'dev rejected';
+                statusIndicator = <span className="h-1.5 w-1.5 rounded-full bg-red-500 inline-block shadow-xs" title="QC Rejected" />;
               } else if (hasDev) {
                 statusClass = 'dev';
                 statusIndicator = <span className="h-1.5 w-1.5 rounded-full bg-[var(--amber)] inline-block" />;
+              } else if (isQCAccepted) {
+                statusClass = 'recorded';
+                statusIndicator = <span className="h-1.5 w-1.5 rounded-full bg-[var(--green)] inline-block shadow-xs" title="QC Accepted" />;
               } else if (isFilled) {
                 statusClass = 'recorded';
                 statusIndicator = <span className="h-1.5 w-1.5 rounded-full bg-[var(--green)] inline-block" />;
@@ -463,7 +513,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                   type="button"
                   onClick={() => loadSlot(idx)}
                   className={`ribbon-cell ${statusClass} ${isSelected ? 'sel' : ''}`}
-                  title={`Slot ${label} (${label.slice(0, 2)}:00)`}
+                  title={`Slot ${label} (${label.slice(0, 2)}:00)${isQCRejected ? ' - QC REJECTED' : isQCAccepted ? ' - QC ACCEPTED' : ''}`}
                   aria-pressed={isSelected}
                 >
                   <span>{label}</span>
@@ -669,13 +719,46 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
           {/* Section A.1: Auto-Dispatch to RF-FR-001 QC Lab */}
           <div className="row dispatch">
             <div>
-              <b>Auto-dispatch sample lot to QC Lab</b>
+              <div className="flex items-center gap-2">
+                <b>Auto-dispatch sample lot to QC Lab</b>
+                {matchingQCReport ? (
+                  <span className="font-mono text-[11px] text-[var(--muted)]">
+                    (Lot: {matchingQCReport.lot_no || matchingQCReport.report_no})
+                  </span>
+                ) : null}
+              </div>
               <p>The sample lot is sent to the QC Lab queue when the hour starts. Operators cannot override this, per the plant QA manual.</p>
             </div>
-            <span className="sync">
-              <i></i>
-              <span>Synced with shift timeline</span>
-            </span>
+            <div className="flex items-center gap-2 flex-wrap">
+              {matchingQCReport?.decision ? (
+                matchingQCReport.decision.decision === 'accept' ? (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    <span>QC Accepted &amp; Released</span>
+                  </span>
+                ) : matchingQCReport.decision.decision === 'accept_concession' ? (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-medium bg-sky-500/15 text-sky-400 border border-sky-500/30">
+                    <AlertTriangle className="h-3.5 w-3.5" />
+                    <span>QC Concession Released</span>
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-medium bg-red-500/15 text-red-400 border border-red-500/30">
+                    <AlertCircle className="h-3.5 w-3.5" />
+                    <span>QC Rejected: {matchingQCReport.decision.reason_label || matchingQCReport.decision.reason_detail || 'Non-compliant'}</span>
+                  </span>
+                )
+              ) : matchingQCReport ? (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-medium bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                  <FlaskConical className="h-3.5 w-3.5 animate-pulse" />
+                  <span>Awaiting QC Lab Analysis</span>
+                </span>
+              ) : (
+                <span className="sync">
+                  <i></i>
+                  <span>Synced with shift timeline</span>
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Section B: Processing Conditions (Feed Rate, Deod Time, Vacuum) */}

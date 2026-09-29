@@ -641,7 +641,7 @@ export default function SettingsModal({
     const storedUser = all.find(p => p.employee_no === currentUser.employee_no);
     const expectedOld = storedUser?.password || currentUser.password || 'password123';
 
-    if (currentPassword !== expectedOld && currentPassword !== 'password123') {
+    if (currentPassword.trim() !== expectedOld) {
       setPasswordStatus({ 
         type: 'error', 
         message: lang === 'ms' 

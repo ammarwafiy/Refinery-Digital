@@ -10,6 +10,8 @@ import {
   getProcessSheetByDate,
   getRealtimeShiftDate,
   syncAuditLogsFromSupabase,
+  syncSampleReportsFromSupabase,
+  syncProcessSheetsFromSupabase,
   formatAuditRecordId,
   formatAuditTableName
 } from '@/lib/data-service';
@@ -172,6 +174,12 @@ export default function OfficialFormsExportView() {
     refreshData();
     syncAuditLogsFromSupabase().then(() => {
       setAuditLogs([...getAuditLogs()]);
+    }).catch(() => {});
+    syncSampleReportsFromSupabase().then(() => {
+      setReports(getSampleReports());
+    }).catch(() => {});
+    syncProcessSheetsFromSupabase().then(() => {
+      setSheet(getProcessSheetByDate(selectedShiftDate));
     }).catch(() => {});
 
     window.addEventListener('refinery_reports_updated', refreshData);
