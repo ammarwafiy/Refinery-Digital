@@ -37,6 +37,9 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
   const [ticketDescription, setTicketDescription] = useState('');
   const [isSubmittingTicket, setIsSubmittingTicket] = useState(false);
   const [ticketSuccessMessage, setTicketSuccessMessage] = useState<string | null>(null);
+  const [ticketTelegramSent, setTicketTelegramSent] = useState(false);
+  const [ticketTelegramMessageId, setTicketTelegramMessageId] = useState<number | null>(null);
+  const [ticketTelegramError, setTicketTelegramError] = useState<string | null>(null);
   const [ticketWhatsAppSent, setTicketWhatsAppSent] = useState(false);
   const [ticketWhatsAppProvider, setTicketWhatsAppProvider] = useState<string | null>(null);
   const [ticketWhatsAppUrl, setTicketWhatsAppUrl] = useState<string | null>(null);
@@ -51,6 +54,9 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
     setIsSubmittingTicket(true);
     setTicketErrorMessage(null);
     setTicketSuccessMessage(null);
+    setTicketTelegramSent(false);
+    setTicketTelegramMessageId(null);
+    setTicketTelegramError(null);
     setTicketWhatsAppSent(false);
     setTicketWhatsAppProvider(null);
     setTicketWhatsAppUrl(null);
@@ -76,20 +82,28 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
       }
 
       const ticketId = result.ticketId;
-      const wasSent = result.whatsappSent === true;
+      const tgSent = result.telegramSent === true;
+      const waSent = result.whatsappSent === true;
       const provider = result.whatsappProvider || null;
 
-      setTicketWhatsAppSent(wasSent);
+      setTicketTelegramSent(tgSent);
+      setTicketTelegramMessageId(result.telegramMessageId || null);
+      setTicketTelegramError(result.telegramError || null);
+      setTicketWhatsAppSent(waSent);
       setTicketWhatsAppProvider(provider);
       setTicketWhatsAppUrl(result.whatsappUrl || null);
 
-      if (wasSent) {
+      if (tgSent) {
         setTicketSuccessMessage(
-          `✅ Tiket [${ticketId}] berjaya didaftarkan & telah diforward secara automatik ke WhatsApp Pengurus Loji via ${(provider || 'bot').toUpperCase()}.`
+          `✅ Tiket [${ticketId}] berjaya didaftarkan & notifikasi segera telah dihantar ke Telegram Pengurus Loji (@Refinery_alert_bot).`
+        );
+      } else if (waSent) {
+        setTicketSuccessMessage(
+          `✅ Tiket [${ticketId}] berjaya didaftarkan & telah dihantar ke WhatsApp Pentadbir via ${(provider || 'bot').toUpperCase()}.`
         );
       } else {
         setTicketSuccessMessage(
-          `Tiket [${ticketId}] berjaya didaftarkan ke Audit Log. WhatsApp auto-forward tidak berjaya — sila hubungi Pengurus Loji secara manual.`
+          `Tiket [${ticketId}] berjaya didaftarkan ke Audit Log Kilang. Sila buka Telegram bot (@Refinery_alert_bot) untuk mengaktifkan notifikasi segera.`
         );
       }
 
@@ -101,8 +115,10 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
         category: ticketCategory,
         description: ticketDescription.trim(),
         reporter: `${currentUser?.full_name || 'Plant Personnel'} (${currentUser?.employee_no || 'OPR001'})`,
+        telegram_sent: tgSent,
+        telegram_message_id: result.telegramMessageId || null,
         dispatched_to_whatsapp: targetPhone,
-        whatsapp_auto_sent: wasSent,
+        whatsapp_auto_sent: waSent,
         whatsapp_provider: provider,
       });
 
@@ -536,50 +552,83 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
                   <span>Report Plant Incident or Technical Issue</span>
                 </h3>
                 <p className="text-xs text-slate-400 mb-4">
-                  Log isu operasi, percanggahan nilai makmal, penderia SCADA atau sistem. Aduan akan terus disalurkan ke WhatsApp Pengurus Loji secara automatik.
+                  Log isu operasi, percanggahan nilai makmal, penderia SCADA atau sistem. Aduan akan terus disalurkan ke Telegram & WhatsApp Pengurus Loji secara automatik.
                 </p>
 
                 {ticketSuccessMessage && (
                   <div className={`mb-4 p-3.5 rounded-xl border text-xs flex flex-col gap-2.5 animate-in fade-in ${
-                    ticketWhatsAppSent 
+                    ticketTelegramSent || ticketWhatsAppSent
                       ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
                       : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
                   }`}>
                     <div className="flex items-start gap-2">
-                      <CheckCircle2 className={`h-4 w-4 shrink-0 mt-0.5 ${ticketWhatsAppSent ? 'text-emerald-400' : 'text-amber-400'}`} />
+                      <CheckCircle2 className={`h-4 w-4 shrink-0 mt-0.5 ${ticketTelegramSent || ticketWhatsAppSent ? 'text-emerald-400' : 'text-amber-400'}`} />
                       <span className="font-medium">{ticketSuccessMessage}</span>
                     </div>
 
-                    {ticketWhatsAppSent && (
-                      <div className="pt-2 border-t border-emerald-500/20 flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                        <span className="text-[11px] text-emerald-400/90 font-mono">
-                          WhatsApp bot auto-forwarded via {(ticketWhatsAppProvider || 'GREEN-API').toUpperCase()} · Tiada tindakan lanjut diperlukan
-                        </span>
-                      </div>
-                    )}
-
-                    {!ticketWhatsAppSent && (
-                      <div className="pt-2 border-t border-amber-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    {ticketTelegramSent && (
+                      <div className="pt-2 border-t border-emerald-500/20 flex flex-wrap items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
-                          <AlertTriangle className="h-3.5 w-3.5 text-amber-400 shrink-0" />
-                          <span className="text-[11px] text-amber-400/90 font-mono">
-                            Sila hubungi Pengurus Loji melalui Ext. 201/202 atau hantar terus via WhatsApp:
+                          <div className="h-2 w-2 rounded-full bg-sky-400 animate-pulse" />
+                          <span className="text-[11px] text-sky-300 font-mono flex items-center gap-1.5">
+                            <svg className="w-3.5 h-3.5 fill-current text-sky-400 shrink-0" viewBox="0 0 24 24">
+                              <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.3-.6.3l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.121l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.458c.538-.196 1.006.128.832.941z"/>
+                            </svg>
+                            Telegram Alert: Terus ke @Refinery_alert_bot {ticketTelegramMessageId ? `(Msg #${ticketTelegramMessageId})` : ''} · Tiada tindakan lanjut diperlukan
                           </span>
                         </div>
+
                         {ticketWhatsAppUrl && (
                           <a
                             href={ticketWhatsAppUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg bg-[#25D366] hover:bg-[#20bd5a] text-slate-950 font-bold text-xs transition-colors shrink-0 shadow-sm cursor-pointer"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#25D366]/20 hover:bg-[#25D366]/30 text-[#25D366] text-[11px] font-medium transition-colors"
                           >
-                            <svg className="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24">
-                              <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
-                            </svg>
-                            <span>Buka WhatsApp Pengurus (+601161764934)</span>
+                            <span>WhatsApp Salinan</span>
                           </a>
                         )}
+                      </div>
+                    )}
+
+                    {!ticketTelegramSent && (
+                      <div className="pt-2 border-t border-amber-500/20 flex flex-col gap-2.5">
+                        <div className="flex items-center gap-2">
+                          <AlertTriangle className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                          <span className="text-[11px] text-amber-300 font-mono">
+                            {ticketTelegramError 
+                              ? `Status Bot: ${ticketTelegramError}. Sila buka bot dan tekan 'Start' di Telegram untuk mengaktifkan notifikasi:`
+                              : 'Untuk menerima notifikasi segera, buka bot Telegram dan tekan /start:'}
+                          </span>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2 pt-1">
+                          <a
+                            href="https://t.me/Refinery_alert_bot"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg bg-[#0088cc] hover:bg-[#0077b5] text-white font-bold text-xs transition-colors shrink-0 shadow-sm cursor-pointer"
+                          >
+                            <svg className="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24">
+                              <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.3-.6.3l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.121l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.458c.538-.196 1.006.128.832.941z"/>
+                            </svg>
+                            <span>Buka Bot Telegram (@Refinery_alert_bot)</span>
+                          </a>
+
+                          {ticketWhatsAppUrl && (
+                            <a
+                              href={ticketWhatsAppUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg bg-[#25D366] hover:bg-[#20bd5a] text-slate-950 font-bold text-xs transition-colors shrink-0 shadow-sm cursor-pointer"
+                            >
+                              <svg className="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24">
+                                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+                              </svg>
+                              <span>Buka WhatsApp (+601161764934)</span>
+                            </a>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>

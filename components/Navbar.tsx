@@ -151,7 +151,7 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
     };
   }, [currentUser]);
 
-  const navItems = [
+  const navItems: { id: string; label: string; shortLabel: string; icon: any; badge?: string }[] = [
     { id: 'process', label: 'Process Control Log', shortLabel: 'Process Log', icon: Layers },
     { id: 'qc', label: 'QC Management', shortLabel: 'QC Lab', icon: FlaskConical },
     { id: 'supervisor', label: 'Abnormality Log', shortLabel: 'Live Board', icon: Activity },

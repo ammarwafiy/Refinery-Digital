@@ -1388,7 +1388,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
           padding: '20px'
         }}>
           <div className="panel" style={{ maxWidth: '500px', width: '100%', margin: 0, padding: '24px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', borderBottom: '1px solid var(--line)', pb: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', borderBottom: '1px solid var(--line)', paddingBottom: '12px' }}>
               <div>
                 <h3 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text)' }}>
                   QC Formal Decision: {selectedReport.lot_no}

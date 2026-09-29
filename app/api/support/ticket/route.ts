@@ -13,6 +13,17 @@ const GREEN_API_INSTANCE_ID = process.env.GREEN_API_INSTANCE_ID || process.env.W
 const GREEN_API_TOKEN = process.env.GREEN_API_TOKEN || process.env.WHATSAPP_GREEN_API_TOKEN || 'ac0b4947396a408f908828faf5b9ba6071a79587548e4ca9b1';
 const GREEN_API_HOST = process.env.GREEN_API_HOST || 'https://api.green-api.com';
 
+// Telegram Incident Alert Configuration (Lam Soon Refinery Digital)
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8606874200:AAGVrgEukViDagP8OK0PPs9T_W3eV3IMqL4';
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || '721415727';
+
+function escapeHtml(text: string): string {
+  return (text || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 function getSupabaseAdmin() {
   return createClient(supabaseUrl, supabaseKey, {
     auth: { persistSession: false, autoRefreshToken: false },
@@ -65,7 +76,23 @@ export async function POST(req: Request) {
 
     const categoryLabel = CATEGORY_LABELS[category] || category;
 
-    // 2. Format WhatsApp Alert Message
+    // 2. Format Messages
+    // A. Telegram HTML Message
+    const telegramHtmlMessage = `🚨 <b>REFINERY PLANT INCIDENT REPORT</b>
+━━━━━━━━━━━━━━━━━━━━━━
+🎫 <b>Ticket ID:</b> <code>${escapeHtml(ticketId)}</code>
+📂 <b>Category:</b> ${escapeHtml(categoryLabel)}
+🏷️ <b>Subject:</b> ${escapeHtml(subject)}
+👤 <b>Reporter:</b> ${escapeHtml(reporterName)} (<code>${escapeHtml(reporterId)}</code> - ${escapeHtml(reporterRole.toUpperCase())})
+🕒 <b>Time:</b> ${escapeHtml(timestampMYT)} (MYT)
+
+📝 <b>Incident Details:</b>
+${escapeHtml(description)}
+━━━━━━━━━━━━━━━━━━━━━━
+🏭 <b>Facility:</b> Lam Soon Edible Oils Refinery
+🌐 <b>System:</b> Refinery Digital Management`;
+
+    // B. WhatsApp Markdown Alert Message
     const rawWaMessage = `🚨 *REFINERY PLANT INCIDENT REPORT*
 ━━━━━━━━━━━━━━━━━━━━━━
 🎫 *Ticket ID:* ${ticketId}
@@ -84,13 +111,45 @@ ${description}
     const cleanPhone = ADMIN_WHATSAPP_PHONE.replace(/[^0-9]/g, '');
     const whatsappUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(rawWaMessage)}`;
 
-    // 3. Dispatch to WhatsApp API in background (Green-API private gateway or CallMeBot)
+    // 3. Dispatch to Telegram Bot API (Primary automated channel)
+    let telegramSent = false;
+    let telegramMessageId: number | null = null;
+    let telegramError: string | null = null;
+
+    if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) {
+      try {
+        const tgRes = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN.trim()}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: TELEGRAM_CHAT_ID.trim(),
+            text: telegramHtmlMessage,
+            parse_mode: 'HTML',
+          }),
+          signal: AbortSignal.timeout(10000),
+        });
+
+        const tgData = await tgRes.json().catch(() => ({}));
+        if (tgRes.ok && tgData.ok) {
+          telegramSent = true;
+          telegramMessageId = tgData.result?.message_id || null;
+        } else {
+          telegramError = tgData.description || `Telegram error HTTP ${tgRes.status}`;
+          console.warn('[Telegram Alert Warning]:', tgData);
+        }
+      } catch (err: any) {
+        telegramError = `Telegram connection error: ${err.message || err}`;
+        console.warn('[Telegram Alert Exception]:', err);
+      }
+    }
+
+    // 4. Dispatch to WhatsApp API in background (Green-API private gateway or CallMeBot)
     let whatsappSent = false;
     let whatsappProvider: 'green-api' | 'callmebot' | 'none' = 'none';
     let whatsappError: string | null = null;
     let whatsappMessageId: string | null = null;
 
-    // A. Priority 1: Private Dedicated Green-API Gateway (No @lid issues, 100% private)
+    // Green-API Gateway
     if (GREEN_API_INSTANCE_ID && GREEN_API_TOKEN) {
       try {
         const host = GREEN_API_HOST.trim().replace(/\/+$/, '');
@@ -104,7 +163,7 @@ ${description}
             chatId: greenApiChatId,
             message: rawWaMessage,
           }),
-          signal: AbortSignal.timeout(10000),
+          signal: AbortSignal.timeout(6000),
         });
 
         const greenData = await greenRes.json().catch(() => ({}));
@@ -121,11 +180,11 @@ ${description}
       }
     }
 
-    // B. Priority 2: Fallback to CallMeBot if Green-API not configured or unsuccessful
+    // CallMeBot fallback
     if (!whatsappSent && CALLMEBOT_API_KEY && CALLMEBOT_API_KEY.trim() !== '') {
       try {
         const callmebotUrl = `https://api.callmebot.com/whatsapp.php?phone=${encodeURIComponent(ADMIN_WHATSAPP_PHONE)}&text=${encodeURIComponent(rawWaMessage)}&apikey=${encodeURIComponent(CALLMEBOT_API_KEY.trim())}`;
-        const cbRes = await fetch(callmebotUrl, { method: 'GET', signal: AbortSignal.timeout(8000) });
+        const cbRes = await fetch(callmebotUrl, { method: 'GET', signal: AbortSignal.timeout(6000) });
         if (cbRes.ok) {
           whatsappSent = true;
           whatsappProvider = 'callmebot';
@@ -138,7 +197,7 @@ ${description}
       }
     }
 
-    // 4. Record to Supabase audit_log for immutable regulatory record
+    // 5. Record to Supabase audit_log for immutable regulatory record
     try {
       const supabaseAdmin = getSupabaseAdmin();
       const validProfiles = ['OPR001', 'SUP001', 'QCS001', 'MGR001', 'USR001', 'ADM001'];
@@ -161,6 +220,10 @@ ${description}
           reporter_name: reporterName,
           reporter_id: reporterId,
           reporter_role: reporterRole,
+          telegram_chat_id: TELEGRAM_CHAT_ID,
+          telegram_sent: telegramSent,
+          telegram_message_id: telegramMessageId,
+          telegram_error: telegramError,
           dispatched_whatsapp: ADMIN_WHATSAPP_PHONE,
           whatsapp_sent: whatsappSent,
           whatsapp_provider: whatsappProvider,
@@ -176,15 +239,16 @@ ${description}
     return NextResponse.json({
       success: true,
       ticketId,
+      telegramSent,
+      telegramMessageId,
+      telegramError,
       dispatchedPhone: ADMIN_WHATSAPP_PHONE,
       whatsappSent,
       whatsappProvider,
       whatsappMessageId,
       whatsappError,
-      callmebotSent: whatsappSent && whatsappProvider === 'callmebot',
-      callmebotError: whatsappError,
       whatsappUrl,
-      message: `Tiket insiden ${ticketId} berjaya didaftarkan${whatsappSent ? ` dan dihantar ke WhatsApp Pentadbir via ${whatsappProvider.toUpperCase()}` : ''}.`,
+      message: `Tiket insiden ${ticketId} berjaya didaftarkan${telegramSent ? ' dan notifikasi telah dihantar ke Telegram Pengurus Loji' : ''}.`,
     });
   } catch (error: any) {
     console.error('[/api/support/ticket Error]:', error);
