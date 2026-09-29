@@ -283,7 +283,7 @@ export default function ProcessLogPage() {
         <div>
           <h1 className="text-xl font-bold text-white flex items-center gap-2">
             <Layers className="h-5 w-5 text-cyan-400" />
-            RF-FR-004 Process Control Log
+            Process Control Log
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">
             Nisshin Deodorizer Plant — 24-hour shift sheet (0700–0600)

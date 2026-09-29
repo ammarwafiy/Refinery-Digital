@@ -341,12 +341,6 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#1F2E43] pb-4">
           <div>
             <div className="flex items-center gap-2.5 flex-wrap">
-              <span className="rounded border border-[#009FE3]/50 bg-[#131E2D] px-2.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-[#009FE3]">
-                PR001 · RF-FR-004 REV. 02
-              </span>
-              <span className="rounded border border-emerald-800/60 bg-emerald-950/40 px-2 py-0.5 font-mono text-[10px] font-bold text-emerald-400">
-                SOP001 · WI001
-              </span>
               <h1 className="text-lg sm:text-xl font-bold tracking-tight text-white font-sans">
                 Hourly Deodorizer Process Control Log
               </h1>
@@ -377,8 +371,8 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                 </span>
               )}
             </div>
-            <p className="mt-1 text-xs text-slate-400 font-mono">
-              <span className="text-[#009FE3] font-bold">DOC001</span> · <span className="text-slate-500 uppercase tracking-wider text-[10px]">UNIT:</span> UNIT-DEOD-01 · <span className="text-slate-500 uppercase tracking-wider text-[10px]">BATCH:</span> <span className="text-amber-400 font-semibold">BP001</span> · <span className="text-slate-500 uppercase tracking-wider text-[10px]">CYCLE:</span> 07:00 (Start) → 06:00 (Next Day)
+            <p className="mt-1 text-xs text-slate-400 font-sans">
+              Unit: Deodorizer 01 · Cycle: 07:00 (Start) → 06:00 (Next Day)
               {sheet.status === 'verified' && sheet.verified_by_name && (
                 <span className="ml-2 text-green-600 font-medium">
                   · Verified by: {sheet.verified_by_name}
@@ -651,8 +645,8 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                   </span>
                 )}
               </h2>
-              <p className="text-xs text-slate-400 font-mono mt-0.5">
-                <span className="text-[#009FE3] font-bold">PR001</span> · Production Record (RF-FR-004) · <span className="text-emerald-400 font-bold">SOP001</span> · <span className="text-sky-400 font-bold">WI001</span>. Ghost numbers indicate previous hour readings.
+              <p className="text-xs text-slate-400 font-sans mt-0.5">
+                Ghost numbers indicate previous hour readings.
               </p>
             </div>
           </div>
@@ -868,7 +862,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-xs font-bold tracking-tight text-white font-mono">
-                      AUTO-DISPATCH SAMPLE LOT → RF-FR-001 QC LAB
+                      Auto-Dispatch Sample Lot to QC Lab
                     </span>
                     <span className="px-2 py-0.2 rounded text-[10px] font-mono border border-[#10B981]/40 bg-[#10B981]/15 text-green-600 font-medium flex items-center gap-1">
                       <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
@@ -891,7 +885,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
           <div className="rounded border border-[#1F2E43] bg-[#131E2D] p-4">
             <div className="flex items-center gap-2 mb-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 font-mono">
               <Gauge className="h-3.5 w-3.5 text-[#009FE3]" />
-              <span>SECTION 2: PROCESSING CONTROLS (RF-FR-004 COL 2 - 4)</span>
+              <span>Processing Controls</span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -1366,7 +1360,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                   Admin Unlock: Process Sheet
                 </h3>
                 <span className="text-[10px] font-mono text-amber-600 uppercase tracking-wider font-medium">
-                  Plant Administrator Override · RF-FR-004
+                  Plant Administrator Override
                 </span>
               </div>
             </div>

@@ -106,9 +106,6 @@ export default function SupervisorBoardView() {
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="rounded border border-slate-700/60 bg-[#162030] px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-slate-300">
-                  SV-CONSOLE-01
-                </span>
                 <h1 className="text-lg sm:text-xl font-extrabold tracking-tight text-white font-sans uppercase">
                   Supervisor Live Operations Board
                 </h1>
@@ -200,7 +197,7 @@ export default function SupervisorBoardView() {
           <div className="flex items-center justify-between mb-4 border-b border-white/[0.08] pb-3">
             <div className="flex items-center gap-2 font-semibold text-white font-mono text-xs uppercase tracking-wider">
               <ShieldAlert className="h-4 w-4 text-[#C52227]" />
-              <span>Plant Deviations & Corrective Action Notes (AR001)</span>
+              <span>Plant Deviations & Corrective Action Notes</span>
             </div>
             <span className="text-[10px] font-mono text-slate-300 font-semibold bg-[#0C121D] px-2 py-0.5 rounded border border-white/[0.07]">
               COUNT: {deviations.length}
@@ -225,10 +222,10 @@ export default function SupervisorBoardView() {
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-mono font-bold text-xs text-slate-100">
-                            [AR001] HOUR {dev.slot_label}
+                          <span className="font-mono font-bold text-xs text-white">
+                            Hour {dev.slot_label}
                           </span>
-                          <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-[#101927] border border-[#1F2E43] text-[#009FE3] font-medium">
+                          <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-[#101927] border border-[#1F2E43] text-slate-300 font-medium">
                             {dev.field_label}
                           </span>
                           {isAck ? (
@@ -302,7 +299,7 @@ export default function SupervisorBoardView() {
                   <div key={m.index} className="flex items-center justify-between p-3 rounded-xl border border-red-500/30 bg-red-950/20">
                     <div className="flex items-center gap-2">
                       <span className="font-mono font-bold text-xs text-[#EF4444]">Hour {m.label}</span>
-                      <span className="text-xs text-slate-400 font-mono">Blank in RF-FR-004</span>
+                      <span className="text-xs text-slate-400 font-mono">Pending Entry</span>
                     </div>
                     <span className="text-[10px] font-mono text-red-300 bg-[#EF4444]/20 px-2 py-0.5 rounded border border-[#EF4444]/40 font-medium">
                       Overdue by ~{m.overdueMin} mins
@@ -318,7 +315,7 @@ export default function SupervisorBoardView() {
             <div className="flex items-center justify-between mb-4 border-b border-white/[0.08] pb-3">
               <div className="flex items-center gap-2 font-semibold text-white font-mono text-xs uppercase tracking-wider">
                 <FlaskConical className="h-4 w-4 text-[#C52227]" />
-                <span>QC Lab Sample Queue (SR001 · RF-FR-001)</span>
+                <span>QC Lab Sample Queue</span>
               </div>
               <span className="text-[10px] font-mono text-slate-300 font-semibold bg-[#0C121D] px-2 py-0.5 rounded border border-white/[0.07]">
                 PENDING: {pendingSamples.length}
@@ -334,9 +331,9 @@ export default function SupervisorBoardView() {
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-mono text-xs font-semibold text-slate-100">
-                          <span className="text-[#009FE3] font-bold mr-1.5">[SR001]</span>{rep.lot_no}
+                          {rep.lot_no}
                         </span>
-                        <span className="text-xs text-[#009FE3] font-mono font-medium">({rep.product_name})</span>
+                        <span className="text-xs text-slate-400 font-mono font-medium">({rep.product_name})</span>
                       </div>
                       <div className="text-[10px] text-slate-400 font-mono mt-0.5">
                         Sampled: {rep.time_check} · {rep.sampling_point_name || 'Deodorizer Outlet'}
@@ -346,15 +343,15 @@ export default function SupervisorBoardView() {
                     <div>
                       {isRejected ? (
                         <span className="text-[10px] font-mono text-[#EF4444] bg-[#EF4444]/15 px-2 py-0.5 rounded border border-[#EF4444]/30 font-semibold">
-                          [QC001] REJECTED ({String(rep.decision?.disposition || 'REPROCESS').toUpperCase()})
+                          REJECTED ({String(rep.decision?.disposition || 'REPROCESS').toUpperCase()})
                         </span>
                       ) : isAccepted ? (
                         <span className="text-[10px] font-mono text-[#10B981] bg-[#10B981]/15 px-2 py-0.5 rounded border border-[#10B981]/30 font-semibold">
-                          [QC001] ACCEPTED
+                          ACCEPTED
                         </span>
                       ) : (
                         <span className="text-[10px] font-mono text-[#F59E0B] bg-[#F59E0B]/15 px-2 py-0.5 rounded border border-[#F59E0B]/30 font-semibold">
-                          [QC001] LAB TESTING
+                          LAB TESTING
                         </span>
                       )}
                     </div>

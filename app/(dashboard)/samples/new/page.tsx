@@ -147,7 +147,7 @@ export default function NewSampleReportPage() {
             <FlaskConical className="h-5 w-5 text-cyan-400" />
             Raise Sample Report
           </h1>
-          <p className="text-xs text-slate-500 mt-0.5">RF-FR-001 — Create a new sample analysis report</p>
+          <p className="text-xs text-slate-500 mt-0.5">Create a new sample analysis report</p>
         </div>
       </div>
 

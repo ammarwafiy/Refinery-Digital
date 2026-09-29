@@ -152,12 +152,12 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
   }, [currentUser]);
 
   const navItems = [
-    { id: 'process', label: 'Process Control Log', shortLabel: 'Process Log', icon: Layers, badge: '24-Hour' },
-    { id: 'qc', label: 'QC Management', shortLabel: 'QC Lab', icon: FlaskConical, badge: 'Quality' },
-    { id: 'supervisor', label: 'Abnormality Log', shortLabel: 'Live Board', icon: Activity, badge: 'Realtime' },
-    { id: 'report', label: 'Reports', shortLabel: 'Report', icon: FileSpreadsheet, badge: 'CSV' },
-    { id: 'export', label: 'Certificates', shortLabel: 'Forms & Audit', icon: FileText, badge: 'ISO' },
-    { id: 'analytics', label: 'Master Data', shortLabel: 'Trends', icon: BarChart3, badge: 'Analytics' },
+    { id: 'process', label: 'Process Control Log', shortLabel: 'Process Log', icon: Layers },
+    { id: 'qc', label: 'QC Management', shortLabel: 'QC Lab', icon: FlaskConical },
+    { id: 'supervisor', label: 'Abnormality Log', shortLabel: 'Live Board', icon: Activity },
+    { id: 'report', label: 'Reports', shortLabel: 'Report', icon: FileSpreadsheet },
+    { id: 'export', label: 'Certificates', shortLabel: 'Forms & Audit', icon: FileText },
+    { id: 'analytics', label: 'Master Data', shortLabel: 'Trends', icon: BarChart3 },
   ];
 
   // RBAC Filter: Only show allowed navigation tabs for current role
@@ -316,15 +316,6 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
                     }`}
                   />
                   <span className="truncate flex-1 text-left">{item.label}</span>
-                  {item.badge && (
-                    <span
-                      className={`text-[8px] px-1.5 py-0.5 rounded font-medium font-mono ${
-                        isActive ? 'bg-[#C52227]/20 text-[#FF6B6B] border border-[#C52227]/30' : 'bg-[#101927] text-slate-400 border border-[#1F2E43]'
-                      }`}
-                    >
-                      {item.badge}
-                    </span>
-                  )}
                 </button>
               );
             })}
@@ -342,9 +333,6 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
               >
                 <Users className={`h-4 w-4 shrink-0 ${activeTab === 'admin' ? 'text-[#C52227]' : 'text-slate-400'}`} />
                 <span className="truncate flex-1 text-left">User Management</span>
-                <span className="text-[8px] px-1.5 py-0.5 rounded font-medium font-mono bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                  ADMIN
-                </span>
               </button>
             )}
           </nav>
@@ -376,9 +364,6 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
                 <Settings className="h-4 w-4 text-[#009FE3]" />
                 <span className="font-sans">Settings</span>
               </div>
-              <span className="text-[9px] px-1.5 py-0.5 rounded font-mono bg-[#1A283C] text-slate-400 border border-[#1F2E43]">
-                v1.0
-              </span>
             </div>
             <div
               role="button"
@@ -531,7 +516,7 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
               </div>
               <div className="text-[10px] text-slate-400 font-mono">
                 {profile.employee_no ? `${profile.employee_no} · ` : ''}
-                {role === 'operator' ? 'Operator (OPR001)' : role === 'supervisor' ? 'Supervisor (SUP001)' : role === 'qc_analyst' ? 'QC Staff (QCS001)' : role === 'qc_manager' ? 'Manager (MGR001)' : role === 'admin' ? 'Administrator (ADM001)' : 'User (USR001)'}
+                {role === 'operator' ? 'Plant Operator' : role === 'supervisor' ? 'Operations Supervisor' : role === 'qc_analyst' ? 'QC Chemist' : role === 'qc_manager' ? 'Quality Manager' : role === 'admin' ? 'System Administrator' : 'Viewer'}
               </div>
             </div>
           </div>

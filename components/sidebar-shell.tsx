@@ -47,9 +47,9 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { href: '/dashboard', label: 'Live Dashboard', icon: LayoutDashboard, badge: 'LIVE', roles: ['supervisor', 'qc_manager', 'admin', 'viewer'] },
-  { href: '/process', label: 'Process Log', icon: Layers, badge: 'RF-FR-004', roles: ['operator', 'supervisor', 'admin', 'viewer'] },
-  { href: '/samples', label: 'Sample Reports', icon: FlaskConical, badge: 'RF-FR-001', roles: ['operator', 'supervisor', 'qc_analyst', 'qc_manager', 'admin', 'viewer'] },
+  { href: '/dashboard', label: 'Live Dashboard', icon: LayoutDashboard, roles: ['supervisor', 'qc_manager', 'admin', 'viewer'] },
+  { href: '/process', label: 'Process Log', icon: Layers, roles: ['operator', 'supervisor', 'admin', 'viewer'] },
+  { href: '/samples', label: 'Sample Reports', icon: FlaskConical, roles: ['operator', 'supervisor', 'qc_analyst', 'qc_manager', 'admin', 'viewer'] },
   { href: '/qc/queue', label: 'Lab Queue', icon: ClipboardCheck, roles: ['qc_analyst', 'qc_manager', 'supervisor'] },
   { href: '/qc/decisions', label: 'QC Decisions', icon: Target, roles: ['qc_analyst', 'qc_manager', 'supervisor', 'admin', 'viewer'] },
   { href: '/trends', label: 'Trends & Analytics', icon: BarChart3, roles: ['supervisor', 'qc_manager', 'admin', 'viewer'] },

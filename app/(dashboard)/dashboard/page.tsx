@@ -193,7 +193,6 @@ export default function DashboardPage() {
               <Thermometer className="h-4 w-4 text-cyan-400" />
               Latest Process Readings
             </h2>
-            <span className="text-[10px] text-slate-500 font-mono">RF-FR-004</span>
           </div>
           <div className="p-4">
             {recentEntries.length > 0 ? (

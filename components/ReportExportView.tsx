@@ -383,9 +383,6 @@ export default function ReportExportView() {
                 <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-100">
                   Plant Operations & Quality Report Generator
                 </h1>
-                <span className="rounded bg-[#0A1018] px-2.5 py-0.5 text-[11px] font-mono font-semibold text-[#009FE3] border border-[#009FE3]/40 shadow-xs">
-                  CSV Export Engine
-                </span>
               </div>
               <p className="mt-1 text-xs text-slate-400">
                 Generate and download comprehensive SCADA operational records and QC laboratory results for daily shift rounds, monthly performance, or yearly audits.
@@ -685,8 +682,8 @@ export default function ReportExportView() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-5 py-3.5 border-b border-[#1F2E43] bg-[#0A1018] gap-2">
           <div className="flex items-center gap-2">
             <span className="text-xs font-mono font-semibold uppercase text-slate-200 tracking-wider">
-              {category === 'process' && 'RF-FR-004 Hourly Process Log Preview'}
-              {category === 'qc' && 'RF-FR-001 QC Lab Analysis Preview'}
+              {category === 'process' && 'Hourly Process Log Preview'}
+              {category === 'qc' && 'QC Lab Analysis Preview'}
               {category === 'deviations' && 'Plant Deviations & Excursions Preview'}
               {category === 'master' && 'Master Operations & Quality Merged Preview'}
             </span>

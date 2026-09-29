@@ -71,7 +71,7 @@ export default function Home() {
     },
     qc: {
       title: 'QC Management & Laboratory',
-      subtitle: 'RF-FR-001 analytical quality testing, sampling point inspection and batch release'
+      subtitle: 'Analytical quality testing, sampling point inspection and batch release'
     },
     supervisor: {
       title: 'Abnormality Log & Live Board',

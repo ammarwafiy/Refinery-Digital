@@ -604,9 +604,6 @@ export default function AdminUserManagementView() {
               <span className="rounded bg-[#0A1018] px-2 py-0.5 text-[10px] font-mono text-[#009FE3] border border-[#009FE3]/30 font-semibold">
                 ADMIN ACCESS ONLY
               </span>
-              <span className="rounded bg-[#009FE3]/15 px-2 py-0.5 text-[10px] font-mono text-[#009FE3] border border-[#009FE3]/40 font-bold">
-                USR001 · ADM001 · OPR001 · QCS001 · SUP001 · MGR001
-              </span>
             </div>
             <p className="text-xs text-slate-400 font-sans mt-0.5">
               Role-Based Access Control (RBAC), Consistent Sequential ID Generation & Nisshin Deodorizer Personnel Directory
@@ -965,7 +962,7 @@ export default function AdminUserManagementView() {
                           </td>
                           <td className="py-2.5 px-3.5">
                             <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${badge.bg} ${badge.text} ${badge.border} font-mono`}>
-                              {p.role === 'operator' ? 'OPR001 · OPERATOR' : p.role === 'supervisor' ? 'SUP001 · SUPERVISOR' : p.role === 'qc_analyst' ? 'QCS001 · QC STAFF' : p.role === 'qc_manager' ? 'MGR001 · MANAGER' : p.role === 'admin' ? 'ADM001 · ADMIN' : 'USR001 · USER'}
+                              {p.role === 'operator' ? 'Operator' : p.role === 'supervisor' ? 'Supervisor' : p.role === 'qc_analyst' ? 'QC Staff' : p.role === 'qc_manager' ? 'QC Manager' : p.role === 'admin' ? 'Admin' : 'User'}
                             </span>
                           </td>
                           <td className="py-2.5 px-3.5">

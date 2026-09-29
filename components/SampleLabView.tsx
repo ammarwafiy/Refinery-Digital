@@ -539,9 +539,6 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="rounded border border-[#1F2E43] bg-[#0A1018] px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-[#009FE3]">
-                  RF-FR-001 REV. 02
-                </span>
                 <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-100 font-sans">
                   Sample Analysis Report & Quality Control
                 </h1>
@@ -640,7 +637,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
       {activeSubTab === 'new' && (
         <div className="rounded-xl border border-[#1F2E43] bg-[#101927] p-5 sm:p-6">
           <h2 className="text-sm font-bold text-slate-100 mb-4 border-b border-[#1F2E43] pb-3 font-mono uppercase tracking-wider">
-            RF-FR-001 Sample Report Header & Parameter Request
+            Sample Report Header & Parameter Request
           </h2>
 
           <form onSubmit={handleCreateSample} className="space-y-5">
@@ -700,7 +697,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
             {/* Product Picker */}
             <div className="rounded-xl border border-[#1F2E43] bg-[#0A1018] p-4">
               <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2 font-mono">
-                Product Selection (RF-FR-001 Form 44-Product Standard List)
+                Product Selection (Standard List)
               </label>
               <select
                 value={newProductId}
@@ -1031,7 +1028,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                         </h2>
                         {selectedReport.decision && (
                           <span className="text-[10px] font-mono px-2 py-0.5 rounded border border-emerald-500/40 bg-emerald-950/40 text-emerald-400 font-bold">
-                            QC{String(reports.findIndex(r => r.id === selectedReport.id) + 1 || 1).padStart(3, '0')} · QC Decision
+                            QC Decision
                           </span>
                         )}
                         {(selectedReport.remarks?.toLowerCase().includes('auto-dispatched') || selectedReport.remarks?.includes('Process Log')) && (
@@ -1043,11 +1040,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                       <div className="mt-1.5 text-xs text-slate-400 font-mono flex flex-wrap items-center gap-2.5">
                         <span>Product: <strong className="text-slate-200">{selectedReport.product_name}</strong></span>
                         <span>•</span>
-                        <span>Batch: <strong className="text-amber-400 font-bold">BP001</strong> ({selectedReport.crystallizer_no || selectedReport.batch_no || 'BP-2609-01'})</span>
-                        <span>•</span>
-                        <span>DOC: <strong className="text-slate-300">DOC001 (RF-FR-001)</strong></span>
-                        <span>•</span>
-                        <span>SOP: <strong className="text-emerald-400">SOP001</strong> · <strong className="text-sky-400">WI001</strong></span>
+                        <span>Batch: <strong className="text-slate-200">{selectedReport.crystallizer_no || selectedReport.batch_no || 'BP-2609-01'}</strong></span>
                         <span>•</span>
                         <span>Submitted: <strong className="text-slate-400">{selectedReport.submitted_by_name}</strong></span>
                       </div>
@@ -1216,7 +1209,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 font-mono">
-                        Lab Analysis Results Entry (RF-FR-001 Table)
+                        Lab Analysis Results Entry
                       </span>
                       <span className="rounded bg-[#0A1018] px-2 py-0.5 font-mono text-[10px] text-[#009FE3] border border-[#1F2E43] font-semibold">
                         {standardResults.filter(r => requestedMap[r.id] !== false).length + (isTempAnyTicked ? 1 : 0)} / {standardResults.length + (tempResults.length > 0 ? 1 : 0)} Active
@@ -1480,7 +1473,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                       <div className="flex items-center gap-2">
                         <FileText className="h-3.5 w-3.5 text-[#009FE3]" />
                         <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-mono">
-                          QC OPERATING CONDITIONS & REMARKS (RF-FR-001)
+                          QC OPERATING CONDITIONS & REMARKS
                         </span>
                       </div>
                       <span className="text-[10px] font-mono text-slate-400">

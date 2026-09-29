@@ -375,15 +375,6 @@ export default function OfficialFormsExportView() {
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-mono text-[10px] text-[#009FE3] uppercase tracking-widest bg-[#0A1018] border border-[#009FE3]/30 px-1.5 py-0.5 rounded font-semibold">
-                  DOC001 · DOC-SYS-04
-                </span>
-                <span className="font-mono text-[10px] text-amber-400 font-semibold bg-amber-950/50 px-2 py-0.5 rounded border border-amber-800/60">
-                  ISO001 · CRT001
-                </span>
-                <span className="font-mono text-[10px] text-sky-400 font-semibold bg-sky-950/50 px-2 py-0.5 rounded border border-sky-800/60">
-                  SOP001 · WI001 · REV001
-                </span>
                 <span className="flex items-center gap-1 font-mono text-[10px] text-emerald-400 font-semibold bg-emerald-950/50 px-2 py-0.5 rounded border border-emerald-800/60">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                   CONTROLLED REPOSITORY
@@ -393,7 +384,7 @@ export default function OfficialFormsExportView() {
                 Official Controlled Forms & Regulatory Audit Trail
               </h1>
               <p className="text-xs text-slate-400">
-                PR001 (Production Record) · SR001 (Sample Report) · AL001 (Audit Log) · ISO001 (Certificate) · ATT001 (Attachment)
+                Production Records, QC Analytical Reports, Audit Logs & ISO Compliance Exports
               </p>
             </div>
           </div>
@@ -764,11 +755,8 @@ export default function OfficialFormsExportView() {
                 <div className="text-sm font-semibold text-slate-500">
                   Refinery Section · Nisshin Deodorizer Plant
                 </div>
-                <div className="text-base font-bold text-slate-900 mt-1 uppercase flex items-center gap-2">
-                  <span>Hourly Process Control Log Sheet</span>
-                  <span className="text-xs bg-sky-100 text-sky-800 border border-sky-300 px-1.5 py-0.5 rounded font-mono font-bold">
-                    PR001 (Production Record)
-                  </span>
+                <div className="text-base font-bold text-slate-900 mt-1 uppercase">
+                  Hourly Process Control Log Sheet
                 </div>
               </div>
 

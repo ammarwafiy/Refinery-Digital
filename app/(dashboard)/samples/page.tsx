@@ -59,7 +59,7 @@ export default function SamplesListPage() {
         <div>
           <h1 className="text-xl font-bold text-white flex items-center gap-2">
             <FlaskConical className="h-5 w-5 text-cyan-400" />
-            RF-FR-001 Sample Reports
+            Sample Reports
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">Sample analysis reports for Nisshin Deodorizer Plant</p>
         </div>
