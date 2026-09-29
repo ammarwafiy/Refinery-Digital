@@ -2125,6 +2125,7 @@ export async function syncSampleReportToSupabase(report: SampleReport): Promise<
     if (report.product_id && report.product_id !== 'others') {
       const localProd = getProducts().find(p => p.id === report.product_id);
       const matched = sbProducts.find(p => 
+        p.id === report.product_id ||
         (localProd && p.code === localProd.code) || 
         (localProd && p.name.toLowerCase() === localProd.name.toLowerCase()) ||
         (report.product_name && p.name.toLowerCase() === report.product_name.toLowerCase())
@@ -2199,11 +2200,39 @@ export async function syncSampleReportToSupabase(report: SampleReport): Promise<
     if (sbReportUuid && Array.isArray(report.results) && report.results.length > 0) {
       const resultsToUpsert: any[] = [];
       let rIdx = 1;
-      report.results.forEach(res => {
-        const matchedParam = sbParams.find(p => p.code === res.parameter_code);
+      for (const res of report.results) {
+        let matchedParam = sbParams.find(p => 
+          p.id === res.parameter_id || 
+          p.code === res.parameter_code ||
+          (res.parameter_name && p.name.toLowerCase() === res.parameter_name.toLowerCase())
+        );
+
+        // If custom parameter, register it in Supabase parameters table to satisfy foreign key
+        if (!matchedParam && res.parameter_name) {
+          const custCode = `CUST_${res.parameter_name.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase().slice(0, 16)}`;
+          try {
+            const { data: createdParam } = await supabase
+              .from('parameters')
+              .insert({
+                code: custCode,
+                name: res.parameter_name,
+                unit: res.unit || null,
+                sort_order: 50 + rIdx
+              })
+              .select('id, code, name')
+              .single();
+            if (createdParam) {
+              matchedParam = createdParam;
+              sbParams.push(createdParam);
+            }
+          } catch (e) {
+            console.warn('[Supabase Sync] Could not register custom parameter:', e);
+          }
+        }
+
         if (matchedParam) {
           resultsToUpsert.push({
-            id: res.id || makeSampleResultUuid(sbReportUuid, rIdx++),
+            id: res.id && res.id.includes('-') && res.id.length === 36 ? res.id : makeSampleResultUuid(sbReportUuid, rIdx++),
             report_id: sbReportUuid,
             parameter_id: matchedParam.id,
             series_key: res.series_key != null ? Number(res.series_key) : null,
@@ -2214,7 +2243,7 @@ export async function syncSampleReportToSupabase(report: SampleReport): Promise<
             entered_by: res.entered_by || null,
           });
         }
-      });
+      }
 
       if (resultsToUpsert.length > 0) {
         const { error: resultsErr } = await supabase
