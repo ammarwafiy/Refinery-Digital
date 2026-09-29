@@ -213,16 +213,16 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
       <header className="lg:hidden sticky top-0 z-50 w-full border-b border-[#1F2E43] bg-[#0A1018] shadow-md">
         <div className="flex items-center justify-between px-3.5 py-2.5">
           <div className="flex items-center gap-2.5">
-            <div className="h-8 w-10 flex items-center justify-center shrink-0">
+            <div className="h-8 w-8 flex items-center justify-center shrink-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/lam-soon-logo.png"
-                alt="Lam Soon Logo"
+                src="/lam-soon-badge.png"
+                alt="Lam Soon Brand Logo"
                 className="w-full h-full object-contain drop-shadow-md"
               />
             </div>
             <div>
-              <div className="font-semibold text-xs text-slate-100">
+              <div className="font-bold text-xs text-white uppercase tracking-wider font-sans">
                 Lam Soon Refinery
               </div>
               <div className="text-[10px] text-slate-400 flex items-center gap-1 font-mono">
@@ -268,22 +268,22 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
       {/* ========================================================================= */}
       <aside className="hidden lg:flex fixed inset-y-0 left-0 w-64 xl:w-72 bg-[#080E18] border-r border-[#1F2E43] flex-col justify-between z-40 select-none overflow-hidden">
         {/* Brand Header */}
-        <div className="p-4 border-b border-[#1F2E43]/60 bg-[#060A10]/40 relative z-10">
+        <div className="p-4 border-b border-white/[0.08] bg-[#070A10]/60 relative z-10">
           <div className="flex items-center gap-3">
-            <div className="h-11 w-12 flex items-center justify-center shrink-0">
+            <div className="h-10 w-10 flex items-center justify-center shrink-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/lam-soon-logo.png"
-                alt="Lam Soon Logo"
-                className="w-full h-full object-contain drop-shadow-lg"
+                src="/lam-soon-badge.png"
+                alt="Lam Soon Brand Logo"
+                className="w-full h-full object-contain drop-shadow-md"
               />
             </div>
             <div className="min-w-0">
-              <div className="font-bold text-xs xl:text-sm text-white tracking-wider truncate uppercase">
-                Lam Soon Refinery
+              <div className="font-extrabold text-xs xl:text-sm text-white tracking-wider truncate uppercase font-sans">
+                Lam Soon Edible Oils
               </div>
-              <div className="text-[9px] xl:text-[10px] text-slate-400 font-mono tracking-widest truncate uppercase">
-                Process Management System
+              <div className="text-[9px] xl:text-[10px] text-slate-400 font-mono tracking-wider truncate uppercase">
+                Refinery Management System
               </div>
             </div>
           </div>
@@ -306,20 +306,20 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
                   onClick={() => setActiveTab(item.id)}
                   className={`group relative flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-medium font-sans transition-all w-full cursor-pointer ${
                     isActive
-                      ? 'bg-[#1D8CF8] text-white shadow-md shadow-blue-500/20 font-semibold'
-                      : 'text-slate-400 hover:text-slate-100 hover:bg-[#121D2C]'
+                      ? 'bg-[#162030] text-white border-l-2 border-[#C52227] shadow-sm font-semibold'
+                      : 'text-slate-400 hover:text-slate-100 hover:bg-[#111824]'
                   }`}
                 >
                   <Icon
                     className={`h-4 w-4 shrink-0 transition-colors ${
-                      isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'
+                      isActive ? 'text-[#C52227]' : 'text-slate-400 group-hover:text-slate-200'
                     }`}
                   />
                   <span className="truncate flex-1 text-left">{item.label}</span>
                   {item.badge && (
                     <span
                       className={`text-[8px] px-1.5 py-0.5 rounded font-medium font-mono ${
-                        isActive ? 'bg-black/25 text-white' : 'bg-[#101927] text-slate-400 border border-[#1F2E43]'
+                        isActive ? 'bg-[#C52227]/20 text-[#FF6B6B] border border-[#C52227]/30' : 'bg-[#101927] text-slate-400 border border-[#1F2E43]'
                       }`}
                     >
                       {item.badge}
@@ -335,12 +335,12 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
                 onClick={() => setActiveTab('admin')}
                 className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-medium transition-all w-full cursor-pointer ${
                   activeTab === 'admin'
-                    ? 'bg-[#1D8CF8] text-white shadow-md shadow-blue-500/20 font-semibold'
-                    : 'text-slate-400 hover:text-slate-100 hover:bg-[#121D2C]'
+                    ? 'bg-[#162030] text-white border-l-2 border-[#C52227] shadow-sm font-semibold'
+                    : 'text-slate-400 hover:text-slate-100 hover:bg-[#111824]'
                 }`}
                 title="Plant Administration & User Management Panel"
               >
-                <Users className={`h-4 w-4 shrink-0 ${activeTab === 'admin' ? 'text-white' : 'text-slate-400'}`} />
+                <Users className={`h-4 w-4 shrink-0 ${activeTab === 'admin' ? 'text-[#C52227]' : 'text-slate-400'}`} />
                 <span className="truncate flex-1 text-left">User Management</span>
                 <span className="text-[8px] px-1.5 py-0.5 rounded font-medium font-mono bg-purple-500/20 text-purple-300 border border-purple-500/30">
                   ADMIN
@@ -463,7 +463,7 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
       {/* ========================================================================= */}
       {/* 3. DESKTOP TOP HEADER BAR (Spans content area, offset by sidebar width)   */}
       {/* ========================================================================= */}
-      <header className="hidden lg:flex fixed top-0 right-0 left-64 xl:left-72 h-14 bg-[#080E18]/95 backdrop-blur-md border-b border-[#1F2E43] z-30 items-center justify-between px-6">
+      <header className="hidden lg:flex fixed top-0 right-0 left-64 xl:left-72 h-14 bg-[#090E17]/90 backdrop-blur-xl border-b border-white/[0.08] z-30 items-center justify-between px-6">
         {/* Global Search Bar */}
         <div className="relative w-80 xl:w-96">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -472,11 +472,11 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
           <input
             type="text"
             placeholder="Search process, batch, equipment..."
-            className="w-full pl-9 pr-12 py-1.5 bg-[#0C1523] border border-[#1F2E43] rounded-lg text-xs text-slate-200 placeholder-slate-400 focus:outline-none focus:border-[#1D8CF8] focus:ring-1 focus:ring-[#1D8CF8] transition-all"
+            className="w-full pl-9 pr-12 py-1.5 bg-[#121826] border border-slate-700/60 rounded-lg text-xs text-slate-200 placeholder-slate-400 focus:outline-none focus:border-slate-500 focus:ring-1 focus:ring-slate-500 transition-all font-sans"
             readOnly
           />
           <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none">
-            <kbd className="px-1.5 py-0.5 text-[10px] font-mono text-slate-400 bg-[#142032] border border-[#1F2E43] rounded">
+            <kbd className="px-1.5 py-0.5 text-[10px] font-mono text-slate-400 bg-[#182232] border border-slate-700/60 rounded">
               ⌘K
             </kbd>
           </div>
@@ -485,15 +485,12 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
         {/* Status, Clock, User Profile & Sign Out */}
         <div className="flex items-center gap-4">
           {/* DCS Online Indicator */}
-          <div className="flex items-center gap-1.5 text-xs text-[#10B981] font-medium font-mono">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10B981] opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#10B981]"></span>
-            </span>
-            <span>System Online</span>
+          <div className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400 font-medium font-mono">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>ONLINE · 2.4 MBAR</span>
           </div>
 
-          <span className="text-[#1F2E43]">|</span>
+          <span className="text-slate-700">|</span>
 
           {/* Formatted Date & Time */}
           <div className="flex items-center gap-1.5 text-xs text-slate-300 font-mono">
@@ -770,12 +767,12 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
                 setIsMobileMenuOpen(false);
               }}
               className={`flex flex-col items-center justify-center py-1 px-2 rounded-md transition-colors cursor-pointer min-w-[54px] ${
-                isActive ? 'text-[#1D8CF8] font-medium' : 'text-slate-400 hover:text-slate-200'
+                isActive ? 'text-[#C52227] font-semibold' : 'text-slate-400 hover:text-slate-200'
               }`}
             >
               <div
                 className={`p-1 rounded-md ${
-                  isActive ? 'bg-[#1D8CF8]/15 text-[#1D8CF8] border border-[#1D8CF8]/30' : ''
+                  isActive ? 'bg-[#C52227]/15 text-[#C52227] border border-[#C52227]/30' : ''
                 }`}
               >
                 <Icon className="h-4 w-4" />

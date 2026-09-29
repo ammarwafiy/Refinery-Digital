@@ -95,33 +95,36 @@ export default function SupervisorBoardView() {
   return (
     <div className="space-y-6">
       {/* 1. Supervisor Dashboard Header */}
-      <div className="rounded-xl border border-[#1F2E43] bg-[#101927] p-4 sm:p-5 shadow-sm">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[#1F2E43] pb-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-lg border border-[#009FE3]/40 bg-[#009FE3]/10 text-[#009FE3] shadow-sm">
+      <div className="rounded-2xl border border-white/[0.08] bg-[#111724]/90 backdrop-blur-xl p-5 sm:p-6 shadow-xl relative overflow-hidden">
+        {/* Subtle Top-left Specular Glass Sheen */}
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/[0.05] via-transparent to-transparent pointer-events-none" />
+
+        <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/[0.08] pb-4">
+          <div className="flex items-center gap-3.5">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-[#C52227]/30 bg-[#C52227]/10 text-[#C52227] shadow-sm">
               <Activity className="h-5 w-5" />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="rounded border border-[#1F2E43] bg-[#0A1018] px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-[#009FE3]">
+                <span className="rounded border border-slate-700/60 bg-[#162030] px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-slate-300">
                   SV-CONSOLE-01
                 </span>
-                <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-100 font-sans">
+                <h1 className="text-lg sm:text-xl font-extrabold tracking-tight text-white font-sans uppercase">
                   Supervisor Live Operations Board
                 </h1>
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-[#10B981]/30 bg-[#10B981]/10 px-2.5 py-0.5 text-[11px] font-mono text-[#10B981] font-semibold">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#10B981] animate-pulse" /> LIVE TELEMETRY
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-mono text-emerald-400 font-semibold">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> LIVE TELEMETRY
                 </span>
               </div>
               <p className="text-xs text-slate-400 font-mono mt-1">
-                Nisshin Deodorizer Plant · Active Shift Date: <span className="text-[#009FE3] font-semibold">{sheet.shift_date}</span>
+                Nisshin Deodorizer Plant · Active Shift Date: <span className="text-slate-200 font-semibold">{sheet.shift_date}</span>
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 self-end sm:self-auto">
-            <div className="text-right text-xs font-mono bg-[#0A1018] px-3.5 py-2 rounded-lg border border-[#1F2E43]">
-              <div className="text-slate-400 text-[10px] font-semibold uppercase tracking-wider">LATEST LOGGED ROUND</div>
+          <div className="flex items-center gap-3 self-end sm:self-auto relative z-10">
+            <div className="text-right text-xs font-mono bg-[#0C121D] px-3.5 py-2 rounded-xl border border-white/[0.07] shadow-xs">
+              <div className="text-slate-500 text-[10px] font-semibold uppercase tracking-wider">LATEST LOGGED ROUND</div>
               <div className="text-slate-100 font-semibold mt-0.5">
                 {latestEntry ? `${latestEntry.slot_label} hrs (${latestEntry.recorded_by_name || 'Shift Operator'})` : 'No readings yet'}
               </div>
@@ -129,43 +132,43 @@ export default function SupervisorBoardView() {
           </div>
         </div>
 
-        {/* Quick KPI Stat Cards */}
-        <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {/* Quick KPI Stat Cards matching Swiss Modern dashboard mockup */}
+        <div className="relative mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3.5">
           {/* Active Vacuum */}
-          <div className="rounded-lg border border-[#1F2E43] bg-[#131E2D] p-3.5 hover:border-[#263A52] transition-colors">
+          <div className="rounded-xl border border-white/[0.07] bg-[#0C121D]/90 p-4 hover:border-slate-600/50 transition-all shadow-md">
             <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1 font-mono">
               <span className="uppercase tracking-wider font-semibold text-slate-400">DEOD VACUUM</span>
-              <Gauge className="h-3.5 w-3.5 text-[#009FE3]" />
+              <Gauge className="h-4 w-4 text-[#C52227]" />
             </div>
-            <div className="text-2xl font-bold font-mono text-slate-100 tracking-tight">
+            <div className="text-2xl sm:text-3xl font-extrabold font-mono text-white tracking-tight">
               {latestEntry?.vacuum_torr ? `${latestEntry.vacuum_torr.toFixed(1)}` : '-'}
               <span className="text-xs text-slate-400 font-normal ml-1 font-mono">Torr</span>
             </div>
-            <div className="text-[10px] text-[#009FE3] font-mono mt-1">Band: 1.0 - 4.5 Torr</div>
+            <div className="text-[10px] text-slate-400 font-mono mt-1">Spec: 1.0 – 4.5 Torr</div>
           </div>
 
           {/* Tray 4 Max Deod Temp */}
-          <div className="rounded-lg border border-[#1F2E43] bg-[#131E2D] p-3.5 hover:border-[#263A52] transition-colors">
+          <div className="rounded-xl border border-white/[0.07] bg-[#0C121D]/90 p-4 hover:border-slate-600/50 transition-all shadow-md">
             <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1 font-mono">
               <span className="uppercase tracking-wider font-semibold text-slate-400">TRAY 4 TEMP</span>
-              <Thermometer className="h-3.5 w-3.5 text-[#009FE3]" />
+              <Thermometer className="h-4 w-4 text-[#C52227]" />
             </div>
-            <div className="text-2xl font-bold font-mono text-slate-100 tracking-tight">
+            <div className="text-2xl sm:text-3xl font-extrabold font-mono text-white tracking-tight">
               {latestEntry?.tray_4_temp_c ? `${latestEntry.tray_4_temp_c.toFixed(1)}` : '-'}
               <span className="text-xs text-slate-400 font-normal ml-1 font-mono">°C</span>
             </div>
-            <div className="text-[10px] text-[#009FE3] font-mono mt-1">Band: 250 - 268°C</div>
+            <div className="text-[10px] text-slate-400 font-mono mt-1">Spec: 250 – 268°C</div>
           </div>
 
           {/* Missing Slots */}
-          <div className={`rounded-lg border p-3.5 transition-colors ${
-            missingSlots.length > 0 ? 'border-[#EF4444]/40 bg-[#EF4444]/10' : 'border-[#1F2E43] bg-[#131E2D]'
+          <div className={`rounded-xl border p-4 transition-all shadow-md ${
+            missingSlots.length > 0 ? 'border-red-500/40 bg-red-950/20' : 'border-white/[0.07] bg-[#0C121D]/90 hover:border-slate-600/50'
           }`}>
             <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1 font-mono">
               <span className="uppercase tracking-wider font-semibold text-slate-400">MISSING SLOTS</span>
-              <Clock className={`h-3.5 w-3.5 ${missingSlots.length > 0 ? 'text-[#EF4444]' : 'text-slate-500'}`} />
+              <Clock className={`h-4 w-4 ${missingSlots.length > 0 ? 'text-[#EF4444]' : 'text-slate-500'}`} />
             </div>
-            <div className={`text-2xl font-bold font-mono tracking-tight ${missingSlots.length > 0 ? 'text-[#EF4444]' : 'text-slate-100'}`}>
+            <div className={`text-2xl sm:text-3xl font-extrabold font-mono tracking-tight ${missingSlots.length > 0 ? 'text-[#EF4444]' : 'text-white'}`}>
               {missingSlots.length}
             </div>
             <div className="text-[10px] text-slate-400 font-mono mt-1">
@@ -174,14 +177,14 @@ export default function SupervisorBoardView() {
           </div>
 
           {/* Active Deviations */}
-          <div className={`rounded-lg border p-3.5 transition-colors ${
-            openDeviations.length > 0 ? 'border-[#F59E0B]/40 bg-[#F59E0B]/10' : 'border-[#1F2E43] bg-[#131E2D]'
+          <div className={`rounded-xl border p-4 transition-all shadow-md ${
+            openDeviations.length > 0 ? 'border-amber-500/40 bg-amber-950/20' : 'border-white/[0.07] bg-[#0C121D]/90 hover:border-slate-600/50'
           }`}>
             <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1 font-mono">
               <span className="uppercase tracking-wider font-semibold text-slate-400">OPEN DEVIATIONS</span>
-              <AlertTriangle className={`h-3.5 w-3.5 ${openDeviations.length > 0 ? 'text-[#F59E0B]' : 'text-slate-500'}`} />
+              <AlertTriangle className={`h-4 w-4 ${openDeviations.length > 0 ? 'text-[#F59E0B]' : 'text-slate-500'}`} />
             </div>
-            <div className={`text-2xl font-bold font-mono tracking-tight ${openDeviations.length > 0 ? 'text-[#F59E0B]' : 'text-slate-100'}`}>
+            <div className={`text-2xl sm:text-3xl font-extrabold font-mono tracking-tight ${openDeviations.length > 0 ? 'text-[#F59E0B]' : 'text-white'}`}>
               {openDeviations.length}
             </div>
             <div className="text-[10px] text-slate-400 font-mono mt-1">
@@ -193,13 +196,13 @@ export default function SupervisorBoardView() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* 2. Open Deviations & Corrective Action Log */}
-        <div className="rounded-xl border border-[#1F2E43] bg-[#101927] p-4 sm:p-5 shadow-sm">
-          <div className="flex items-center justify-between mb-4 border-b border-[#1F2E43] pb-3">
-            <div className="flex items-center gap-2 font-semibold text-slate-100 font-mono text-xs uppercase tracking-wider">
-              <ShieldAlert className="h-4 w-4 text-[#F59E0B]" />
-              <span>Plant Deviations & Corrective Action Notes (AR001 · Approval Record)</span>
+        <div className="rounded-2xl border border-white/[0.08] bg-[#111724]/90 backdrop-blur-xl p-5 sm:p-6 shadow-xl relative overflow-hidden">
+          <div className="flex items-center justify-between mb-4 border-b border-white/[0.08] pb-3">
+            <div className="flex items-center gap-2 font-semibold text-white font-mono text-xs uppercase tracking-wider">
+              <ShieldAlert className="h-4 w-4 text-[#C52227]" />
+              <span>Plant Deviations & Corrective Action Notes (AR001)</span>
             </div>
-            <span className="text-[10px] font-mono text-[#009FE3] font-semibold bg-[#0A1018] px-2 py-0.5 rounded border border-[#1F2E43]">
+            <span className="text-[10px] font-mono text-slate-300 font-semibold bg-[#0C121D] px-2 py-0.5 rounded border border-white/[0.07]">
               COUNT: {deviations.length}
             </span>
           </div>
@@ -277,9 +280,9 @@ export default function SupervisorBoardView() {
         {/* 3. Missing Entries & QC Lab Alert Queue */}
         <div className="space-y-6">
           {/* Missing Hourly Entries Box */}
-          <div className="rounded-xl border border-[#1F2E43] bg-[#101927] p-4 sm:p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-4 border-b border-[#1F2E43] pb-3">
-              <div className="flex items-center gap-2 font-semibold text-slate-100 font-mono text-xs uppercase tracking-wider">
+          <div className="rounded-2xl border border-white/[0.08] bg-[#111724]/90 backdrop-blur-xl p-5 sm:p-6 shadow-xl relative overflow-hidden">
+            <div className="flex items-center justify-between mb-4 border-b border-white/[0.08] pb-3">
+              <div className="flex items-center gap-2 font-semibold text-white font-mono text-xs uppercase tracking-wider">
                 <Clock className="h-4 w-4 text-[#EF4444]" />
                 <span>Overdue Hourly Log Entries</span>
               </div>
@@ -289,14 +292,14 @@ export default function SupervisorBoardView() {
             </div>
 
             {missingSlots.length === 0 ? (
-              <div className="p-3.5 text-center text-xs text-[#10B981] font-mono bg-[#10B981]/10 rounded-lg border border-[#10B981]/30">
-                <CheckCircle2 className="h-4 w-4 inline-block mr-1.5 text-[#10B981]" />
+              <div className="p-3.5 text-center text-xs text-emerald-400 font-mono bg-emerald-500/10 rounded-xl border border-emerald-500/20">
+                <CheckCircle2 className="h-4 w-4 inline-block mr-1.5 text-emerald-400" />
                 Zero overdue slots. Operating shifts are completely up to date.
               </div>
             ) : (
               <div className="space-y-2">
                 {missingSlots.map(m => (
-                  <div key={m.index} className="flex items-center justify-between p-3 rounded-lg border border-[#EF4444]/30 bg-[#EF4444]/10">
+                  <div key={m.index} className="flex items-center justify-between p-3 rounded-xl border border-red-500/30 bg-red-950/20">
                     <div className="flex items-center gap-2">
                       <span className="font-mono font-bold text-xs text-[#EF4444]">Hour {m.label}</span>
                       <span className="text-xs text-slate-400 font-mono">Blank in RF-FR-004</span>
@@ -311,13 +314,13 @@ export default function SupervisorBoardView() {
           </div>
 
           {/* QC Lab Status in Realtime */}
-          <div className="rounded-xl border border-[#1F2E43] bg-[#101927] p-4 sm:p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-4 border-b border-[#1F2E43] pb-3">
-              <div className="flex items-center gap-2 font-semibold text-slate-100 font-mono text-xs uppercase tracking-wider">
-                <FlaskConical className="h-4 w-4 text-[#009FE3]" />
+          <div className="rounded-2xl border border-white/[0.08] bg-[#111724]/90 backdrop-blur-xl p-5 sm:p-6 shadow-xl relative overflow-hidden">
+            <div className="flex items-center justify-between mb-4 border-b border-white/[0.08] pb-3">
+              <div className="flex items-center gap-2 font-semibold text-white font-mono text-xs uppercase tracking-wider">
+                <FlaskConical className="h-4 w-4 text-[#C52227]" />
                 <span>QC Lab Sample Queue (SR001 · RF-FR-001)</span>
               </div>
-              <span className="text-[10px] font-mono text-[#009FE3] font-semibold bg-[#0A1018] px-2 py-0.5 rounded border border-[#1F2E43]">
+              <span className="text-[10px] font-mono text-slate-300 font-semibold bg-[#0C121D] px-2 py-0.5 rounded border border-white/[0.07]">
                 PENDING: {pendingSamples.length}
               </span>
             </div>

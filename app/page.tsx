@@ -113,8 +113,8 @@ export default function Home() {
 
       {/* Main Content Area (Offset by sidebar width on desktop and topbar height) */}
       <div className="flex-1 flex flex-col min-w-0 lg:pl-64 xl:pl-72 lg:pt-14">
-        {/* Dynamic Page Header & Breadcrumbs matching user mockup */}
-        <div className="px-4 sm:px-6 lg:px-8 pt-5 pb-3 border-b border-[#1F2E43]/40 bg-[#070B12]/80 backdrop-blur-xs header-accent-line">
+        {/* Dynamic Page Header & Breadcrumbs matching Swiss Modern design */}
+        <div className="px-4 sm:px-6 lg:px-8 pt-5 pb-3 border-b border-white/[0.08] bg-[#090E17]/85 backdrop-blur-md">
           <div className="flex items-center gap-2 text-xs text-slate-400 mb-1.5 font-medium">
             <span 
               onClick={() => setActiveTab('process')}
@@ -123,17 +123,17 @@ export default function Home() {
               Home
             </span>
             <span className="text-slate-500">&gt;</span>
-            <span className="text-[#1D8CF8] font-medium">
+            <span className="text-[#C52227] font-semibold">
               {currentHeaderInfo.title}
             </span>
           </div>
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white font-sans">
                 {currentHeaderInfo.title}
               </h1>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-slate-400 mt-0.5 font-sans">
                 {currentHeaderInfo.subtitle}
               </p>
             </div>
