@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   AlertCircle,
   Eye,
@@ -21,33 +21,7 @@ export default function LoginView({ onLogin }: LoginViewProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [currentShift, setCurrentShift] = useState<string>('Shift A · 06:00-14:00');
   const [isHelpOpen, setIsHelpOpen] = useState(false);
-
-  useEffect(() => {
-    const updateShift = () => {
-      const now = new Date();
-      const hour = parseInt(
-        now.toLocaleTimeString('en-GB', {
-          timeZone: 'Asia/Kuala_Lumpur',
-          hour12: false,
-          hour: '2-digit',
-        }),
-        10
-      );
-
-      if (hour >= 6 && hour < 14) {
-        setCurrentShift('Shift A · 06:00-14:00');
-      } else if (hour >= 14 && hour < 22) {
-        setCurrentShift('Shift B · 14:00-22:00');
-      } else {
-        setCurrentShift('Shift C · 22:00-06:00');
-      }
-    };
-    updateShift();
-    const interval = setInterval(updateShift, 60000);
-    return () => clearInterval(interval);
-  }, []);
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,31 +52,27 @@ export default function LoginView({ onLogin }: LoginViewProps) {
       {/* Background Deep Vignette / Subtle Atmosphere */}
       <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#0F1726]/40 via-[#070A10] to-[#04060A]" />
 
-      {/* Centered Swiss Modern Workstation Card matching mockup 1:1 */}
+      {/* Centered Swiss Modern Workstation Card */}
       <div className="relative z-10 w-full max-w-[420px]">
         <div className="relative rounded-2xl bg-[#111724]/90 backdrop-blur-xl border border-white/[0.08] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85)] p-7 sm:p-8 transition-all overflow-hidden">
           {/* Subtle Top-left Specular Glass Sheen */}
           <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/[0.07] via-transparent to-transparent pointer-events-none" />
 
-          {/* Header Row: Title & Lam Soon Red Leaf Emblem */}
-          <div className="relative flex items-start justify-between mb-6">
-            <div>
+          {/* Header Row: Official Lam Soon Badge Logo (left) + Title */}
+          <div className="relative flex items-center gap-3.5 mb-6">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/lam-soon-badge.png"
+              alt="Lam Soon Brand Logo"
+              className="h-11 w-11 object-contain shrink-0 drop-shadow-md"
+            />
+            <div className="flex-1 min-w-0">
               <div className="text-white font-extrabold text-[15px] sm:text-base tracking-wider leading-tight uppercase font-sans">
                 LAM SOON EDIBLE OILS
               </div>
-              <div className="text-white font-extrabold text-[15px] sm:text-base tracking-wider leading-tight uppercase font-sans mt-0.5">
+              <div className="text-white font-extrabold text-[14px] sm:text-base tracking-wider leading-tight uppercase font-sans mt-0.5 text-slate-200">
                 REFINERY MANAGEMENT SYSTEM
               </div>
-            </div>
-
-            {/* Lam Soon Red Leaf Emblem */}
-            <div className="shrink-0 ml-3 pt-0.5" title="Lam Soon Edible Oils">
-              <svg
-                className="w-5 h-6 text-[#DC2626] fill-current drop-shadow-sm transform -rotate-6"
-                viewBox="0 0 24 24"
-              >
-                <path d="M21 3C14.5 3.5 8 7.5 5.5 13C3.5 17.5 5 21 8.5 21C14 21 19.5 15.5 21 3Z" />
-              </svg>
             </div>
           </div>
 
@@ -173,67 +143,35 @@ export default function LoginView({ onLogin }: LoginViewProps) {
               </div>
             </div>
 
-            {/* Shift Telemetry Line: Shift A · 06:00-14:00 · Online */}
-            <div className="text-xs text-slate-400 font-sans tracking-tight pt-1 pb-1 flex items-center gap-1.5">
-              <span>{currentShift}</span>
-              <span className="text-slate-600">·</span>
-              <span className="flex items-center gap-1.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 inline-block"></span>
-                <span>Online</span>
-              </span>
-            </div>
-
             {/* Submit Button: Solid Red ACCESS SYSTEM */}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-3 rounded-lg bg-[#C52227] hover:bg-[#B31B20] active:scale-[0.99] text-white font-bold text-xs uppercase tracking-wider transition-all shadow-md shadow-red-950/30 flex items-center justify-center cursor-pointer disabled:opacity-50"
-            >
-              {isLoading ? (
-                <span className="flex items-center gap-2">
-                  <span className="h-3 w-3 border-2 border-white/20 border-t-white rounded-full animate-spin"></span>
-                  <span>AUTHENTICATING...</span>
-                </span>
-              ) : (
-                'ACCESS SYSTEM'
-              )}
-            </button>
+            <div className="pt-2">
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-3 rounded-lg bg-[#C52227] hover:bg-[#B31B20] active:scale-[0.99] text-white font-bold text-xs uppercase tracking-wider transition-all shadow-md shadow-red-950/30 flex items-center justify-center cursor-pointer disabled:opacity-50"
+              >
+                {isLoading ? (
+                  <span className="flex items-center gap-2">
+                    <span className="h-3 w-3 border-2 border-white/20 border-t-white rounded-full animate-spin"></span>
+                    <span>AUTHENTICATING...</span>
+                  </span>
+                ) : (
+                  'ACCESS SYSTEM'
+                )}
+              </button>
+            </div>
           </form>
         </div>
 
-        {/* Minimalist discreet utilities below the card */}
-        <div className="mt-4 flex items-center justify-between px-2 text-[11px] text-slate-600 font-mono">
+        {/* Centered System Help & Support Tab */}
+        <div className="mt-4 flex items-center justify-center text-[11px] text-slate-500 font-mono">
           <button
             type="button"
             onClick={() => setIsHelpOpen(true)}
-            className="hover:text-slate-400 transition-colors cursor-pointer"
+            className="hover:text-slate-300 transition-colors cursor-pointer tracking-wider"
           >
             System Help & Support
           </button>
-          <div className="flex items-center gap-2">
-            <span>Quick fill:</span>
-            <button
-              type="button"
-              onClick={() => {
-                setIdentifier('OPR001');
-                setPassword('password123');
-              }}
-              className="text-slate-500 hover:text-slate-300 transition-colors cursor-pointer underline"
-            >
-              Operator
-            </button>
-            <span>·</span>
-            <button
-              type="button"
-              onClick={() => {
-                setIdentifier('SUP001');
-                setPassword('password123');
-              }}
-              className="text-slate-500 hover:text-slate-300 transition-colors cursor-pointer underline"
-            >
-              Supervisor
-            </button>
-          </div>
         </div>
       </div>
 
