@@ -70,6 +70,11 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
   // Active entry form state
   const [formData, setFormData] = useState<Partial<ProcessEntry>>({});
   const [ghostData, setGhostData] = useState<Partial<ProcessEntry>>({});
+  const [isDirty, setIsDirty] = useState<boolean>(false);
+  const isDirtyRef = React.useRef<boolean>(false);
+  const formDataRef = React.useRef<Partial<ProcessEntry>>({});
+  const lastSlotSyncedRef = React.useRef<number | null>(null);
+
   const [validationError, setValidationError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isCopying, setIsCopying] = useState(false);
@@ -90,6 +95,43 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
 
   const limits = getParameterLimits();
 
+  // SessionStorage draft persistence helpers to guarantee zero data loss
+  const getDraftKey = (date: string, slot: number) => `refinery_process_draft_${date}_slot_${slot}`;
+
+  const saveDraft = (date: string, slot: number, data: Partial<ProcessEntry>) => {
+    try {
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem(getDraftKey(date, slot), JSON.stringify({
+          data,
+          timestamp: Date.now()
+        }));
+      }
+    } catch (e) {
+      console.warn('[ProcessLog Draft] Failed to save draft:', e);
+    }
+  };
+
+  const getDraft = (date: string, slot: number): Partial<ProcessEntry> | null => {
+    try {
+      if (typeof window !== 'undefined') {
+        const raw = sessionStorage.getItem(getDraftKey(date, slot));
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          return parsed.data || null;
+        }
+      }
+    } catch {}
+    return null;
+  };
+
+  const clearDraft = (date: string, slot: number) => {
+    try {
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem(getDraftKey(date, slot));
+      }
+    } catch {}
+  };
+
   // Realtime clock, slot tracker, and shift date rollover
   useEffect(() => {
     setAvailableDates(getAvailableShiftDates());
@@ -107,8 +149,11 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
         mytDate.toLocaleTimeString('en-GB', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })
       );
 
-      // Proactively auto-dispatch QC sample lot to RF-FR-001 QC Lab for the active timeline hour and recorded entries
-      syncAllProcessEntriesToQC(activeShiftDate);
+      // Only auto-dispatch QC on hour slot rollover, not every single second
+      if (lastSlotSyncedRef.current !== slot) {
+        lastSlotSyncedRef.current = slot;
+        syncAllProcessEntriesToQC(activeShiftDate);
+      }
 
       // Auto-rollover in realtime when shift date changes (e.g. 07:00 AM hits)
       setActiveShiftDate(prevDate => {
@@ -127,13 +172,13 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
     updateRealtime();
     const timer = setInterval(updateRealtime, 1000);
     return () => clearInterval(timer);
-  }, [isLiveShift]);
+  }, [isLiveShift, activeShiftDate]);
 
   useEffect(() => {
     setProducts(getProducts());
     setParameters(getParameters());
     setRole(currentRole || currentUser?.role || getCurrentRole());
-    refreshSheet();
+    refreshSheet(false, false);
     setSampleReports(getSampleReports());
 
     // Hydrate Supabase on mount/shift change
@@ -141,7 +186,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
       setSampleReports(getSampleReports());
     });
     syncProcessSheetsFromSupabase().then(() => {
-      refreshSheet();
+      refreshSheet(false, true); // background sync!
     });
 
     const handleReportsUpdated = (e: any) => {
@@ -152,7 +197,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
       }
     };
     const handleSheetUpdated = () => {
-      refreshSheet();
+      refreshSheet(false, true); // background sync!
     };
 
     window.addEventListener('refinery_reports_updated', handleReportsUpdated);
@@ -162,9 +207,13 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
       window.removeEventListener('refinery_reports_updated', handleReportsUpdated);
       window.removeEventListener('refinery_sheet_updated', handleSheetUpdated);
     };
-  }, [currentRole, currentUser, activeShiftDate]);
+  }, [currentRole, currentUser?.id, activeShiftDate]);
 
   const handleDateChange = (newDate: string) => {
+    // Preserve draft before switching date
+    if (isDirtyRef.current) {
+      saveDraft(activeShiftDate, selectedSlotIndex, formDataRef.current);
+    }
     setActiveShiftDate(newDate);
     const targetSheet = getProcessSheetByDate(newDate);
     setSheet(targetSheet);
@@ -174,15 +223,27 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
     loadSlot(targetSlot, targetSheet);
   };
 
-  const refreshSheet = (preserveSuccess = false) => {
+  const refreshSheet = (preserveSuccess = false, isBackground = false) => {
     const s = getProcessSheetByDate(activeShiftDate);
     setSheet(s);
-    syncAllProcessEntriesToQC(activeShiftDate);
-    loadSlot(selectedSlotIndex, s, preserveSuccess);
     setAvailableDates(getAvailableShiftDates());
+
+    // CRITICAL: If this is a background sheet sync/event and the operator is actively editing,
+    // NEVER overwrite their active inputs!
+    if (isBackground && isDirtyRef.current) {
+      console.info('[ProcessLog] Preserving active in-progress form inputs during background sheet sync.');
+      return;
+    }
+
+    loadSlot(selectedSlotIndex, s, preserveSuccess, !isBackground);
   };
 
-  const loadSlot = (slotIdx: number, activeSheet = sheet, preserveSuccess = false) => {
+  const loadSlot = (
+    slotIdx: number, 
+    activeSheet = sheet, 
+    preserveSuccess = false, 
+    checkDraft = true
+  ) => {
     setSelectedSlotIndex(slotIdx);
     setValidationError(null);
     if (!preserveSuccess) {
@@ -199,37 +260,83 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
       setGhostData({});
     }
 
+    // Check if an unsaved in-progress draft exists in sessionStorage
+    const draft = checkDraft ? getDraft(activeShiftDate, slotIdx) : null;
+    if (draft && Object.keys(draft).length > 0) {
+      setFormData(draft);
+      formDataRef.current = draft;
+      setIsDirty(true);
+      isDirtyRef.current = true;
+      if (draft.auto_dispatch_qc !== undefined) {
+        setAutoDispatchQc(draft.auto_dispatch_qc !== false);
+      }
+      return;
+    }
+
     if (existingEntry) {
       setFormData({ ...existingEntry });
+      formDataRef.current = { ...existingEntry };
       setAutoDispatchQc(existingEntry.auto_dispatch_qc !== false);
+      setIsDirty(false);
+      isDirtyRef.current = false;
     } else {
       // Initialize with defaults / carried-over product
       const defaultProdId = prevEntry?.product_id || products[25]?.id || DEFAULT_PRODUCT_ID;
       const initialDispatch = prevEntry ? prevEntry.auto_dispatch_qc !== false : true;
 
-      setFormData({
+      const initialData: Partial<ProcessEntry> = {
         slot_index: slotIdx,
         product_id: defaultProdId,
         deod_time_set_hr: 2.0,
         strip_steam_pct_of_oil: prevEntry?.strip_steam_pct_of_oil ?? activeSheet.stripping_steam_pct ?? 1.5,
         tray_steam_supply_bar: prevEntry?.tray_steam_supply_bar ?? activeSheet.set_steam_supply_bar ?? 3.0,
         auto_dispatch_qc: initialDispatch,
-      });
+      };
+
+      setFormData(initialData);
+      formDataRef.current = initialData;
       setAutoDispatchQc(initialDispatch);
+      setIsDirty(false);
+      isDirtyRef.current = false;
     }
   };
 
   const handleFieldChange = (field: keyof ProcessEntry, value: unknown) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value === '' ? null : value,
-    }));
+    setIsDirty(true);
+    isDirtyRef.current = true;
+    setFormData(prev => {
+      const next = {
+        ...prev,
+        [field]: value === '' ? null : value,
+      };
+      formDataRef.current = next;
+      saveDraft(activeShiftDate, selectedSlotIndex, next);
+      return next;
+    });
   };
 
   const handleProductChange = (newProdId: string) => {
     handleFieldChange('product_id', newProdId);
     // Proactively sync auto-dispatched QC report with the newly selected product
     ensureAutoDispatchedQC(selectedSlotIndex, activeShiftDate, newProdId);
+  };
+
+  const handleSlotSelect = (idx: number) => {
+    if (selectedSlotIndex === idx) return;
+    // Preserve draft of previous slot if it was edited
+    if (isDirtyRef.current) {
+      saveDraft(activeShiftDate, selectedSlotIndex, formDataRef.current);
+    }
+    loadSlot(idx);
+  };
+
+  const handleDiscardDraft = () => {
+    clearDraft(activeShiftDate, selectedSlotIndex);
+    setIsDirty(false);
+    isDirtyRef.current = false;
+    loadSlot(selectedSlotIndex, sheet, false, false);
+    setSuccessMessage('Draft discarded. Reverted to saved readings.');
+    setTimeout(() => setSuccessMessage(null), 3000);
   };
 
   const handleCopyPrevious = () => {
@@ -242,10 +349,15 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
       setIsCopying(true);
       const sourceSlot = res.prevSlotLabel || String((((selectedSlotIndex - 1 + 24) % 24) + 7) % 24 * 100).padStart(4, '0');
       setCopiedSlotLabel(sourceSlot);
-      setFormData(prev => ({
-        ...prev,
+      const merged = {
+        ...formDataRef.current,
         ...res.data,
-      }));
+      };
+      setFormData(merged);
+      formDataRef.current = merged;
+      setIsDirty(true);
+      isDirtyRef.current = true;
+      saveDraft(activeShiftDate, selectedSlotIndex, merged);
       if (res.data.auto_dispatch_qc !== undefined) {
         setAutoDispatchQc(res.data.auto_dispatch_qc !== false);
       }
@@ -278,6 +390,11 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
       return;
     }
 
+    // Clear saved draft from sessionStorage
+    clearDraft(activeShiftDate, selectedSlotIndex);
+    setIsDirty(false);
+    isDirtyRef.current = false;
+
     setIsSaving(false);
     setIsJustSaved(true);
     if (autoDispatchQc) {
@@ -285,7 +402,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
     } else {
       setSuccessMessage(`✓ Hour ${res.entry.slot_label} readings recorded!`);
     }
-    refreshSheet(true);
+    refreshSheet(true, false);
 
     setTimeout(() => {
       setIsJustSaved(false);
@@ -511,7 +628,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                 <button
                   key={idx}
                   type="button"
-                  onClick={() => loadSlot(idx)}
+                  onClick={() => handleSlotSelect(idx)}
                   className={`ribbon-cell ${statusClass} ${isSelected ? 'sel' : ''}`}
                   title={`Slot ${label} (${label.slice(0, 2)}:00)${isQCRejected ? ' - QC REJECTED' : isQCAccepted ? ' - QC ACCEPTED' : ''}`}
                   aria-pressed={isSelected}
@@ -533,9 +650,17 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
               {selectedSlotLabel.slice(0, 2)}:00
             </div>
             <div>
-              <h2 className="text-lg font-semibold tracking-tight text-[var(--text)]">
-                Hourly readings for {currentSlotTimeStr} hrs
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-semibold tracking-tight text-[var(--text)]">
+                  Hourly readings for {currentSlotTimeStr} hrs
+                </h2>
+                {isDirty && (
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                    Unsaved Edits (Auto-Drafted)
+                  </span>
+                )}
+              </div>
               <p className="text-xs text-[var(--muted)] mt-0.5">
                 Ghost numbers show the previous hour&apos;s readings.
               </p>
@@ -544,6 +669,16 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
 
           {/* Quick Ergonomic Actions */}
           <div className="flex items-center gap-2">
+            {isDirty && (
+              <button
+                type="button"
+                onClick={handleDiscardDraft}
+                className="ghost text-xs text-amber-400 hover:text-red-400 border border-amber-500/30 hover:border-red-500/40 px-2.5 py-1.5 rounded transition-colors"
+                title="Discard unsaved draft and revert to saved readings"
+              >
+                Discard Draft
+              </button>
+            )}
             <button
               type="button"
               onClick={handleCopyPrevious}
@@ -622,7 +757,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
             </div>
             <button
               type="button"
-              onClick={() => loadSlot(currentSlotIndex)}
+              onClick={() => handleSlotSelect(currentSlotIndex)}
               className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded bg-[#101927] text-slate-200 border border-[#1F2E43] hover:bg-slate-100 text-xs font-mono font-medium transition-colors cursor-pointer"
             >
               <Clock className="h-3.5 w-3.5 text-[#009FE3]" />
@@ -648,7 +783,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
             </div>
             <button
               type="button"
-              onClick={() => loadSlot(currentSlotIndex)}
+              onClick={() => handleSlotSelect(currentSlotIndex)}
               className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded bg-[#101927] text-slate-200 border border-[#1F2E43] hover:bg-slate-100 text-xs font-mono font-medium transition-colors cursor-pointer"
             >
               <Clock className="h-3.5 w-3.5 text-[#009FE3]" />
