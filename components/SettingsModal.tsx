@@ -37,7 +37,8 @@ import {
   Camera,
   Upload,
   Trash2,
-  Copy
+  Copy,
+  Link2
 } from 'lucide-react';
 import { Profile } from '@/types/refinery';
 import { 
@@ -133,10 +134,11 @@ const DICT = {
     newPassPlaceholder: 'Leave empty to keep existing password',
     confirmPassPlaceholder: 'Re-enter new password to verify',
     passNote: 'Minimum 6 characters · Synchronized directly to Supabase profiles table',
-    avatarUploadBtn: 'Upload Photo',
-    avatarChangeBtn: 'Change Photo',
+    avatarUploadBtn: 'Upload Image / GIF',
+    avatarChangeBtn: 'Change Image / GIF',
     avatarRemoveBtn: 'Remove',
-    avatarUploadNote: 'JPG, PNG, WebP or animated GIF under 3.5MB. Auto-synced directly to Supabase profile.',
+    avatarUrlBtn: 'Paste URL',
+    avatarUploadNote: 'Supports animated GIF, PNG, JPG, WebP up to 10MB. Uploaded directly to cloud storage and synchronized across all sessions.',
 
     // Preferences
     prefHeading: '2. System Display & Workstation Preferences',
@@ -240,10 +242,11 @@ const DICT = {
     newPassPlaceholder: 'Biarkan kosong jika kekal kata laluan sedia ada',
     confirmPassPlaceholder: 'Masukkan semula kata laluan baharu',
     passNote: 'Sekurang-kurangnya 6 aksara · Diselaraskan terus ke pangkalan data Supabase',
-    avatarUploadBtn: 'Muat Naik Foto',
-    avatarChangeBtn: 'Tukar Foto',
+    avatarUploadBtn: 'Muat Naik Imej / GIF',
+    avatarChangeBtn: 'Tukar Imej / GIF',
     avatarRemoveBtn: 'Padam Foto',
-    avatarUploadNote: 'JPG, PNG, WebP atau animasi GIF bawah 3.5MB. Diselaras terus ke profil Supabase.',
+    avatarUrlBtn: 'Guna Link URL',
+    avatarUploadNote: 'Menyokong animasi GIF, PNG, JPG, WebP sehingga 10MB. Disimpan terus ke storan awan Supabase & diselaras ke semua peranti.',
 
     // Preferences
     prefHeading: '2. Pilihan Paparan & Stesen Kerja',
@@ -344,6 +347,9 @@ export default function SettingsModal({
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(currentUser?.avatar_url || null);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [avatarUploadStatus, setAvatarUploadStatus] = useState<string>('');
+  const [showUrlInput, setShowUrlInput] = useState(false);
+  const [urlInputValue, setUrlInputValue] = useState('');
   const avatarFileInputRef = useRef<HTMLInputElement>(null);
 
   // Security Form State
@@ -431,103 +437,205 @@ export default function SettingsModal({
     }
   }, [currentUser]);
 
-  // Optimize and process uploaded avatar photo (supports JPG, PNG, WebP, and animated GIF)
-  const handleAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Upload and process avatar photo directly to Supabase Storage (supports GIF, PNG, JPG, WebP up to 10MB)
+  const handleAvatarFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     const isGif = file.type === 'image/gif' || file.name.toLowerCase().endsWith('.gif');
-    const maxSizeBytes = isGif ? 3.5 * 1024 * 1024 : 2.5 * 1024 * 1024;
+    const maxSizeBytes = 10 * 1024 * 1024; // 10MB
 
     if (file.size > maxSizeBytes) {
       showToast(lang === 'ms' 
-        ? `Saiz ${isGif ? 'GIF' : 'imej'} melebihi had (${isGif ? '3.5MB' : '2.5MB'}). Sila pilih fail yang lebih kecil.` 
-        : `File size exceeds limit (${isGif ? '3.5MB' : '2.5MB'}). Please choose a smaller file.`);
+        ? `Saiz ${isGif ? 'GIF' : 'imej'} melebihi had (10MB). Sila pilih fail yang lebih kecil.` 
+        : `File size exceeds limit (10MB). Please choose a smaller file.`);
       return;
     }
 
-    if (!file.type.startsWith('image/') && !isGif) {
+    if (!file.type.startsWith('image/') && !isGif && !file.name.toLowerCase().match(/\.(gif|jpg|jpeg|png|webp|svg)$/i)) {
       showToast(lang === 'ms' 
-        ? 'Fail mestilah format imej (JPG, PNG, WebP, GIF).' 
-        : 'File must be an image format (JPG, PNG, WebP, GIF).');
+        ? 'Fail mestilah format imej (GIF, JPG, PNG, WebP).' 
+        : 'File must be an image format (GIF, JPG, PNG, WebP).');
       return;
     }
 
     setIsUploadingAvatar(true);
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
-      if (!dataUrl) {
-        setIsUploadingAvatar(false);
-        return;
+    setAvatarUploadStatus(lang === 'ms' ? 'Menyediakan fail...' : 'Preparing file...');
+
+    // 1. Instant local preview so user sees animation right away
+    try {
+      const localUrl = URL.createObjectURL(file);
+      setAvatarPreview(localUrl);
+    } catch {}
+
+    // 2. Upload to Supabase Storage via /api/avatar/upload
+    try {
+      setAvatarUploadStatus(lang === 'ms' ? 'Memuat naik ke awan Supabase...' : 'Uploading to cloud storage...');
+      const formData = new FormData();
+      formData.append('file', file);
+      if (currentUser?.employee_no) {
+        formData.append('employee_no', currentUser.employee_no);
       }
 
-      // CRITICAL: Animated GIFs MUST NOT be drawn to Canvas!
-      // HTML5 Canvas drawImage() permanently flattens and strips all animated frames.
-      if (isGif) {
-        setAvatarPreview(dataUrl);
-        setIsUploadingAvatar(false);
-        showToast(lang === 'ms'
-          ? 'Animasi GIF avatar dipilih! Sila klik "Simpan Perubahan Profil" untuk selaras ke Supabase.'
-          : 'Animated GIF avatar selected! Click "Save Profile Changes" to sync with Supabase.');
-        return;
+      const res = await fetch('/api/avatar/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success || !data.avatar_url) {
+        throw new Error(data.error || 'Upload failed');
       }
 
-      // Compress & scale static images to 256x256 via HTML5 Canvas for optimal DB footprint & fast load
-      const img = new Image();
-      img.onload = () => {
-        try {
-          const canvas = document.createElement('canvas');
-          const maxDim = 256;
-          let width = img.width;
-          let height = img.height;
-          if (width > height) {
-            if (width > maxDim) {
-              height = Math.round((height * maxDim) / width);
-              width = maxDim;
-            }
-          } else {
-            if (height > maxDim) {
-              width = Math.round((width * maxDim) / height);
-              height = maxDim;
-            }
-          }
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            ctx.drawImage(img, 0, 0, width, height);
-            const compressed = canvas.toDataURL('image/jpeg', 0.85);
-            setAvatarPreview(compressed);
-          } else {
-            setAvatarPreview(dataUrl);
-          }
-        } catch {
-          setAvatarPreview(dataUrl);
-        } finally {
-          setIsUploadingAvatar(false);
-          showToast(lang === 'ms'
-            ? 'Foto avatar dipilih! Klik "Simpan Perubahan Profil" untuk selaras ke Supabase.'
-            : 'Avatar photo selected! Click "Save Profile Changes" to sync with Supabase.');
+      const permanentUrl: string = data.avatar_url;
+      setAvatarPreview(permanentUrl);
+
+      // Immediately sync with currentUser and storage
+      if (currentUser) {
+        const updated: Profile = {
+          ...currentUser,
+          avatar_url: permanentUrl,
+        };
+
+        if (onProfileUpdate) {
+          onProfileUpdate(updated);
         }
-      };
-      img.onerror = () => {
-        setAvatarPreview(dataUrl);
-        setIsUploadingAvatar(false);
-      };
-      img.src = dataUrl;
-    };
-    reader.onerror = () => {
+
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('refinery_auth_user', JSON.stringify(updated));
+            const all = getProfiles();
+            const idx = all.findIndex(p => p.employee_no === currentUser.employee_no);
+            if (idx !== -1) {
+              all[idx].avatar_url = permanentUrl;
+              setStored(STORAGE_KEYS.PROFILES, all);
+            }
+            window.dispatchEvent(new CustomEvent('refinery_profile_updated', { detail: updated }));
+            window.dispatchEvent(new CustomEvent('refinery_profiles_synced', { detail: updated }));
+          } catch (storageErr) {
+            console.warn('[Avatar Update] Local cache error:', storageErr);
+          }
+        }
+
+        // Broadcast to all active workstations
+        initWorkstationTracking(updated);
+      }
+
+      showToast(lang === 'ms'
+        ? 'Animasi GIF avatar berjaya dimuat naik & diselaraskan ke semua peranti!'
+        : 'Animated GIF avatar uploaded and synchronized across all workstations!');
+    } catch (uploadErr: any) {
+      console.error('[Avatar Upload Error]:', uploadErr);
+      showToast(lang === 'ms'
+        ? `Ralat muat naik: ${uploadErr.message || 'Gagal memuat naik fail'}`
+        : `Upload error: ${uploadErr.message || 'Failed to upload image'}`);
+    } finally {
       setIsUploadingAvatar(false);
-      showToast('Failed to read image file.');
-    };
-    reader.readAsDataURL(file);
+      setAvatarUploadStatus('');
+    }
   };
 
-  const handleRemoveAvatar = () => {
+  const handleUrlAvatarSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanUrl = urlInputValue.trim();
+    if (!cleanUrl) return;
+
+    if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://') && !cleanUrl.startsWith('data:image/')) {
+      showToast(lang === 'ms' ? 'Sila masukkan pautan URL yang sah (cth: https://...)' : 'Please enter a valid URL (e.g. https://...)');
+      return;
+    }
+
+    setAvatarPreview(cleanUrl);
+    setShowUrlInput(false);
+    setUrlInputValue('');
+
+    if (currentUser) {
+      const updated: Profile = {
+        ...currentUser,
+        avatar_url: cleanUrl,
+      };
+
+      if (onProfileUpdate) {
+        onProfileUpdate(updated);
+      }
+
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('refinery_auth_user', JSON.stringify(updated));
+          const all = getProfiles();
+          const idx = all.findIndex(p => p.employee_no === currentUser.employee_no);
+          if (idx !== -1) {
+            all[idx].avatar_url = cleanUrl;
+            setStored(STORAGE_KEYS.PROFILES, all);
+          }
+          window.dispatchEvent(new CustomEvent('refinery_profile_updated', { detail: updated }));
+          window.dispatchEvent(new CustomEvent('refinery_profiles_synced', { detail: updated }));
+        } catch {}
+      }
+
+      initWorkstationTracking(updated);
+
+      try {
+        await fetch('/api/profiles', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-plant-admin-signature': PLANT_ADMIN_SIGNATURE,
+          },
+          body: JSON.stringify({
+            employee_no: currentUser.employee_no,
+            avatar_url: cleanUrl,
+          }),
+        });
+      } catch {}
+    }
+
+    showToast(lang === 'ms' 
+      ? 'URL Avatar/GIF berjaya ditetapkan & diselaraskan!' 
+      : 'Avatar/GIF URL set and synchronized successfully!');
+  };
+
+  const handleRemoveAvatar = async () => {
     setAvatarPreview(null);
     if (avatarFileInputRef.current) {
       avatarFileInputRef.current.value = '';
+    }
+    if (currentUser) {
+      const updated: Profile = {
+        ...currentUser,
+        avatar_url: undefined,
+      };
+      if (onProfileUpdate) {
+        onProfileUpdate(updated);
+      }
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('refinery_auth_user', JSON.stringify(updated));
+          const all = getProfiles();
+          const idx = all.findIndex(p => p.employee_no === currentUser.employee_no);
+          if (idx !== -1) {
+            delete all[idx].avatar_url;
+            setStored(STORAGE_KEYS.PROFILES, all);
+          }
+          window.dispatchEvent(new CustomEvent('refinery_profile_updated', { detail: updated }));
+          window.dispatchEvent(new CustomEvent('refinery_profiles_synced', { detail: updated }));
+        } catch {}
+      }
+      initWorkstationTracking(updated);
+
+      try {
+        await fetch('/api/profiles', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-plant-admin-signature': PLANT_ADMIN_SIGNATURE,
+          },
+          body: JSON.stringify({
+            employee_no: currentUser.employee_no,
+            avatar_url: null,
+          }),
+        });
+      } catch {}
     }
     showToast(lang === 'ms' ? 'Foto avatar dipadamkan.' : 'Avatar photo removed.');
   };
@@ -1065,7 +1173,8 @@ export default function SettingsModal({
                   type="file"
                   ref={avatarFileInputRef}
                   onChange={handleAvatarFileChange}
-                  accept="image/jpeg,image/png,image/webp,image/gif,image/*"
+                  onClick={(e) => { (e.currentTarget as HTMLInputElement).value = ''; }}
+                  accept="image/gif,image/jpeg,image/png,image/webp,image/*"
                   className="hidden"
                 />
 
@@ -1090,25 +1199,38 @@ export default function SettingsModal({
                         modalInitials
                       )}
 
+                      {/* Loading Spinner Overlay during Upload */}
+                      {isUploadingAvatar && (
+                        <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center text-white z-20 backdrop-blur-[2px]">
+                          <RefreshCw className="h-6 w-6 text-[#009FE3] animate-spin" />
+                          <span className="text-[8px] font-mono text-slate-200 mt-1 font-semibold uppercase tracking-wider text-center px-1">
+                            {avatarUploadStatus || (lang === 'ms' ? 'Muat naik...' : 'Uploading...')}
+                          </span>
+                        </div>
+                      )}
+
                       {/* Hover Overlay Button to trigger upload */}
-                      <button
-                        type="button"
-                        onClick={() => avatarFileInputRef.current?.click()}
-                        className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white transition-opacity duration-200 cursor-pointer backdrop-blur-[2px]"
-                        title={t.avatarUploadBtn}
-                      >
-                        <Camera className="h-5 w-5 text-[#009FE3] drop-shadow-md" />
-                        <span className="text-[9px] font-mono mt-1 font-semibold uppercase tracking-wider text-slate-200">
-                          {avatarPreview ? t.avatarChangeBtn : t.avatarUploadBtn}
-                        </span>
-                      </button>
+                      {!isUploadingAvatar && (
+                        <button
+                          type="button"
+                          onClick={() => avatarFileInputRef.current?.click()}
+                          className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white transition-opacity duration-200 cursor-pointer backdrop-blur-[2px]"
+                          title={t.avatarUploadBtn}
+                        >
+                          <Camera className="h-5 w-5 text-[#009FE3] drop-shadow-md" />
+                          <span className="text-[9px] font-mono mt-1 font-semibold uppercase tracking-wider text-slate-200">
+                            {avatarPreview ? t.avatarChangeBtn : t.avatarUploadBtn}
+                          </span>
+                        </button>
+                      )}
                     </div>
 
                     {/* Camera Badge in bottom right corner */}
                     <button
                       type="button"
                       onClick={() => avatarFileInputRef.current?.click()}
-                      className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-[#009FE3] hover:bg-[#0089C4] text-white flex items-center justify-center shadow-md border-2 border-[#101927] cursor-pointer transition-transform hover:scale-110"
+                      disabled={isUploadingAvatar}
+                      className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-[#009FE3] hover:bg-[#0089C4] text-white flex items-center justify-center shadow-md border-2 border-[#101927] cursor-pointer transition-transform hover:scale-110 disabled:opacity-50"
                       title={t.avatarUploadBtn}
                     >
                       <Camera className="h-3.5 w-3.5" />
@@ -1139,14 +1261,35 @@ export default function SettingsModal({
                         disabled={isUploadingAvatar}
                         className="px-2.5 py-1 rounded-lg bg-[#1E2D42] hover:bg-[#2A3E5B] text-slate-200 hover:text-white text-[11px] font-mono border border-[#2D415E] flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
                       >
-                        <Upload className="h-3 w-3 text-[#009FE3]" />
-                        <span>{isUploadingAvatar ? 'Loading...' : avatarPreview ? t.avatarChangeBtn : t.avatarUploadBtn}</span>
+                        {isUploadingAvatar ? (
+                          <>
+                            <RefreshCw className="h-3 w-3 text-[#009FE3] animate-spin" />
+                            <span>{lang === 'ms' ? 'Memuat naik...' : 'Uploading...'}</span>
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="h-3 w-3 text-[#009FE3]" />
+                            <span>{avatarPreview ? t.avatarChangeBtn : t.avatarUploadBtn}</span>
+                          </>
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setShowUrlInput(!showUrlInput)}
+                        disabled={isUploadingAvatar}
+                        className="px-2.5 py-1 rounded-lg bg-[#162232] hover:bg-[#1E2D42] text-slate-300 hover:text-white text-[11px] font-mono border border-[#24354D] flex items-center gap-1 transition-all cursor-pointer"
+                        title="Paste online GIF/Image URL"
+                      >
+                        <Link2 className="h-3 w-3 text-cyan-400" />
+                        <span>{t.avatarUrlBtn}</span>
                       </button>
 
                       {avatarPreview && (
                         <button
                           type="button"
                           onClick={handleRemoveAvatar}
+                          disabled={isUploadingAvatar}
                           className="px-2.5 py-1 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-[11px] font-mono border border-red-500/30 flex items-center gap-1 transition-all cursor-pointer"
                         >
                           <Trash2 className="h-3 w-3" />
@@ -1154,6 +1297,34 @@ export default function SettingsModal({
                         </button>
                       )}
                     </div>
+
+                    {/* Collapsible URL Input Box */}
+                    {showUrlInput && (
+                      <form onSubmit={handleUrlAvatarSubmit} className="mt-2 flex items-center gap-2 max-w-md">
+                        <input
+                          type="url"
+                          value={urlInputValue}
+                          onChange={(e) => setUrlInputValue(e.target.value)}
+                          placeholder="https://media.giphy.com/.../source.gif"
+                          className="flex-1 bg-[#0A1018] border border-[#2A3E5B] rounded-lg px-2.5 py-1 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-[#009FE3] font-mono"
+                          autoFocus
+                        />
+                        <button
+                          type="submit"
+                          className="px-3 py-1 bg-[#009FE3] hover:bg-[#0089C4] text-white text-xs font-mono font-semibold rounded-lg transition-colors cursor-pointer"
+                        >
+                          OK
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowUrlInput(false)}
+                          className="px-2 py-1 text-slate-400 hover:text-white text-xs font-mono"
+                        >
+                          ✕
+                        </button>
+                      </form>
+                    )}
+
                     <div className="text-[10px] text-slate-500 font-mono">
                       {t.avatarUploadNote}
                     </div>
