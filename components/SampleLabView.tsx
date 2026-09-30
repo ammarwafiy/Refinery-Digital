@@ -1118,7 +1118,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                         <option value="">-- Pilih Produk Lain --</option>
                         {products.map(p => (
                           <option key={p.id} value={p.id}>
-                            {p.name} {p.code ? `(${p.code})` : ''}
+                            {p.name}
                           </option>
                         ))}
                       </select>
