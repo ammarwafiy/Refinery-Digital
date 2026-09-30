@@ -87,6 +87,20 @@ export default function OfficialFormsExportView() {
   const [editRemarksText, setEditRemarksText] = useState('');
   const [saveSuccessMsg, setSaveSuccessMsg] = useState<string | null>(null);
 
+  // Live date for official header: EFFECTIVE: DD/MM/YYYY
+  const liveEffectiveDate = useMemo(() => {
+    const rt = getRealtimeShiftDate();
+    const parts = rt.split('-');
+    if (parts.length === 3) {
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+    const d = new Date();
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  }, []);
+
   const handleShiftDateChange = (newDate: string) => {
     setSelectedShiftDate(newDate);
     setSheet(getProcessSheetByDate(newDate));
@@ -781,7 +795,7 @@ export default function OfficialFormsExportView() {
                 <div><strong>DOC:</strong> DOC001 (RF-FR-004)</div>
                 <div><strong>SOP / WI:</strong> SOP001 · WI001</div>
                 <div><strong>REVISION:</strong> REV001 (Rev 02)</div>
-                <div><strong>EFFECTIVE:</strong> 01/01/2026</div>
+                <div><strong>EFFECTIVE:</strong> {liveEffectiveDate}</div>
               </div>
             </div>
 
