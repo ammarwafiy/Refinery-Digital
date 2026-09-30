@@ -18,6 +18,7 @@ import {
   ROLE_ALLOWED_TABS, 
   ROLE_DEFAULT_TAB 
 } from '@/lib/data-service';
+import { initWorkstationTracking } from '@/lib/workstation-service';
 import { 
   Flame 
 } from 'lucide-react';
@@ -33,6 +34,8 @@ export default function Home() {
       setAuthUserState(savedUser);
       const defaultTab = ROLE_DEFAULT_TAB[savedUser.role] || 'process';
       setActiveTab(defaultTab);
+      // Initialize real-time workstation presence for this device
+      initWorkstationTracking(savedUser);
     }
   }, []);
 
@@ -41,6 +44,8 @@ export default function Home() {
     setAuthUserState(profile);
     const targetTab = ROLE_DEFAULT_TAB[profile.role] || 'process';
     setActiveTab(targetTab);
+    // Register active workstation presence immediately on login
+    initWorkstationTracking(profile);
   };
 
   const handleLogout = () => {

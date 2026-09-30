@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut } from '@/app/actions/auth'
+import { initWorkstationTracking } from '@/lib/workstation-service'
 import {
   Flame,
   LayoutDashboard,
@@ -90,6 +91,9 @@ export function SidebarShell({ profile, children }: { profile: Profile; children
   const [timeString, setTimeString] = useState('')
 
   useEffect(() => {
+    // Register active workstation presence
+    initWorkstationTracking(profile)
+
     const update = () => {
       setTimeString(
         new Date().toLocaleTimeString('en-GB', {
@@ -104,7 +108,7 @@ export function SidebarShell({ profile, children }: { profile: Profile; children
     update()
     const t = setInterval(update, 1000)
     return () => clearInterval(t)
-  }, [])
+  }, [profile])
 
   const filteredNav = navItems.filter(item => item.roles.includes(profile.role))
   const filteredAdmin = adminItems.filter(item => item.roles.includes(profile.role))

@@ -15,6 +15,7 @@ import {
   EyeOff, 
   Download, 
   Laptop, 
+  Tablet,
   Clock, 
   Globe, 
   Palette, 
@@ -39,6 +40,16 @@ import {
   Copy
 } from 'lucide-react';
 import { Profile } from '@/types/refinery';
+import { 
+  initWorkstationTracking, 
+  getActiveSessions, 
+  subscribeToSessions, 
+  terminateOtherWorkstations, 
+  terminateSingleWorkstation, 
+  getAuthenticationAuditTrail,
+  type WorkstationSession,
+  type AuthAuditRecord
+} from '@/lib/workstation-service';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import { 
   generateBase32Secret, 
@@ -362,6 +373,12 @@ export default function SettingsModal({
   const [updateCheckText, setUpdateCheckText] = useState<string | null>(null);
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
 
+  // Active Workstation Sessions & Real-Time Sync State
+  const [activeSessions, setActiveSessions] = useState<WorkstationSession[]>([]);
+  const [auditTrail, setAuditTrail] = useState<AuthAuditRecord[]>([]);
+  const [isTerminatingOthers, setIsTerminatingOthers] = useState(false);
+  const [isRefreshingAudit, setIsRefreshingAudit] = useState(false);
+
   // Sync settings and state from localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -378,6 +395,33 @@ export default function SettingsModal({
         }
       } catch {}
     }
+  }, [isOpen, currentUser]);
+
+  // Subscribe to live multi-device workstation presence & fetch audit trail
+  useEffect(() => {
+    if (!isOpen) return;
+
+    // Initialize or refresh presence tracking
+    initWorkstationTracking(currentUser);
+
+    // Initial populate
+    setActiveSessions(getActiveSessions());
+
+    // Subscribe to live updates
+    const unsubscribe = subscribeToSessions((sessions) => {
+      setActiveSessions(sessions);
+    });
+
+    // Fetch live audit trail
+    getAuthenticationAuditTrail().then(trail => {
+      if (Array.isArray(trail) && trail.length > 0) {
+        setAuditTrail(trail);
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
   }, [isOpen, currentUser]);
 
   useEffect(() => {
@@ -787,12 +831,54 @@ export default function SettingsModal({
     }
   };
 
-  // Terminate Other Sessions
-  const handleTerminateOtherSessions = () => {
-    setSessionTerminated(true);
-    setTimeout(() => {
-      showToast(lang === 'ms' ? 'Semua sesi stesen luar telah ditamatkan secara paksa.' : 'All remote workstation sessions terminated.');
-    }, 400);
+  // Terminate All Other Sessions across the plant network
+  const handleTerminateOtherSessions = async () => {
+    setIsTerminatingOthers(true);
+    try {
+      const res = await terminateOtherWorkstations(currentUser?.employee_no || currentUser?.full_name);
+      setSessionTerminated(true);
+      showToast(
+        lang === 'ms'
+          ? `Berjaya menamatkan ${res.terminatedCount} sesi stesen kerja lain.`
+          : `Successfully terminated ${res.terminatedCount} remote workstation session(s).`
+      );
+      const trail = await getAuthenticationAuditTrail();
+      setAuditTrail(trail);
+    } catch {
+      showToast(lang === 'ms' ? 'Ralat menamatkan sesi stesen lain.' : 'Failed to terminate remote workstations.');
+    } finally {
+      setIsTerminatingOthers(false);
+    }
+  };
+
+  // Terminate a single specific remote workstation
+  const handleTerminateSingle = async (deviceId: string, stationName: string) => {
+    try {
+      await terminateSingleWorkstation(deviceId, currentUser?.employee_no || currentUser?.full_name);
+      showToast(
+        lang === 'ms'
+          ? `Sesi ${stationName} telah ditamatkan secara paksa.`
+          : `Session on ${stationName} terminated.`
+      );
+      const trail = await getAuthenticationAuditTrail();
+      setAuditTrail(trail);
+    } catch {
+      showToast('Error terminating session.');
+    }
+  };
+
+  // Refresh Authentication Audit Trail
+  const handleRefreshAuditTrail = async () => {
+    setIsRefreshingAudit(true);
+    try {
+      const trail = await getAuthenticationAuditTrail();
+      setAuditTrail(trail);
+      showToast(lang === 'ms' ? 'Jejak audit log masuk dikemas kini dari pangkalan data.' : 'Authentication audit trail refreshed from database.');
+    } catch {
+      showToast('Audit trail refreshed.');
+    } finally {
+      setIsRefreshingAudit(false);
+    }
   };
 
   // System Update Checker
@@ -1631,40 +1717,101 @@ export default function SettingsModal({
                 )}
 
                 {/* Active Sessions & Workstation */}
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-mono uppercase tracking-wider text-slate-400">
-                      {t.activeSessions}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={handleTerminateOtherSessions}
-                      className="text-[11px] font-mono text-[#EF4444] hover:underline cursor-pointer"
-                    >
-                      {t.terminateOthers}
-                    </button>
-                  </div>
-                  <div className="p-3.5 rounded-xl bg-[#101927] border border-[#1F2E43] flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Laptop className="h-5 w-5 text-[#009FE3]" />
-                      <div>
-                        <div className="text-xs font-bold text-slate-200">
-                          {t.primaryConsole}
-                        </div>
-                        <div className="text-[10px] text-slate-400 font-mono">
-                          Windows 11 · Chrome 120.0 · Plant LAN IP: 192.168.1.45
-                        </div>
-                      </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-mono uppercase tracking-wider text-slate-400">
+                        {t.activeSessions}
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
+                        {activeSessions.length} {activeSessions.length === 1 ? 'Station' : 'Stations'} Online
+                      </span>
                     </div>
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                      <span>{t.activeNow}</span>
-                    </span>
+                    {activeSessions.some(s => !s.isCurrent) && (
+                      <button
+                        type="button"
+                        onClick={handleTerminateOtherSessions}
+                        disabled={isTerminatingOthers}
+                        className="text-[11px] font-mono text-[#EF4444] hover:underline cursor-pointer disabled:opacity-50"
+                      >
+                        {isTerminatingOthers ? 'Terminating...' : t.terminateOthers}
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    {activeSessions.map((session) => {
+                      const isThisDevice = session.isCurrent;
+                      return (
+                        <div
+                          key={session.deviceId}
+                          className={`p-3.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all ${
+                            isThisDevice
+                              ? 'bg-[#101927] border-[#009FE3]/50 shadow-[0_0_15px_rgba(0,159,227,0.08)]'
+                              : 'bg-[#0B111D] border-[#1F2E43]'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`p-2 rounded-lg ${isThisDevice ? 'bg-[#009FE3]/15 text-[#009FE3]' : 'bg-slate-800 text-slate-400'}`}>
+                              {session.deviceType === 'mobile' ? (
+                                <Smartphone className="h-5 w-5" />
+                              ) : session.deviceType === 'tablet' ? (
+                                <Tablet className="h-5 w-5" />
+                              ) : (
+                                <Laptop className="h-5 w-5" />
+                              )}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-bold text-slate-200">
+                                  {session.stationName}
+                                </span>
+                                {isThisDevice && (
+                                  <span className="text-[10px] font-mono text-[#009FE3] bg-[#009FE3]/10 px-1.5 py-0.2 rounded border border-[#009FE3]/30">
+                                    (This Device)
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-[10px] text-slate-400 font-mono mt-0.5 flex flex-wrap items-center gap-x-2">
+                                <span>{session.os} · {session.browser}</span>
+                                <span>•</span>
+                                <span>IP: {session.ip}</span>
+                                <span>•</span>
+                                <span className="text-slate-500">Operator: {session.user}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 self-end sm:self-auto">
+                            {isThisDevice ? (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                <span>{t.activeNow}</span>
+                              </span>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <span className="inline-flex items-center gap-1 text-[10px] font-mono text-cyan-400 bg-cyan-950/40 px-2 py-0.5 rounded border border-cyan-800/60">
+                                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-400"></span>
+                                  Remote
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleTerminateSingle(session.deviceId, session.stationName)}
+                                  className="text-[10px] font-mono px-2 py-1 rounded bg-red-950/40 border border-red-800 text-red-400 hover:bg-red-900/60 transition cursor-pointer"
+                                >
+                                  Terminate
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
 
                   {sessionTerminated && (
                     <div className="p-2.5 rounded-lg bg-emerald-950/40 border border-emerald-800 text-emerald-300 text-xs font-mono">
-                      ✓ All other external sessions terminated. Only Console #4 remains authorized.
+                      ✓ All other external sessions terminated. Only this authorized workstation remains connected.
                     </div>
                   )}
                 </div>
@@ -1677,9 +1824,11 @@ export default function SettingsModal({
                     </span>
                     <button
                       type="button"
-                      onClick={() => showToast('Login audit trail refreshed.')}
-                      className="text-[11px] font-mono text-[#009FE3] hover:underline cursor-pointer"
+                      onClick={handleRefreshAuditTrail}
+                      disabled={isRefreshingAudit}
+                      className="text-[11px] font-mono text-[#009FE3] hover:underline cursor-pointer flex items-center gap-1"
                     >
+                      <RefreshCw className={`h-3 w-3 ${isRefreshingAudit ? 'animate-spin' : ''}`} />
                       {t.refreshLog}
                     </button>
                   </div>
@@ -1690,18 +1839,22 @@ export default function SettingsModal({
                       <span>IP ADDRESS</span>
                       <span className="text-right">RESULT</span>
                     </div>
-                    {[
-                      { time: 'Today 09:12 MYT', station: 'Console #4', ip: '192.168.1.45', status: 'SUCCESS' },
-                      { time: 'Today 06:02 MYT', station: 'Tablet Shift A', ip: '192.168.1.114', status: 'SUCCESS' },
-                      { time: '24 Sep 22:01 MYT', station: 'Console #2', ip: '192.168.1.42', status: 'SUCCESS' },
-                    ].map((row, idx) => (
-                      <div key={idx} className="grid grid-cols-4 p-2.5 border-b border-[#1F2E43]/50 text-slate-300 items-center">
-                        <span className="text-[11px]">{row.time}</span>
-                        <span className="text-[11px] text-slate-200">{row.station}</span>
-                        <span className="text-[11px] text-slate-400">{row.ip}</span>
-                        <span className="text-right text-[10px] text-emerald-400 font-bold">{row.status}</span>
+                    {auditTrail.length > 0 ? (
+                      auditTrail.map((row, idx) => (
+                        <div key={row.id || idx} className="grid grid-cols-4 p-2.5 border-b border-[#1F2E43]/50 text-slate-300 items-center">
+                          <span className="text-[11px]">{row.time}</span>
+                          <span className="text-[11px] text-slate-200 truncate">{row.station}</span>
+                          <span className="text-[11px] text-slate-400">{row.ip}</span>
+                          <span className={`text-right text-[10px] font-bold ${row.status === 'SUCCESS' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                            {row.status}
+                          </span>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="p-4 text-center text-slate-500 text-xs">
+                        No recent login records found in audit log.
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
               </div>
