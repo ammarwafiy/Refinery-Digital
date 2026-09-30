@@ -40,8 +40,42 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      data-theme="dark"
+      suppressHydrationWarning
       className={`dark ${inter.variable} h-full`}
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var stored = localStorage.getItem('refinery_system_settings');
+                  var theme = 'dark';
+                  if (stored) {
+                    try { theme = JSON.parse(stored).theme || 'dark'; } catch(e) {}
+                  } else {
+                    var direct = localStorage.getItem('refinery_theme');
+                    if (direct) theme = direct;
+                  }
+                  var resolved = theme === 'light' ? 'light' : (theme === 'system' && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+                  if (resolved === 'light') {
+                    document.documentElement.classList.add('light-theme');
+                    document.documentElement.classList.remove('dark');
+                    document.documentElement.setAttribute('data-theme', 'light');
+                    document.documentElement.style.colorScheme = 'light';
+                  } else {
+                    document.documentElement.classList.remove('light-theme');
+                    document.documentElement.classList.add('dark');
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    document.documentElement.style.colorScheme = 'dark';
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col bg-[#0a0e18] text-[#f3f5f9] selection:bg-[#d81f2c]/25 selection:text-[#f47b83] antialiased">
         <div className="bgfx" aria-hidden="true">
           <svg viewBox="0 0 520 700" preserveAspectRatio="xMaxYMax meet">

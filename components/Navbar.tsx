@@ -17,7 +17,9 @@ import {
   X,
   Search,
   Settings,
-  HelpCircle
+  HelpCircle,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { UserRole, Profile } from '@/types/refinery';
 import {
@@ -46,6 +48,58 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [isHelpOpen, setIsHelpOpen] = useState<boolean>(false);
+  const [currentTheme, setCurrentTheme] = useState<'dark' | 'light' | 'system'>('dark');
+
+  const applyTheme = (theme: string) => {
+    if (typeof document === 'undefined') return;
+    let resolved: 'dark' | 'light' = 'dark';
+    if (theme === 'system') {
+      if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+        resolved = 'light';
+      } else {
+        resolved = 'dark';
+      }
+    } else if (theme === 'light') {
+      resolved = 'light';
+    } else {
+      resolved = 'dark';
+    }
+
+    if (resolved === 'light') {
+      document.documentElement.classList.add('light-theme');
+      document.documentElement.classList.remove('dark');
+      document.documentElement.setAttribute('data-theme', 'light');
+      document.documentElement.style.colorScheme = 'light';
+    } else {
+      document.documentElement.classList.remove('light-theme');
+      document.documentElement.classList.add('dark');
+      document.documentElement.setAttribute('data-theme', 'dark');
+      document.documentElement.style.colorScheme = 'dark';
+    }
+
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('refinery_theme', resolved);
+      } catch {}
+    }
+    return resolved;
+  };
+
+  const toggleTheme = () => {
+    const nextTheme = currentTheme === 'light' ? 'dark' : 'light';
+    setCurrentTheme(nextTheme);
+    applyTheme(nextTheme);
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('refinery_system_settings');
+        const parsed = stored ? JSON.parse(stored) : {};
+        parsed.theme = nextTheme;
+        localStorage.setItem('refinery_system_settings', JSON.stringify(parsed));
+        localStorage.setItem('refinery_theme', nextTheme);
+        window.dispatchEvent(new CustomEvent('refinery_settings_updated', { detail: parsed }));
+      } catch {}
+    }
+  };
 
   useEffect(() => {
     if (currentUser) {
@@ -63,17 +117,6 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
         if (stored) return JSON.parse(stored);
       } catch {}
       return { timeFormat: '24h', dateFormat: 'DD/MM/YYYY', theme: 'dark', language: 'en' };
-    };
-
-    const applyTheme = (theme: string) => {
-      if (typeof document === 'undefined') return;
-      if (theme === 'light') {
-        document.documentElement.classList.add('light-theme');
-        document.documentElement.classList.remove('dark');
-      } else {
-        document.documentElement.classList.remove('light-theme');
-        document.documentElement.classList.add('dark');
-      }
     };
 
     const updateClock = () => {
@@ -135,12 +178,19 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
       }
     };
 
-    applyTheme(getSystemSettings().theme);
+    const initialSettings = getSystemSettings();
+    const initialTheme = initialSettings.theme || 'dark';
+    setCurrentTheme(initialTheme);
+    applyTheme(initialTheme);
     updateClock();
     const timer = setInterval(updateClock, 1000);
 
-    const handleSettingsUpdate = () => {
-      applyTheme(getSystemSettings().theme);
+    const handleSettingsUpdate = (e?: any) => {
+      const settings = e?.detail || getSystemSettings();
+      if (settings?.theme) {
+        setCurrentTheme(settings.theme);
+        applyTheme(settings.theme);
+      }
       updateClock();
     };
     window.addEventListener('refinery_settings_updated', handleSettingsUpdate);
@@ -382,6 +432,26 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
             {formattedDateTime || '08/12/2024 14:25:00'}
           </span>
 
+          {/* Quick Theme Toggle Button (Dark / Light) */}
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[var(--line)] bg-[var(--surface)] hover:bg-[var(--raised)] text-[var(--text)] transition-all cursor-pointer shadow-xs active:scale-95 text-xs font-mono select-none"
+            title={currentTheme === 'light' ? 'Switch to Dark Industrial Mode' : 'Switch to Daylight SCADA Mode'}
+          >
+            {currentTheme === 'light' ? (
+              <>
+                <Sun className="h-4 w-4 text-amber-500 animate-pulse" />
+                <span className="font-semibold text-slate-800 hidden sm:inline">Light</span>
+              </>
+            ) : (
+              <>
+                <Moon className="h-4 w-4 text-[#009FE3]" />
+                <span className="font-semibold text-slate-200 hidden sm:inline">Dark</span>
+              </>
+            )}
+          </button>
+
           {/* User Profile Chip */}
           <div 
             role="button"
@@ -477,6 +547,21 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
               <Clock className="h-3 w-3 text-slate-400" />
               <span className="text-[11px] font-medium font-mono">{formattedDateTime}</span>
             </div>
+          </div>
+
+          {/* Quick Theme Toggle Button on Mobile */}
+          <div className="flex items-center justify-between p-2 rounded-md bg-[#0A1018] border border-[#1F2E43]">
+            <span className="text-xs text-slate-300 font-mono flex items-center gap-1.5">
+              {currentTheme === 'light' ? <Sun className="h-3.5 w-3.5 text-amber-500" /> : <Moon className="h-3.5 w-3.5 text-[#009FE3]" />}
+              <span>Mode Tema</span>
+            </span>
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="px-2.5 py-1 rounded bg-[#172235] hover:bg-[#1E2D42] text-xs font-mono text-slate-200 border border-[#2A3E5B] flex items-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <span>{currentTheme === 'light' ? 'Light (Daylight)' : 'Dark (Industri)'}</span>
+            </button>
           </div>
 
           {/* Mobile Navigation Tabs List (Button #4) */}

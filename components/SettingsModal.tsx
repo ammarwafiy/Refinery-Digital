@@ -690,12 +690,36 @@ export default function SettingsModal({
   // Apply theme to document element immediately
   const applyTheme = (theme: 'dark' | 'light' | 'system') => {
     if (typeof document === 'undefined') return;
-    if (theme === 'light') {
+
+    let resolved: 'dark' | 'light' = 'dark';
+    if (theme === 'system') {
+      if (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+        resolved = 'light';
+      } else {
+        resolved = 'dark';
+      }
+    } else if (theme === 'light') {
+      resolved = 'light';
+    } else {
+      resolved = 'dark';
+    }
+
+    if (resolved === 'light') {
       document.documentElement.classList.add('light-theme');
       document.documentElement.classList.remove('dark');
+      document.documentElement.setAttribute('data-theme', 'light');
+      document.documentElement.style.colorScheme = 'light';
     } else {
       document.documentElement.classList.remove('light-theme');
       document.documentElement.classList.add('dark');
+      document.documentElement.setAttribute('data-theme', 'dark');
+      document.documentElement.style.colorScheme = 'dark';
+    }
+
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('refinery_theme', resolved);
+      } catch {}
     }
   };
 
@@ -708,7 +732,9 @@ export default function SettingsModal({
       } catch {}
     }
     applyTheme(newSettings.theme);
-    showToast(lang === 'ms' ? 'Pilihan berjaya disimpan dan dikemas kini.' : 'Preferences updated and saved to local plant cache.');
+    showToast(lang === 'ms' 
+      ? `Tema ${newSettings.theme === 'dark' ? 'Gelap Industri' : newSettings.theme === 'light' ? 'Kontras Siang' : 'Lalai Sistem'} diaktifkan.` 
+      : `Theme updated to ${newSettings.theme === 'dark' ? 'Dark Industrial' : newSettings.theme === 'light' ? 'High Contrast Daylight' : 'System Default'}.`);
   };
 
   // Full Profile Update: Local state + Supabase Sync (Name + Avatar)
@@ -1450,22 +1476,27 @@ export default function SettingsModal({
                       { id: 'system', label: t.themeSys, desc: t.themeSysDesc, icon: Laptop },
                     ].map((th) => {
                       const isSelected = settings.theme === th.id;
+                      const Icon = th.icon;
                       return (
-                        <div
+                        <button
                           key={th.id}
+                          type="button"
                           onClick={() => handleSaveSettings({ ...settings, theme: th.id as any })}
-                          className={`p-3.5 rounded-xl border text-left cursor-pointer transition-all ${
+                          className={`p-3.5 rounded-xl border text-left cursor-pointer transition-all flex flex-col justify-between ${
                             isSelected
-                              ? 'bg-[#101927] border-[#009FE3] shadow-md shadow-[#009FE3]/20 ring-1 ring-[#009FE3]'
-                              : 'bg-[#070B12] border-[#1F2E43] hover:border-slate-500'
+                              ? 'bg-[#101927] border-[#009FE3] shadow-md shadow-[#009FE3]/20 ring-2 ring-[#009FE3]'
+                              : 'bg-[#070B12] border-[#1F2E43] hover:border-slate-500 hover:bg-[#121B29]'
                           }`}
                         >
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-white">{th.label}</span>
-                            {isSelected && <CheckCircle2 className="h-4 w-4 text-[#009FE3]" />}
+                          <div className="flex items-center justify-between w-full mb-2">
+                            <div className="flex items-center gap-2">
+                              <Icon className={`h-4 w-4 ${isSelected ? 'text-[#009FE3]' : 'text-slate-400'}`} />
+                              <span className="text-xs font-bold text-white font-mono">{th.label}</span>
+                            </div>
+                            {isSelected && <CheckCircle2 className="h-4 w-4 text-[#009FE3] shrink-0" />}
                           </div>
-                          <p className="text-[11px] text-slate-400 mt-1">{th.desc}</p>
-                        </div>
+                          <p className="text-[11px] text-slate-400 leading-tight">{th.desc}</p>
+                        </button>
                       );
                     })}
                   </div>
