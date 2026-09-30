@@ -561,17 +561,43 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
     }
   };
 
-  // Filtered reports list
-  const filteredReports = reports.filter(r => {
-    const matchSearch = r.lot_no.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                        (r.product_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                        r.report_no.toLowerCase().includes(searchQuery.toLowerCase());
-    if (!matchSearch) return false;
-    if (filterStatus === 'awaiting') return r.status === 'awaiting_results';
-    if (filterStatus === 'accepted') return r.decision?.decision === 'accept';
-    if (filterStatus === 'rejected') return r.decision?.decision === 'reject';
-    return true;
-  });
+  // Pre-calculate status counts for filter chips
+  const countAccepted = useMemo(() => {
+    return reports.filter(r => r.decision?.decision === 'accept' || r.decision?.decision === 'accept_concession').length;
+  }, [reports]);
+
+  const countRejected = useMemo(() => {
+    return reports.filter(r => r.decision?.decision === 'reject').length;
+  }, [reports]);
+
+  const countAwaiting = useMemo(() => {
+    return reports.filter(r => {
+      const dec = r.decision?.decision;
+      return dec !== 'accept' && dec !== 'accept_concession' && dec !== 'reject';
+    }).length;
+  }, [reports]);
+
+  // Filtered reports list strictly aligned with QC decision status
+  const filteredReports = useMemo(() => {
+    return reports.filter(r => {
+      const q = searchQuery.trim().toLowerCase();
+      const matchSearch = !q ||
+                          (r.lot_no || '').toLowerCase().includes(q) ||
+                          (r.product_name || '').toLowerCase().includes(q) ||
+                          (r.report_no || '').toLowerCase().includes(q);
+      if (!matchSearch) return false;
+
+      const dec = r.decision?.decision;
+      const isAccepted = dec === 'accept' || dec === 'accept_concession';
+      const isRejected = dec === 'reject';
+      const isAwaiting = !isAccepted && !isRejected;
+
+      if (filterStatus === 'awaiting') return isAwaiting;
+      if (filterStatus === 'accepted') return isAccepted;
+      if (filterStatus === 'rejected') return isRejected;
+      return true;
+    });
+  }, [reports, searchQuery, filterStatus]);
 
   return (
     <div>
@@ -931,17 +957,38 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
               />
               <div className="chips">
                 {[
-                  { id: 'all', label: 'All' },
-                  { id: 'awaiting', label: 'Awaiting' },
-                  { id: 'accepted', label: 'Accepted' },
-                  { id: 'rejected', label: 'Rejected' },
+                  { id: 'all', label: `All (${reports.length})` },
+                  { id: 'awaiting', label: `Awaiting (${countAwaiting})` },
+                  { id: 'accepted', label: `Accepted (${countAccepted})` },
+                  { id: 'rejected', label: `Rejected (${countRejected})` },
                 ].map(f => (
                   <button
                     key={f.id}
                     className="seg"
                     aria-pressed={filterStatus === f.id}
                     type="button"
-                    onClick={() => setFilterStatus(f.id)}
+                    onClick={() => {
+                      setFilterStatus(f.id);
+                      const q = searchQuery.trim().toLowerCase();
+                      const matching = reports.filter(r => {
+                        const matchSearch = !q ||
+                                            (r.lot_no || '').toLowerCase().includes(q) ||
+                                            (r.product_name || '').toLowerCase().includes(q) ||
+                                            (r.report_no || '').toLowerCase().includes(q);
+                        if (!matchSearch) return false;
+                        const dec = r.decision?.decision;
+                        const isAcc = dec === 'accept' || dec === 'accept_concession';
+                        const isRej = dec === 'reject';
+                        const isAw = !isAcc && !isRej;
+                        if (f.id === 'awaiting') return isAw;
+                        if (f.id === 'accepted') return isAcc;
+                        if (f.id === 'rejected') return isRej;
+                        return true;
+                      });
+                      if (matching.length > 0 && !matching.some(m => m.id === selectedReportId)) {
+                        setSelectedReportId(matching[0].id);
+                      }
+                    }}
                   >
                     {f.label}
                   </button>
@@ -950,35 +997,41 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
             </div>
 
             <div>
-              {filteredReports.map(rep => {
-                const isSelected = selectedReport?.id === rep.id;
-                const isRejected = rep.decision?.decision === 'reject';
-                const isAccepted = rep.decision?.decision === 'accept';
-                const isConcession = rep.decision?.decision === 'accept_concession';
+              {filteredReports.length === 0 ? (
+                <div style={{ padding: '36px 16px', textAlign: 'center', color: 'var(--muted)', fontSize: '13px' }}>
+                  No sample lots found for {filterStatus !== 'all' ? `status "${filterStatus}"` : 'your search'}.
+                </div>
+              ) : (
+                filteredReports.map(rep => {
+                  const isSelected = selectedReport?.id === rep.id;
+                  const isRejected = rep.decision?.decision === 'reject';
+                  const isAccepted = rep.decision?.decision === 'accept';
+                  const isConcession = rep.decision?.decision === 'accept_concession';
 
-                return (
-                  <button
-                    key={rep.id}
-                    className="lot"
-                    aria-pressed={isSelected}
-                    onClick={() => {
-                      setSelectedReportId(rep.id);
-                      setActiveSubTab('detail');
-                    }}
-                  >
-                    <div>
-                      <b style={{ color: 'var(--text)' }}>{rep.lot_no}</b>
-                      <span className={`bd ${isAccepted ? 'g' : isRejected ? 'r' : isConcession ? 'a' : 'a'}`}>
-                        {isAccepted ? 'Accepted' : isRejected ? 'Rejected' : isConcession ? 'Concession' : 'Awaiting'}
-                      </span>
-                    </div>
-                    <div>
-                      <span>{rep.product_name}</span>
-                      <span>{rep.sample_date} {rep.time_check}</span>
-                    </div>
-                  </button>
-                );
-              })}
+                  return (
+                    <button
+                      key={rep.id}
+                      className="lot"
+                      aria-pressed={isSelected}
+                      onClick={() => {
+                        setSelectedReportId(rep.id);
+                        setActiveSubTab('detail');
+                      }}
+                    >
+                      <div>
+                        <b style={{ color: 'var(--text)' }}>{rep.lot_no}</b>
+                        <span className={`bd ${isAccepted ? 'g' : isRejected ? 'r' : isConcession ? 'a' : 'a'}`}>
+                          {isAccepted ? 'Accepted' : isRejected ? 'Rejected' : isConcession ? 'Concession' : 'Awaiting'}
+                        </span>
+                      </div>
+                      <div>
+                        <span>{rep.product_name}</span>
+                        <span>{rep.sample_date} {rep.time_check}</span>
+                      </div>
+                    </button>
+                  );
+                })
+              )}
             </div>
           </section>
 

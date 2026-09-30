@@ -2173,26 +2173,7 @@ export default function SettingsModal({
                   </div>
                 </div>
 
-                {/* Manual Backup Trigger Button */}
-                <div className="p-4 rounded-xl bg-[#070B12] border border-[#1F2E43] flex items-center justify-between">
-                  <div>
-                    <h4 className="text-xs font-bold text-white">
-                      {t.backupNow}
-                    </h4>
-                    <p className="text-[11px] text-slate-400 mt-0.5">
-                      Create an immediate, offline-ready JSON archive of all active plant sheets, QC records, and profiles.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleTriggerManualBackup}
-                    disabled={isBackingUp}
-                    className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#101927] hover:bg-[#1E2D42] text-[#009FE3] border border-[#009FE3]/50 text-xs font-medium shadow-md transition-all cursor-pointer"
-                  >
-                    {isBackingUp ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Database className="h-3.5 w-3.5" />}
-                    <span>{isBackingUp ? 'Archiving...' : t.backupNow}</span>
-                  </button>
-                </div>
+
 
                 {/* Audit Log Download */}
                 <div className="p-4 rounded-xl bg-[#101927] border border-[#1F2E43] flex items-center justify-between">
