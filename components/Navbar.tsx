@@ -145,9 +145,18 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
     };
     window.addEventListener('refinery_settings_updated', handleSettingsUpdate);
 
+    const handleProfileUpdate = (e: any) => {
+      if (e.detail) {
+        setProfile(e.detail);
+        if (onRoleChange) onRoleChange(e.detail);
+      }
+    };
+    window.addEventListener('refinery_profile_updated', handleProfileUpdate as EventListener);
+
     return () => {
       clearInterval(timer);
       window.removeEventListener('refinery_settings_updated', handleSettingsUpdate);
+      window.removeEventListener('refinery_profile_updated', handleProfileUpdate as EventListener);
     };
   }, [currentUser]);
 

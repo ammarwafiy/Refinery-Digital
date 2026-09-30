@@ -13,6 +13,7 @@ interface SessionData {
   ip: string;
   user: string;
   role: string;
+  avatar_url?: string;
   loginTime: string;
   lastSeen: number;
 }
@@ -125,7 +126,7 @@ export async function POST(req: Request) {
   try {
     const ip = getClientIp(req);
     const body = await req.json();
-    const { action, deviceId, stationName, deviceType, os, browser, user, role, actor, terminatedDevices } = body;
+    const { action, deviceId, stationName, deviceType, os, browser, user, role, avatar_url, actor, terminatedDevices } = body;
 
     cleanOldSessions();
 
@@ -184,6 +185,7 @@ export async function POST(req: Request) {
         ip: ip !== '127.0.0.1' ? ip : (existing?.ip || '192.168.1.45'),
         user: user || existing?.user || 'Operator',
         role: role || existing?.role || 'operator',
+        avatar_url: avatar_url || existing?.avatar_url,
         loginTime: existing?.loginTime || new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
         lastSeen: now,
       };

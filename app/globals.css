@@ -950,6 +950,7 @@ html.light-theme ::-webkit-scrollbar-thumb:hover {
   font-weight: 600;
   color: var(--text);
   flex-shrink: 0;
+  overflow: hidden;
 }
 .user-redesign b {
   display: block;

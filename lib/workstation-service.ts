@@ -23,6 +23,7 @@ export interface WorkstationSession {
   ip: string;
   user: string;
   role: string;
+  avatar_url?: string;
   loginTime: string;
   lastSeen: number;
   isCurrent?: boolean;
@@ -222,7 +223,7 @@ function mergeServerSessions(serverList: WorkstationSession[]) {
 /**
  * Initialize current workstation session and subscribe to Supabase Realtime channel.
  */
-export async function initWorkstationTracking(currentUser?: { full_name?: string; role?: string; employee_no?: string }) {
+export async function initWorkstationTracking(currentUser?: { full_name?: string; role?: string; employee_no?: string; avatar_url?: string }) {
   if (typeof window === 'undefined') return;
 
   const deviceId = getOrCreateDeviceId();
@@ -242,6 +243,7 @@ export async function initWorkstationTracking(currentUser?: { full_name?: string
     ip,
     user: currentUser?.full_name || 'Operator',
     role: currentUser?.role || 'operator',
+    avatar_url: currentUser?.avatar_url,
     loginTime: new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
     lastSeen: Date.now(),
     isCurrent: true,
@@ -336,6 +338,7 @@ export async function initWorkstationTracking(currentUser?: { full_name?: string
         ip,
         user: session.user,
         role: session.role,
+        avatar_url: session.avatar_url,
         actor: currentUser?.employee_no || session.user,
       }),
     })
@@ -381,6 +384,7 @@ export async function initWorkstationTracking(currentUser?: { full_name?: string
           ip: currentSession.ip,
           user: currentSession.user,
           role: currentSession.role,
+          avatar_url: currentSession.avatar_url,
         }),
       })
         .then(res => res.json())

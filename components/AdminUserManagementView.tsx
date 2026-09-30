@@ -833,8 +833,21 @@ export default function AdminUserManagementView() {
                           <tr key={p.employee_no || p.id}>
                             <td><b>{p.employee_no}</b></td>
                             <td>
-                              {p.full_name}
-                              {isCurrent && <span className="bd" style={{ marginLeft: '6px' }}>You</span>}
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                {p.avatar_url ? (
+                                  <img
+                                    src={p.avatar_url}
+                                    alt={p.full_name}
+                                    style={{ width: '26px', height: '26px', borderRadius: '50%', objectFit: 'cover' }}
+                                  />
+                                ) : (
+                                  <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: 'var(--raised)', display: 'grid', placeItems: 'center', fontSize: '10px', fontWeight: 'bold' }}>
+                                    {(p.full_name || 'U').charAt(0).toUpperCase()}
+                                  </div>
+                                )}
+                                <span>{p.full_name}</span>
+                                {isCurrent && <span className="bd" style={{ marginLeft: '4px' }}>You</span>}
+                              </div>
                             </td>
                             <td><span className="bd">{p.role}</span></td>
                             <td>

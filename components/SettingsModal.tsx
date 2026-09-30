@@ -136,7 +136,7 @@ const DICT = {
     avatarUploadBtn: 'Upload Photo',
     avatarChangeBtn: 'Change Photo',
     avatarRemoveBtn: 'Remove',
-    avatarUploadNote: 'JPG, PNG or WebP under 2MB. Auto-optimized & synced directly to Supabase profile.',
+    avatarUploadNote: 'JPG, PNG, WebP or animated GIF under 3.5MB. Auto-synced directly to Supabase profile.',
 
     // Preferences
     prefHeading: '2. System Display & Workstation Preferences',
@@ -243,7 +243,7 @@ const DICT = {
     avatarUploadBtn: 'Muat Naik Foto',
     avatarChangeBtn: 'Tukar Foto',
     avatarRemoveBtn: 'Padam Foto',
-    avatarUploadNote: 'JPG, PNG atau WebP bawah 2MB. Dioptimum & diselaras terus ke profil Supabase.',
+    avatarUploadNote: 'JPG, PNG, WebP atau animasi GIF bawah 3.5MB. Diselaras terus ke profil Supabase.',
 
     // Preferences
     prefHeading: '2. Pilihan Paparan & Stesen Kerja',
@@ -431,22 +431,25 @@ export default function SettingsModal({
     }
   }, [currentUser]);
 
-  // Optimize and process uploaded avatar photo
+  // Optimize and process uploaded avatar photo (supports JPG, PNG, WebP, and animated GIF)
   const handleAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) {
+    const isGif = file.type === 'image/gif' || file.name.toLowerCase().endsWith('.gif');
+    const maxSizeBytes = isGif ? 3.5 * 1024 * 1024 : 2.5 * 1024 * 1024;
+
+    if (file.size > maxSizeBytes) {
       showToast(lang === 'ms' 
-        ? 'Saiz imej melebihi 2MB. Sila pilih fail imej yang lebih kecil.' 
-        : 'Image size exceeds 2MB limit. Please choose a smaller file.');
+        ? `Saiz ${isGif ? 'GIF' : 'imej'} melebihi had (${isGif ? '3.5MB' : '2.5MB'}). Sila pilih fail yang lebih kecil.` 
+        : `File size exceeds limit (${isGif ? '3.5MB' : '2.5MB'}). Please choose a smaller file.`);
       return;
     }
 
-    if (!file.type.startsWith('image/')) {
+    if (!file.type.startsWith('image/') && !isGif) {
       showToast(lang === 'ms' 
-        ? 'Fail mestilah format imej (JPG, PNG, WebP).' 
-        : 'File must be an image format (JPG, PNG, WebP).');
+        ? 'Fail mestilah format imej (JPG, PNG, WebP, GIF).' 
+        : 'File must be an image format (JPG, PNG, WebP, GIF).');
       return;
     }
 
@@ -454,53 +457,65 @@ export default function SettingsModal({
     const reader = new FileReader();
     reader.onload = (event) => {
       const dataUrl = event.target?.result as string;
-      if (dataUrl) {
-        // Compress & scale to 256x256 via HTML5 Canvas for optimal DB footprint & fast load
-        const img = new Image();
-        img.onload = () => {
-          try {
-            const canvas = document.createElement('canvas');
-            const maxDim = 256;
-            let width = img.width;
-            let height = img.height;
-            if (width > height) {
-              if (width > maxDim) {
-                height = Math.round((height * maxDim) / width);
-                width = maxDim;
-              }
-            } else {
-              if (height > maxDim) {
-                width = Math.round((width * maxDim) / height);
-                height = maxDim;
-              }
-            }
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            if (ctx) {
-              ctx.drawImage(img, 0, 0, width, height);
-              const compressed = canvas.toDataURL('image/jpeg', 0.85);
-              setAvatarPreview(compressed);
-            } else {
-              setAvatarPreview(dataUrl);
-            }
-          } catch {
-            setAvatarPreview(dataUrl);
-          } finally {
-            setIsUploadingAvatar(false);
-            showToast(lang === 'ms'
-              ? 'Foto avatar dipilih! Klik "Simpan Perubahan Profil" untuk selaras ke Supabase.'
-              : 'Avatar photo selected! Click "Save Profile Changes" to sync with Supabase.');
-          }
-        };
-        img.onerror = () => {
-          setAvatarPreview(dataUrl);
-          setIsUploadingAvatar(false);
-        };
-        img.src = dataUrl;
-      } else {
+      if (!dataUrl) {
         setIsUploadingAvatar(false);
+        return;
       }
+
+      // CRITICAL: Animated GIFs MUST NOT be drawn to Canvas!
+      // HTML5 Canvas drawImage() permanently flattens and strips all animated frames.
+      if (isGif) {
+        setAvatarPreview(dataUrl);
+        setIsUploadingAvatar(false);
+        showToast(lang === 'ms'
+          ? 'Animasi GIF avatar dipilih! Sila klik "Simpan Perubahan Profil" untuk selaras ke Supabase.'
+          : 'Animated GIF avatar selected! Click "Save Profile Changes" to sync with Supabase.');
+        return;
+      }
+
+      // Compress & scale static images to 256x256 via HTML5 Canvas for optimal DB footprint & fast load
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          const maxDim = 256;
+          let width = img.width;
+          let height = img.height;
+          if (width > height) {
+            if (width > maxDim) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            }
+          } else {
+            if (height > maxDim) {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            const compressed = canvas.toDataURL('image/jpeg', 0.85);
+            setAvatarPreview(compressed);
+          } else {
+            setAvatarPreview(dataUrl);
+          }
+        } catch {
+          setAvatarPreview(dataUrl);
+        } finally {
+          setIsUploadingAvatar(false);
+          showToast(lang === 'ms'
+            ? 'Foto avatar dipilih! Klik "Simpan Perubahan Profil" untuk selaras ke Supabase.'
+            : 'Avatar photo selected! Click "Save Profile Changes" to sync with Supabase.');
+        }
+      };
+      img.onerror = () => {
+        setAvatarPreview(dataUrl);
+        setIsUploadingAvatar(false);
+      };
+      img.src = dataUrl;
     };
     reader.onerror = () => {
       setIsUploadingAvatar(false);
@@ -658,7 +673,14 @@ export default function SettingsModal({
           all[idx].avatar_url = avatarPreview || undefined;
           setStored(STORAGE_KEYS.PROFILES, all);
         }
+
+        // Dispatch live event across entire application
+        window.dispatchEvent(new CustomEvent('refinery_profile_updated', { detail: updated }));
+        window.dispatchEvent(new CustomEvent('refinery_profiles_synced', { detail: updated }));
       }
+
+      // Re-announce presence with updated avatar across active workstations
+      initWorkstationTracking(updated);
 
       // 4. Proactive sync to ensure cache matches
       syncProfilesFromSupabase().catch(() => {});
@@ -1043,7 +1065,7 @@ export default function SettingsModal({
                   type="file"
                   ref={avatarFileInputRef}
                   onChange={handleAvatarFileChange}
-                  accept="image/jpeg,image/png,image/webp,image/jpg"
+                  accept="image/jpeg,image/png,image/webp,image/gif,image/*"
                   className="hidden"
                 />
 
@@ -1052,11 +1074,18 @@ export default function SettingsModal({
                   <div className="relative group shrink-0">
                     <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-[#009FE3] to-blue-700 flex items-center justify-center text-white font-bold text-2xl shadow-lg font-mono border-2 border-slate-600/40 overflow-hidden relative">
                       {avatarPreview ? (
-                        <img
-                          src={avatarPreview}
-                          alt={currentUser?.full_name || 'Staff Avatar'}
-                          className="h-full w-full object-cover"
-                        />
+                        <>
+                          <img
+                            src={avatarPreview}
+                            alt={currentUser?.full_name || 'Staff Avatar'}
+                            className="h-full w-full object-cover"
+                          />
+                          {(avatarPreview.startsWith('data:image/gif') || avatarPreview.toLowerCase().includes('.gif')) && (
+                            <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded text-[8px] font-mono font-bold bg-[#009FE3] text-white shadow-md uppercase tracking-wider animate-pulse z-10 pointer-events-none">
+                              GIF
+                            </span>
+                          )}
+                        </>
                       ) : (
                         modalInitials
                       )}
@@ -1752,13 +1781,34 @@ export default function SettingsModal({
                           }`}
                         >
                           <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-lg ${isThisDevice ? 'bg-[#009FE3]/15 text-[#009FE3]' : 'bg-slate-800 text-slate-400'}`}>
-                              {session.deviceType === 'mobile' ? (
-                                <Smartphone className="h-5 w-5" />
-                              ) : session.deviceType === 'tablet' ? (
-                                <Tablet className="h-5 w-5" />
+                            <div className="relative shrink-0">
+                              {session.avatar_url ? (
+                                <img
+                                  src={session.avatar_url}
+                                  alt={session.user}
+                                  className="h-9 w-9 rounded-lg object-cover border border-[#1F2E43]"
+                                />
                               ) : (
-                                <Laptop className="h-5 w-5" />
+                                <div className={`p-2 rounded-lg ${isThisDevice ? 'bg-[#009FE3]/15 text-[#009FE3]' : 'bg-slate-800 text-slate-400'}`}>
+                                  {session.deviceType === 'mobile' ? (
+                                    <Smartphone className="h-5 w-5" />
+                                  ) : session.deviceType === 'tablet' ? (
+                                    <Tablet className="h-5 w-5" />
+                                  ) : (
+                                    <Laptop className="h-5 w-5" />
+                                  )}
+                                </div>
+                              )}
+                              {session.avatar_url && (
+                                <div className="absolute -bottom-1 -right-1 p-0.5 rounded bg-[#101927] border border-slate-700 text-[#009FE3]">
+                                  {session.deviceType === 'mobile' ? (
+                                    <Smartphone className="h-2.5 w-2.5" />
+                                  ) : session.deviceType === 'tablet' ? (
+                                    <Tablet className="h-2.5 w-2.5" />
+                                  ) : (
+                                    <Laptop className="h-2.5 w-2.5" />
+                                  )}
+                                </div>
                               )}
                             </div>
                             <div>
