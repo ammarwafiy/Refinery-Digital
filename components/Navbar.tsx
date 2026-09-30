@@ -213,10 +213,11 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
   const navItems: { id: string; label: string; shortLabel: string; icon: any; badge?: string }[] = [
     { id: 'process', label: 'Process Control Log', shortLabel: 'Process Log', icon: Layers },
     { id: 'qc', label: 'QC Management', shortLabel: 'QC Lab', icon: FlaskConical },
-    { id: 'supervisor', label: 'Abnormality Log', shortLabel: 'Live Board', icon: Activity },
-    { id: 'report', label: 'Reports', shortLabel: 'Report', icon: FileSpreadsheet },
-    { id: 'export', label: 'Certificates', shortLabel: 'Forms & Audit', icon: FileText },
     { id: 'analytics', label: 'Master Data', shortLabel: 'Trends', icon: BarChart3 },
+    { id: 'supervisor', label: 'Abnormality Log', shortLabel: 'Live Board', icon: Activity },
+    { id: 'export', label: 'Certificates', shortLabel: 'Forms & Audit', icon: FileText },
+    { id: 'report', label: 'Reports', shortLabel: 'Report', icon: FileSpreadsheet },
+    { id: 'admin', label: 'User Management', shortLabel: 'Users', icon: Users },
   ];
 
   // RBAC Filter: Only show allowed navigation tabs for current role
@@ -360,18 +361,7 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
               );
             })}
 
-            {/* Admin Management Tab Button - Admin Only */}
-            {role === 'admin' && (
-              <button
-                type="button"
-                onClick={() => setActiveTab('admin')}
-                aria-current={activeTab === 'admin' ? 'page' : undefined}
-                className={`nav-link-redesign ${activeTab === 'admin' ? 'active' : ''}`}
-                title="Plant Administration & User Management Panel"
-              >
-                <span className="truncate">User Management</span>
-              </button>
-            )}
+
 
             <hr className="border-0 border-t border-[var(--line)] my-3" />
 
@@ -600,25 +590,7 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
             })}
           </div>
 
-          {/* Admin Management Button for Mobile (Button #5) */}
-          {role === 'admin' && (
-            <div className="pt-2 border-t border-[#1F2E43]">
-              <button
-                onClick={() => {
-                  setActiveTab('admin');
-                  setIsMobileMenuOpen(false);
-                }}
-                className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-medium transition-colors cursor-pointer border ${
-                  activeTab === 'admin'
-                    ? 'bg-[#1D8CF8] text-white border-[#1D8CF8]'
-                    : 'text-slate-200 bg-[#172235] border-[#1F2E43] hover:bg-[#1E2D42]'
-                }`}
-              >
-                <Users className="h-4 w-4 text-[#009FE3]" />
-                <span>Admin & Users Panel</span>
-              </button>
-            </div>
-          )}
+
 
           {/* System Settings for Mobile */}
           <div className="pt-2 border-t border-[#1F2E43]">

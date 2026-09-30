@@ -713,6 +713,8 @@ export default function AdminUserManagementView() {
                     <label htmlFor="ro">Assigned role</label>
                     <select
                       id="ro"
+                      className="inp w"
+                      style={{ height: '42px' }}
                       disabled={!isAdmin}
                       value={selectedRole}
                       onChange={(e) => handleRoleSelectChange(e.target.value as UserRole)}

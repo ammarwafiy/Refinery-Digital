@@ -525,36 +525,97 @@ html.light-theme [class*="border-[#263A52]"] {
 }
 
 /* 9. Input, Select, Textarea & Form Controls */
+select {
+  color-scheme: dark;
+}
+:root,
+:root[data-theme="dark"],
+html.dark {
+  color-scheme: dark;
+}
+:root[data-theme="dark"] select,
+:root[data-theme="dark"] .inp,
+:root[data-theme="dark"] input,
+:root[data-theme="dark"] textarea,
+html.dark select,
+html.dark .inp,
+html.dark input,
+html.dark textarea {
+  color-scheme: dark !important;
+}
+
+/* Dropdown option background & text colors */
+select option,
+option {
+  background-color: #0b1320 !important;
+  color: #f1f5f9 !important;
+}
+option:checked {
+  background-color: #0284c7 !important;
+  color: #ffffff !important;
+}
+option:hover {
+  background-color: #1e293b !important;
+  color: #ffffff !important;
+}
+
+html.light-theme,
+:root[data-theme="light"] {
+  color-scheme: light;
+}
 html.light-theme input:not([type="checkbox"]):not([type="radio"]),
 html.light-theme select,
 html.light-theme textarea,
-html.light-theme .industrial-input {
+html.light-theme .industrial-input,
+:root[data-theme="light"] input:not([type="checkbox"]):not([type="radio"]),
+:root[data-theme="light"] select,
+:root[data-theme="light"] textarea,
+:root[data-theme="light"] .industrial-input {
   background-color: #FFFFFF !important;
   color: #0F172A !important;
   border-color: #CBD5E1 !important;
+  color-scheme: light !important;
 }
 html.light-theme input:focus,
 html.light-theme select:focus,
 html.light-theme textarea:focus,
-html.light-theme .industrial-input:focus {
+html.light-theme .industrial-input:focus,
+:root[data-theme="light"] input:focus,
+:root[data-theme="light"] select:focus,
+:root[data-theme="light"] textarea:focus,
+:root[data-theme="light"] .industrial-input:focus {
   border-color: #009FE3 !important;
   box-shadow: 0 0 0 2px rgba(0, 159, 227, 0.15) !important;
 }
 html.light-theme input:disabled,
 html.light-theme select:disabled,
 html.light-theme textarea:disabled,
-html.light-theme .industrial-input:disabled {
+html.light-theme .industrial-input:disabled,
+:root[data-theme="light"] input:disabled,
+:root[data-theme="light"] select:disabled,
+:root[data-theme="light"] textarea:disabled,
+:root[data-theme="light"] .industrial-input:disabled {
   background-color: #F8FAFC !important;
   color: #94A3B8 !important;
   border-color: #E2E8F0 !important;
 }
 html.light-theme input::placeholder,
-html.light-theme textarea::placeholder {
+html.light-theme textarea::placeholder,
+:root[data-theme="light"] input::placeholder,
+:root[data-theme="light"] textarea::placeholder {
   color: #94A3B8 !important;
 }
-html.light-theme option {
+html.light-theme option,
+html.light-theme select option,
+:root[data-theme="light"] option,
+:root[data-theme="light"] select option {
   background-color: #FFFFFF !important;
   color: #0F172A !important;
+}
+html.light-theme option:checked,
+:root[data-theme="light"] option:checked {
+  background-color: #0284c7 !important;
+  color: #ffffff !important;
 }
 
 /* 10. General Text Contrast Mappings */
@@ -1342,7 +1403,7 @@ html.light-theme ::-webkit-scrollbar-thumb:hover {
   border: 1px solid var(--line);
   background-color: var(--bg);
   color: var(--text);
-  color-scheme: dark light;
+  color-scheme: dark !important;
   font: inherit;
   font-weight: 400;
   min-width: 0;
@@ -1351,6 +1412,13 @@ html.light-theme ::-webkit-scrollbar-thumb:hover {
 .inp:focus {
   outline: 2px solid var(--red);
   outline-offset: 2px;
+}
+html.light-theme .inp,
+:root[data-theme="light"] .inp {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+  border-color: #CBD5E1 !important;
+  color-scheme: light !important;
 }
 .w {
   width: 100%;
@@ -1409,7 +1477,8 @@ html.light-theme ::-webkit-scrollbar-thumb:hover {
   margin-bottom: 6px;
   color: var(--text);
 }
-.fld input {
+.fld input,
+.fld select {
   width: 100%;
   height: 42px;
   padding: 0 12px;
@@ -1418,6 +1487,25 @@ html.light-theme ::-webkit-scrollbar-thumb:hover {
   background: var(--bg);
   color: var(--text);
   font-size: 14px;
+  color-scheme: dark !important;
+  font-family: inherit;
+}
+.fld select {
+  cursor: pointer;
+}
+.fld input:focus,
+.fld select:focus {
+  outline: 2px solid var(--red);
+  outline-offset: 2px;
+}
+html.light-theme .fld input,
+html.light-theme .fld select,
+:root[data-theme="light"] .fld input,
+:root[data-theme="light"] .fld select {
+  background: #FFFFFF !important;
+  color: #0F172A !important;
+  border-color: #CBD5E1 !important;
+  color-scheme: light !important;
 }
 .pw {
   position: relative;
@@ -1883,7 +1971,16 @@ html.light-theme ::-webkit-scrollbar-thumb:hover {
   border: 1px solid var(--line);
   background-color: var(--bg);
   color: var(--text);
-  color-scheme: dark light;
+  color-scheme: dark !important;
+}
+html.light-theme .cfg input,
+html.light-theme .cfg select,
+:root[data-theme="light"] .cfg input,
+:root[data-theme="light"] .cfg select {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+  border-color: #CBD5E1 !important;
+  color-scheme: light !important;
 }
 .dr {
   display: flex;
