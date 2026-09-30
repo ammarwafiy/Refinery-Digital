@@ -364,6 +364,27 @@ body {
     overflow: hidden !important;
     text-overflow: ellipsis !important;
   }
+  .rf-fr-004-table td.col-product,
+  .rf-fr-004-table th.col-product {
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    font-size: 6.2pt !important;
+    line-height: 1.05 !important;
+    padding: 1px 2px !important;
+    font-weight: 600 !important;
+    text-align: left !important;
+  }
+  .rf-fr-004-table td.col-remarks {
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    font-size: 5.8pt !important;
+    line-height: 1.05 !important;
+    text-align: left !important;
+  }
   .rf-fr-004-table thead tr th {
     background: #f1f5f9 !important;
     font-weight: 700 !important;

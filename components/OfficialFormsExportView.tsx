@@ -299,9 +299,9 @@ export default function OfficialFormsExportView() {
       document.head.appendChild(styleEl);
     }
     if (activeFormType === 'rf_fr_004') {
-      styleEl.textContent = `@page { size: landscape; margin: 4mm 5mm; }`;
+      styleEl.textContent = `@page { size: A4 landscape; margin: 4mm 5mm; }`;
     } else {
-      styleEl.textContent = `@page { size: portrait; margin: 8mm 10mm; }`;
+      styleEl.textContent = `@page { size: A4 portrait; margin: 8mm 10mm; }`;
     }
     window.print();
   };
@@ -809,11 +809,39 @@ export default function OfficialFormsExportView() {
 
           {/* 24-Row × 21-Column Data Table */}
           <div className="overflow-x-auto">
-            <table className="rf-fr-004-table w-full text-center border-collapse border border-slate-900 text-[10px] font-mono">
+            <table 
+              className="rf-fr-004-table w-full text-center border-collapse border border-slate-900 text-[10px] font-mono"
+              style={{ tableLayout: 'fixed', width: '100%', minWidth: 'unset' }}
+            >
+              <colgroup>
+                <col style={{ width: '42px' }} /> {/* Time */}
+                <col style={{ width: '14%' }} />  {/* Type of Oil */}
+                <col style={{ width: '4.5%' }} /> {/* Feed (L) */}
+                <col style={{ width: '3.5%' }} /> {/* Time (Hr) */}
+                <col style={{ width: '3.5%' }} /> {/* Vac (Torr) */}
+                <col style={{ width: '3.5%' }} /> {/* T1 */}
+                <col style={{ width: '3.5%' }} /> {/* T2 */}
+                <col style={{ width: '3.5%' }} /> {/* T3 */}
+                <col style={{ width: '3.5%' }} /> {/* T4 */}
+                <col style={{ width: '3.5%' }} /> {/* T5 */}
+                <col style={{ width: '3.5%' }} /> {/* T6 */}
+                <col style={{ width: '3.5%' }} /> {/* T7 */}
+                <col style={{ width: '3.5%' }} /> {/* BC101 In */}
+                <col style={{ width: '3.5%' }} /> {/* BC101 Out */}
+                <col style={{ width: '3.5%' }} /> {/* Chill In */}
+                <col style={{ width: '3.5%' }} /> {/* Chill Out */}
+                <col style={{ width: '3.5%' }} /> {/* Boost */}
+                <col style={{ width: '3.5%' }} /> {/* Ejec */}
+                <col style={{ width: '3.5%' }} /> {/* Strip % */}
+                <col style={{ width: '3.8%' }} /> {/* Strip kg/h */}
+                <col style={{ width: '3.5%' }} /> {/* FP-A */}
+                <col style={{ width: '3.5%' }} /> {/* FP-B */}
+                <col style={{ width: '9.6%' }} /> {/* Remarks */}
+              </colgroup>
               <thead>
                 <tr className="bg-slate-100 font-bold border-b border-slate-900 text-slate-800">
                   <th className="border border-slate-900 p-1" rowSpan={2}>Time</th>
-                  <th className="border border-slate-900 p-1" rowSpan={2}>Type of Oil</th>
+                  <th className="border border-slate-900 p-1 col-product" rowSpan={2}>Type of Oil</th>
                   <th className="border border-slate-900 p-1" colSpan={3}>Processing</th>
                   <th className="border border-slate-900 p-1" colSpan={7}>Temperature Recorder (°C)</th>
                   <th className="border border-slate-900 p-1" colSpan={2}>BC 101 (°C)</th>
@@ -821,7 +849,7 @@ export default function OfficialFormsExportView() {
                   <th className="border border-slate-900 p-1" colSpan={2}>Steam Press (Bar)</th>
                   <th className="border border-slate-900 p-1" colSpan={2}>Stripping Steam</th>
                   <th className="border border-slate-900 p-1" colSpan={2}>Filtration (Bar)</th>
-                  <th className="border border-slate-900 p-1" rowSpan={2}>Remarks</th>
+                  <th className="border border-slate-900 p-1 col-remarks" rowSpan={2}>Remarks</th>
                 </tr>
                 <tr className="bg-slate-100 text-[9px] border-b border-slate-900">
                   <th className="border border-slate-900 p-1">Feed (L)</th>
@@ -853,7 +881,7 @@ export default function OfficialFormsExportView() {
                   return (
                     <tr key={idx} className={idx % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
                       <td className="border border-slate-900 p-1 font-bold">{label}</td>
-                      <td className="border border-slate-900 p-1 font-sans text-left max-w-[90px] truncate">
+                      <td className="border border-slate-900 px-1 py-0.5 font-sans text-left font-semibold col-product text-slate-900 whitespace-normal break-words leading-tight text-[8.5px]">
                         {entry?.product_name || '-'}
                       </td>
                       <td className="border border-slate-900 p-1">{entry?.oil_feed_rate_litre || '-'}</td>
@@ -876,7 +904,7 @@ export default function OfficialFormsExportView() {
                       <td className="border border-slate-900 p-1">{entry?.strip_steam_flow_kghr || '-'}</td>
                       <td className="border border-slate-900 p-1">{entry?.fp101a_press_bar || '-'}</td>
                       <td className="border border-slate-900 p-1">{entry?.fp101b_press_bar || '-'}</td>
-                      <td className="border border-slate-900 p-1 font-sans text-left max-w-[120px] truncate">
+                      <td className="border border-slate-900 px-1 py-0.5 font-sans text-left col-remarks text-slate-700 whitespace-normal break-words leading-tight text-[8px]">
                         {entry?.remarks || '-'}
                       </td>
                     </tr>
