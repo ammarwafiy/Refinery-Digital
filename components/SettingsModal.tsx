@@ -408,7 +408,9 @@ export default function SettingsModal({
     if (!isOpen) return;
 
     // Initialize or refresh presence tracking
-    initWorkstationTracking(currentUser);
+    if (currentUser) {
+      initWorkstationTracking(currentUser);
+    }
 
     // Initial populate
     setActiveSessions(getActiveSessions());

@@ -38,20 +38,14 @@ export async function updateSession(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser()
 
-    // Allow root path '/', login path, and all '/api' backend routes
+    // Allow root path '/', '/dashboard', '/login', and all '/api' backend routes
     if (
       !user &&
       request.nextUrl.pathname !== '/' &&
+      !request.nextUrl.pathname.startsWith('/dashboard') &&
       !request.nextUrl.pathname.startsWith('/login') &&
       !request.nextUrl.pathname.startsWith('/api')
     ) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/'
-      return NextResponse.redirect(url)
-    }
-
-    // If user is on /login, redirect to /
-    if (request.nextUrl.pathname === '/login') {
       const url = request.nextUrl.clone()
       url.pathname = '/'
       return NextResponse.redirect(url)
