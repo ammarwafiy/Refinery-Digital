@@ -25,50 +25,99 @@ export default function RefineryDashboard() {
   const params = useParams();
   const routeTab = typeof params?.tab === 'string' ? params.tab : null;
 
-  const [activeTab, setActiveTab] = useState<string>(routeTab || 'process');
-  const [authUser, setAuthUserState] = useState<Profile | null>(null);
-  const [isInitializing, setIsInitializing] = useState<boolean>(true);
+  // Initialize authUser synchronously from storage to eliminate any loading flicker
+  const [authUser, setAuthUserState] = useState<Profile | null>(() => {
+    if (typeof window !== 'undefined') {
+      return getAuthUser();
+    }
+    return null;
+  });
+
+  // Initialize activeTab directly from current URL path to render correct tab on frame 1
+  const [activeTab, setActiveTab] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const parts = window.location.pathname.split('/').filter(Boolean);
+      if (parts[0] === 'dashboard' && parts[1]) {
+        return parts[1];
+      }
+    }
+    if (routeTab) return routeTab;
+    return 'process';
+  });
+
+  const [isInitializing, setIsInitializing] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return !getAuthUser();
+    }
+    return true;
+  });
 
   useEffect(() => {
     // Check if user is logged in
     const savedUser = getAuthUser();
     if (!savedUser) {
-      // If no active auth session, redirect to login page
       router.replace('/login');
       return;
     }
 
     setAuthUserState(savedUser);
+    setIsInitializing(false);
 
     const allowedTabs = ROLE_ALLOWED_TABS[savedUser.role] || ['process'];
     const defaultTab = ROLE_DEFAULT_TAB[savedUser.role] || allowedTabs[0] || 'process';
 
-    // If route tab is valid for role, set it; otherwise redirect to defaultTab
-    if (routeTab && allowedTabs.includes(routeTab)) {
-      setActiveTab(routeTab);
-    } else {
-      setActiveTab(defaultTab);
-      router.replace(`/dashboard/${defaultTab}`);
-    }
-
-    // Initialize real-time workstation presence for this device
-    initWorkstationTracking(savedUser);
-    setIsInitializing(false);
-  }, [router, routeTab]);
-
-  // Keep activeTab in sync if routeTab changes (e.g. browser Back / Forward buttons)
-  useEffect(() => {
-    if (routeTab && authUser) {
-      const allowedTabs = ROLE_ALLOWED_TABS[authUser.role] || ['process'];
-      if (allowedTabs.includes(routeTab) && activeTab !== routeTab) {
-        setActiveTab(routeTab);
+    let currentUrlTab = routeTab;
+    if (typeof window !== 'undefined') {
+      const parts = window.location.pathname.split('/').filter(Boolean);
+      if (parts[0] === 'dashboard' && parts[1]) {
+        currentUrlTab = parts[1];
       }
     }
-  }, [routeTab, authUser, activeTab]);
 
+    if (currentUrlTab && allowedTabs.includes(currentUrlTab)) {
+      setActiveTab(currentUrlTab);
+      if (typeof window !== 'undefined' && window.location.pathname !== `/dashboard/${currentUrlTab}`) {
+        window.history.replaceState({ tab: currentUrlTab }, '', `/dashboard/${currentUrlTab}`);
+      }
+    } else {
+      setActiveTab(defaultTab);
+      if (typeof window !== 'undefined' && window.location.pathname !== `/dashboard/${defaultTab}`) {
+        window.history.replaceState({ tab: defaultTab }, '', `/dashboard/${defaultTab}`);
+      }
+    }
+
+    initWorkstationTracking(savedUser);
+  }, [router]);
+
+  // Handle browser Back / Forward history navigation seamlessly without reloading
+  useEffect(() => {
+    const handlePopState = () => {
+      if (typeof window !== 'undefined') {
+        const parts = window.location.pathname.split('/').filter(Boolean);
+        if (parts[0] === 'dashboard' && parts[1]) {
+          const tabFromUrl = parts[1];
+          const user = getAuthUser();
+          const allowed = (user && ROLE_ALLOWED_TABS[user.role]) || ['process'];
+          if (allowed.includes(tabFromUrl)) {
+            setActiveTab(tabFromUrl);
+          }
+        }
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Instant glitch-free tab change: updates state and syncs browser URL bar
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
-    router.push(`/dashboard/${tab}`);
+    if (typeof window !== 'undefined') {
+      const targetPath = `/dashboard/${tab}`;
+      if (window.location.pathname !== targetPath) {
+        window.history.pushState({ tab }, '', targetPath);
+      }
+    }
   };
 
   const handleRoleChange = (profile: Profile) => {
