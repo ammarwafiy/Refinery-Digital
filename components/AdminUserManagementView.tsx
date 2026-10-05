@@ -870,7 +870,7 @@ export default function AdminUserManagementView() {
                                 <div className="dr" style={{ justifyContent: 'flex-end' }}>
                                   <button
                                     type="button"
-                                    className="ghost"
+                                    className="ghost transition-all duration-150 active:scale-[0.96] cursor-pointer"
                                     disabled={isCurrent}
                                     onClick={() => handleToggleStatus(p.employee_no, isActive, p.full_name)}
                                   >
@@ -878,7 +878,7 @@ export default function AdminUserManagementView() {
                                   </button>
                                   <button
                                     type="button"
-                                    className="ghost dng"
+                                    className="ghost dng transition-all duration-150 active:scale-[0.96] cursor-pointer"
                                     disabled={isCurrent}
                                     onClick={() => handleDeleteUser(p.employee_no, p.full_name)}
                                   >
@@ -1423,7 +1423,7 @@ export default function AdminUserManagementView() {
       {/* ========================================================================= */}
       {confirmModal && confirmModal.isOpen && (
         <div 
-          className="fixed inset-0 z-[9998] flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-in fade-in duration-200"
+          className="fixed inset-0 z-[9998] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md transition-all duration-200 ease-out select-none"
           onClick={() => {
             if (!modalIsSubmitting) {
               setConfirmModal(null);
@@ -1432,7 +1432,7 @@ export default function AdminUserManagementView() {
           }}
         >
           <div 
-            className="relative max-w-md w-full bg-[#101927] border border-[#1F2E43] rounded-xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+            className="relative max-w-md w-full bg-[#0F1524] border border-[#1F2E43] rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.75)] overflow-hidden transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] scale-100 opacity-100 translate-y-0"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Top gradient highlight strip */}
@@ -1551,7 +1551,7 @@ export default function AdminUserManagementView() {
                     setConfirmModal(null);
                     setModalPasswordInput('');
                   }}
-                  className="px-4 py-2.5 rounded-lg border border-[#1F2E43] bg-[#0A1018] hover:bg-[#172235] text-slate-300 font-mono text-xs transition-colors cursor-pointer disabled:opacity-50"
+                  className="px-4 py-2.5 rounded-lg border border-[#1F2E43] bg-[#0A1018] hover:bg-[#172235] text-slate-300 font-mono text-xs transition-all duration-150 active:scale-[0.97] cursor-pointer disabled:opacity-50 select-none"
                 >
                   Cancel
                 </button>
@@ -1569,12 +1569,12 @@ export default function AdminUserManagementView() {
                       setModalIsSubmitting(false);
                     }
                   }}
-                  className={`px-5 py-2.5 rounded-lg font-mono text-xs font-bold text-white flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+                  className={`px-5 py-2.5 rounded-lg font-mono text-xs font-bold text-white flex items-center justify-center gap-2 transition-all duration-150 active:scale-[0.97] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-md select-none ${
                     confirmModal.confirmButtonVariant === 'danger'
-                      ? 'bg-rose-600 hover:bg-rose-500 border border-rose-500/50'
+                      ? 'bg-rose-600 hover:bg-rose-500 border border-rose-500/50 hover:shadow-[0_0_15px_rgba(225,29,72,0.4)]'
                       : confirmModal.confirmButtonVariant === 'warning'
-                      ? 'bg-amber-600 hover:bg-amber-500 border border-amber-500/50'
-                      : 'bg-[#009FE3] hover:bg-[#0089C4] border border-[#009FE3]/50'
+                      ? 'bg-amber-600 hover:bg-amber-500 border border-amber-500/50 hover:shadow-[0_0_15px_rgba(217,119,6,0.4)]'
+                      : 'bg-[#009FE3] hover:bg-[#0089C4] border border-[#009FE3]/50 hover:shadow-[0_0_15px_rgba(0,159,227,0.4)]'
                   }`}
                 >
                   {modalIsSubmitting ? (

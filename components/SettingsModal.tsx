@@ -58,6 +58,17 @@ import {
   generateQrCodeDataUrl, 
   verifyTotpCode 
 } from '@/lib/totp';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { 
   getAuditLogs, 
   ROLE_ID_SERIES, 
@@ -1761,7 +1772,7 @@ export default function SettingsModal({
                       <button
                         type="submit"
                         disabled={isUpdatingPassword}
-                        className="px-4 py-2 rounded-xl bg-[#009FE3] hover:bg-[#0089C4] text-white font-medium text-xs shadow-md transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                        className="px-4 py-2 rounded-xl bg-[#009FE3] hover:bg-[#0089C4] text-white font-medium text-xs shadow-md transition-all duration-150 active:scale-[0.97] hover:shadow-[0_0_15px_rgba(0,159,227,0.4)] flex items-center gap-2 cursor-pointer disabled:opacity-50 select-none"
                       >
                         {isUpdatingPassword ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <KeyRound className="h-3.5 w-3.5" />}
                         <span>{t.btnUpdatePass}</span>
@@ -1961,14 +1972,39 @@ export default function SettingsModal({
                       </span>
                     </div>
                     {activeSessions.some(s => !s.isCurrent) && (
-                      <button
-                        type="button"
-                        onClick={handleTerminateOtherSessions}
-                        disabled={isTerminatingOthers}
-                        className="text-[11px] font-mono text-[#EF4444] hover:underline cursor-pointer disabled:opacity-50"
-                      >
-                        {isTerminatingOthers ? 'Terminating...' : t.terminateOthers}
-                      </button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <button
+                            type="button"
+                            disabled={isTerminatingOthers}
+                            className="text-[11px] font-mono text-[#EF4444] hover:underline cursor-pointer disabled:opacity-50 transition-all duration-150 active:scale-[0.96]"
+                          >
+                            {isTerminatingOthers ? 'Terminating...' : t.terminateOthers}
+                          </button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>
+                              <AlertTriangle className="h-5 w-5 text-amber-500" />
+                              {lang === 'ms' ? 'Tamatkan Semua Sesi Stesen Lain?' : 'Terminate Remote Workstations?'}
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              {lang === 'ms'
+                                ? 'Tindakan ini akan memutuskan sambungan semua stesen kerja dan peranti lain yang sedang aktif di bawah akaun loji ini. Hanya stesen semasa ini akan kekal bersambung.'
+                                : 'This action will forcefully disconnect all other active workstations and devices under this plant account. Only this workstation will remain connected.'}
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>{lang === 'ms' ? 'Batal' : 'Cancel'}</AlertDialogCancel>
+                            <AlertDialogAction
+                              variant="destructive"
+                              onConfirm={handleTerminateOtherSessions}
+                            >
+                              {lang === 'ms' ? 'Sahkan Tamatkan' : 'Confirm Terminate'}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     )}
                   </div>
 
@@ -2048,13 +2084,39 @@ export default function SettingsModal({
                                   <span className="h-1.5 w-1.5 rounded-full bg-cyan-400"></span>
                                   Remote
                                 </span>
-                                <button
-                                  type="button"
-                                  onClick={() => handleTerminateSingle(session.deviceId, session.stationName)}
-                                  className="text-[10px] font-mono px-2 py-1 rounded bg-red-950/40 border border-red-800 text-red-400 hover:bg-red-900/60 transition cursor-pointer"
-                                >
-                                  Terminate
-                                </button>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <button
+                                      type="button"
+                                      className="text-[10px] font-mono px-2 py-1 rounded bg-red-950/40 border border-red-800 text-red-400 hover:bg-red-900/60 transition-all duration-150 active:scale-[0.95] cursor-pointer"
+                                    >
+                                      Terminate
+                                    </button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent size="sm">
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>
+                                        <Laptop className="h-4 w-4 text-red-400" />
+                                        Disconnect {session.stationName}?
+                                      </AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        {lang === 'ms'
+                                          ? `Putuskan sesi stesen kerja ${session.stationName} (IP: ${session.ip}) secara paksa?`
+                                          : `Forcefully terminate session for ${session.stationName} (IP: ${session.ip})?`}
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel size="sm">{lang === 'ms' ? 'Batal' : 'Cancel'}</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        size="sm"
+                                        variant="destructive"
+                                        onConfirm={() => handleTerminateSingle(session.deviceId, session.stationName)}
+                                      >
+                                        Disconnect
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
                               </div>
                             )}
                           </div>

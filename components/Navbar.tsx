@@ -29,6 +29,17 @@ import {
 } from '@/lib/data-service';
 import SettingsModal from '@/components/SettingsModal';
 import HelpSupportModal from '@/components/HelpSupportModal';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface NavbarProps {
   activeTab: string;
@@ -475,16 +486,37 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
             </div>
           </div>
 
-          {/* Sign Out Button */}
+          {/* Sign Out Button with Animated Alert Dialog */}
           {onLogout && (
-            <button
-              onClick={onLogout}
-              className="ghost out"
-              type="button"
-              title="Sign Out"
-            >
-              Sign out
-            </button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <button
+                  className="ghost out transition-all duration-150 active:scale-[0.97] cursor-pointer flex items-center gap-1.5"
+                  type="button"
+                  title="Sign Out"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  <span>Sign out</span>
+                </button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    <LogOut className="h-5 w-5 text-red-500" />
+                    Sign Out of Plant Session?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Adakah anda pasti ingin menamatkan sesi operasi anda sekarang? Sebarang perubahan atau draf laporan yang belum disimpan akan terbatal.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Batal / Cancel</AlertDialogCancel>
+                  <AlertDialogAction variant="destructive" onConfirm={onLogout}>
+                    Sahkan Keluar / Sign Out
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           )}
         </div>
       </header>
@@ -651,19 +683,43 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
             </div>
           </div>
 
-          {/* Mobile Actions: Sign Out (Button #6) */}
+          {/* Mobile Actions: Sign Out with Animated Alert Dialog */}
           {onLogout && (
             <div className="pt-2 border-t border-[#1F2E43]">
-              <button
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  onLogout();
-                }}
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-medium text-[#EF4444] bg-[#EF4444]/10 border border-[#EF4444]/30 hover:bg-[#EF4444]/20 transition-colors cursor-pointer"
-              >
-                <LogOut className="h-4 w-4" />
-                <span>Sign Out of Session</span>
-              </button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <button
+                    type="button"
+                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-medium text-[#EF4444] bg-[#EF4444]/10 border border-[#EF4444]/30 hover:bg-[#EF4444]/20 transition-all duration-150 active:scale-[0.97] cursor-pointer"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>Sign Out of Session</span>
+                  </button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      <LogOut className="h-5 w-5 text-red-500" />
+                      Sign Out of Session?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Tamatkan sesi stesen kerja ini dan kembali ke skrin log masuk loji penapisan.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Batal</AlertDialogCancel>
+                    <AlertDialogAction
+                      variant="destructive"
+                      onConfirm={() => {
+                        setIsMobileMenuOpen(false);
+                        onLogout();
+                      }}
+                    >
+                      Sahkan Keluar
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           )}
         </div>

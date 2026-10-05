@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-sans: var(--font-outfit), var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: var(--font-outfit), var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 :root {
@@ -66,9 +66,13 @@
   --redt: #b4121e;
 }
 
-/* Force whole website to use clean, highly legible Inter font with solid weights */
+html {
+  scrollbar-gutter: stable;
+}
+
+/* Force whole website to use bold, highly legible Outfit font with solid weights */
 *, ::before, ::after {
-  font-family: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--font-outfit), var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   box-sizing: border-box;
 }
 
@@ -77,12 +81,28 @@ body {
   background-image: radial-gradient(900px 480px at 0 0, var(--glow), transparent 65%);
   background-repeat: no-repeat;
   color: var(--text);
-  font: 14px/1.5 var(--font-inter), system-ui, -apple-system, "Segoe UI", sans-serif;
+  font: 15px/1.5 var(--font-outfit), var(--font-inter), system-ui, -apple-system, "Segoe UI", sans-serif;
   overflow-x: hidden;
-  font-weight: 450;
-  letter-spacing: -0.005em;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
+  font-weight: 550;
+  letter-spacing: -0.01em;
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: subpixel-antialiased;
+  -moz-osx-font-smoothing: auto;
+}
+
+/* Tactile Micro-Physics & Zero-Flicker Button Engine */
+button:not(:disabled), [role="button"]:not([aria-disabled="true"]) {
+  transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease, opacity 0.16s ease;
+  will-change: transform;
+}
+
+button:active:not(:disabled), [role="button"]:active:not([aria-disabled="true"]) {
+  transform: scale(0.975) translateY(1px);
+}
+
+button:disabled, [role="button"][aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 /* Industrial Precision Scrollbar */

@@ -1671,17 +1671,17 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
 
       {/* 3. QC Decision Modal with Electronic Signature */}
       {isDecisionModalOpen && selectedReport && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 50,
-          display: 'grid',
-          placeItems: 'center',
-          background: 'rgba(0, 0, 0, 0.75)',
-          backdropFilter: 'blur(4px)',
-          padding: '20px'
-        }}>
-          <div className="panel" style={{ maxWidth: '500px', width: '100%', margin: 0, padding: '24px' }}>
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md transition-all duration-200 ease-out select-none"
+          onClick={() => setIsDecisionModalOpen(false)}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="panel relative w-full max-w-lg rounded-2xl bg-[#0F1524] border border-[#1F2E43] shadow-[0_20px_50px_rgba(0,0,0,0.75)] p-6 overflow-hidden transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] scale-100 opacity-100 translate-y-0"
+            style={{ margin: 0 }}
+          >
+            {/* Top accent beam */}
+            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-500 via-[#009FE3] to-amber-500 opacity-80" />
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', borderBottom: '1px solid var(--line)', paddingBottom: '12px' }}>
               <div>
                 <h3 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text)' }}>
@@ -1809,13 +1809,13 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                 <button
                   type="button"
                   onClick={() => setIsDecisionModalOpen(false)}
-                  className="ghost"
+                  className="ghost transition-all duration-150 active:scale-[0.97] cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="primary"
+                  className="primary transition-all duration-150 active:scale-[0.97] hover:shadow-[0_0_15px_rgba(0,159,227,0.4)] cursor-pointer"
                 >
                   Sign & Commit Decision
                 </button>
@@ -1827,17 +1827,20 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
 
       {/* Modal: Delete Sample Confirmation (QC Correction) */}
       {reportToDelete && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 50,
-          display: 'grid',
-          placeItems: 'center',
-          background: 'rgba(0, 0, 0, 0.75)',
-          backdropFilter: 'blur(4px)',
-          padding: '20px'
-        }}>
-          <div className="panel" style={{ maxWidth: '500px', width: '100%', margin: 0, padding: '24px' }}>
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md transition-all duration-200 ease-out select-none"
+          onClick={() => {
+            setReportToDelete(null);
+            setDeleteError(null);
+          }}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="panel relative w-full max-w-lg rounded-2xl bg-[#0F1524] border border-[#1F2E43] shadow-[0_20px_50px_rgba(0,0,0,0.75)] p-6 overflow-hidden transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] scale-100 opacity-100 translate-y-0"
+            style={{ margin: 0 }}
+          >
+            {/* Top red accent beam */}
+            <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-red-600 via-rose-500 to-amber-500 opacity-90" />
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', borderBottom: '1px solid var(--line)', paddingBottom: '12px' }}>
               <div>
                 <h3 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--redt)' }}>
@@ -1934,14 +1937,14 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                     setReportToDelete(null);
                     setDeleteError(null);
                   }}
-                  className="ghost"
+                  className="ghost transition-all duration-150 active:scale-[0.97] cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isDeleting}
-                  className="primary"
+                  className="primary transition-all duration-150 active:scale-[0.97] hover:shadow-[0_0_15px_rgba(216,31,44,0.4)] cursor-pointer"
                   style={{ background: 'var(--red)' }}
                 >
                   {isDeleting ? 'Deleting Sample...' : 'Confirm & Delete Sample'}
