@@ -37,6 +37,11 @@
   --status-warning: #e0a030;
   --status-critical: #d81f2c;
   --status-neutral: #8a92a6;
+
+  /* Emil Kowalski Motion Tokens (Calibrated Custom Easing) */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 :root, :root[data-theme="dark"], html.dark {
@@ -1287,15 +1292,24 @@ html.light-theme ::-webkit-scrollbar-thumb:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: filter 0.15s ease;
+  transition: transform 160ms var(--ease-out), filter 160ms ease, background-color 180ms ease, box-shadow 180ms ease;
   font-size: 13px;
+  will-change: transform;
 }
 .primary:hover:not(:disabled) {
-  filter: brightness(1.1);
+  filter: brightness(1.08);
+}
+.primary:active:not(:disabled) {
+  transform: scale(0.97) translateY(1px);
 }
 .primary:disabled {
-  opacity: .4;
+  opacity: .5;
   cursor: not-allowed;
+}
+.primary.success {
+  background: #10b981 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.35);
 }
 
 .ghost {
@@ -1566,6 +1580,78 @@ html.light-theme .inp,
   width: 100%;
 }
 
+/* ========================================================================= */
+/* EMIL KOWALSKI DESIGN ENGINEERING - LOGIN & DASHBOARD TRANSITION ENGINE    */
+/* ========================================================================= */
+
+@keyframes login-fade-up {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes login-card-enter {
+  0% {
+    opacity: 0;
+    transform: scale(0.96) translateY(12px);
+    filter: blur(2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0px);
+  }
+}
+
+@keyframes login-shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  20%, 60% {
+    transform: translateX(-5px);
+  }
+  40%, 80% {
+    transform: translateX(5px);
+  }
+}
+
+@keyframes portal-sweep {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes dashboard-enter {
+  0% {
+    opacity: 0;
+    transform: scale(0.992) translateY(6px);
+    filter: blur(2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0px);
+  }
+}
+
+.animate-dashboard-enter {
+  animation: dashboard-enter 240ms cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  will-change: transform, opacity, filter;
+}
+
 /* Login Split Screen */
 .login {
   min-height: 100vh;
@@ -1574,7 +1660,30 @@ html.light-theme .inp,
   align-items: center;
   gap: 48px;
   padding: 48px 8vw;
+  position: relative;
+  overflow: hidden;
 }
+
+.lg-l {
+  transition: transform 200ms var(--ease-out), opacity 180ms ease-out, filter 200ms ease-out;
+  will-change: transform, opacity, filter;
+}
+
+.lg-l.is-exiting {
+  transform: translateX(-12px);
+  opacity: 0;
+  filter: blur(2.5px);
+  pointer-events: none;
+}
+
+.login-enter-brand > * {
+  opacity: 0;
+  animation: login-fade-up 260ms var(--ease-out) forwards;
+}
+.login-enter-brand > *:nth-child(1) { animation-delay: 0ms; }
+.login-enter-brand > *:nth-child(2) { animation-delay: 45ms; }
+.login-enter-brand > *:nth-child(3) { animation-delay: 90ms; }
+
 .login h1 {
   font-size: clamp(34px, 4.6vw, 56px);
   line-height: 1.05;
@@ -1584,12 +1693,15 @@ html.light-theme .inp,
   max-width: 12ch;
   color: var(--text);
 }
+
 .lg-l p {
   color: var(--muted);
   max-width: 44ch;
   font-size: 16px;
 }
+
 .lg-card {
+  position: relative;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 14px;
@@ -1597,7 +1709,78 @@ html.light-theme .inp,
   max-width: 420px;
   width: 100%;
   justify-self: center;
+  box-shadow: 0 12px 36px -8px rgba(0, 0, 0, 0.45);
+  transition: transform 220ms var(--ease-out), opacity 200ms ease-out, filter 220ms ease-out, box-shadow 220ms ease, border-color 200ms ease;
+  will-change: transform, opacity, filter;
+  overflow: hidden;
 }
+
+.login-card-enter {
+  animation: login-card-enter 280ms var(--ease-out) forwards;
+}
+
+.lg-card.is-shaking {
+  animation: login-shake 220ms ease-in-out;
+}
+
+.lg-card.is-exiting {
+  transform: scale(1.018) translateY(-4px);
+  opacity: 0;
+  filter: blur(3px);
+  pointer-events: none;
+  box-shadow: 0 16px 48px -12px rgba(0, 0, 0, 0.6), 0 0 35px rgba(16, 185, 129, 0.25);
+  border-color: rgba(16, 185, 129, 0.4);
+}
+
+.login-portal-beam {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #10b981 30%, #38bdf8 70%, transparent);
+  animation: portal-sweep 240ms var(--ease-out) forwards;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.login-btn-content {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: filter 160ms ease, opacity 160ms ease;
+}
+
+.login-btn-content.is-transitioning {
+  filter: blur(1.5px);
+  opacity: 0.85;
+}
+
+.quick-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 11px;
+  font-family: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 120ms var(--ease-out), background-color 140ms ease, color 140ms ease, border-color 140ms ease;
+}
+.quick-pill:hover {
+  background: var(--raised);
+  color: var(--text);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+.quick-pill:active {
+  transform: scale(0.96) translateY(1px);
+}
+
 .lg-card h2 {
   font-size: 20px;
   font-weight: 600;
@@ -1605,7 +1788,7 @@ html.light-theme .inp,
   margin-bottom: 4px;
 }
 .lg-card .hint {
-  margin: 4px 0 24px;
+  margin: 4px 0 20px;
   color: var(--muted);
   font-size: 13px;
 }
@@ -1631,14 +1814,16 @@ html.light-theme .inp,
   font-size: 14px;
   color-scheme: dark !important;
   font-family: inherit;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
 }
 .fld select {
   cursor: pointer;
 }
 .fld input:focus,
 .fld select:focus {
-  outline: 2px solid var(--red);
-  outline-offset: 2px;
+  outline: none;
+  border-color: var(--red);
+  box-shadow: 0 0 0 3px rgba(216, 31, 44, 0.22);
 }
 html.light-theme .fld input,
 html.light-theme .fld select,
@@ -1667,13 +1852,31 @@ html.light-theme .fld select,
   cursor: pointer;
   font-size: 12px;
   font-weight: 500;
+  border-radius: 4px;
+  transition: color 120ms ease, background-color 120ms ease, transform 120ms var(--ease-out);
 }
+.pw button:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.05);
+}
+.pw button:active {
+  transform: scale(0.95);
+}
+
 .err {
-  color: var(--amber);
+  color: #fb7185;
   min-height: 20px;
-  font-size: 13px;
-  margin-bottom: 8px;
+  font-size: 12.5px;
+  margin-bottom: 12px;
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
+.err:not(:empty) {
+  animation: login-fade-up 180ms var(--ease-out) forwards;
+}
+
 .wide {
   width: 100%;
 }
@@ -1685,9 +1888,15 @@ html.light-theme .fld select,
   font-size: 13px;
   text-decoration: none;
   cursor: pointer;
+  background: transparent;
+  border: 0;
+  transition: color 140ms ease, transform 140ms var(--ease-out);
 }
 .help-link:hover {
   color: var(--text);
+}
+.help-link:active {
+  transform: scale(0.98);
 }
 
 @media (max-width: 900px) {
@@ -1697,6 +1906,29 @@ html.light-theme .fld select,
   }
   .login h1 {
     margin-top: 32px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-dashboard-enter,
+  .login-card-enter,
+  .login-portal-beam,
+  .login-enter-brand > *,
+  .err:not(:empty) {
+    animation: none !important;
+    transition: opacity 160ms ease !important;
+    transform: none !important;
+    filter: none !important;
+  }
+  .lg-card.is-shaking {
+    animation: none !important;
+  }
+  .lg-card.is-exiting,
+  .lg-l.is-exiting {
+    transform: none !important;
+    filter: none !important;
+    opacity: 0 !important;
+    transition: opacity 160ms ease !important;
   }
 }
 

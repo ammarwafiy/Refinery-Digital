@@ -11,6 +11,19 @@ export default function LoginPage() {
   const router = useRouter();
 
   useEffect(() => {
+    // Proactively prefetch all primary dashboard views so navigation is instant
+    try {
+      router.prefetch('/dashboard/process');
+      router.prefetch('/dashboard/qc');
+      router.prefetch('/dashboard/supervisor');
+      router.prefetch('/dashboard/report');
+      router.prefetch('/dashboard/analytics');
+      router.prefetch('/dashboard/export');
+      router.prefetch('/dashboard/admin');
+    } catch {
+      // Ignore prefetch errors in non-browser environments
+    }
+
     const savedUser = getAuthUser();
     if (savedUser) {
       const defaultTab = ROLE_DEFAULT_TAB[savedUser.role] || 'process';

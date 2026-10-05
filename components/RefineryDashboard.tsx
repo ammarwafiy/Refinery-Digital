@@ -196,7 +196,7 @@ export default function RefineryDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] flex flex-col">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] flex flex-col animate-dashboard-enter">
       {/* Sidebar (Desktop) + Mobile Topbar / Drawer */}
       <div className="no-print">
         <Navbar 
