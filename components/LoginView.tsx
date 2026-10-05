@@ -31,12 +31,6 @@ export default function LoginView({ onLogin }: LoginViewProps) {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [successProfile, setSuccessProfile] = useState<Profile | null>(null);
 
-  const handleQuickFill = (id: string, roleName: string) => {
-    setIdentifier(id);
-    setPassword('password123');
-    setErrorMessage(null);
-  };
-
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (authStatus === 'authenticating' || authStatus === 'success') return;
@@ -123,57 +117,6 @@ export default function LoginView({ onLogin }: LoginViewProps) {
 
         <h2>Log in</h2>
         <p className="hint">Use the ID and access key from your plant administrator.</p>
-
-        {/* Quick-fill helper pills for instant switching and testing */}
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[11px] font-medium text-[var(--muted)] uppercase tracking-wider">
-              Quick demo login:
-            </span>
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            <button
-              type="button"
-              onClick={() => handleQuickFill('OPR001', 'Operator')}
-              className="quick-pill"
-              title="Ahmad Razak - Plant Operator"
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
-              <span>Operator</span>
-              <span className="text-[10px] opacity-60 font-mono">OPR001</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickFill('SUP001', 'Supervisor')}
-              className="quick-pill"
-              title="Chong Wei Lun - Shift Supervisor"
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-              <span>Supervisor</span>
-              <span className="text-[10px] opacity-60 font-mono">SUP001</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickFill('QCS001', 'QC Lab')}
-              className="quick-pill"
-              title="Siti Nurhaliza - Lab Chemist"
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-              <span>QC Lab</span>
-              <span className="text-[10px] opacity-60 font-mono">QCS001</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickFill('ADM001', 'Plant Admin')}
-              className="quick-pill"
-              title="Admin User - Full System Access"
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-red-400"></span>
-              <span>Admin</span>
-              <span className="text-[10px] opacity-60 font-mono">ADM001</span>
-            </button>
-          </div>
-        </div>
 
         {/* Refinery ID Field */}
         <div className="fld">
