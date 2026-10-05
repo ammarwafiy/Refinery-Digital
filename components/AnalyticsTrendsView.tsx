@@ -19,7 +19,8 @@ import {
 import { 
   getActiveProcessSheet, 
   getSampleReports, 
-  getRejectionReasons 
+  getRejectionReasons,
+  getProducts
 } from '@/lib/data-service';
 import { SampleReport, ProcessSheet } from '@/types/refinery';
 import { BarChart3, TrendingUp, AlertOctagon, Layers } from 'lucide-react';
@@ -201,7 +202,12 @@ export default function AnalyticsTrendsView() {
     const prodMap: Record<string, { lots: number; rejects: number; concessions: number }> = {};
 
     scopedReports.forEach(report => {
-      const prod = getProductCategory(report.product_name);
+      let rawName = report.product_name;
+      if (!rawName && report.product_id) {
+        const found = getProducts().find(p => p.id === report.product_id);
+        if (found) rawName = found.name;
+      }
+      const prod = getProductCategory(rawName);
       if (!prodMap[prod]) {
         prodMap[prod] = { lots: 0, rejects: 0, concessions: 0 };
       }
@@ -465,16 +471,31 @@ export default function AnalyticsTrendsView() {
               productRejections.map((prod) => {
                 const maxLots = Math.max(1, ...productRejections.map((p) => p.lots));
                 const pct = Math.round((prod.lots / maxLots) * 100);
+                const rejPct = prod.lots > 0 ? Math.round((prod.effectiveRejects / prod.lots) * 100) : 0;
                 return (
-                  <div key={prod.product} className="pr" style={{ gridTemplateColumns: '130px 1fr 120px' }}>
+                  <div key={prod.product} className="pr" style={{ gridTemplateColumns: '130px 1fr 130px' }}>
                     <span title={prod.product} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {prod.product}
                     </span>
-                    <div className="bar">
-                      <i style={{ width: `${pct}%`, background: 'var(--muted)' }} />
+                    <div className="bar" style={{ position: 'relative', overflow: 'hidden' }}>
+                      <i style={{ width: `${pct}%`, background: prod.effectiveRejects > 0 ? 'rgba(239, 68, 68, 0.35)' : 'var(--muted)' }} />
+                      {prod.effectiveRejects > 0 && (
+                        <i 
+                          style={{ 
+                            position: 'absolute', 
+                            left: 0, 
+                            top: 0, 
+                            bottom: 0, 
+                            width: `${(pct * prod.effectiveRejects) / prod.lots}%`, 
+                            background: 'var(--red)',
+                            borderRadius: 'inherit'
+                          }} 
+                        />
+                      )}
                     </div>
                     <span style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--muted)' }}>
                       {prod.lots} lots, <b style={{ color: prod.effectiveRejects > 0 ? 'var(--redt)' : 'inherit' }}>{prod.effectiveRejects}</b> rej
+                      {prod.effectiveRejects > 0 && <span style={{ fontSize: '10px', marginLeft: '4px', color: 'var(--redt)' }}>({rejPct}%)</span>}
                     </span>
                   </div>
                 );

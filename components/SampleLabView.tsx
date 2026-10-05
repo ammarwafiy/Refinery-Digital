@@ -434,7 +434,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
     const payload = displayResults.map(res => {
       const val = resultInputs[res.id] || {};
       const isReq = requestedMap[res.id] !== false;
-      const customName = paramNameInputs[res.id]?.trim() || res.parameter_name;
+      const paramName = res.parameter_name;
       const rawText = val.text !== undefined ? val.text : (val.num !== undefined ? String(val.num) : '');
       const numVal = isReq && rawText.trim() !== '' && !isNaN(Number(rawText)) ? Number(rawText) : (val.num ?? null);
 
@@ -442,7 +442,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
         resultId: res.id,
         parameter_id: res.parameter_id,
         parameter_code: res.parameter_code,
-        parameter_name: customName,
+        parameter_name: paramName,
         unit: null,
         series_key: res.series_key,
         value_numeric: isReq ? numVal : null,
@@ -1373,25 +1373,17 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                                   title="Tick/untick test parameter"
                                 />
                               </td>
-                              <td>
-                                <input
-                                  type="text"
-                                  disabled={!canEdit}
-                                  placeholder="Parameter Name..."
-                                  value={currentName}
-                                  onChange={e => {
-                                    const val = e.target.value;
-                                    setParamNameInputs(prev => ({ ...prev, [res.id]: val }));
-                                  }}
-                                  className="inp"
-                                  style={{
-                                    width: '100%',
-                                    height: '34px',
-                                    fontWeight: 500,
-                                    color: isUnticked ? 'var(--muted)' : 'var(--text)',
-                                    background: isUnticked ? 'transparent' : 'var(--surface)',
-                                  }}
-                                />
+                              <td style={{ verticalAlign: 'middle', padding: '8px 12px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <span style={{ fontWeight: 600, fontSize: '13px', color: isUnticked ? 'var(--muted)' : 'var(--text)' }}>
+                                    {res.parameter_name}
+                                  </span>
+                                  {res.unit && (
+                                    <span style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 400 }}>
+                                      ({res.unit})
+                                    </span>
+                                  )}
+                                </div>
                               </td>
                               <td>
                                 <input
@@ -1480,25 +1472,17 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                                   style={{ accentColor: 'var(--red)', width: '16px', height: '16px', cursor: 'pointer' }}
                                 />
                               </td>
-                              <td style={{ paddingLeft: '28px' }}>
-                                <input
-                                  type="text"
-                                  disabled={!canEdit}
-                                  placeholder="Parameter Name..."
-                                  value={currentName}
-                                  onChange={e => {
-                                    const val = e.target.value;
-                                    setParamNameInputs(prev => ({ ...prev, [res.id]: val }));
-                                  }}
-                                  className="inp"
-                                  style={{
-                                    width: '100%',
-                                    height: '34px',
-                                    fontWeight: 500,
-                                    color: isUnticked ? 'var(--muted)' : 'var(--text)',
-                                    background: isUnticked ? 'transparent' : 'var(--surface)',
-                                  }}
-                                />
+                              <td style={{ paddingLeft: '28px', verticalAlign: 'middle', padding: '8px 12px 8px 28px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <span style={{ fontWeight: 500, fontSize: '12px', color: isUnticked ? 'var(--muted)' : 'var(--text)' }}>
+                                    {res.parameter_name}
+                                  </span>
+                                  {res.unit && (
+                                    <span style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 400 }}>
+                                      ({res.unit})
+                                    </span>
+                                  )}
+                                </div>
                               </td>
                               <td>
                                 <input

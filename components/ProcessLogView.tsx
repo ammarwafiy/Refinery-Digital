@@ -167,6 +167,17 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
         }
         return prevDate;
       });
+
+      // Strictly lock selected slot to live realtime slot on live shift
+      if (isLiveShift) {
+        setSelectedSlotIndex(prev => {
+          if (prev !== slot) {
+            loadSlot(slot);
+            return slot;
+          }
+          return prev;
+        });
+      }
     };
 
     updateRealtime();
@@ -322,6 +333,13 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
   };
 
   const handleSlotSelect = (idx: number) => {
+    // Strictly enforce realtime timeline: on live shift, past or future hours cannot be accessed
+    if (isLiveShift && idx !== currentSlotIndex) {
+      const targetLabel = String(((idx + 7) % 24) * 100).padStart(4, '0');
+      const liveLabel = String(((currentSlotIndex + 7) % 24) * 100).padStart(4, '0');
+      setValidationError(`Realtime timeline enforced: Hour ${targetLabel} is locked. Active recording is strictly restricted to current live hour (${liveLabel}).`);
+      return;
+    }
     if (selectedSlotIndex === idx) return;
     // Preserve draft of previous slot if it was edited
     if (isDirtyRef.current) {
@@ -467,8 +485,8 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
   const isPastSlot = isLiveShift ? selectedSlotIndex < currentSlotIndex : true;
   const isFutureSlot = isLiveShift ? selectedSlotIndex > currentSlotIndex : false;
 
-  // Strict realtime lock rule
-  const isSlotDisabled = sheet.status === 'verified' || (role !== 'admin' && (!isLiveShift || !isLiveSlot));
+  // Strict realtime lock rule: only the active live slot on live shift can be recorded
+  const isSlotDisabled = sheet.status === 'verified' || !isLiveShift || !isLiveSlot;
 
   // Real-time synchronization of Stripping Steam & Tray Steam Supply
   const latestEntryWithStripSteam = [...(sheet.entries || [])]
@@ -624,14 +642,22 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                 statusIndicator = <Lock className="h-2.5 w-2.5 text-[var(--muted)]" />;
               }
 
+              const isSlotAccessible = !isLiveShift || isLive;
+
               return (
                 <button
                   key={idx}
                   type="button"
-                  onClick={() => handleSlotSelect(idx)}
-                  className={`ribbon-cell ${statusClass} ${isSelected ? 'sel' : ''}`}
-                  title={`Slot ${label} (${label.slice(0, 2)}:00)${isQCRejected ? ' - QC REJECTED' : isQCAccepted ? ' - QC ACCEPTED' : ''}`}
+                  onClick={() => isSlotAccessible && handleSlotSelect(idx)}
+                  disabled={!isSlotAccessible}
+                  className={`ribbon-cell ${statusClass} ${isSelected ? 'sel' : ''} ${!isSlotAccessible ? 'opacity-40 cursor-not-allowed pointer-events-none' : ''}`}
+                  title={
+                    !isSlotAccessible
+                      ? `Slot ${label} (${label.slice(0, 2)}:00) - Locked (Realtime timeline enforced)`
+                      : `Slot ${label} (${label.slice(0, 2)}:00)${isQCRejected ? ' - QC REJECTED' : isQCAccepted ? ' - QC ACCEPTED' : ''}`
+                  }
                   aria-pressed={isSelected}
+                  aria-disabled={!isSlotAccessible}
                 >
                   <span>{label}</span>
                   <small>{statusIndicator}</small>
