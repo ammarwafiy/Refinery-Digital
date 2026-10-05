@@ -24,7 +24,25 @@ import {
   syncSampleReportsFromSupabase
 } from '@/lib/data-service';
 import { SampleReport, ProcessSheet } from '@/types/refinery';
-import { BarChart3, TrendingUp, AlertOctagon, Layers } from 'lucide-react';
+import { 
+  BarChart3, 
+  TrendingUp, 
+  AlertOctagon, 
+  Layers,
+  Search,
+  Filter,
+  UserCheck,
+  Calendar,
+  Clock,
+  Eye,
+  X,
+  FileText,
+  AlertTriangle,
+  Tag,
+  ShieldAlert,
+  CheckCircle2
+} from 'lucide-react';
+import { formatDateTime, formatDate } from '@/lib/utils';
 
 // Normalization helpers for Pareto Reason Codes and Products
 function formatMonthLabel(monthKey: string): string {
@@ -103,6 +121,15 @@ export default function AnalyticsTrendsView() {
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
   const [dispositionScope, setDispositionScope] = useState<'rejects_only' | 'all_non_conformances'>('rejects_only');
 
+  // Filter for specific Pareto reason selection (interactive drilldown from chart)
+  const [selectedReasonFilter, setSelectedReasonFilter] = useState<string | null>(null);
+
+  // Search query for rejected lots traceability registry
+  const [lotSearchQuery, setLotSearchQuery] = useState<string>('');
+
+  // Selected report for analytical laboratory inspection modal
+  const [inspectReport, setInspectReport] = useState<SampleReport | null>(null);
+
   // Listen for live QC lab updates (RF-FR-001) and sync with Supabase cloud DB
   useEffect(() => {
     // Initial fetch from Supabase to sync live cloud reports
@@ -180,6 +207,58 @@ export default function AnalyticsTrendsView() {
       return dec === 'reject' || dec === 'accept_concession';
     });
   }, [scopedReports, dispositionScope]);
+
+  // Sorted list of non-conforming reports (most recent first)
+  const sortedParetoReports = useMemo(() => {
+    return [...paretoReports].sort((a, b) => {
+      const dateA = a.decision?.decided_at || a.created_at || a.sample_date || '';
+      const dateB = b.decision?.decided_at || b.created_at || b.sample_date || '';
+      return dateB.localeCompare(dateA);
+    });
+  }, [paretoReports]);
+
+  // Filtered reports for traceability registry table
+  const filteredParetoReports = useMemo(() => {
+    return sortedParetoReports.filter(report => {
+      // 1. Pareto reason code filter
+      if (selectedReasonFilter) {
+        const category = getReasonCategory(report.decision?.reason_label, report.decision?.reason_id);
+        if (category !== selectedReasonFilter) return false;
+      }
+
+      // 2. Search query across lot_no, report_no, product_name, decided_by_name, reason, etc.
+      if (lotSearchQuery.trim()) {
+        const q = lotSearchQuery.toLowerCase().trim();
+        const lot = (report.lot_no || '').toLowerCase();
+        const rep = (report.report_no || '').toLowerCase();
+        const prod = (report.product_name || '').toLowerCase();
+        const decBy = (report.decision?.decided_by_name || '').toLowerCase();
+        const reason = (report.decision?.reason_label || '').toLowerCase();
+        const detail = (report.decision?.reason_detail || '').toLowerCase();
+        const disposition = (report.decision?.disposition || '').toLowerCase();
+        const feedTank = (report.feed_tank_code || '').toLowerCase();
+        const disTank = (report.discharge_tank_code || '').toLowerCase();
+        const failedParams = (report.decision?.failed_parameters || []).join(' ').toLowerCase();
+
+        if (
+          !lot.includes(q) &&
+          !rep.includes(q) &&
+          !prod.includes(q) &&
+          !decBy.includes(q) &&
+          !reason.includes(q) &&
+          !detail.includes(q) &&
+          !disposition.includes(q) &&
+          !feedTank.includes(q) &&
+          !disTank.includes(q) &&
+          !failedParams.includes(q)
+        ) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [sortedParetoReports, selectedReasonFilter, lotSearchQuery]);
 
   // Build Pareto defect reasons data dynamically synced with RF-FR-001 QC Lab reports
   const paretoData = useMemo(() => {
@@ -428,16 +507,52 @@ export default function AnalyticsTrendsView() {
               paretoData.map((p) => {
                 const maxCount = Math.max(1, ...paretoData.map((d) => d.count));
                 const pct = Math.round((p.count / maxCount) * 100);
+                const isSelected = selectedReasonFilter === p.reason;
                 return (
-                  <div key={p.reason} className="pr" style={{ gridTemplateColumns: '150px 1fr 70px' }}>
-                    <span title={p.reason} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {p.reason}
-                    </span>
+                  <div 
+                    key={p.reason} 
+                    className="pr" 
+                    onClick={() => {
+                      setSelectedReasonFilter(prev => prev === p.reason ? null : p.reason);
+                      const el = document.getElementById('rejected-lots-registry');
+                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }}
+                    style={{ 
+                      gridTemplateColumns: '150px 1fr 70px',
+                      cursor: 'pointer',
+                      borderRadius: '6px',
+                      padding: '5px 8px',
+                      margin: '2px -8px',
+                      transition: 'all 0.15s ease',
+                      background: isSelected ? 'rgba(216, 31, 44, 0.14)' : undefined,
+                      border: isSelected ? '1px solid rgba(216, 31, 44, 0.45)' : '1px solid transparent'
+                    }}
+                    title={`Click to filter rejected lots by: ${p.reason}`}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden' }}>
+                      <span 
+                        title={p.reason} 
+                        style={{ 
+                          overflow: 'hidden', 
+                          textOverflow: 'ellipsis', 
+                          whiteSpace: 'nowrap',
+                          fontWeight: isSelected ? 600 : 400,
+                          color: isSelected ? 'var(--redt)' : 'inherit'
+                        }}
+                      >
+                        {p.reason}
+                      </span>
+                      {isSelected && (
+                        <span style={{ fontSize: '9px', background: 'var(--red)', color: '#fff', padding: '0 4px', borderRadius: '3px', fontWeight: 600 }}>
+                          FILTERED
+                        </span>
+                      )}
+                    </div>
                     <div className="bar">
                       <i style={{ width: `${pct}%`, background: 'var(--red)' }} />
                     </div>
                     <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
-                      <b style={{ fontVariantNumeric: 'tabular-nums' }}>{p.count}</b>
+                      <b style={{ fontVariantNumeric: 'tabular-nums', color: isSelected ? 'var(--redt)' : 'inherit' }}>{p.count}</b>
                       <span style={{ fontSize: '11px', color: 'var(--muted)', width: '34px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
                         {p.cumulative}%
                       </span>
@@ -448,18 +563,40 @@ export default function AnalyticsTrendsView() {
             )}
           </div>
 
-          <p className="foot">
-            {totalParetoRejections === 0 ? (
-              '0 rejections tracked. All inspected lots passed quality release specifications.'
-            ) : totalParetoRejections === 1 ? (
-              <span>
-                <b>{topReasons[0]?.reason}</b> accounts for 100% of the 1 tracked rejection in this period.
-              </span>
-            ) : (
-              <span>
-                <b>{topReasons[0]?.reason}</b> and <b>{topReasons[1]?.reason}</b> account for{' '}
-                {Math.round((((topReasons[0]?.count || 0) + (topReasons[1]?.count || 0)) / totalParetoRejections) * 100)}% of the {totalParetoRejections} rejections tracked.
-              </span>
+          <p className="foot" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '6px' }}>
+            <span>
+              {totalParetoRejections === 0 ? (
+                '0 rejections tracked. All inspected lots passed quality release specifications.'
+              ) : totalParetoRejections === 1 ? (
+                <span>
+                  <b>{topReasons[0]?.reason}</b> accounts for 100% of the 1 tracked rejection in this period.
+                </span>
+              ) : (
+                <span>
+                  <b>{topReasons[0]?.reason}</b> and <b>{topReasons[1]?.reason}</b> account for{' '}
+                  {Math.round((((topReasons[0]?.count || 0) + (topReasons[1]?.count || 0)) / totalParetoRejections) * 100)}% of the {totalParetoRejections} rejections tracked.
+                </span>
+              )}
+            </span>
+            {selectedReasonFilter && (
+              <button
+                type="button"
+                onClick={() => setSelectedReasonFilter(null)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--redt)',
+                  cursor: 'pointer',
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  padding: 0
+                }}
+              >
+                Clear reason filter ✕
+              </button>
             )}
           </p>
         </section>
@@ -533,6 +670,540 @@ export default function AnalyticsTrendsView() {
           </p>
         </section>
       </div>
+
+      {/* 4. Rejected Lots & Non-Conformance Traceability Log */}
+      <section className="panel" id="rejected-lots-registry">
+        <div className="ph" style={{ flexWrap: 'wrap', gap: '10px', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <span style={{ fontWeight: 600, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <ShieldAlert size={16} style={{ color: 'var(--redt)' }} />
+              Rejected Lots &amp; Non-Conformance Traceability Log
+            </span>
+            <span style={{ fontSize: '11px', color: 'var(--muted)', display: 'block', marginTop: '2px' }}>
+              Full trace of rejected product lots, QA decision authorities, timestamps, failed analytical parameters, and dispositions.
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            {/* Active reason filter indicator */}
+            {selectedReasonFilter && (
+              <div 
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '6px', 
+                  background: 'rgba(216, 31, 44, 0.12)', 
+                  border: '1px solid rgba(216, 31, 44, 0.3)', 
+                  padding: '3px 8px', 
+                  borderRadius: '6px',
+                  fontSize: '11px',
+                  color: 'var(--redt)'
+                }}
+              >
+                <Filter size={11} />
+                <span>Reason: <b>{selectedReasonFilter}</b></span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedReasonFilter(null)}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', padding: 0, display: 'flex' }}
+                  title="Clear filter"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            )}
+
+            {/* Quick Search */}
+            <div style={{ position: 'relative' }}>
+              <Search size={13} style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)', pointerEvents: 'none' }} />
+              <input
+                type="text"
+                value={lotSearchQuery}
+                onChange={(e) => setLotSearchQuery(e.target.value)}
+                placeholder="Search Lot / Product / Officer..."
+                className="inp"
+                style={{ height: '28px', paddingLeft: '26px', paddingRight: lotSearchQuery ? '24px' : '8px', fontSize: '12px', width: '220px' }}
+              />
+              {lotSearchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setLotSearchQuery('')}
+                  style={{ position: 'absolute', right: '6px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', padding: 0 }}
+                  title="Clear search"
+                >
+                  <X size={12} />
+                </button>
+              )}
+            </div>
+
+            {/* Total Badge */}
+            <span className="bd r">
+              {filteredParetoReports.length} {filteredParetoReports.length === 1 ? 'Lot Record' : 'Lot Records'}
+            </span>
+          </div>
+        </div>
+
+        {/* Traceability Table */}
+        <div style={{ overflowX: 'auto', width: '100%' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px', minWidth: '920px' }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid var(--line)', background: 'rgba(255,255,255,0.02)', textAlign: 'left', color: 'var(--muted)', fontSize: '11px' }}>
+                <th style={{ padding: '10px 14px' }}>Lot &amp; Report No</th>
+                <th style={{ padding: '10px 12px' }}>Product &amp; Sampling Point</th>
+                <th style={{ padding: '10px 12px' }}>Sample Check Time</th>
+                <th style={{ padding: '10px 12px' }}>Status &amp; Disposition</th>
+                <th style={{ padding: '10px 12px' }}>Defect Reason &amp; Failed Parameters</th>
+                <th style={{ padding: '10px 12px' }}>QA Decision Authority</th>
+                <th style={{ padding: '10px 14px', textAlign: 'center' }}>Analysis</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredParetoReports.length === 0 ? (
+                <tr>
+                  <td colSpan={7} style={{ padding: '36px 16px', textAlign: 'center', color: 'var(--muted)' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                      <AlertOctagon size={24} style={{ opacity: 0.4 }} />
+                      <span style={{ fontWeight: 500, color: 'var(--text)' }}>
+                        {selectedReasonFilter 
+                          ? `No lots found for reason "${selectedReasonFilter}".`
+                          : lotSearchQuery 
+                            ? `No lots match query "${lotSearchQuery}".`
+                            : `No QC ${dispositionScope === 'rejects_only' ? 'rejections' : 'non-conformances'} found for this period.`}
+                      </span>
+                      {(selectedReasonFilter || lotSearchQuery) && (
+                        <button
+                          type="button"
+                          className="btn sm"
+                          onClick={() => { setSelectedReasonFilter(null); setLotSearchQuery(''); }}
+                          style={{ marginTop: '4px' }}
+                        >
+                          Reset Filters
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                filteredParetoReports.map((r) => {
+                  const isReject = r.decision?.decision === 'reject';
+                  const failedParams = r.decision?.failed_parameters || [];
+                  const reasonCategory = getReasonCategory(r.decision?.reason_label, r.decision?.reason_id);
+
+                  return (
+                    <tr 
+                      key={r.id} 
+                      style={{ 
+                        borderBottom: '1px solid var(--line)',
+                        transition: 'background 0.15s ease',
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.02)')}
+                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                    >
+                      {/* 1. Lot & Report No */}
+                      <td style={{ padding: '10px 14px', verticalAlign: 'top' }}>
+                        <div style={{ fontFamily: 'monospace', fontWeight: 700, color: 'var(--text)', fontSize: '13px' }}>
+                          {r.lot_no}
+                        </div>
+                        <div style={{ fontFamily: 'monospace', color: 'var(--muted)', fontSize: '11px', marginTop: '1px' }}>
+                          {r.report_no}
+                        </div>
+                        {(r.feed_tank_code || r.discharge_tank_code) && (
+                          <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                            <Tag size={9} />
+                            <span>Tank: {r.feed_tank_code || '–'} → {r.discharge_tank_code || '–'}</span>
+                          </div>
+                        )}
+                        {r.crystallizer_no && (
+                          <div style={{ fontSize: '10px', color: 'var(--muted)' }}>
+                            Cry: {r.crystallizer_no} {r.batch_no ? `(${r.batch_no})` : ''}
+                          </div>
+                        )}
+                      </td>
+
+                      {/* 2. Product & Sampling Point */}
+                      <td style={{ padding: '10px 12px', verticalAlign: 'top' }}>
+                        <div style={{ fontWeight: 600, color: 'var(--text)' }}>
+                          {r.product_name || 'Standard Product'}
+                        </div>
+                        <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>
+                          {r.sampling_point_name || 'Deodorizer Discharge'}
+                        </div>
+                      </td>
+
+                      {/* 3. Sample Check Time */}
+                      <td style={{ padding: '10px 12px', verticalAlign: 'top', whiteSpace: 'nowrap' }}>
+                        <div style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 500 }}>
+                          {formatDate(r.sample_date)}
+                        </div>
+                        <div style={{ fontSize: '11px', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '3px', marginTop: '2px' }}>
+                          <Clock size={10} />
+                          <span>Check: {r.time_check || '–'}</span>
+                        </div>
+                        {r.submitted_by_name && (
+                          <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '1px' }}>
+                            Sampler: {r.submitted_by_name}
+                          </div>
+                        )}
+                      </td>
+
+                      {/* 4. Status & Disposition */}
+                      <td style={{ padding: '10px 12px', verticalAlign: 'top' }}>
+                        <div>
+                          {isReject ? (
+                            <span className="bd r">REJECTED</span>
+                          ) : (
+                            <span className="bd a">CONCESSION</span>
+                          )}
+                        </div>
+                        {r.decision?.disposition && (
+                          <div style={{ marginTop: '4px' }}>
+                            <span 
+                              style={{ 
+                                fontSize: '10px', 
+                                padding: '1px 6px', 
+                                borderRadius: '4px', 
+                                background: 'rgba(255,255,255,0.06)',
+                                border: '1px solid var(--line)',
+                                color: 'var(--text)',
+                                textTransform: 'uppercase',
+                                fontWeight: 600,
+                                letterSpacing: '0.04em'
+                              }}
+                            >
+                              Action: {r.decision.disposition}
+                            </span>
+                          </div>
+                        )}
+                      </td>
+
+                      {/* 5. Defect Reason & Failed Parameters */}
+                      <td style={{ padding: '10px 12px', verticalAlign: 'top', maxWidth: '340px' }}>
+                        <div style={{ fontWeight: 600, color: 'var(--redt)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <AlertTriangle size={12} />
+                          <span>{reasonCategory}</span>
+                        </div>
+
+                        {r.decision?.reason_detail && (
+                          <div style={{ fontSize: '11px', color: 'var(--text)', marginTop: '3px', lineHeight: '1.35' }}>
+                            {r.decision.reason_detail}
+                          </div>
+                        )}
+
+                        {failedParams.length > 0 && (
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '5px' }}>
+                            {failedParams.map((param, idx) => (
+                              <span 
+                                key={idx}
+                                style={{ 
+                                  fontSize: '10px', 
+                                  fontFamily: 'monospace',
+                                  background: 'rgba(216, 31, 44, 0.12)', 
+                                  border: '1px solid rgba(216, 31, 44, 0.28)', 
+                                  color: 'var(--redt)', 
+                                  padding: '1px 5px', 
+                                  borderRadius: '3px',
+                                  fontWeight: 500
+                                }}
+                              >
+                                {param}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </td>
+
+                      {/* 6. QA Decision Authority & Timestamp */}
+                      <td style={{ padding: '10px 12px', verticalAlign: 'top' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontWeight: 600, color: 'var(--text)' }}>
+                          <UserCheck size={13} style={{ color: 'var(--green)' }} />
+                          <span>{r.decision?.decided_by_name || 'QA Authority'}</span>
+                        </div>
+                        {r.decision?.decided_by && r.decision.decided_by !== r.decision.decided_by_name && (
+                          <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'monospace' }}>
+                            ID: {r.decision.decided_by}
+                          </div>
+                        )}
+                        <div style={{ fontSize: '10px', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '3px', marginTop: '3px', fontVariantNumeric: 'tabular-nums' }}>
+                          <Clock size={10} />
+                          <span>{r.decision?.decided_at ? formatDateTime(r.decision.decided_at) : 'Timestamp logged'}</span>
+                        </div>
+                        {r.decision?.overturn_reason && (
+                          <div style={{ fontSize: '10px', color: 'var(--amber)', marginTop: '2px' }}>
+                            Overturned: {r.decision.overturn_reason}
+                          </div>
+                        )}
+                      </td>
+
+                      {/* 7. Action: Inspect Lab Results */}
+                      <td style={{ padding: '10px 14px', verticalAlign: 'top', textAlign: 'center' }}>
+                        <button
+                          type="button"
+                          className="btn sm"
+                          onClick={() => setInspectReport(r)}
+                          style={{
+                            height: '28px',
+                            padding: '0 10px',
+                            fontSize: '11px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            whiteSpace: 'nowrap'
+                          }}
+                          title={`Inspect full laboratory certificate for ${r.lot_no}`}
+                        >
+                          <Eye size={12} />
+                          <span>View</span>
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <p className="foot" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '6px' }}>
+          <span>
+            Displaying <b>{filteredParetoReports.length}</b> of <b>{paretoReports.length}</b> non-conforming lot records for {selectedMonth === 'all' ? 'All Shifts' : formatMonthLabel(selectedMonth)}.
+          </span>
+          <span style={{ fontSize: '11px', color: 'var(--muted)' }}>
+            Traceability locked to ISO 9001 / HACCP standard analytical records.
+          </span>
+        </p>
+      </section>
+
+      {/* 5. Analytical Laboratory Inspection Modal */}
+      {inspectReport && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none bg-black/80 backdrop-blur-md animate-alert-overlay-in"
+          onClick={() => setInspectReport(null)}
+        >
+          <div 
+            className="bg-[#101927] border border-[#1F2E43] rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-alert-content-in text-slate-100"
+            onClick={(e) => e.stopPropagation()}
+            style={{ position: 'relative' }}
+          >
+            {/* Modal Header */}
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.02)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(216, 31, 44, 0.15)', border: '1px solid rgba(216, 31, 44, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <ShieldAlert size={18} style={{ color: 'var(--redt)' }} />
+                </div>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 600 }}>
+                      Lot Non-Conformance Certificate · {inspectReport.lot_no}
+                    </h3>
+                    {inspectReport.decision?.decision === 'reject' ? (
+                      <span className="bd r">REJECTED</span>
+                    ) : (
+                      <span className="bd a">CONCESSION</span>
+                    )}
+                  </div>
+                  <span style={{ fontSize: '11px', color: 'var(--muted)', fontFamily: 'monospace' }}>
+                    Report No: {inspectReport.report_no} · Created: {formatDateTime(inspectReport.created_at)}
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setInspectReport(null)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--muted)',
+                  cursor: 'pointer',
+                  padding: '4px',
+                  borderRadius: '6px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                title="Close modal"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div style={{ padding: '20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* Product & Sampling Details */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--line)', borderRadius: '8px', padding: '12px 14px' }}>
+                <div>
+                  <small style={{ color: 'var(--muted)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Product Name</small>
+                  <div style={{ fontWeight: 600, fontSize: '13px', marginTop: '2px' }}>{inspectReport.product_name || 'Standard Oil'}</div>
+                </div>
+                <div>
+                  <small style={{ color: 'var(--muted)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Sample Date &amp; Check</small>
+                  <div style={{ fontWeight: 500, fontSize: '13px', marginTop: '2px', fontVariantNumeric: 'tabular-nums' }}>
+                    {formatDate(inspectReport.sample_date)} ({inspectReport.time_check || '–'})
+                  </div>
+                </div>
+                <div>
+                  <small style={{ color: 'var(--muted)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Sampling Point</small>
+                  <div style={{ fontWeight: 500, fontSize: '13px', marginTop: '2px' }}>{inspectReport.sampling_point_name || 'Discharge Manifold'}</div>
+                </div>
+                <div>
+                  <small style={{ color: 'var(--muted)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Tanks (Feed → Discharge)</small>
+                  <div style={{ fontWeight: 500, fontSize: '13px', marginTop: '2px', fontFamily: 'monospace' }}>
+                    {inspectReport.feed_tank_code || '–'} → {inspectReport.discharge_tank_code || '–'}
+                  </div>
+                </div>
+                {inspectReport.crystallizer_no && (
+                  <div>
+                    <small style={{ color: 'var(--muted)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Crystallizer / Batch</small>
+                    <div style={{ fontWeight: 500, fontSize: '13px', marginTop: '2px' }}>
+                      {inspectReport.crystallizer_no} {inspectReport.batch_no ? `· Batch ${inspectReport.batch_no}` : ''}
+                    </div>
+                  </div>
+                )}
+                <div>
+                  <small style={{ color: 'var(--muted)', fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Sample Submitted By</small>
+                  <div style={{ fontWeight: 500, fontSize: '13px', marginTop: '2px' }}>{inspectReport.submitted_by_name || 'Plant Operator'}</div>
+                </div>
+              </div>
+
+              {/* QC Decision Statement */}
+              <div style={{ background: 'rgba(216, 31, 44, 0.07)', border: '1px solid rgba(216, 31, 44, 0.25)', borderRadius: '8px', padding: '14px 16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <AlertTriangle size={15} style={{ color: 'var(--redt)' }} />
+                    <span style={{ fontWeight: 600, fontSize: '13px', color: 'var(--redt)' }}>
+                      Rejection Reason: {getReasonCategory(inspectReport.decision?.reason_label, inspectReport.decision?.reason_id)}
+                    </span>
+                  </div>
+                  {inspectReport.decision?.disposition && (
+                    <span className="bd" style={{ background: 'rgba(255,255,255,0.08)', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.03em' }}>
+                      Disposition: {inspectReport.decision.disposition}
+                    </span>
+                  )}
+                </div>
+
+                {inspectReport.decision?.reason_detail && (
+                  <p style={{ margin: '0 0 10px', fontSize: '12px', color: 'var(--text)', lineHeight: '1.4' }}>
+                    {inspectReport.decision.reason_detail}
+                  </p>
+                )}
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px', paddingTop: '10px', borderTop: '1px solid rgba(216, 31, 44, 0.15)', fontSize: '11px' }}>
+                  <div>
+                    <span style={{ color: 'var(--muted)' }}>Decided by Authority: </span>
+                    <strong style={{ color: 'var(--text)' }}>{inspectReport.decision?.decided_by_name || 'QA Officer'}</strong>
+                    {inspectReport.decision?.decided_by && (
+                      <span style={{ color: 'var(--muted)', fontFamily: 'monospace', marginLeft: '4px' }}>
+                        ({inspectReport.decision.decided_by})
+                      </span>
+                    )}
+                  </div>
+                  <div>
+                    <span style={{ color: 'var(--muted)' }}>Decision Timestamp: </span>
+                    <strong style={{ color: 'var(--text)', fontVariantNumeric: 'tabular-nums' }}>
+                      {inspectReport.decision?.decided_at ? formatDateTime(inspectReport.decision.decided_at) : '–'}
+                    </strong>
+                  </div>
+                </div>
+
+                {inspectReport.decision?.overturn_reason && (
+                  <div style={{ marginTop: '8px', padding: '6px 10px', borderRadius: '4px', background: 'rgba(224, 160, 48, 0.12)', border: '1px solid rgba(224, 160, 48, 0.3)', fontSize: '11px', color: 'var(--amber)' }}>
+                    <strong>Overturn Note:</strong> {inspectReport.decision.overturn_reason}
+                  </div>
+                )}
+              </div>
+
+              {/* Lab Analytical Parameters Table */}
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <h4 style={{ margin: 0, fontSize: '13px', fontWeight: 600 }}>
+                    Laboratory Analytical Parameters (RF-FR-001)
+                  </h4>
+                  <span style={{ fontSize: '11px', color: 'var(--muted)' }}>
+                    {inspectReport.results?.length || 0} Tested Parameters
+                  </span>
+                </div>
+
+                {(!inspectReport.results || inspectReport.results.length === 0) ? (
+                  <p style={{ margin: 0, padding: '16px', background: 'rgba(255,255,255,0.02)', borderRadius: '6px', textAlign: 'center', color: 'var(--muted)', fontSize: '12px' }}>
+                    No analytical test parameters attached to this report.
+                  </p>
+                ) : (
+                  <div style={{ overflowX: 'auto', border: '1px solid var(--line)', borderRadius: '6px' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
+                      <thead>
+                        <tr style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid var(--line)', textAlign: 'left', color: 'var(--muted)', fontSize: '11px' }}>
+                          <th style={{ padding: '8px 12px' }}>Parameter Name</th>
+                          <th style={{ padding: '8px 12px' }}>Code</th>
+                          <th style={{ padding: '8px 12px', textAlign: 'right' }}>Result Value</th>
+                          <th style={{ padding: '8px 12px', textAlign: 'center' }}>Specification Compliance</th>
+                          <th style={{ padding: '8px 12px' }}>Analyst</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {inspectReport.results.map((res) => {
+                          const isFailed = res.in_spec === false;
+                          return (
+                            <tr 
+                              key={res.id || res.parameter_code}
+                              style={{ 
+                                borderBottom: '1px solid var(--line)',
+                                background: isFailed ? 'rgba(216, 31, 44, 0.08)' : undefined
+                              }}
+                            >
+                              <td style={{ padding: '8px 12px', fontWeight: isFailed ? 600 : 400, color: isFailed ? 'var(--redt)' : 'inherit' }}>
+                                {res.parameter_name}
+                                {res.series_key && (
+                                  <small style={{ color: 'var(--muted)', marginLeft: '4px' }}>
+                                    ({res.series_key}°C)
+                                  </small>
+                                )}
+                              </td>
+                              <td style={{ padding: '8px 12px', fontFamily: 'monospace', fontSize: '11px', color: 'var(--muted)' }}>
+                                {res.parameter_code}
+                              </td>
+                              <td style={{ padding: '8px 12px', textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 600, color: isFailed ? 'var(--redt)' : 'inherit' }}>
+                                {res.value_numeric !== null && res.value_numeric !== undefined
+                                  ? `${res.value_numeric} ${res.unit || ''}`
+                                  : res.value_text || '–'}
+                              </td>
+                              <td style={{ padding: '8px 12px', textAlign: 'center' }}>
+                                {res.in_spec === true && (
+                                  <span className="bd g">IN SPEC</span>
+                                )}
+                                {res.in_spec === false && (
+                                  <span className="bd r">OUT OF SPEC</span>
+                                )}
+                                {res.in_spec === null || res.in_spec === undefined ? (
+                                  <span className="bd">N/A</span>
+                                ) : null}
+                              </td>
+                              <td style={{ padding: '8px 12px', fontSize: '11px', color: 'var(--muted)' }}>
+                                {res.entered_by_name || 'QC Analyst'}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div style={{ padding: '12px 20px', borderTop: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', background: 'rgba(255,255,255,0.02)' }}>
+              <button
+                type="button"
+                className="btn"
+                onClick={() => setInspectReport(null)}
+                style={{ height: '32px', padding: '0 16px', fontSize: '12px' }}
+              >
+                Close Certificate
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
