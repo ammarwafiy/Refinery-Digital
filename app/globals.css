@@ -104,6 +104,119 @@ button:disabled, [role="button"][aria-disabled="true"] {
   opacity: 0.5;
 }
 
+/* ========================================================================= */
+/* INDUSTRIAL MODAL & ALERT DIALOG SPRING PHYSICS ANIMATIONS                 */
+/* ========================================================================= */
+@keyframes alert-overlay-in {
+  0% {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
+  }
+  100% {
+    opacity: 1;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+}
+
+@keyframes alert-overlay-out {
+  0% {
+    opacity: 1;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  100% {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
+  }
+}
+
+@keyframes alert-content-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.90) translateY(14px);
+  }
+  65% {
+    opacity: 1;
+    transform: scale(1.02) translateY(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes alert-content-out {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.94) translateY(10px);
+  }
+}
+
+@keyframes toast-slide-down {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes modal-fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.animate-alert-overlay-in {
+  animation: alert-overlay-in 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-alert-overlay-out {
+  animation: alert-overlay-out 0.18s ease-in forwards;
+}
+
+.animate-alert-content-in {
+  animation: alert-content-in 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.animate-alert-content-out {
+  animation: alert-content-out 0.18s cubic-bezier(0.4, 0, 1, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.animate-fadeIn {
+  animation: modal-fade-in 0.2s ease-out forwards;
+}
+
+.animate-slideDown {
+  animation: toast-slide-down 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Fallbacks for standard Tailwind/Radix animation tokens */
+.animate-in {
+  animation-duration: 0.24s;
+  animation-fill-mode: both;
+}
+.fade-in {
+  animation-name: modal-fade-in;
+}
+.zoom-in-95 {
+  animation-name: alert-content-in;
+}
+
 /* Industrial Precision Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

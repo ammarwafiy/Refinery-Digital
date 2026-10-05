@@ -1672,12 +1672,12 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
       {/* 3. QC Decision Modal with Electronic Signature */}
       {isDecisionModalOpen && selectedReport && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md transition-all duration-200 ease-out select-none"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none animate-alert-overlay-in"
           onClick={() => setIsDecisionModalOpen(false)}
         >
           <div 
             onClick={(e) => e.stopPropagation()}
-            className="panel relative w-full max-w-lg rounded-2xl bg-[#0F1524] border border-[#1F2E43] shadow-[0_20px_50px_rgba(0,0,0,0.75)] p-6 overflow-hidden transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] scale-100 opacity-100 translate-y-0"
+            className="panel relative w-full max-w-lg rounded-2xl bg-[#0F1524] border border-[#1F2E43] shadow-[0_20px_50px_rgba(0,0,0,0.75)] p-6 overflow-hidden animate-alert-content-in"
             style={{ margin: 0 }}
           >
             {/* Top accent beam */}
@@ -1828,7 +1828,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
       {/* Modal: Delete Sample Confirmation (QC Correction) */}
       {reportToDelete && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md transition-all duration-200 ease-out select-none"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none animate-alert-overlay-in"
           onClick={() => {
             setReportToDelete(null);
             setDeleteError(null);
@@ -1836,7 +1836,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
         >
           <div 
             onClick={(e) => e.stopPropagation()}
-            className="panel relative w-full max-w-lg rounded-2xl bg-[#0F1524] border border-[#1F2E43] shadow-[0_20px_50px_rgba(0,0,0,0.75)] p-6 overflow-hidden transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] scale-100 opacity-100 translate-y-0"
+            className="panel relative w-full max-w-lg rounded-2xl bg-[#0F1524] border border-[#1F2E43] shadow-[0_20px_50px_rgba(0,0,0,0.75)] p-6 overflow-hidden animate-alert-content-in"
             style={{ margin: 0 }}
           >
             {/* Top red accent beam */}

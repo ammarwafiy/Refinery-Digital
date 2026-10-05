@@ -114,9 +114,9 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none animate-alert-overlay-in">
       <div 
-        className="w-full max-w-4xl max-h-[92vh] flex flex-col bg-[#0A101D] border border-[#1F2E43] rounded-2xl shadow-2xl overflow-hidden font-sans text-slate-200"
+        className="w-full max-w-4xl max-h-[92vh] flex flex-col bg-[#0A101D] border border-[#1F2E43] rounded-2xl shadow-2xl overflow-hidden font-sans text-slate-200 animate-alert-content-in"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}

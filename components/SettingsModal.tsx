@@ -69,6 +69,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
 import { 
   getAuditLogs, 
   ROLE_ID_SERIES, 
@@ -1113,7 +1114,7 @@ export default function SettingsModal({
 
   return (
     <div 
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-5 bg-black/85 backdrop-blur-sm animate-fadeIn"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-5 select-none animate-alert-overlay-in"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose();
@@ -1130,7 +1131,7 @@ export default function SettingsModal({
 
       {/* Main Settings Modal Card */}
       <div 
-        className="w-full max-w-4xl max-h-[92vh] flex flex-col rounded-2xl border border-[#1F2E43] bg-[#0A1018] shadow-2xl overflow-hidden text-slate-100"
+        className="w-full max-w-4xl max-h-[92vh] flex flex-col rounded-2xl border border-[#1F2E43] bg-[#0A1018] shadow-2xl overflow-hidden text-slate-100 animate-alert-content-in"
         role="dialog"
         aria-modal="true"
       >
@@ -2356,6 +2357,31 @@ export default function SettingsModal({
                         {updateCheckText}
                       </span>
                     )}
+                  </div>
+
+                  {/* Interactive Alert Transition Demo (from alert.transition) */}
+                  <div className="p-3.5 rounded-xl bg-[#070B12] border border-[#1F2E43]/60 flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <div>
+                      <span className="text-white font-mono font-bold text-xs block">Preview Alert Transition</span>
+                      <span className="text-[11px] text-slate-400 font-sans">Uji animasi spring dialog & transition efek Alert Dialog</span>
+                    </div>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="dark" size="sm">Launch Dialog</Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Do you wish to proceed?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This operation is irreversible. proceeding will permanently remove your account and all related information from our servers.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction>Continue</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </div>
 

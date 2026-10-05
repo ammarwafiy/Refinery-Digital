@@ -122,13 +122,15 @@ export const AlertDialogContent = React.forwardRef<HTMLDivElement, AlertDialogCo
           document.body.style.overflow = originalOverflow;
           window.removeEventListener('keydown', handleKeyDown);
         };
-      } else {
-        const timeout = setTimeout(() => setIsVisible(false), 200);
+      } else if (isVisible) {
+        const timeout = setTimeout(() => setIsVisible(false), 190);
         return () => clearTimeout(timeout);
       }
-    }, [open, setOpen]);
+    }, [open, isVisible, setOpen]);
 
     if (!mounted || (!open && !isVisible)) return null;
+
+    const isExiting = !open && isVisible;
 
     const maxWidthClasses = {
       sm: 'max-w-sm',
@@ -139,10 +141,10 @@ export const AlertDialogContent = React.forwardRef<HTMLDivElement, AlertDialogCo
     return createPortal(
       <div
         className={cn(
-          'fixed inset-0 z-[9999] flex items-center justify-center p-4 transition-all duration-200 ease-out select-none',
-          open
-            ? 'bg-black/80 backdrop-blur-sm opacity-100 pointer-events-auto'
-            : 'bg-black/0 backdrop-blur-none opacity-0 pointer-events-none'
+          'fixed inset-0 z-[9999] flex items-center justify-center p-4 select-none',
+          isExiting
+            ? 'animate-alert-overlay-out pointer-events-none'
+            : 'animate-alert-overlay-in pointer-events-auto'
         )}
         onClick={() => setOpen(false)}
         role="dialog"
@@ -152,19 +154,17 @@ export const AlertDialogContent = React.forwardRef<HTMLDivElement, AlertDialogCo
           ref={ref}
           onClick={(e) => e.stopPropagation()}
           className={cn(
-            'relative w-full rounded-2xl bg-[#0F1524] border border-[#1F2E43] shadow-[0_20px_50px_rgba(0,0,0,0.7)] p-6 overflow-hidden',
-            // Emil Kowalski craft: Never scale from 0! Animate smoothly from 0.96 -> 1.00 with custom cubic bezier
-            'transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]',
-            open
-              ? 'opacity-100 scale-100 translate-y-0'
-              : 'opacity-0 scale-[0.96] translate-y-2',
+            'relative w-full rounded-2xl bg-[#0F1524] border border-[#1F2E43] shadow-[0_25px_60px_rgba(0,0,0,0.85)] p-6 overflow-hidden',
+            isExiting
+              ? 'animate-alert-content-out'
+              : 'animate-alert-content-in',
             maxWidthClasses,
             className
           )}
           {...props}
         >
           {/* Subtle top industrial accent border beam */}
-          <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-red-600 via-[#009FE3] to-amber-500 opacity-80" />
+          <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-red-600 via-[#009FE3] to-amber-500 opacity-90" />
           {children}
         </div>
       </div>,

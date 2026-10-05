@@ -1423,7 +1423,7 @@ export default function AdminUserManagementView() {
       {/* ========================================================================= */}
       {confirmModal && confirmModal.isOpen && (
         <div 
-          className="fixed inset-0 z-[9998] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md transition-all duration-200 ease-out select-none"
+          className="fixed inset-0 z-[9998] flex items-center justify-center p-4 select-none animate-alert-overlay-in"
           onClick={() => {
             if (!modalIsSubmitting) {
               setConfirmModal(null);
@@ -1432,7 +1432,7 @@ export default function AdminUserManagementView() {
           }}
         >
           <div 
-            className="relative max-w-md w-full bg-[#0F1524] border border-[#1F2E43] rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.75)] overflow-hidden transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] scale-100 opacity-100 translate-y-0"
+            className="relative max-w-md w-full bg-[#0F1524] border border-[#1F2E43] rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.75)] overflow-hidden animate-alert-content-in"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Top gradient highlight strip */}
