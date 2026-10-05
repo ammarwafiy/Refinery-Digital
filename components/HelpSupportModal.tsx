@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   HelpCircle, 
   X, 
@@ -31,8 +32,30 @@ interface HelpSupportModalProps {
 }
 
 export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpSupportModalProps) {
+  const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<'sop' | 'specs' | 'directory' | 'diagnostics'>('sop');
   const [ticketSubject, setTicketSubject] = useState('');
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
   const [ticketCategory, setTicketCategory] = useState('process');
   const [ticketDescription, setTicketDescription] = useState('');
   const [isSubmittingTicket, setIsSubmittingTicket] = useState(false);
@@ -113,8 +136,17 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none animate-alert-overlay-in">
+  if (!isOpen || !mounted) return null;
+
+  return createPortal(
+    <div 
+      className="fixed inset-0 z-[99999] flex items-center justify-center p-4 select-none bg-black/80 backdrop-blur-md animate-alert-overlay-in"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
       <div 
         className="w-full max-w-4xl max-h-[92vh] flex flex-col bg-[#0A101D] border border-[#1F2E43] rounded-2xl shadow-2xl overflow-hidden font-sans text-slate-200 animate-alert-content-in"
         onClick={(e) => e.stopPropagation()}
@@ -690,6 +722,7 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

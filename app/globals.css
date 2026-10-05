@@ -112,11 +112,13 @@ button:disabled, [role="button"][aria-disabled="true"] {
     opacity: 0;
     backdrop-filter: blur(0px);
     -webkit-backdrop-filter: blur(0px);
+    background-color: rgba(0, 0, 0, 0);
   }
   100% {
     opacity: 1;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
+    background-color: rgba(3, 7, 18, 0.82);
   }
 }
 
@@ -125,11 +127,13 @@ button:disabled, [role="button"][aria-disabled="true"] {
     opacity: 1;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
+    background-color: rgba(3, 7, 18, 0.82);
   }
   100% {
     opacity: 0;
     backdrop-filter: blur(0px);
     -webkit-backdrop-filter: blur(0px);
+    background-color: rgba(0, 0, 0, 0);
   }
 }
 
@@ -180,10 +184,16 @@ button:disabled, [role="button"][aria-disabled="true"] {
 }
 
 .animate-alert-overlay-in {
+  background-color: rgba(3, 7, 18, 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   animation: alert-overlay-in 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .animate-alert-overlay-out {
+  background-color: rgba(3, 7, 18, 0);
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
   animation: alert-overlay-out 0.18s ease-in forwards;
 }
 

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   User, 
   Sliders, 
@@ -349,9 +350,14 @@ export default function SettingsModal({
   currentUser,
   onProfileUpdate,
 }: SettingsModalProps) {
+  const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
   const [settings, setSettings] = useState<SystemSettings>(DEFAULT_SETTINGS);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Profile Form State
   const [fullName, setFullName] = useState(currentUser?.full_name || '');
@@ -657,16 +663,22 @@ export default function SettingsModal({
   // Keyboard Escape listener to close modal (Must be before early return to adhere to React Hook rules)
   useEffect(() => {
     if (!isOpen) return;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         onClose();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   const lang = settings.language === 'ms' ? 'ms' : 'en';
   const t = DICT[lang];
@@ -1112,9 +1124,9 @@ export default function SettingsModal({
     .join('')
     .toUpperCase() || 'OP';
 
-  return (
+  return createPortal(
     <div 
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-5 select-none animate-alert-overlay-in"
+      className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-5 select-none bg-black/80 backdrop-blur-md animate-alert-overlay-in"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose();
@@ -2409,6 +2421,7 @@ export default function SettingsModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
