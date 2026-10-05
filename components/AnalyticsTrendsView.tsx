@@ -25,9 +25,40 @@ import { SampleReport, ProcessSheet } from '@/types/refinery';
 import { BarChart3, TrendingUp, AlertOctagon, Layers } from 'lucide-react';
 
 // Normalization helpers for Pareto Reason Codes and Products
-function getReasonCategory(label?: string | null): string {
-  if (!label) return 'Other Defect';
-  const l = label.toLowerCase();
+function formatMonthLabel(monthKey: string): string {
+  if (!monthKey || monthKey === 'all') return 'All Shifts (All-Time)';
+  const [yearStr, monthStr] = monthKey.split('-');
+  const y = parseInt(yearStr, 10);
+  const m = parseInt(monthStr, 10);
+  if (isNaN(y) || isNaN(m)) return monthKey;
+  const date = new Date(y, m - 1, 1);
+  return date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+}
+
+function getReasonCategory(label?: string | null, reasonId?: string | null): string {
+  if (!label && !reasonId) return 'Other Defect';
+  const allReasons = getRejectionReasons();
+  const matched = allReasons.find(r => r.id === reasonId || r.code === reasonId || r.label === label);
+  if (matched) {
+    switch (matched.code) {
+      case 'FFA_HIGH': return 'FFA above spec';
+      case 'H2O_HIGH': return 'Moisture above limit';
+      case 'PV_HIGH': return 'PV above spec';
+      case 'COLOUR_OUT': return 'Colour out of spec';
+      case 'OFF_ODOUR': return 'Off odour';
+      case 'SMP_OUT': return 'SMP out of range';
+      case 'CLOUD_OUT': return 'Cloud point out of range';
+      case 'SFC_OUT': return 'SFC profile out of range';
+      case 'SOAP_HIGH': return 'Soap content high';
+      case 'IV_OUT': return 'IV out of range';
+      case 'CONTAMINATION': return 'Cross-contamination';
+      case 'WRONG_TANK': return 'Wrong product in tank';
+      case 'SAMPLING_ERR': return 'Sampling error';
+      default: return matched.label;
+    }
+  }
+
+  const l = (label || '').toLowerCase();
   if (l.includes('colour') || l.includes('color')) return 'Colour out of spec';
   if (l.includes('ffa') || l.includes('fatty acid')) return 'FFA above spec';
   if (l.includes('odour') || l.includes('odor')) return 'Off odour';
@@ -41,7 +72,7 @@ function getReasonCategory(label?: string | null): string {
   if (l.includes('contamination')) return 'Cross-contamination';
   if (l.includes('wrong') || l.includes('tank')) return 'Wrong product in tank';
   if (l.includes('sampling')) return 'Sampling error';
-  return label;
+  return label || 'Other Defect';
 }
 
 function getProductCategory(name?: string | null): string {
@@ -62,27 +93,13 @@ function getProductCategory(name?: string | null): string {
   return trimmed;
 }
 
-// Month-to-date historical baseline prior to active shift session
-const BASELINE_REASONS: Record<string, number> = {
-  'Colour out of spec': 11,
-  'FFA above spec': 8,
-  'Off odour': 4,
-  'SMP out of range': 3,
-  'Moisture above limit': 2,
-  'Soap content high': 1,
-};
-
-const BASELINE_PRODUCTS: Record<string, { lots: number; rejects: number }> = {
-  'PL 65 Matsuyama': { lots: 45, rejects: 5 },
-  'Chocohi 357A': { lots: 21, rejects: 4 },
-  'Naturel WOS': { lots: 35, rejects: 3 },
-  'Daisy Soft PM18': { lots: 18, rejects: 2 },
-  'RPMO': { lots: 30, rejects: 1 },
-};
-
 export default function AnalyticsTrendsView() {
   const [sheet, setSheet] = useState<ProcessSheet>(() => getActiveProcessSheet());
   const [reports, setReports] = useState<SampleReport[]>(() => getSampleReports());
+
+  // Filter controls: Month selection & Disposition scope
+  const [selectedMonth, setSelectedMonth] = useState<string>('all');
+  const [dispositionScope, setDispositionScope] = useState<'rejects_only' | 'all_non_conformances'>('rejects_only');
 
   // Listen for live QC lab updates (RF-FR-001)
   useEffect(() => {
@@ -102,6 +119,32 @@ export default function AnalyticsTrendsView() {
   // Selected parameter view
   const [activeMetric, setActiveMetric] = useState<'trays' | 'vacuum' | 'steam'>('trays');
 
+  // Discover available shift months from live reports
+  const availableMonths = useMemo(() => {
+    const monthsSet = new Set<string>();
+    reports.forEach(r => {
+      if (r.sample_date && /^\d{4}-\d{2}/.test(r.sample_date)) {
+        monthsSet.add(r.sample_date.slice(0, 7));
+      }
+    });
+    return Array.from(monthsSet).sort((a, b) => b.localeCompare(a));
+  }, [reports]);
+
+  // Scoped reports based on selected month filter
+  const scopedReports = useMemo(() => {
+    if (selectedMonth === 'all') return reports;
+    return reports.filter(r => r.sample_date && r.sample_date.startsWith(selectedMonth));
+  }, [reports, selectedMonth]);
+
+  // Counts strictly synchronized with QC Management
+  const totalLotsCount = scopedReports.length;
+  const totalRejectsCount = useMemo(() => {
+    return scopedReports.filter(r => r.decision?.decision === 'reject').length;
+  }, [scopedReports]);
+  const totalConcessionsCount = useMemo(() => {
+    return scopedReports.filter(r => r.decision?.decision === 'accept_concession').length;
+  }, [scopedReports]);
+
   // Build time series data from 24-hour entries
   const timeSeriesData = (sheet.entries || []).map(entry => ({
     time: entry.slot_label,
@@ -114,19 +157,24 @@ export default function AnalyticsTrendsView() {
     ejectorPress: entry.ejector_press_bar,
   }));
 
+  // Filter reports that qualify for Pareto defect analysis based on disposition scope
+  const paretoReports = useMemo(() => {
+    return scopedReports.filter(r => {
+      const dec = r.decision?.decision;
+      if (dispositionScope === 'rejects_only') {
+        return dec === 'reject';
+      }
+      return dec === 'reject' || dec === 'accept_concession';
+    });
+  }, [scopedReports, dispositionScope]);
+
   // Build Pareto defect reasons data dynamically synced with RF-FR-001 QC Lab reports
   const paretoData = useMemo(() => {
-    const reasonsMap: Record<string, number> = { ...BASELINE_REASONS };
-    const allReasons = getRejectionReasons();
+    const reasonsMap: Record<string, number> = {};
 
-    // Iterate through all live reports from RF-FR-001 QC Lab
-    reports.forEach(report => {
-      if (report.decision?.decision === 'reject') {
-        const reasonObj = allReasons.find(r => r.id === report.decision?.reason_id);
-        const rawLabel = report.decision.reason_label || reasonObj?.label || 'Other Defect';
-        const category = getReasonCategory(rawLabel);
-        reasonsMap[category] = (reasonsMap[category] || 0) + 1;
-      }
+    paretoReports.forEach(report => {
+      const category = getReasonCategory(report.decision?.reason_label, report.decision?.reason_id);
+      reasonsMap[category] = (reasonsMap[category] || 0) + 1;
     });
 
     // Convert to sorted array
@@ -146,23 +194,22 @@ export default function AnalyticsTrendsView() {
         cumulative: total > 0 ? Math.round((running / total) * 100) : 0,
       };
     });
-  }, [reports]);
+  }, [paretoReports]);
 
   // Build Lot Rejection Frequency by Product dynamically synced with RF-FR-001 QC Lab reports
   const productRejections = useMemo(() => {
-    const prodMap: Record<string, { lots: number; rejects: number }> = {};
-    Object.entries(BASELINE_PRODUCTS).forEach(([prod, data]) => {
-      prodMap[prod] = { ...data };
-    });
+    const prodMap: Record<string, { lots: number; rejects: number; concessions: number }> = {};
 
-    reports.forEach(report => {
+    scopedReports.forEach(report => {
       const prod = getProductCategory(report.product_name);
       if (!prodMap[prod]) {
-        prodMap[prod] = { lots: 0, rejects: 0 };
+        prodMap[prod] = { lots: 0, rejects: 0, concessions: 0 };
       }
       prodMap[prod].lots += 1;
       if (report.decision?.decision === 'reject') {
         prodMap[prod].rejects += 1;
+      } else if (report.decision?.decision === 'accept_concession') {
+        prodMap[prod].concessions += 1;
       }
     });
 
@@ -171,9 +218,11 @@ export default function AnalyticsTrendsView() {
         product,
         lots: data.lots,
         rejects: data.rejects,
+        concessions: data.concessions,
+        effectiveRejects: dispositionScope === 'rejects_only' ? data.rejects : (data.rejects + data.concessions),
       }))
-      .sort((a, b) => b.rejects - a.rejects);
-  }, [reports]);
+      .sort((a, b) => b.effectiveRejects - a.effectiveRejects || b.lots - a.lots);
+  }, [scopedReports, dispositionScope]);
 
   // Statistical summaries for key insight callouts
   const totalParetoRejections = useMemo(
@@ -289,27 +338,92 @@ export default function AnalyticsTrendsView() {
       <div className="two" style={{ gridTemplateColumns: '1fr 1fr' }}>
         {/* Pareto Defect Reasons */}
         <section className="panel">
-          <div className="ph">
-            <span>Monthly QC rejection Pareto by reason code</span>
-            <span className="hint" style={{ fontWeight: 400 }}>80/20 analysis</span>
+          <div className="ph" style={{ flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+              <span style={{ fontWeight: 600 }}>
+                {selectedMonth === 'all'
+                  ? 'QC Rejection Pareto by Reason Code'
+                  : `Monthly QC Rejection Pareto (${formatMonthLabel(selectedMonth)})`}
+              </span>
+              <span style={{ fontSize: '11px', color: 'var(--green)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--green)', display: 'inline-block' }} />
+                Live QC Lab Synced: {totalRejectsCount} {totalRejectsCount === 1 ? 'rejection' : 'rejections'}
+                {totalConcessionsCount > 0 ? ` (${totalConcessionsCount} concessions)` : ''} across {totalLotsCount} lots
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto', flexWrap: 'wrap' }}>
+              {/* Month Selector */}
+              <select
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                className="inp"
+                style={{ height: '28px', padding: '0 8px', fontSize: '12px', minWidth: '130px', width: 'auto' }}
+                title="Filter by shift month"
+              >
+                <option value="all">All Shifts (All-Time MTD)</option>
+                {availableMonths.map((m) => (
+                  <option key={m} value={m}>
+                    {formatMonthLabel(m)}
+                  </option>
+                ))}
+              </select>
+
+              {/* Disposition Scope Toggle */}
+              <div className="segs" style={{ '--c': 2, margin: 0, height: '28px' } as React.CSSProperties}>
+                <button
+                  type="button"
+                  className="seg"
+                  aria-pressed={dispositionScope === 'rejects_only'}
+                  onClick={() => setDispositionScope('rejects_only')}
+                  style={{ padding: '0 8px', fontSize: '11px', height: '28px', lineHeight: '26px' }}
+                  title="Show only lot rejections"
+                >
+                  Rejects ({totalRejectsCount})
+                </button>
+                <button
+                  type="button"
+                  className="seg"
+                  aria-pressed={dispositionScope === 'all_non_conformances'}
+                  onClick={() => setDispositionScope('all_non_conformances')}
+                  style={{ padding: '0 8px', fontSize: '11px', height: '28px', lineHeight: '26px' }}
+                  title="Show rejections and concessions"
+                >
+                  + Concessions ({totalRejectsCount + totalConcessionsCount})
+                </button>
+              </div>
+            </div>
           </div>
 
           <div style={{ padding: '8px 20px 16px' }}>
             {paretoData.length === 0 ? (
-              <p className="empty">No QC rejections logged this month.</p>
+              <div style={{ padding: '32px 16px', textAlign: 'center', color: 'var(--muted)' }}>
+                <p style={{ margin: 0, fontWeight: 500, color: 'var(--text)' }}>
+                  No QC {dispositionScope === 'rejects_only' ? 'rejections' : 'non-conformances'} logged
+                  {selectedMonth !== 'all' ? ` for ${formatMonthLabel(selectedMonth)}` : ''}.
+                </p>
+                <p style={{ margin: '4px 0 0', fontSize: '12px' }}>
+                  100% of tested lots meet analytical quality specifications.
+                </p>
+              </div>
             ) : (
               paretoData.map((p) => {
                 const maxCount = Math.max(1, ...paretoData.map((d) => d.count));
                 const pct = Math.round((p.count / maxCount) * 100);
                 return (
-                  <div key={p.reason} className="pr">
+                  <div key={p.reason} className="pr" style={{ gridTemplateColumns: '150px 1fr 70px' }}>
                     <span title={p.reason} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {p.reason}
                     </span>
                     <div className="bar">
                       <i style={{ width: `${pct}%`, background: 'var(--red)' }} />
                     </div>
-                    <b style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{p.count}</b>
+                    <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
+                      <b style={{ fontVariantNumeric: 'tabular-nums' }}>{p.count}</b>
+                      <span style={{ fontSize: '11px', color: 'var(--muted)', width: '34px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+                        {p.cumulative}%
+                      </span>
+                    </div>
                   </div>
                 );
               })
@@ -317,19 +431,31 @@ export default function AnalyticsTrendsView() {
           </div>
 
           <p className="foot">
-            {topReasons[0]?.reason || 'Colour out of spec'} and {topReasons[1]?.reason || 'FFA above spec'} account for{' '}
-            {totalParetoRejections > 0
-              ? Math.round((((topReasons[0]?.count || 0) + (topReasons[1]?.count || 0)) / totalParetoRejections) * 100)
-              : 0}
-            % of the {totalParetoRejections} rejections tracked this month.
+            {totalParetoRejections === 0 ? (
+              '0 rejections tracked. All inspected lots passed quality release specifications.'
+            ) : totalParetoRejections === 1 ? (
+              <span>
+                <b>{topReasons[0]?.reason}</b> accounts for 100% of the 1 tracked rejection in this period.
+              </span>
+            ) : (
+              <span>
+                <b>{topReasons[0]?.reason}</b> and <b>{topReasons[1]?.reason}</b> account for{' '}
+                {Math.round((((topReasons[0]?.count || 0) + (topReasons[1]?.count || 0)) / totalParetoRejections) * 100)}% of the {totalParetoRejections} rejections tracked.
+              </span>
+            )}
           </p>
         </section>
 
         {/* Lot Rejection Frequency by Product */}
         <section className="panel">
-          <div className="ph">
-            <span>Lot rejection frequency by product</span>
-            <span className="hint" style={{ fontWeight: 400 }}>Volume and rejections</span>
+          <div className="ph" style={{ flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+            <div>
+              <span style={{ fontWeight: 600 }}>Lot rejection frequency by product</span>
+              <p className="meta" style={{ margin: 0, fontSize: '11px' }}>Volume and rejection breakdown</p>
+            </div>
+            <span className="hint" style={{ fontWeight: 400, marginLeft: 'auto' }}>
+              {productRejections.length} {productRejections.length === 1 ? 'Product Grade' : 'Product Grades'}
+            </span>
           </div>
 
           <div style={{ padding: '8px 20px 16px' }}>
@@ -340,7 +466,7 @@ export default function AnalyticsTrendsView() {
                 const maxLots = Math.max(1, ...productRejections.map((p) => p.lots));
                 const pct = Math.round((prod.lots / maxLots) * 100);
                 return (
-                  <div key={prod.product} className="pr" style={{ gridTemplateColumns: '130px 1fr 110px' }}>
+                  <div key={prod.product} className="pr" style={{ gridTemplateColumns: '130px 1fr 120px' }}>
                     <span title={prod.product} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {prod.product}
                     </span>
@@ -348,7 +474,7 @@ export default function AnalyticsTrendsView() {
                       <i style={{ width: `${pct}%`, background: 'var(--muted)' }} />
                     </div>
                     <span style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--muted)' }}>
-                      {prod.lots} lots, <b style={{ color: prod.rejects > 0 ? 'var(--redt)' : 'inherit' }}>{prod.rejects}</b> rej
+                      {prod.lots} lots, <b style={{ color: prod.effectiveRejects > 0 ? 'var(--redt)' : 'inherit' }}>{prod.effectiveRejects}</b> rej
                     </span>
                   </div>
                 );
@@ -357,12 +483,14 @@ export default function AnalyticsTrendsView() {
           </div>
 
           <p className="foot">
-            Most rejections: {highestRejectProduct?.product || 'PL 65 Matsuyama'},{' '}
-            {highestRejectProduct?.rejects || 0} of {highestRejectProduct?.lots || 0} lots (
-            {highestRejectProduct && highestRejectProduct.lots > 0
-              ? ((highestRejectProduct.rejects / highestRejectProduct.lots) * 100).toFixed(1)
-              : '0'}
-            % fail rate). Watch grade switchovers.
+            {highestRejectProduct && highestRejectProduct.effectiveRejects > 0 ? (
+              <span>
+                Most rejections: <b>{highestRejectProduct.product}</b>, {highestRejectProduct.effectiveRejects} of {highestRejectProduct.lots} lots (
+                {((highestRejectProduct.effectiveRejects / highestRejectProduct.lots) * 100).toFixed(1)}% fail rate). Watch grade switchovers.
+              </span>
+            ) : (
+              <span>All {scopedReports.length} tested lots passed with 0 rejections across all product grades.</span>
+            )}
           </p>
         </section>
       </div>

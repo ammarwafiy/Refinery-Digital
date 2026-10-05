@@ -2304,7 +2304,7 @@ export async function syncSampleReportsFromSupabase(): Promise<{ success: boolea
         feed_tank:tanks!feed_tank_id(id, code),
         discharge_tank:tanks!discharge_tank_id(id, code),
         sampling_point:sampling_points(id, name),
-        decisions:qc_decisions(*),
+        decisions:qc_decisions(*, reason:rejection_reasons(id, code, label)),
         results:sample_results(
           id,
           parameter_id,
@@ -2344,14 +2344,15 @@ export async function syncSampleReportsFromSupabase(): Promise<{ success: boolea
 
       const sbDec = Array.isArray(sbRep.decisions) && sbRep.decisions.length > 0 ? sbRep.decisions[0] : sbRep.decisions;
       let mappedDecision: QCDecision | undefined = undefined;
+      const localMatch = currentReports.find(cr => cr.id === sbRep.id || cr.report_no === sbRep.report_no);
       if (sbDec) {
-        const reasonObj = getRejectionReasons().find(r => r.id === sbDec.reason_id);
+        const reasonObj = getRejectionReasons().find(r => r.id === sbDec.reason_id || r.code === sbDec.reason_id) || sbDec.reason;
         mappedDecision = {
           id: sbDec.id,
           report_id: sbRep.id,
           decision: sbDec.decision,
           reason_id: sbDec.reason_id,
-          reason_label: reasonObj?.label,
+          reason_label: reasonObj?.label || sbDec.reason?.label || localMatch?.decision?.reason_label || undefined,
           reason_detail: sbDec.reason_detail,
           failed_parameters: sbDec.failed_parameters,
           disposition: sbDec.disposition,
@@ -2362,7 +2363,6 @@ export async function syncSampleReportsFromSupabase(): Promise<{ success: boolea
       }
 
       // Preserve local decision if remote decision has not yet populated
-      const localMatch = currentReports.find(cr => cr.id === sbRep.id || cr.report_no === sbRep.report_no);
       if (!mappedDecision && localMatch?.decision) {
         mappedDecision = localMatch.decision;
       }
@@ -2714,14 +2714,15 @@ export function submitQCDecision(data: {
   if (!report) return { success: false, error: 'Sample report not found.' };
 
   const reasons = getRejectionReasons();
-  const reasonObj = reasons.find(r => r.id === data.reason_id);
+  const reasonObj = reasons.find(r => r.id === data.reason_id || r.code === data.reason_id);
+  const resolvedReasonLabel = reasonObj?.label || (typeof data.reason_id === 'string' ? data.reason_id : undefined);
 
   const decisionObj: QCDecision = {
     id: makeDecisionUuid(data.report_id),
     report_id: data.report_id,
     decision: data.decision,
     reason_id: data.reason_id,
-    reason_label: reasonObj?.label,
+    reason_label: resolvedReasonLabel,
     reason_detail: data.reason_detail,
     failed_parameters: data.failed_parameters,
     disposition: data.disposition,
