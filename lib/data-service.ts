@@ -1885,6 +1885,22 @@ export function getSampleReports(): SampleReport[] {
   syncAllProcessEntriesToQC();
 
   const reports = getStored<SampleReport[]>(STORAGE_KEYS.REPORTS, memoryReports);
+
+  // Ensure all baseline refinery product sample reports exist in local storage
+  const existingReportNos = new Set(reports.map(r => r.report_no));
+  let addedBaseline = false;
+  INITIAL_REPORTS.forEach(baseRep => {
+    if (!existingReportNos.has(baseRep.report_no)) {
+      reports.push(JSON.parse(JSON.stringify(baseRep)));
+      existingReportNos.add(baseRep.report_no);
+      addedBaseline = true;
+    }
+  });
+  if (addedBaseline) {
+    setStored(STORAGE_KEYS.REPORTS, reports);
+    memoryReports = reports;
+  }
+
   let migrated = false;
   reports.forEach(rep => {
     if (rep.results && rep.results.length > 0) {

@@ -20,7 +20,8 @@ import {
   getActiveProcessSheet, 
   getSampleReports, 
   getRejectionReasons,
-  getProducts
+  getProducts,
+  syncSampleReportsFromSupabase
 } from '@/lib/data-service';
 import { SampleReport, ProcessSheet } from '@/types/refinery';
 import { BarChart3, TrendingUp, AlertOctagon, Layers } from 'lucide-react';
@@ -102,17 +103,28 @@ export default function AnalyticsTrendsView() {
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
   const [dispositionScope, setDispositionScope] = useState<'rejects_only' | 'all_non_conformances'>('rejects_only');
 
-  // Listen for live QC lab updates (RF-FR-001)
+  // Listen for live QC lab updates (RF-FR-001) and sync with Supabase cloud DB
   useEffect(() => {
-    const handleUpdate = () => {
+    // Initial fetch from Supabase to sync live cloud reports
+    syncSampleReportsFromSupabase().then(() => {
       setReports(getSampleReports());
+    });
+
+    const handleUpdate = (e?: any) => {
+      if (e?.detail && Array.isArray(e.detail)) {
+        setReports(e.detail);
+      } else {
+        setReports(getSampleReports());
+      }
       setSheet(getActiveProcessSheet());
     };
 
     window.addEventListener('refinery_reports_updated', handleUpdate);
+    window.addEventListener('refinery_sheet_updated', handleUpdate);
     window.addEventListener('storage', handleUpdate);
     return () => {
       window.removeEventListener('refinery_reports_updated', handleUpdate);
+      window.removeEventListener('refinery_sheet_updated', handleUpdate);
       window.removeEventListener('storage', handleUpdate);
     };
   }, []);
@@ -455,9 +467,12 @@ export default function AnalyticsTrendsView() {
         {/* Lot Rejection Frequency by Product */}
         <section className="panel">
           <div className="ph" style={{ flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
-            <div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
               <span style={{ fontWeight: 600 }}>Lot rejection frequency by product</span>
-              <p className="meta" style={{ margin: 0, fontSize: '11px' }}>Volume and rejection breakdown</p>
+              <span style={{ fontSize: '11px', color: 'var(--green)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--green)', display: 'inline-block' }} />
+                Synchronized with QC Management (RF-FR-001) · {scopedReports.length} Lots ({totalRejectsCount} {totalRejectsCount === 1 ? 'Rejection' : 'Rejections'}{totalConcessionsCount > 0 ? `, ${totalConcessionsCount} Concessions` : ''})
+              </span>
             </div>
             <span className="hint" style={{ fontWeight: 400, marginLeft: 'auto' }}>
               {productRejections.length} {productRejections.length === 1 ? 'Product Grade' : 'Product Grades'}
@@ -466,7 +481,7 @@ export default function AnalyticsTrendsView() {
 
           <div style={{ padding: '8px 20px 16px' }}>
             {productRejections.length === 0 ? (
-              <p className="empty">No product lots recorded.</p>
+              <p className="empty">No product lots recorded in QC Management.</p>
             ) : (
               productRejections.map((prod) => {
                 const maxLots = Math.max(1, ...productRejections.map((p) => p.lots));
@@ -495,6 +510,9 @@ export default function AnalyticsTrendsView() {
                     </div>
                     <span style={{ textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--muted)' }}>
                       {prod.lots} lots, <b style={{ color: prod.effectiveRejects > 0 ? 'var(--redt)' : 'inherit' }}>{prod.effectiveRejects}</b> rej
+                      {prod.concessions > 0 && dispositionScope === 'all_non_conformances' && (
+                        <span style={{ fontSize: '10px', marginLeft: '3px', color: 'var(--amber)' }}>({prod.concessions}c)</span>
+                      )}
                       {prod.effectiveRejects > 0 && <span style={{ fontSize: '10px', marginLeft: '4px', color: 'var(--redt)' }}>({rejPct}%)</span>}
                     </span>
                   </div>
@@ -506,8 +524,8 @@ export default function AnalyticsTrendsView() {
           <p className="foot">
             {highestRejectProduct && highestRejectProduct.effectiveRejects > 0 ? (
               <span>
-                Most rejections: <b>{highestRejectProduct.product}</b>, {highestRejectProduct.effectiveRejects} of {highestRejectProduct.lots} lots (
-                {((highestRejectProduct.effectiveRejects / highestRejectProduct.lots) * 100).toFixed(1)}% fail rate). Watch grade switchovers.
+                Highest non-conformance: <b>{highestRejectProduct.product}</b> with {highestRejectProduct.effectiveRejects} of {highestRejectProduct.lots} lots (
+                {((highestRejectProduct.effectiveRejects / highestRejectProduct.lots) * 100).toFixed(1)}% fail rate). Synchronized live with RF-FR-001 QC Lab decisions.
               </span>
             ) : (
               <span>All {scopedReports.length} tested lots passed with 0 rejections across all product grades.</span>
