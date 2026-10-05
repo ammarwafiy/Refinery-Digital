@@ -130,6 +130,11 @@ export default function AnalyticsTrendsView() {
   // Selected report for analytical laboratory inspection modal
   const [inspectReport, setInspectReport] = useState<SampleReport | null>(null);
 
+  // Auto-clear reason filter whenever month or scope changes so no stale/mismatched filter occurs
+  useEffect(() => {
+    setSelectedReasonFilter(null);
+  }, [selectedMonth, dispositionScope]);
+
   // Listen for live QC lab updates (RF-FR-001) and sync with Supabase cloud DB
   useEffect(() => {
     // Initial fetch from Supabase to sync live cloud reports
@@ -453,7 +458,10 @@ export default function AnalyticsTrendsView() {
               {/* Month Selector */}
               <select
                 value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
+                onChange={(e) => {
+                  setSelectedMonth(e.target.value);
+                  setSelectedReasonFilter(null);
+                }}
                 className="inp"
                 style={{ height: '28px', padding: '0 8px', fontSize: '12px', minWidth: '130px', width: 'auto' }}
                 title="Filter by shift month"
@@ -675,16 +683,64 @@ export default function AnalyticsTrendsView() {
       <section className="panel" id="rejected-lots-registry">
         <div className="ph" style={{ flexWrap: 'wrap', gap: '10px', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <span style={{ fontWeight: 600, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <ShieldAlert size={16} style={{ color: 'var(--redt)' }} />
-              Rejected Lots &amp; Non-Conformance Traceability Log
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <span style={{ fontWeight: 600, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <ShieldAlert size={16} style={{ color: 'var(--redt)' }} />
+                Rejected Lots &amp; Non-Conformance Traceability Log
+              </span>
+              <span className="bd" style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--text)' }}>
+                {formatMonthLabel(selectedMonth)}
+              </span>
+            </div>
             <span style={{ fontSize: '11px', color: 'var(--muted)', display: 'block', marginTop: '2px' }}>
               Full trace of rejected product lots, QA decision authorities, timestamps, failed analytical parameters, and dispositions.
             </span>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            {/* Synchronized Month Selector directly in table header */}
+            <select
+              value={selectedMonth}
+              onChange={(e) => {
+                setSelectedMonth(e.target.value);
+                setSelectedReasonFilter(null);
+              }}
+              className="inp"
+              style={{ height: '28px', padding: '0 8px', fontSize: '12px', minWidth: '130px', width: 'auto' }}
+              title="Filter by shift month"
+            >
+              <option value="all">All Shifts (All-Time)</option>
+              {availableMonths.map((m) => (
+                <option key={m} value={m}>
+                  {formatMonthLabel(m)}
+                </option>
+              ))}
+            </select>
+
+            {/* Synchronized Scope Toggle */}
+            <div className="segs" style={{ '--c': 2, margin: 0, height: '28px' } as React.CSSProperties}>
+              <button
+                type="button"
+                className="seg"
+                aria-pressed={dispositionScope === 'rejects_only'}
+                onClick={() => setDispositionScope('rejects_only')}
+                style={{ padding: '0 8px', fontSize: '11px', height: '28px', lineHeight: '26px' }}
+                title="Show only lot rejections"
+              >
+                Rejects ({totalRejectsCount})
+              </button>
+              <button
+                type="button"
+                className="seg"
+                aria-pressed={dispositionScope === 'all_non_conformances'}
+                onClick={() => setDispositionScope('all_non_conformances')}
+                style={{ padding: '0 8px', fontSize: '11px', height: '28px', lineHeight: '26px' }}
+                title="Show rejections and concessions"
+              >
+                + Concessions ({totalRejectsCount + totalConcessionsCount})
+              </button>
+            </div>
+
             {/* Active reason filter indicator */}
             {selectedReasonFilter && (
               <div 
@@ -722,7 +778,7 @@ export default function AnalyticsTrendsView() {
                 onChange={(e) => setLotSearchQuery(e.target.value)}
                 placeholder="Search Lot / Product / Officer..."
                 className="inp"
-                style={{ height: '28px', paddingLeft: '26px', paddingRight: lotSearchQuery ? '24px' : '8px', fontSize: '12px', width: '220px' }}
+                style={{ height: '28px', paddingLeft: '26px', paddingRight: lotSearchQuery ? '24px' : '8px', fontSize: '12px', width: '200px' }}
               />
               {lotSearchQuery && (
                 <button
@@ -738,7 +794,7 @@ export default function AnalyticsTrendsView() {
 
             {/* Total Badge */}
             <span className="bd r">
-              {filteredParetoReports.length} {filteredParetoReports.length === 1 ? 'Lot Record' : 'Lot Records'}
+              {filteredParetoReports.length} {filteredParetoReports.length === 1 ? 'Lot' : 'Lots'}
             </span>
           </div>
         </div>
@@ -761,25 +817,64 @@ export default function AnalyticsTrendsView() {
               {filteredParetoReports.length === 0 ? (
                 <tr>
                   <td colSpan={7} style={{ padding: '36px 16px', textAlign: 'center', color: 'var(--muted)' }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-                      <AlertOctagon size={24} style={{ opacity: 0.4 }} />
-                      <span style={{ fontWeight: 500, color: 'var(--text)' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                      <AlertOctagon size={28} style={{ opacity: 0.5, color: 'var(--amber)' }} />
+                      <span style={{ fontWeight: 600, color: 'var(--text)', fontSize: '13px' }}>
                         {selectedReasonFilter 
-                          ? `No lots found for reason "${selectedReasonFilter}".`
+                          ? `No lots found for reason "${selectedReasonFilter}" in ${formatMonthLabel(selectedMonth)}.`
                           : lotSearchQuery 
                             ? `No lots match query "${lotSearchQuery}".`
-                            : `No QC ${dispositionScope === 'rejects_only' ? 'rejections' : 'non-conformances'} found for this period.`}
+                            : `No QC ${dispositionScope === 'rejects_only' ? 'rejections' : 'non-conformances'} recorded for ${formatMonthLabel(selectedMonth)}.`}
                       </span>
-                      {(selectedReasonFilter || lotSearchQuery) && (
-                        <button
-                          type="button"
-                          className="btn sm"
-                          onClick={() => { setSelectedReasonFilter(null); setLotSearchQuery(''); }}
-                          style={{ marginTop: '4px' }}
-                        >
-                          Reset Filters
-                        </button>
-                      )}
+                      <p style={{ margin: 0, fontSize: '12px', color: 'var(--muted)' }}>
+                        {selectedReasonFilter
+                          ? 'Try clearing the Pareto reason filter to view all lots in this month.'
+                          : totalConcessionsCount > 0 && dispositionScope === 'rejects_only'
+                            ? `There are ${totalConcessionsCount} concession lots in this month. Switch to "+ Concessions" to view them.`
+                            : 'All inspected lots passed quality specification without any rejection logged.'}
+                      </p>
+                      <div style={{ display: 'flex', gap: '8px', marginTop: '6px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                        {selectedReasonFilter && (
+                          <button
+                            type="button"
+                            className="ghost"
+                            onClick={() => setSelectedReasonFilter(null)}
+                            style={{ fontSize: '11px', height: '28px', padding: '0 10px' }}
+                          >
+                            Clear Reason Filter
+                          </button>
+                        )}
+                        {lotSearchQuery && (
+                          <button
+                            type="button"
+                            className="ghost"
+                            onClick={() => setLotSearchQuery('')}
+                            style={{ fontSize: '11px', height: '28px', padding: '0 10px' }}
+                          >
+                            Clear Search
+                          </button>
+                        )}
+                        {dispositionScope === 'rejects_only' && totalConcessionsCount > 0 && (
+                          <button
+                            type="button"
+                            className="ghost"
+                            onClick={() => setDispositionScope('all_non_conformances')}
+                            style={{ fontSize: '11px', height: '28px', padding: '0 10px', color: 'var(--amber)', borderColor: 'rgba(224, 160, 48, 0.4)' }}
+                          >
+                            Show Concessions ({totalConcessionsCount})
+                          </button>
+                        )}
+                        {selectedMonth !== 'all' && (
+                          <button
+                            type="button"
+                            className="ghost"
+                            onClick={() => { setSelectedMonth('all'); setSelectedReasonFilter(null); }}
+                            style={{ fontSize: '11px', height: '28px', padding: '0 10px' }}
+                          >
+                            View All Months
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </td>
                 </tr>
@@ -938,7 +1033,7 @@ export default function AnalyticsTrendsView() {
                       <td style={{ padding: '10px 14px', verticalAlign: 'top', textAlign: 'center' }}>
                         <button
                           type="button"
-                          className="btn sm"
+                          className="ghost"
                           onClick={() => setInspectReport(r)}
                           style={{
                             height: '28px',
@@ -947,7 +1042,9 @@ export default function AnalyticsTrendsView() {
                             display: 'inline-flex',
                             alignItems: 'center',
                             gap: '4px',
-                            whiteSpace: 'nowrap'
+                            whiteSpace: 'nowrap',
+                            borderRadius: '6px',
+                            fontWeight: 500
                           }}
                           title={`Inspect full laboratory certificate for ${r.lot_no}`}
                         >
@@ -976,7 +1073,7 @@ export default function AnalyticsTrendsView() {
       {/* 5. Analytical Laboratory Inspection Modal */}
       {inspectReport && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none bg-black/80 backdrop-blur-md animate-alert-overlay-in"
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-alert-overlay-in"
           onClick={() => setInspectReport(null)}
         >
           <div 
@@ -1194,7 +1291,7 @@ export default function AnalyticsTrendsView() {
             <div style={{ padding: '12px 20px', borderTop: '1px solid var(--line)', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', background: 'rgba(255,255,255,0.02)' }}>
               <button
                 type="button"
-                className="btn"
+                className="primary"
                 onClick={() => setInspectReport(null)}
                 style={{ height: '32px', padding: '0 16px', fontSize: '12px' }}
               >
