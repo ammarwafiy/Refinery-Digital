@@ -5,10 +5,7 @@ import {
   AlertCircle,
   Eye,
   EyeOff,
-  CheckCircle2,
-  ShieldCheck,
-  ArrowRight,
-  Sparkles
+  CheckCircle2
 } from 'lucide-react';
 import { Profile } from '@/types/refinery';
 import { loginUser, authenticateUser } from '@/lib/data-service';
@@ -86,8 +83,8 @@ export default function LoginView({ onLogin }: LoginViewProps) {
 
   return (
     <div className="login">
-      {/* Left Column: Brand & Hero Display with Staggered Entrance */}
-      <div className={`lg-l login-enter-brand ${isExiting ? 'is-exiting' : ''}`}>
+      {/* Left Column: Brand & Hero Display */}
+      <div className={`lg-l ${isExiting ? 'is-exiting' : ''}`}>
         <div className="brand-redesign" style={{ padding: 0 }}>
           <div className="mark-redesign">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -106,9 +103,9 @@ export default function LoginView({ onLogin }: LoginViewProps) {
         <p>Hourly process logs, QC results and shift reports for the deodorizer line.</p>
       </div>
 
-      {/* Right Column: Clean Dark Surface Login Card with Emil Physics */}
+      {/* Right Column: Clean Dark Surface Login Card */}
       <form 
-        className={`lg-card login-card-enter ${isExiting ? 'is-exiting' : ''} ${isShaking ? 'is-shaking' : ''}`} 
+        className={`lg-card ${isExiting ? 'is-exiting' : ''} ${isShaking ? 'is-shaking' : ''}`} 
         onSubmit={handleFormSubmit} 
         noValidate
       >
@@ -165,15 +162,10 @@ export default function LoginView({ onLogin }: LoginViewProps) {
           </div>
         </div>
 
-        {/* Error message alert line with smooth slide-down */}
-        <div className="err" id="err" role="alert" aria-live="polite">
-          {errorMessage && (
-            <>
-              <AlertCircle className="w-4 h-4 text-[#fb7185] shrink-0" />
-              <span>{errorMessage}</span>
-            </>
-          )}
-        </div>
+        {/* Error message alert line */}
+        <p className="err" id="err" role="alert">
+          {errorMessage || ''}
+        </p>
 
         {/* Primary Access Button with Tactile Emil Physics */}
         <button 
@@ -181,26 +173,19 @@ export default function LoginView({ onLogin }: LoginViewProps) {
           type="submit" 
           disabled={isLoading || isSuccess}
         >
-          <span className={`login-btn-content ${isLoading ? 'is-transitioning' : ''}`}>
-            {isLoading && (
-              <>
-                <span className="h-4 w-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></span>
-                <span>Authenticating credentials...</span>
-              </>
-            )}
-            {isSuccess && (
-              <>
-                <CheckCircle2 className="w-4 h-4 text-white" />
-                <span>Access Granted · Entering...</span>
-              </>
-            )}
-            {!isLoading && !isSuccess && (
-              <>
-                <span>Access system</span>
-                <ArrowRight className="w-3.5 h-3.5 opacity-70 group-hover:translate-x-0.5 transition-transform" />
-              </>
-            )}
-          </span>
+          {isLoading && (
+            <span className="inline-flex items-center gap-2">
+              <span className="h-3.5 w-3.5 border-2 border-white/20 border-t-white rounded-full animate-spin"></span>
+              <span>Authenticating...</span>
+            </span>
+          )}
+          {isSuccess && (
+            <span className="inline-flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-white" />
+              <span>Access Granted · Entering...</span>
+            </span>
+          )}
+          {!isLoading && !isSuccess && 'Access system'}
         </button>
 
         {/* Help and Support Link */}

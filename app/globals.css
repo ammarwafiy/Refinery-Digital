@@ -1676,14 +1676,6 @@ html.light-theme .inp,
   pointer-events: none;
 }
 
-.login-enter-brand > * {
-  opacity: 0;
-  animation: login-fade-up 260ms var(--ease-out) forwards;
-}
-.login-enter-brand > *:nth-child(1) { animation-delay: 0ms; }
-.login-enter-brand > *:nth-child(2) { animation-delay: 45ms; }
-.login-enter-brand > *:nth-child(3) { animation-delay: 90ms; }
-
 .login h1 {
   font-size: clamp(34px, 4.6vw, 56px);
   line-height: 1.05;
@@ -1713,10 +1705,6 @@ html.light-theme .inp,
   transition: transform 220ms var(--ease-out), opacity 200ms ease-out, filter 220ms ease-out, box-shadow 220ms ease, border-color 200ms ease;
   will-change: transform, opacity, filter;
   overflow: hidden;
-}
-
-.login-card-enter {
-  animation: login-card-enter 280ms var(--ease-out) forwards;
 }
 
 .lg-card.is-shaking {
@@ -1887,9 +1875,7 @@ html.light-theme .fld select,
 
 @media (prefers-reduced-motion: reduce) {
   .animate-dashboard-enter,
-  .login-card-enter,
   .login-portal-beam,
-  .login-enter-brand > *,
   .err:not(:empty) {
     animation: none !important;
     transition: opacity 160ms ease !important;
