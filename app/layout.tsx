@@ -1,13 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Outfit } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
-
-const outfit = Outfit({
-  variable: "--font-outfit",
-  subsets: ["latin"],
-  weight: ["500", "600", "700", "800", "900"],
-  display: "swap",
-});
 
 const inter = Inter({
   variable: "--font-inter",
@@ -49,7 +42,7 @@ export default function RootLayout({
       lang="en"
       data-theme="dark"
       suppressHydrationWarning
-      className={`dark ${outfit.variable} ${inter.variable} h-full`}
+      className={`dark ${inter.variable} h-full`}
     >
       <head>
         <script

@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: var(--font-outfit), var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: var(--font-outfit), var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-sans: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 :root {
@@ -70,9 +70,9 @@ html {
   scrollbar-gutter: stable;
 }
 
-/* Force whole website to use bold, highly legible Outfit font with solid weights */
+/* Force whole website to use clean, highly legible Inter font with solid weights */
 *, ::before, ::after {
-  font-family: var(--font-outfit), var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   box-sizing: border-box;
 }
 
@@ -81,13 +81,12 @@ body {
   background-image: radial-gradient(900px 480px at 0 0, var(--glow), transparent 65%);
   background-repeat: no-repeat;
   color: var(--text);
-  font: 15px/1.5 var(--font-outfit), var(--font-inter), system-ui, -apple-system, "Segoe UI", sans-serif;
+  font: 14px/1.5 var(--font-inter), system-ui, -apple-system, "Segoe UI", sans-serif;
   overflow-x: hidden;
-  font-weight: 550;
-  letter-spacing: -0.01em;
-  text-rendering: geometricPrecision;
-  -webkit-font-smoothing: subpixel-antialiased;
-  -moz-osx-font-smoothing: auto;
+  font-weight: 450;
+  letter-spacing: -0.005em;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* Tactile Micro-Physics & Zero-Flicker Button Engine */
