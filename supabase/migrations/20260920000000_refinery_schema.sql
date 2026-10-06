@@ -249,7 +249,7 @@ create table if not exists attachments (
 create table if not exists audit_log (
   id bigserial primary key,
   table_name text not null,
-  record_id uuid not null,
+  record_id text not null,
   action text not null,                   -- insert | update | void
   actor text references profiles(employee_no),
   old_row jsonb, 

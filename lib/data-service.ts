@@ -1472,17 +1472,25 @@ export function ensureAutoDispatchedQC(
 
     const parts = (targetShiftDate || '2026-09-20').split('-');
     const mmdd = `${parts[1] || '09'}${parts[2] || '20'}`;
-    const hexSlot = (targetSlotIndex ?? 0).toString(16).padStart(2, '0');
     const slotHour = slotLabel.slice(0, 2);
-    const reportId = `70000000-${mmdd}-0000-0000-0000000000${hexSlot}`;
     const reportNo = `SAR-2026-${mmdd}${slotHour}`;
 
     const currentReports = getStored<SampleReport[]>(STORAGE_KEYS.REPORTS, memoryReports);
     const deletedReports = getStored<string[]>(STORAGE_KEYS.DELETED_REPORTS, []);
     const slotKey = `${targetShiftDate}-${slotLabel}`;
-    if (deletedReports.includes(slotKey) || deletedReports.includes(reportId) || deletedReports.includes(reportNo)) {
+    if (deletedReports.includes(slotKey) || deletedReports.includes(reportNo)) {
       return null;
     }
+
+    let maxSrSeq = 0;
+    currentReports.forEach(r => {
+      const m = (r.id || '').match(/^SR(\d+)$/i);
+      if (m) {
+        const n = parseInt(m[1], 10);
+        if (n > maxSrSeq) maxSrSeq = n;
+      }
+    });
+    const reportId = makeSampleReportId(maxSrSeq + 1);
 
     const existingReportIdx = currentReports.findIndex(r => {
       if (r.id === reportId || r.report_no === reportNo) return true;
@@ -2561,7 +2569,7 @@ export function createSampleReport(data: {
   const nextSeq = maxSeq + 1;
   const seqStr = String(nextSeq).padStart(6, '0');
   const reportNo = `SAR-2026-${seqStr}`;
-  const reportId = `70000000-0000-0000-0000-${String(nextSeq).padStart(12, '0')}`;
+  const reportId = makeSampleReportId(nextSeq);
 
   // Prepare requested parameter results
   const results: SampleResult[] = [];

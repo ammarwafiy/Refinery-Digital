@@ -199,7 +199,7 @@ export default function RefineryDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] flex flex-col overflow-x-hidden animate-dashboard-enter relative">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] flex flex-col overflow-x-hidden relative">
       {/* Background Star Particle Transition (Transition/animation/Pattern) */}
       <StarFieldBackground />
 
