@@ -274,7 +274,9 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
     : 'USR';
 
   const handleMobileTabSelect = (tabId: string) => {
-    setActiveTab(tabId);
+    React.startTransition(() => {
+      setActiveTab(tabId);
+    });
     setIsMobileMenuOpen(false);
   };
 

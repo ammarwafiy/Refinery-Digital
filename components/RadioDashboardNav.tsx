@@ -63,6 +63,19 @@ export default function RadioDashboardNav({
     return () => window.removeEventListener('resize', handleResize);
   }, [activeTab]);
 
+  const handleSelectTab = (itemId: string, el: HTMLElement) => {
+    if (el) {
+      setIndicatorStyle({
+        top: el.offsetTop,
+        height: el.offsetHeight || 38,
+        opacity: 1,
+      });
+    }
+    React.startTransition(() => {
+      onTabChange(itemId);
+    });
+  };
+
   return (
     <div className={`radio-vnav-container select-none ${className}`}>
       <div className="radio-vnav-wrap" ref={containerRef} role="tablist" aria-orientation="vertical">
@@ -89,7 +102,8 @@ export default function RadioDashboardNav({
                 aria-current={isActive ? 'page' : undefined}
                 className={`radio-vnav-btn ${isActive ? 'active' : ''}`}
                 style={{ '--index': index } as React.CSSProperties}
-                onClick={() => onTabChange(item.id)}
+                onPointerDown={(e) => handleSelectTab(item.id, e.currentTarget)}
+                onClick={(e) => handleSelectTab(item.id, e.currentTarget)}
               >
                 {Icon && (
                   <Icon

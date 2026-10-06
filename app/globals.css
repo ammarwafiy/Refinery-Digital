@@ -2962,9 +2962,9 @@ html.light-theme .radio-vnav-btn[aria-current="page"] {
   pointer-events: none;
   z-index: 1;
   transform-origin: 0 0 0;
-  transition: transform 0.45s cubic-bezier(0.33, 0.83, 0.99, 0.98),
-              height 0.35s cubic-bezier(0.33, 0.83, 0.99, 0.98),
-              opacity 0.2s ease;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              height 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.12s ease;
 }
 
 html.light-theme .radio-vnav-slidebar {
@@ -2982,9 +2982,9 @@ html.light-theme .radio-vnav-slidebar {
   pointer-events: none;
   z-index: 3;
   transform-origin: 0 0 0;
-  transition: transform 0.45s cubic-bezier(0.33, 0.83, 0.99, 0.98),
-              height 0.35s cubic-bezier(0.33, 0.83, 0.99, 0.98),
-              opacity 0.2s ease;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+              height 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.12s ease;
 }
 
 /* Left accent notch / active indicator with red highlight matching plant branding */
@@ -3181,6 +3181,39 @@ html.light-theme .glider-tab-btn.active {
   height: 15px;
   color: #009fe3;
   flex-shrink: 0;
+}
+
+.radio-option-dropdown-card {
+  max-height: 330px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.radio-option-scroll-list {
+  max-height: 260px;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+
+.radio-option-scroll-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.radio-option-scroll-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.radio-option-scroll-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 4px;
+}
+
+.radio-option-scroll-list::-webkit-scrollbar-thumb:hover {
+  background: #009fe3;
 }
 
 

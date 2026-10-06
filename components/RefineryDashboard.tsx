@@ -112,7 +112,9 @@ export default function RefineryDashboard() {
 
   // Instant glitch-free tab change: updates state and syncs browser URL bar
   const handleTabChange = (tab: string) => {
-    setActiveTab(tab);
+    React.startTransition(() => {
+      setActiveTab(tab);
+    });
     if (typeof window !== 'undefined') {
       const targetPath = `/dashboard/${tab}`;
       if (window.location.pathname !== targetPath) {

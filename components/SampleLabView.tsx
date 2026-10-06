@@ -126,6 +126,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
   const [customParamRows, setCustomParamRows] = useState<{ id: string; parameter_name: string; result_text: string; requested: boolean }[]>([]);
   const [requestedMap, setRequestedMap] = useState<Record<string, boolean>>({});
   const [resultsSuccess, setResultsSuccess] = useState<string | null>(null);
+  const [resultsError, setResultsError] = useState<string | null>(null);
 
   // QC Decision Modal state
   const [isDecisionModalOpen, setIsDecisionModalOpen] = useState(false);
@@ -320,6 +321,12 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
     return missing;
   }, [selectedReport, displayResults, requestedMap, resultInputs, customParamRows]);
 
+  // Validation Rule: Every parameter MUST be ticked before QC commit
+  const untickedParams = useMemo(() => {
+    if (!selectedReport) return [];
+    return displayResults.filter(r => requestedMap[r.id] === false);
+  }, [selectedReport, displayResults, requestedMap]);
+
   const handleOpenDecisionModal = (targetType: 'accept' | 'accept_concession' | 'reject' = 'accept') => {
     setValidationWarning(null);
     setDecisionType(targetType);
@@ -486,6 +493,35 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
     e.preventDefault();
     if (!selectedReport) return;
     setResultsSuccess(null);
+    setResultsError(null);
+
+    // Rule: QC must tick all test boxes AND fill all result boxes before committing
+    if (untickedParams.length > 0 && missingTickedParams.length > 0) {
+      setResultsError(
+        `Wajib tandakan (tick) semua parameter makmal (${untickedParams.length} belum ditanda) dan isi semua keputusan makmal (${missingTickedParams.length} masih kosong) sebelum boleh Commit Lab Results!`
+      );
+      return;
+    }
+
+    if (untickedParams.length > 0) {
+      setResultsError(
+        `Terdapat ${untickedParams.length} parameter makmal yang belum ditandakan tick box (${untickedParams.slice(0, 3).map(p => p.parameter_name).join(', ')}${untickedParams.length > 3 ? '...' : ''}). Sila tandakan semua kotak ujian atau klik 'Tick All' sebelum commit.`
+      );
+      return;
+    }
+
+    if (missingTickedParams.length > 0) {
+      setResultsError(
+        `Terdapat ${missingTickedParams.length} parameter yang ditanda tetapi kotak keputusan makmal masih kosong: ${missingTickedParams.slice(0, 3).join(', ')}${missingTickedParams.length > 3 ? '...' : ''}. Sila lengkapkan semua nilai makmal terlebih dahulu sebelum commit.`
+      );
+      return;
+    }
+
+    const incompleteCustom = customParamRows.filter(r => !r.requested || !r.parameter_name.trim() || !r.result_text.trim());
+    if (incompleteCustom.length > 0) {
+      setResultsError('Sila pastikan parameter makmal tambahan yang ditambah telah ditandakan dan diisi keputusannya.');
+      return;
+    }
 
     const payload = displayResults.map(res => {
       const val = resultInputs[res.id] || {};
@@ -1272,11 +1308,11 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                           Boleh ubah jika silap key-in
                         </span>
                       </label>
-                      <select
-                        value={qcProductId}
+                      <ProductOptionSelector
+                        value={qcProductId || selectedReport?.product_id || ''}
                         disabled={!canEdit}
-                        onChange={e => {
-                          const val = e.target.value;
+                        options={products}
+                        onChange={val => {
                           setQcProductId(val);
                           const matched = products.find(p => p.id === val || p.code === val);
                           const newName = matched?.name || val;
@@ -1303,16 +1339,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                             } : r));
                           }
                         }}
-                        className="inp"
-                        style={{ width: '100%', fontWeight: 600, height: '38px' }}
-                      >
-                        <option value="">-- Pilih Produk Lain --</option>
-                        {products.map(p => (
-                          <option key={p.id} value={p.id}>
-                            {p.name}
-                          </option>
-                        ))}
-                      </select>
+                      />
                     </div>
 
                     {/* 2. Lot Number */}
@@ -1425,6 +1452,33 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                 {resultsSuccess && (
                   <div style={{ margin: '20px 28px', padding: '14px', background: 'rgba(63,179,127,.12)', borderRadius: '10px', border: '1px solid rgba(63,179,127,.4)', color: 'var(--green)', fontSize: '13px' }}>
                     {resultsSuccess}
+                  </div>
+                )}
+
+                {/* Validation error alert on result committing */}
+                {resultsError && (
+                  <div style={{ margin: '20px 28px', padding: '14px 16px', background: 'rgba(239, 68, 68, 0.12)', borderRadius: '10px', border: '1px solid rgba(239, 68, 68, 0.45)', color: '#f87171', fontSize: '13px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700 }}>
+                        <span>⚠️ Syarat Mandatori QC: Wajib Lengkapkan Semua Kotak</span>
+                      </div>
+                      {untickedParams.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleTickAll();
+                            setResultsError(null);
+                          }}
+                          className="ghost"
+                          style={{ height: '26px', fontSize: '11px', padding: '0 10px', color: '#38bdf8', borderColor: 'rgba(56, 189, 248, 0.35)', background: 'rgba(56, 189, 248, 0.1)' }}
+                        >
+                          ✓ Tandakan Semua (Tick All)
+                        </button>
+                      )}
+                    </div>
+                    <p style={{ marginTop: '8px', marginBottom: 0, lineHeight: 1.5 }}>
+                      {resultsError}
+                    </p>
                   </div>
                 )}
 
@@ -1554,8 +1608,10 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                                 {!isUnticked && currentResult.trim() !== '' ? (
                                   <span title="Result recorded" style={{ color: 'var(--green)', fontSize: '14px', fontWeight: 'bold' }}>✓</span>
                                 ) : !isUnticked ? (
-                                  <span title="Wajib diisi sebelum boleh membuat keputusan Pass/Reject" style={{ color: '#f59e0b', fontSize: '11px', fontWeight: 600 }}>*wajib</span>
-                                ) : null}
+                                  <span title="Wajib diisi sebelum boleh commit" style={{ color: '#f59e0b', fontSize: '11px', fontWeight: 600 }}>*wajib diisi</span>
+                                ) : (
+                                  <span title="Kotak ujian wajib ditanda sebelum boleh commit" style={{ color: '#f59e0b', fontSize: '10px', fontWeight: 600, background: 'rgba(245, 158, 11, 0.1)', padding: '2px 5px', borderRadius: '4px' }}>*belum ditanda</span>
+                                )}
                               </td>
                             </tr>
                           );
@@ -1656,8 +1712,10 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                                 {!isUnticked && currentResult.trim() !== '' ? (
                                   <span title="Result recorded" style={{ color: 'var(--green)', fontSize: '14px', fontWeight: 'bold' }}>✓</span>
                                 ) : !isUnticked ? (
-                                  <span title="Wajib diisi sebelum boleh membuat keputusan Pass/Reject" style={{ color: '#f59e0b', fontSize: '11px', fontWeight: 600 }}>*wajib</span>
-                                ) : null}
+                                  <span title="Wajib diisi sebelum boleh commit" style={{ color: '#f59e0b', fontSize: '11px', fontWeight: 600 }}>*wajib diisi</span>
+                                ) : (
+                                  <span title="Kotak ujian wajib ditanda sebelum boleh commit" style={{ color: '#f59e0b', fontSize: '10px', fontWeight: 600, background: 'rgba(245, 158, 11, 0.1)', padding: '2px 5px', borderRadius: '4px' }}>*belum ditanda</span>
+                                )}
                               </td>
                             </tr>
                           );
@@ -1775,8 +1833,19 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                   </div>
 
                   {(role === 'qc_analyst' || role === 'qc_manager' || role === 'admin') && (
-                    <div className="foot">
-                      <p>All recorded laboratory entries comply with ISO / 21 CFR Part 11 integrity standards.</p>
+                    <div className="foot" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+                      <div>
+                        <p style={{ margin: 0 }}>All recorded laboratory entries comply with ISO / 21 CFR Part 11 integrity standards.</p>
+                        {(untickedParams.length > 0 || missingTickedParams.length > 0) ? (
+                          <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: '#f59e0b', fontWeight: 600 }}>
+                            ⚠️ Status: {untickedParams.length > 0 ? `${untickedParams.length} tick box belum ditanda` : ''} {untickedParams.length > 0 && missingTickedParams.length > 0 ? '· ' : ''}{missingTickedParams.length > 0 ? `${missingTickedParams.length} blank box belum diisi` : ''} (Wajib lengkap sebelum boleh commit)
+                          </p>
+                        ) : (
+                          <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: 'var(--green)', fontWeight: 600 }}>
+                            ✓ Semua kotak ujian telah ditandakan dan diisi. Sedia untuk commit.
+                          </p>
+                        )}
+                      </div>
                       <ModernButton
                         type="submit"
                         variant="primary"
