@@ -49,61 +49,132 @@ import { sanitizeInputString } from './security';
 const PLANT_ADMIN_SIGNATURE = 'NISSHIN-DEODORIZER-SECURE-AUTH-2026';
 
 // =============================================================================
-// Hierarchical Structured RFC-4122 UUID Standard Generator
+// Standardized Industrial Prefixed Traceability ID System (Core, User, Document)
+// Format: 2-3 Character Prefix + 3-Digit Padded Sequence (e.g. SR001, QC001, PL001)
 // =============================================================================
-export function makeSheetUuid(dateStr: string): string {
-  const compact = (dateStr || '2026-09-20').replace(/-/g, '');
-  return `60000000-0000-0000-0000-0000${compact}`;
+
+// Core Module Generators
+export function makeSampleReportId(seq?: number | string): string {
+  if (typeof seq === 'string' && /^SR\d+$/i.test(seq)) return seq.toUpperCase();
+  const num = typeof seq === 'number' ? seq : parseInt(String(seq || '').replace(/\D/g, ''), 10) || 1;
+  return `SR${String(num).padStart(3, '0')}`;
 }
 
-export function makeEntryUuid(dateStr: string, slotIndex: number): string {
-  const parts = (dateStr || '2026-09-20').split('-');
-  const mmdd = `${parts[1] || '09'}${parts[2] || '20'}`;
-  const hexSlot = (slotIndex ?? 0).toString(16).padStart(2, '0');
-  return `61000000-${mmdd}-0000-0000-0000000000${hexSlot}`;
+export function makeQCDecisionId(seq?: number | string): string {
+  if (typeof seq === 'string' && /^QC\d+$/i.test(seq)) return seq.toUpperCase();
+  const num = typeof seq === 'number' ? seq : parseInt(String(seq || '').replace(/\D/g, ''), 10) || 1;
+  return `QC${String(num).padStart(3, '0')}`;
+}
+
+export function makeISOCertificateId(seq?: number | string): string {
+  if (typeof seq === 'string' && /^ISO\d+$/i.test(seq)) return seq.toUpperCase();
+  const num = typeof seq === 'number' ? seq : parseInt(String(seq || '').replace(/\D/g, ''), 10) || 1;
+  return `ISO${String(num).padStart(3, '0')}`;
+}
+
+export function makeBatchProcessId(seq?: number | string): string {
+  if (typeof seq === 'string' && /^BP\d+$/i.test(seq)) return seq.toUpperCase();
+  const num = typeof seq === 'number' ? seq : parseInt(String(seq || '').replace(/\D/g, ''), 10) || 1;
+  return `BP${String(num).padStart(3, '0')}`;
+}
+
+export function makeProductionRecordId(seqOrDate?: number | string): string {
+  if (typeof seqOrDate === 'string' && /^PR\d+$/i.test(seqOrDate)) return seqOrDate.toUpperCase();
+  const num = typeof seqOrDate === 'number' ? seqOrDate : parseInt(String(seqOrDate || '').replace(/\D/g, ''), 10) || 1;
+  return `PR${String(num).padStart(3, '0')}`;
+}
+
+export function makeProcessLogId(seqOrSlot?: number | string): string {
+  if (typeof seqOrSlot === 'string' && /^PL\d+$/i.test(seqOrSlot)) return seqOrSlot.toUpperCase();
+  const num = typeof seqOrSlot === 'number' ? seqOrSlot : parseInt(String(seqOrSlot || '').replace(/\D/g, ''), 10) || 1;
+  return `PL${String(num).padStart(3, '0')}`;
+}
+
+export function makeApprovalRecordId(seq?: number | string): string {
+  if (typeof seq === 'string' && /^AR\d+$/i.test(seq)) return seq.toUpperCase();
+  const num = typeof seq === 'number' ? seq : parseInt(String(seq || '').replace(/\D/g, ''), 10) || 1;
+  return `AR${String(num).padStart(3, '0')}`;
+}
+
+export function makeAuditLogId(seq?: number | string): string {
+  if (typeof seq === 'string' && /^AL\d+$/i.test(seq)) return seq.toUpperCase();
+  const num = typeof seq === 'number' ? seq : parseInt(String(seq || '').replace(/\D/g, ''), 10) || 1;
+  return `AL${String(num).padStart(3, '0')}`;
+}
+
+// User & Administration Generators
+export function makeUserId(role: UserRole | string, seq: number = 1): string {
+  const r = (role || '').toLowerCase();
+  let prefix = 'USR';
+  if (r.includes('admin')) prefix = 'ADM';
+  else if (r.includes('operator')) prefix = 'OPR';
+  else if (r.includes('analyst') || r.includes('qc_staff')) prefix = 'QCS';
+  else if (r.includes('supervisor')) prefix = 'SUP';
+  else if (r.includes('manager')) prefix = 'MGR';
+  return `${prefix}${String(seq).padStart(3, '0')}`;
+}
+
+// Document Management Generators
+export function makeDocumentId(seq?: number | string): string {
+  if (typeof seq === 'string' && /^DOC\d+$/i.test(seq)) return seq.toUpperCase();
+  const num = typeof seq === 'number' ? seq : parseInt(String(seq || '').replace(/\D/g, ''), 10) || 1;
+  return `DOC${String(num).padStart(3, '0')}`;
+}
+
+export function makeSOPId(seq?: number | string): string {
+  if (typeof seq === 'string' && /^SOP\d+$/i.test(seq)) return seq.toUpperCase();
+  const num = typeof seq === 'number' ? seq : parseInt(String(seq || '').replace(/\D/g, ''), 10) || 1;
+  return `SOP${String(num).padStart(3, '0')}`;
+}
+
+export function makeWorkInstructionId(seq?: number | string): string {
+  if (typeof seq === 'string' && /^WI\d+$/i.test(seq)) return seq.toUpperCase();
+  const num = typeof seq === 'number' ? seq : parseInt(String(seq || '').replace(/\D/g, ''), 10) || 1;
+  return `WI${String(num).padStart(3, '0')}`;
+}
+
+export function makeCertificateId(seq?: number | string): string {
+  if (typeof seq === 'string' && /^CRT\d+$/i.test(seq)) return seq.toUpperCase();
+  const num = typeof seq === 'number' ? seq : parseInt(String(seq || '').replace(/\D/g, ''), 10) || 1;
+  return `CRT${String(num).padStart(3, '0')}`;
+}
+
+export function makeAttachmentId(seq?: number | string): string {
+  if (typeof seq === 'string' && /^ATT\d+$/i.test(seq)) return seq.toUpperCase();
+  const num = typeof seq === 'number' ? seq : parseInt(String(seq || '').replace(/\D/g, ''), 10) || 1;
+  return `ATT${String(num).padStart(3, '0')}`;
+}
+
+export function makeRevisionId(seq?: number | string): string {
+  if (typeof seq === 'string' && /^REV\d+$/i.test(seq)) return seq.toUpperCase();
+  const num = typeof seq === 'number' ? seq : parseInt(String(seq || '').replace(/\D/g, ''), 10) || 1;
+  return `REV${String(num).padStart(3, '0')}`;
+}
+
+// Backward Compatibility Aliases
+export function makeSheetUuid(dateStr?: string): string {
+  return makeProductionRecordId(1);
+}
+
+export function makeEntryUuid(dateStr?: string, slotIndex?: number): string {
+  return makeProcessLogId((slotIndex ?? 0) + 1);
 }
 
 export function makeSampleReportUuid(seed?: number | string, slotIndex?: number): string {
-  // If called with dateStr and slotIndex (e.g. '2026-09-26', 0)
-  if (typeof seed === 'string' && seed.includes('-') && slotIndex !== undefined) {
-    const parts = seed.split('-');
-    const mmdd = `${parts[1] || '09'}${parts[2] || '26'}`;
-    const hexSlot = (slotIndex ?? 0).toString(16).padStart(2, '0');
-    return `70000000-${mmdd}-0000-0000-0000000000${hexSlot}`;
-  }
-  // If sequential integer or numeric seed (e.g. 486)
-  const num = typeof seed === 'number' ? seed : parseInt(String(seed || '').replace(/\D/g, '').slice(-12), 10) || 486;
-  const hexNum = (num % 0xffffffffffff).toString(16).padStart(12, '0');
-  return `70000000-0000-0000-0000-${hexNum}`;
+  return makeSampleReportId(seed);
 }
 
 export function makeSampleResultUuid(reportIdOrSeq: number | string, paramIndex: number): string {
-  if (typeof reportIdOrSeq === 'string' && reportIdOrSeq.startsWith('70000000-')) {
-    const parts = reportIdOrSeq.split('-');
-    const middle = parts[1] || '0000';
-    const slotHex = parts[4] ? parts[4].slice(-2) : '00';
-    const pHex = (paramIndex % 0xff).toString(16).padStart(2, '0');
-    return `71000000-${middle}-${slotHex}00-0000-0000000000${pHex}`;
-  }
-  const rNum = typeof reportIdOrSeq === 'number' ? reportIdOrSeq : parseInt(String(reportIdOrSeq).replace(/\D/g, '').slice(-4), 10) || 1;
-  const rHex = (rNum % 0xffff).toString(16).padStart(4, '0');
-  const pHex = (paramIndex % 0xff).toString(16).padStart(2, '0');
-  return `71000000-0000-${rHex}-0000-0000000000${pHex}`;
+  const rId = typeof reportIdOrSeq === 'string' ? reportIdOrSeq : makeSampleReportId(reportIdOrSeq);
+  return `${rId}-RES${String(paramIndex).padStart(2, '0')}`;
 }
 
 export function makeDecisionUuid(reportIdOrSeed?: number | string): string {
-  if (typeof reportIdOrSeed === 'string' && reportIdOrSeed.startsWith('70000000-')) {
-    return '80000000-' + reportIdOrSeed.slice(9);
-  }
-  const num = typeof reportIdOrSeed === 'number' ? reportIdOrSeed : parseInt(String(reportIdOrSeed || '').replace(/\D/g, '').slice(-12), 10) || 1;
-  const hexNum = (num % 0xffffffffffff).toString(16).padStart(12, '0');
-  return `80000000-0000-0000-0000-${hexNum}`;
+  return makeQCDecisionId(reportIdOrSeed);
 }
 
 export function makeDeviationUuid(seed?: number | string): string {
-  const num = typeof seed === 'number' ? seed : parseInt(String(seed || '').replace(/\D/g, '').slice(-12), 10) || 1;
-  const hexNum = (num % 0xffffffffffff).toString(16).padStart(12, '0');
-  return `90000000-0000-0000-0000-${hexNum}`;
+  return makeApprovalRecordId(seed);
 }
 
 export const STORAGE_KEYS = {
@@ -233,12 +304,13 @@ export function formatAuditTableName(tableName: string): string {
   }
 }
 
-// Formats any record ID / audit row to standard industrial traceability code (Idea 2: [PREFIX]-[YYMMDD]-[SIRI], e.g. SR-260928-007)
+// Formats any record ID / audit row to standard industrial traceability code (e.g. SR001, QC001, PR001, PL001, AR001, AL001)
 export function formatAuditRecordId(entry: AuditLogEntry | { table_name?: string; record_id?: string; id?: any; occurred_at?: string; created_at?: string }): string {
   const table = (entry?.table_name || '').toLowerCase();
   const rawId = String(entry?.record_id || entry?.id || '').trim();
   
-  if (/^[A-Z]{2,4}-\d{6}-\d{3,4}$/i.test(rawId)) {
+  // If already in official standard format (e.g. SR001, QC001, PR001, PL001, AR001, AL001, DOC001, ATT001)
+  if (/^(SR|QC|ISO|BP|PR|PL|AR|AL|USR|ADM|OPR|QCS|SUP|MGR|DOC|SOP|WI|CRT|ATT|REV)\d{3,}$/i.test(rawId)) {
     return rawId.toUpperCase();
   }
 
@@ -279,30 +351,27 @@ export function formatAuditRecordId(entry: AuditLogEntry | { table_name?: string
     case 'documents':
       prefix = 'DOC';
       break;
+    case 'sops':
+      prefix = 'SOP';
+      break;
+    case 'work_instructions':
+      prefix = 'WI';
+      break;
+    case 'certificates':
+      prefix = 'CRT';
+      break;
+    case 'attachments':
+      prefix = 'ATT';
+      break;
+    case 'document_revisions':
+      prefix = 'REV';
+      break;
     default:
       if (/^(SR|QC|ISO|BP|PR|PL|AR|AL|USR|ADM|OPR|QCS|SUP|MGR|DOC|SOP|WI|CRT|ATT|REV)/i.test(rawId)) {
         const match = rawId.match(/^(SR|QC|ISO|BP|PR|PL|AR|AL|USR|ADM|OPR|QCS|SUP|MGR|DOC|SOP|WI|CRT|ATT|REV)/i);
         prefix = match ? match[0].toUpperCase() : 'AL';
       }
       break;
-  }
-
-  // Extract date part (YYMMDD), e.g. 260928
-  let datePart = '260928';
-  const timestamp = (entry as any)?.occurred_at || (entry as any)?.created_at;
-  if (timestamp && typeof timestamp === 'string') {
-    const d = new Date(timestamp);
-    if (!isNaN(d.getTime())) {
-      const yy = String(d.getFullYear()).slice(-2);
-      const mm = String(d.getMonth() + 1).padStart(2, '0');
-      const dd = String(d.getDate()).padStart(2, '0');
-      datePart = `${yy}${mm}${dd}`;
-    }
-  } else if (rawId.includes('-')) {
-    const parts = rawId.split('-');
-    if (parts[1] && parts[1].length === 4 && /^\d{4}$/.test(parts[1])) {
-      datePart = `26${parts[1]}`;
-    }
   }
 
   let num = 1;
@@ -328,7 +397,7 @@ export function formatAuditRecordId(entry: AuditLogEntry | { table_name?: string
   const displayNum = ((num - 1) % 999) + 1;
   const padded = String(displayNum).padStart(3, '0');
 
-  return `${prefix}-${datePart}-${padded}`;
+  return `${prefix}${padded}`;
 }
 
 // Consistent Industrial Employee ID Configuration

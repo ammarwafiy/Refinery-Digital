@@ -130,6 +130,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
   const [decisionDisposition, setDecisionDisposition] = useState<Disposition>('reprocess');
   const [decisionPassword, setDecisionPassword] = useState('');
   const [decisionError, setDecisionError] = useState<string | null>(null);
+  const [validationWarning, setValidationWarning] = useState<string | null>(null);
 
   // Delete Sample state (QC mistake correction)
   const [reportToDelete, setReportToDelete] = useState<SampleReport | null>(null);
@@ -269,6 +270,46 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
   const activeTempCount = useMemo(() => {
     return tempResults.filter(r => requestedMap[r.id] !== false).length;
   }, [tempResults, requestedMap]);
+
+  // Validation Rule: Every ticked parameter MUST have its blank box filled in before QC decision can be made
+  const missingTickedParams = useMemo(() => {
+    if (!selectedReport) return [];
+    const missing: string[] = [];
+
+    displayResults.forEach(r => {
+      const isTicked = requestedMap[r.id] !== false;
+      if (isTicked) {
+        const val = resultInputs[r.id];
+        const hasNum = val?.num !== null && val?.num !== undefined && !isNaN(val.num);
+        const hasText = val?.text !== undefined && val?.text !== null && val.text.trim() !== '';
+        if (!hasNum && !hasText) {
+          missing.push(r.parameter_name);
+        }
+      }
+    });
+
+    customParamRows.forEach(crow => {
+      if (crow.requested) {
+        if (!crow.result_text || crow.result_text.trim() === '') {
+          missing.push(crow.parameter_name || 'Custom Parameter');
+        }
+      }
+    });
+
+    return missing;
+  }, [selectedReport, displayResults, requestedMap, resultInputs, customParamRows]);
+
+  const handleOpenDecisionModal = (targetType: 'accept' | 'accept_concession' | 'reject' = 'accept') => {
+    if (missingTickedParams.length > 0) {
+      setValidationWarning(
+        `Wajib isi blank box bagi ${missingTickedParams.length} parameter yang ditick sebelum membuat keputusan QC (Pass/Reject): ${missingTickedParams.slice(0, 4).join(', ')}${missingTickedParams.length > 4 ? ` dan ${missingTickedParams.length - 4} lagi` : ''}.`
+      );
+      return;
+    }
+    setValidationWarning(null);
+    setDecisionType(targetType);
+    setIsDecisionModalOpen(true);
+  };
 
   // Toggle master Temperature parameter
   const handleToggleMasterTemp = (checked: boolean) => {
@@ -504,7 +545,79 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
     if (!selectedReport) return;
     setDecisionError(null);
 
-    const failedParams = selectedReport.results
+    // Strict Rule: Every ticked parameter MUST have its blank box filled before deciding Pass or Reject
+    if (missingTickedParams.length > 0) {
+      setDecisionError(
+        `Wajib isi semua blank box bagi parameter yang ditick (${missingTickedParams.length} belum diisi: ${missingTickedParams.slice(0, 4).join(', ')}${missingTickedParams.length > 4 ? ` dan ${missingTickedParams.length - 4} lagi` : ''}) sebelum merekodkan keputusan.`
+      );
+      return;
+    }
+
+    // Auto-commit entered blank box inputs into the sample report so QC decision evaluates the live numbers
+    const payload = displayResults.map(res => {
+      const val = resultInputs[res.id] || {};
+      const isReq = requestedMap[res.id] !== false;
+      const paramName = res.parameter_name;
+      const rawText = val.text !== undefined ? val.text : (val.num !== undefined ? String(val.num) : '');
+      const numVal = isReq && rawText.trim() !== '' && !isNaN(Number(rawText)) ? Number(rawText) : (val.num ?? null);
+
+      return {
+        resultId: res.id,
+        parameter_id: res.parameter_id,
+        parameter_code: res.parameter_code,
+        parameter_name: paramName,
+        unit: null,
+        series_key: res.series_key,
+        value_numeric: isReq ? numVal : null,
+        value_text: isReq ? (rawText.trim() !== '' ? rawText : null) : null,
+        requested: isReq,
+      };
+    });
+
+    customParamRows.forEach(crow => {
+      if (crow.parameter_name.trim() !== '' || crow.result_text.trim() !== '') {
+        const rawText = crow.result_text.trim();
+        const numVal = rawText !== '' && !isNaN(Number(rawText)) ? Number(rawText) : null;
+        payload.push({
+          resultId: crow.id,
+          parameter_id: crow.id,
+          parameter_code: 'CUSTOM',
+          parameter_name: crow.parameter_name.trim() || 'Custom Parameter',
+          unit: null,
+          series_key: null,
+          value_numeric: crow.requested ? numVal : null,
+          value_text: crow.requested ? (rawText !== '' ? rawText : null) : null,
+          requested: crow.requested,
+        });
+      }
+    });
+
+    let crystNo = qcCrystallizerBatch.trim();
+    let batchNo = '';
+    if (qcCrystallizerBatch.includes('/')) {
+      const parts = qcCrystallizerBatch.split('/');
+      crystNo = parts[0]?.trim() || '';
+      batchNo = parts.slice(1).join('/').trim();
+    }
+
+    const matchedSp = samplingPoints.find(sp => sp.id === qcSamplingPointId);
+
+    updateSampleResults(selectedReport.id, payload, {
+      remark_flushing: qcRemarkFlushing,
+      remark_cooling: qcRemarkCooling,
+      remark_pushover: qcRemarkPushover,
+      remarks: qcRemarksText,
+      sampling_point_id: qcSamplingPointId || null,
+      sampling_point_name: matchedSp?.name || undefined,
+      crystallizer_no: crystNo || null,
+      batch_no: batchNo || (qcCrystallizerBatch.includes('/') ? null : crystNo || null),
+      product_id: qcProductId || undefined,
+      product_name: qcProductName || undefined,
+      lot_no: qcLotNo || selectedReport.lot_no || undefined,
+    });
+
+    const updatedRep = getSampleReports().find(r => r.id === selectedReport.id) || selectedReport;
+    const failedParams = updatedRep.results
       ?.filter(r => (requestedMap[r.id] ?? r.requested) !== false && r.in_spec === false)
       .map(r => `${r.parameter_name} (${r.value_numeric ?? r.value_text})`) || [];
 
@@ -526,6 +639,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
     setIsDecisionModalOpen(false);
     setDecisionPassword('');
     setDecisionNarrative('');
+    setValidationWarning(null);
     refreshReports();
   };
 
@@ -1036,12 +1150,25 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
           </section>
 
           {/* Right Column: Active Sample Lab Result Input & QC Decision */}
-          <div>
+          <div style={{ minWidth: 0, width: '100%', maxWidth: '100%' }}>
             {selectedReport ? (
-              <section className="panel" style={{ margin: 0 }}>
+              <section className="panel" style={{ margin: 0, minWidth: 0 }}>
                 {/* Sample Header Summary */}
-                <div className="rh">
-                  <div>
+                <div 
+                  className="rh"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '16px',
+                    flexWrap: 'wrap',
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 20,
+                    background: 'var(--surface)',
+                  }}
+                >
+                  <div style={{ minWidth: 0, flex: '1 1 auto' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                       <h2 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text)' }}>
                         {qcLotNo || selectedReport.lot_no}
@@ -1058,7 +1185,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                   </div>
 
                   {/* Actions & Decision */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, marginLeft: 'auto' }}>
                     {selectedReport.decision?.decision ? (
                       <>
                         <span className={`bd ${selectedReport.decision.decision === 'reject' ? 'r' : selectedReport.decision.decision === 'accept' ? 'g' : 'a'}`}>
@@ -1068,10 +1195,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                         {(role === 'qc_analyst' || role === 'qc_manager' || role === 'admin') && (
                           <button
                             type="button"
-                            onClick={() => {
-                              setDecisionType(selectedReport.decision?.decision || 'accept');
-                              setIsDecisionModalOpen(true);
-                            }}
+                            onClick={() => handleOpenDecisionModal(selectedReport.decision?.decision || 'accept')}
                             className="ghost"
                           >
                             Update Decision
@@ -1084,8 +1208,10 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                         {(role === 'qc_analyst' || role === 'qc_manager' || role === 'admin') && (
                           <button
                             type="button"
-                            onClick={() => setIsDecisionModalOpen(true)}
+                            onClick={() => handleOpenDecisionModal('accept')}
                             className="primary"
+                            style={missingTickedParams.length > 0 ? { opacity: 0.9 } : undefined}
+                            title={missingTickedParams.length > 0 ? `Wajib isi ${missingTickedParams.length} parameter yang ditick dahulu sebelum membuat keputusan` : undefined}
                           >
                             Record Decision
                           </button>
@@ -1115,11 +1241,29 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                   </div>
                 </div>
 
+                {/* Validation Warning Alert Banner if blank boxes are missing */}
+                {validationWarning && (
+                  <div style={{ margin: '14px 28px 0', padding: '12px 16px', background: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.4)', borderRadius: '10px', color: '#f87171', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontWeight: 'bold' }}>⚠️ Perhatian:</span>
+                      <span>{validationWarning}</span>
+                    </div>
+                    <button 
+                      type="button" 
+                      onClick={() => setValidationWarning(null)} 
+                      className="ghost"
+                      style={{ height: '24px', width: '24px', padding: 0, fontSize: '13px', color: '#f87171' }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
+
                 {/* Product, Lot Number, Sampling Point & Batch row (Balanced 2x2 Card Grid) */}
                 <div style={{ padding: '16px 28px', borderBottom: '1px solid var(--line)' }}>
                   <div style={{ 
                     display: 'grid', 
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', 
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', 
                     gap: '14px',
                     background: 'rgba(255, 255, 255, 0.02)',
                     padding: '16px 18px',
@@ -1342,14 +1486,14 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                     )}
                   </div>
 
-                  <div className="tw">
-                    <table>
+                  <div className="tw" style={{ overflowX: 'auto', width: '100%', maxWidth: '100%' }}>
+                    <table style={{ width: '100%', minWidth: 'unset', tableLayout: 'auto' }}>
                       <thead>
                         <tr>
-                          <th style={{ width: '60px', textAlign: 'center' }}>Test</th>
-                          <th style={{ minWidth: '240px' }}>Parameter Name</th>
-                          <th style={{ minWidth: '240px' }}>Lab Result [blank box]</th>
-                          <th style={{ width: '48px', textAlign: 'center' }}></th>
+                          <th style={{ width: '50px', textAlign: 'center' }}>Test</th>
+                          <th style={{ minWidth: '180px' }}>Parameter Name</th>
+                          <th style={{ minWidth: '180px' }}>Lab Result [blank box]</th>
+                          <th style={{ width: '64px', textAlign: 'center' }}>Status</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -1360,6 +1504,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                           const canEdit = (role === 'qc_analyst' || role === 'qc_manager' || role === 'admin');
                           const currentName = paramNameInputs[res.id] !== undefined ? paramNameInputs[res.id] : res.parameter_name;
                           const currentResult = inputVal.text !== undefined ? inputVal.text : (inputVal.num !== undefined ? String(inputVal.num) : '');
+                          const isBlank = !isUnticked && currentResult.trim() === '';
 
                           return (
                             <tr key={res.id} style={{ opacity: isUnticked ? 0.45 : 1 }}>
@@ -1405,16 +1550,20 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                                   className="inp"
                                   style={{
                                     width: '100%',
+                                    minWidth: 'unset',
                                     height: '34px',
                                     color: isUnticked ? 'var(--muted)' : 'var(--text)',
                                     background: isUnticked ? 'transparent' : 'var(--surface)',
+                                    borderColor: isBlank ? 'rgba(245, 158, 11, 0.45)' : undefined,
                                   }}
                                 />
                               </td>
                               <td style={{ textAlign: 'center' }}>
-                                {!isUnticked && currentResult.trim() !== '' && (
+                                {!isUnticked && currentResult.trim() !== '' ? (
                                   <span title="Result recorded" style={{ color: 'var(--green)', fontSize: '14px', fontWeight: 'bold' }}>✓</span>
-                                )}
+                                ) : !isUnticked ? (
+                                  <span title="Wajib diisi sebelum boleh membuat keputusan Pass/Reject" style={{ color: '#f59e0b', fontSize: '11px', fontWeight: 600 }}>*wajib</span>
+                                ) : null}
                               </td>
                             </tr>
                           );
@@ -1460,6 +1609,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                           const canEdit = (role === 'qc_analyst' || role === 'qc_manager' || role === 'admin');
                           const currentName = paramNameInputs[res.id] !== undefined ? paramNameInputs[res.id] : res.parameter_name;
                           const currentResult = inputVal.text !== undefined ? inputVal.text : (inputVal.num !== undefined ? String(inputVal.num) : '');
+                          const isBlank = !isUnticked && currentResult.trim() === '';
 
                           return (
                             <tr key={res.id} style={{ opacity: isUnticked ? 0.45 : 1 }}>
@@ -1504,16 +1654,20 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                                   className="inp"
                                   style={{
                                     width: '100%',
+                                    minWidth: 'unset',
                                     height: '34px',
                                     color: isUnticked ? 'var(--muted)' : 'var(--text)',
                                     background: isUnticked ? 'transparent' : 'var(--surface)',
+                                    borderColor: isBlank ? 'rgba(245, 158, 11, 0.45)' : undefined,
                                   }}
                                 />
                               </td>
                               <td style={{ textAlign: 'center' }}>
-                                {!isUnticked && currentResult.trim() !== '' && (
+                                {!isUnticked && currentResult.trim() !== '' ? (
                                   <span title="Result recorded" style={{ color: 'var(--green)', fontSize: '14px', fontWeight: 'bold' }}>✓</span>
-                                )}
+                                ) : !isUnticked ? (
+                                  <span title="Wajib diisi sebelum boleh membuat keputusan Pass/Reject" style={{ color: '#f59e0b', fontSize: '11px', fontWeight: 600 }}>*wajib</span>
+                                ) : null}
                               </td>
                             </tr>
                           );
@@ -1545,7 +1699,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                                   setCustomParamRows(prev => prev.map(r => r.id === crow.id ? { ...r, parameter_name: val } : r));
                                 }}
                                 className="inp"
-                                style={{ width: '100%', height: '34px', fontWeight: 500 }}
+                                style={{ width: '100%', height: '34px', fontWeight: 500, minWidth: 'unset' }}
                               />
                             </td>
                             <td>
@@ -1559,10 +1713,18 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                                   setCustomParamRows(prev => prev.map(r => r.id === crow.id ? { ...r, result_text: val } : r));
                                 }}
                                 className="inp"
-                                style={{ width: '100%', height: '34px' }}
+                                style={{ 
+                                  width: '100%', 
+                                  height: '34px', 
+                                  minWidth: 'unset',
+                                  borderColor: crow.requested && (!crow.result_text || crow.result_text.trim() === '') ? 'rgba(245, 158, 11, 0.45)' : undefined,
+                                }}
                               />
                             </td>
-                            <td style={{ textAlign: 'center' }}>
+                            <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
+                              {crow.requested && (!crow.result_text || crow.result_text.trim() === '') && (
+                                <span title="Wajib diisi" style={{ color: '#f59e0b', fontSize: '10px', fontWeight: 600, marginRight: '4px' }}>*wajib</span>
+                              )}
                               <button
                                 type="button"
                                 onClick={() => setCustomParamRows(prev => prev.filter(r => r.id !== crow.id))}
@@ -1789,6 +1951,12 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                 />
               </div>
 
+              {missingTickedParams.length > 0 && (
+                <div style={{ margin: '14px 0 0', padding: '10px 14px', background: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.4)', borderRadius: '8px', color: '#f87171', fontSize: '12px' }}>
+                  ⚠️ Wajib isi blank box bagi {missingTickedParams.length} parameter yang ditick dahulu sebelum membuat keputusan ({missingTickedParams.slice(0, 3).join(', ')}{missingTickedParams.length > 3 ? '...' : ''}).
+                </div>
+              )}
+
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '20px' }}>
                 <button
                   type="button"
@@ -1799,7 +1967,8 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                 </button>
                 <button
                   type="submit"
-                  className="primary transition-all duration-150 active:scale-[0.97] hover:shadow-[0_0_15px_rgba(0,159,227,0.4)] cursor-pointer"
+                  disabled={missingTickedParams.length > 0}
+                  className="primary transition-all duration-150 active:scale-[0.97] hover:shadow-[0_0_15px_rgba(0,159,227,0.4)] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Sign & Commit Decision
                 </button>

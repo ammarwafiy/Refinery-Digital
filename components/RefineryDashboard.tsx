@@ -196,7 +196,7 @@ export default function RefineryDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] flex flex-col animate-dashboard-enter">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] flex flex-col overflow-x-hidden animate-dashboard-enter">
       {/* Sidebar (Desktop) + Mobile Topbar / Drawer */}
       <div className="no-print">
         <Navbar 
@@ -209,7 +209,7 @@ export default function RefineryDashboard() {
       </div>
 
       {/* Main Content Area (Offset by sidebar width 248px on desktop and topbar height 64px) */}
-      <div className="flex-1 flex flex-col min-w-0 lg:pl-[248px] lg:pt-16">
+      <div className="flex-1 flex flex-col min-w-0 max-w-full overflow-x-hidden lg:pl-[248px] lg:pt-16">
         {/* Dynamic Page Header & Breadcrumbs matching redesign */}
         <div className="px-6 lg:px-10 pt-8 pb-2 no-print">
           <p className="crumb-redesign">
@@ -229,7 +229,7 @@ export default function RefineryDashboard() {
         </div>
 
         {/* Main Work Area - Strictly renders only the view allowed for current role */}
-        <main className="content-redesign pt-0">
+        <main className="content-redesign pt-0 w-full max-w-full overflow-x-hidden">
           {currentTab === 'process' && allowedTabs.includes('process') && (
             <ProcessLogView currentRole={authUser.role} currentUser={authUser} />
           )}

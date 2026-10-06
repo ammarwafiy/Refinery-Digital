@@ -993,30 +993,27 @@ export default function OfficialFormsExportView() {
             <div><span className="text-slate-500">SAMPLING POINT:</span> <strong>{activeReport.sampling_point_name || 'Outlet'}</strong></div>
           </div>
 
-          {/* Parameters Table - 5 Columns: No, Tested Parameter, Standard Spec, Analytical Result, Compliance */}
+          {/* Parameters Table - 4 Columns: No, Tested Parameter, Analytical Result, Compliance */}
           <table 
             className="rf-fr-001-table w-full text-left border-collapse border border-slate-900 text-xs font-mono mb-4"
             style={{ tableLayout: 'fixed', width: '100%', minWidth: 'unset' }}
           >
             <colgroup>
-              <col style={{ width: '42px' }} />
-              <col style={{ width: '38%' }} />
-              <col style={{ width: '22%' }} />
-              <col style={{ width: '22%' }} />
-              <col style={{ width: '18%' }} />
+              <col style={{ width: '48px' }} />
+              <col style={{ width: '48%' }} />
+              <col style={{ width: '28%' }} />
+              <col style={{ width: '24%' }} />
             </colgroup>
             <thead>
               <tr className="bg-slate-100 border-b border-slate-900 text-slate-900 font-bold">
                 <th className="border border-slate-900 p-2 text-center">No.</th>
                 <th className="border border-slate-900 p-2">Analytical Parameter Tested</th>
-                <th className="border border-slate-900 p-2 text-center">Standard Specification</th>
                 <th className="border border-slate-900 p-2 text-center">Analytical Result</th>
                 <th className="border border-slate-900 p-2 text-center">Compliance Status</th>
               </tr>
             </thead>
             <tbody>
               {activeReport.results?.filter(res => res.requested !== false).map((res, idx) => {
-                const specText = getSpecString(res.parameter_id, res.series_key, res.unit);
                 const hasVal = (res.value_numeric !== null && res.value_numeric !== undefined) || (res.value_text && res.value_text.trim() !== '');
                 const displayVal = (res.value_numeric !== null && res.value_numeric !== undefined)
                   ? `${res.value_numeric}${res.unit ? ` ${res.unit}` : ''}`
@@ -1054,9 +1051,6 @@ export default function OfficialFormsExportView() {
                       {res.parameter_name.includes('°C') || !res.series_key
                         ? res.parameter_name
                         : `${res.parameter_name} (${res.series_key}°C)`}
-                    </td>
-                    <td className="border border-slate-900 p-2 text-center text-slate-700 font-mono text-[11px]">
-                      {specText}
                     </td>
                     <td className="border border-slate-900 p-2 text-center font-bold text-slate-900 font-mono text-[11px]">
                       {displayVal}
