@@ -56,9 +56,15 @@ import {
 } from '@/lib/data-service';
 
 export default function AdminUserManagementView() {
-  const [profiles, setProfiles] = useState<Profile[]>([]);
-  const [currentRole, setCurrentRoleState] = useState<UserRole>('operator');
-  const [currentProfile, setCurrentProfileState] = useState<Profile>(getCurrentProfile());
+  const [profiles, setProfiles] = useState<Profile[]>(() => {
+    try {
+      return getProfiles();
+    } catch {
+      return [];
+    }
+  });
+  const [currentRole, setCurrentRoleState] = useState<UserRole>(() => getCurrentRole());
+  const [currentProfile, setCurrentProfileState] = useState<Profile>(() => getCurrentProfile());
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   

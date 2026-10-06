@@ -18,10 +18,22 @@ import {
 } from '@/lib/data-service';
 
 export default function SupervisorBoardView() {
-  const [sheet, setSheet] = useState<ProcessSheet>(getActiveProcessSheet());
-  const [deviations, setDeviations] = useState<Deviation[]>([]);
-  const [reports, setReports] = useState<SampleReport[]>([]);
-  const [role, setRole] = useState<UserRole>('supervisor');
+  const [sheet, setSheet] = useState<ProcessSheet>(() => getActiveProcessSheet());
+  const [deviations, setDeviations] = useState<Deviation[]>(() => {
+    try {
+      return getDeviations();
+    } catch {
+      return [];
+    }
+  });
+  const [reports, setReports] = useState<SampleReport[]>(() => {
+    try {
+      return getSampleReports();
+    } catch {
+      return [];
+    }
+  });
+  const [role, setRole] = useState<UserRole>(() => getCurrentRole());
 
   // Acknowledge deviation modal
   const [selectedDev, setSelectedDev] = useState<Deviation | null>(null);

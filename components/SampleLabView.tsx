@@ -66,18 +66,31 @@ interface SampleLabViewProps {
 }
 
 export default function SampleLabView({ currentRole, currentUser, onNavigateToCertificate }: SampleLabViewProps = {}) {
-  const [reports, setReports] = useState<SampleReport[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [tanks, setTanks] = useState<Tank[]>([]);
-  const [samplingPoints, setSamplingPoints] = useState<SamplingPoint[]>([]);
-  const [parameters, setParameters] = useState<Parameter[]>([]);
-  const [reasons, setReasons] = useState<RejectionReason[]>([]);
-  const [role, setRole] = useState<UserRole>(currentRole || currentUser?.role || getCurrentRole() || 'qc_analyst');
+  const [reports, setReports] = useState<SampleReport[]>(() => {
+    try {
+      return getSampleReports();
+    } catch {
+      return [];
+    }
+  });
+  const [products, setProducts] = useState<Product[]>(() => getProducts());
+  const [tanks, setTanks] = useState<Tank[]>(() => getTanks());
+  const [samplingPoints, setSamplingPoints] = useState<SamplingPoint[]>(() => getSamplingPoints());
+  const [parameters, setParameters] = useState<Parameter[]>(() => getParameters());
+  const [reasons, setReasons] = useState<RejectionReason[]>(() => getRejectionReasons());
+  const [role, setRole] = useState<UserRole>(() => currentRole || currentUser?.role || getCurrentRole() || 'qc_analyst');
   const canEdit = role === 'qc_analyst' || role === 'qc_manager' || role === 'admin';
 
   // Active sub-tab: 'list' | 'new' | 'detail'
   const [activeSubTab, setActiveSubTab] = useState<'list' | 'new' | 'detail'>('list');
-  const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
+  const [selectedReportId, setSelectedReportId] = useState<string | null>(() => {
+    try {
+      const list = getSampleReports();
+      return list.length > 0 ? list[0].id : null;
+    } catch {
+      return null;
+    }
+  });
 
   // Search & filter
   const [searchQuery, setSearchQuery] = useState('');
@@ -190,11 +203,16 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
   }, []);
 
   const refreshReports = () => {
-    syncAllProcessEntriesToQC();
-    const list = getSampleReports();
-    setReports(list);
-    if (!selectedReportId && list.length > 0) {
-      setSelectedReportId(list[0].id);
+    try {
+      syncAllProcessEntriesToQC();
+      const list = getSampleReports();
+      setReports(list);
+      setSelectedReportId(prev => {
+        if (prev && list.some(r => r.id === prev)) return prev;
+        return list.length > 0 ? list[0].id : null;
+      });
+    } catch (e) {
+      console.warn('[SampleLabView] Failed to refresh reports:', e);
     }
   };
 

@@ -1493,7 +1493,7 @@ export function ensureAutoDispatchedQC(
     const reportId = makeSampleReportId(maxSrSeq + 1);
 
     const existingReportIdx = currentReports.findIndex(r => {
-      if (r.id === reportId || r.report_no === reportNo) return true;
+      if (r.report_no === reportNo) return true;
       if (r.sample_date === targetShiftDate) {
         if (r.time_check === slotTimeCheck || r.time_check?.startsWith(slotHour + ':')) return true;
         if (r.lot_no?.endsWith(`-${slotLabel}`)) return true;
@@ -2493,16 +2493,28 @@ export async function syncSampleReportsFromSupabase(): Promise<{ success: boolea
       };
     });
 
-    // Retain only very recent un-synced local reports (< 60s)
+    // Retain baseline system reports and recent local reports that haven't been pushed yet
     const activeLocalReports = getSampleReports();
     const now = Date.now();
     const pendingLocalReports = activeLocalReports.filter(r => {
       if (remoteReportNos.has(r.report_no) || remoteIds.has(r.id)) return false;
+      // Permanently retain baseline demonstration reports (SR001 - SR020)
+      if (r.id?.startsWith('SR') && parseInt(r.id.slice(2), 10) <= 20) return true;
       const ageMs = now - new Date(r.created_at || 0).getTime();
-      return ageMs >= 0 && ageMs < 60000;
+      return ageMs >= 0 && ageMs < 600000;
     });
 
-    const mergedReports: SampleReport[] = [...mappedRemoteReports, ...pendingLocalReports];
+    // Also guarantee all baseline INITIAL_REPORTS exist
+    const mergedReportNos = new Set([...mappedRemoteReports, ...pendingLocalReports].map(r => r.report_no));
+    const missingBaselines: SampleReport[] = [];
+    INITIAL_REPORTS.forEach(baseRep => {
+      if (!mergedReportNos.has(baseRep.report_no)) {
+        missingBaselines.push(JSON.parse(JSON.stringify(baseRep)));
+        mergedReportNos.add(baseRep.report_no);
+      }
+    });
+
+    const mergedReports: SampleReport[] = [...mappedRemoteReports, ...pendingLocalReports, ...missingBaselines];
 
     // Sort by sample_date desc, time_check desc
     mergedReports.sort((a, b) => {

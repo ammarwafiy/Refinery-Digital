@@ -79,20 +79,44 @@ interface ProcessLogViewProps {
 }
 
 export default function ProcessLogView({ currentRole, currentUser }: ProcessLogViewProps = {}) {
-  const [activeShiftDate, setActiveShiftDate] = useState<string>(getRealtimeShiftDate());
-  const [availableDates, setAvailableDates] = useState<string[]>([]);
+  const [activeShiftDate, setActiveShiftDate] = useState<string>(() => getRealtimeShiftDate());
+  const [availableDates, setAvailableDates] = useState<string[]>(() => {
+    try {
+      return getAvailableShiftDates();
+    } catch {
+      return [];
+    }
+  });
   const [sheet, setSheet] = useState<ProcessSheet>(() => getProcessSheetByDate(getRealtimeShiftDate()));
   const isLiveShift = activeShiftDate === getRealtimeShiftDate();
 
-  const [products, setProducts] = useState<Product[]>([]);
-  const [parameters, setParameters] = useState<Parameter[]>([]);
+  const [products, setProducts] = useState<Product[]>(() => {
+    try {
+      return getProducts();
+    } catch {
+      return [];
+    }
+  });
+  const [parameters, setParameters] = useState<Parameter[]>(() => {
+    try {
+      return getParameters();
+    } catch {
+      return [];
+    }
+  });
   const [autoDispatchQc, setAutoDispatchQc] = useState<boolean>(true);
-  const [selectedSlotIndex, setSelectedSlotIndex] = useState<number>(getRealtimeSlotIndex());
-  const [currentSlotIndex, setCurrentSlotIndex] = useState<number>(getRealtimeSlotIndex());
+  const [selectedSlotIndex, setSelectedSlotIndex] = useState<number>(() => getRealtimeSlotIndex());
+  const [currentSlotIndex, setCurrentSlotIndex] = useState<number>(() => getRealtimeSlotIndex());
   const [currentMinutesRemaining, setCurrentMinutesRemaining] = useState<number>(60);
   const [currentTimeStr, setCurrentTimeStr] = useState<string>('');
-  const [role, setRole] = useState<UserRole>(currentRole || currentUser?.role || getCurrentRole());
-  const [sampleReports, setSampleReports] = useState<SampleReport[]>(() => getSampleReports());
+  const [role, setRole] = useState<UserRole>(() => currentRole || currentUser?.role || getCurrentRole());
+  const [sampleReports, setSampleReports] = useState<SampleReport[]>(() => {
+    try {
+      return getSampleReports();
+    } catch {
+      return [];
+    }
+  });
 
   // Active entry form state
   const [formData, setFormData] = useState<Partial<ProcessEntry>>({});
