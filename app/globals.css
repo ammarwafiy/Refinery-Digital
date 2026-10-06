@@ -2716,18 +2716,22 @@ html.light-theme .cfg select,
 }
 
 /* Arrows */
-.modern-btn svg {
+.modern-btn svg.modern-arr-1,
+.modern-btn svg.modern-arr-2 {
   position: absolute;
   width: 15px;
   height: 15px;
   z-index: 3;
   transition: all 0.65s cubic-bezier(0.23, 1, 0.32, 1);
+  pointer-events: none;
 }
-.modern-btn-sm svg {
+.modern-btn-sm svg.modern-arr-1,
+.modern-btn-sm svg.modern-arr-2 {
   width: 13px;
   height: 13px;
 }
-.modern-btn-lg svg {
+.modern-btn-lg svg.modern-arr-1,
+.modern-btn-lg svg.modern-arr-2 {
   width: 17px;
   height: 17px;
 }
@@ -2744,6 +2748,15 @@ html.light-theme .cfg select,
 
 .modern-btn .modern-arr-2 {
   left: -40%;
+}
+
+/* Any child icon inside text or modern-btn-icon must remain static inline flex */
+.modern-btn .modern-btn-text svg,
+.modern-btn .modern-btn-icon svg {
+  position: static !important;
+  display: inline-block;
+  flex-shrink: 0;
+  vertical-align: middle;
 }
 
 /* Circle expanding effect */
@@ -2766,14 +2779,16 @@ html.light-theme .cfg select,
   z-index: 2;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  transform: translateX(-5px);
+  gap: 7px;
+  padding: 0 2px;
+  transform: translateX(-2px);
   transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 .modern-btn .modern-btn-icon {
   display: inline-flex;
   align-items: center;
+  margin-right: 2px;
 }
 
 /* Hover States */
@@ -2868,6 +2883,287 @@ html.light-theme .cfg select,
 .modern-btn-danger:hover:not(:disabled) svg {
   fill: #ffffff;
 }
+
+/* ========================================================================= */
+/* 1. Radio Dashboard Animated Tab Navigation                                */
+/* ========================================================================= */
+.radio-dashboard-container {
+  display: flex;
+  align-items: center;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.radio-dashboard-container::-webkit-scrollbar {
+  display: none;
+}
+
+.radio-dashboard-wrap {
+  --round: 10px;
+  --p-x: 6px;
+  --p-y: 4px;
+  display: inline-flex;
+  align-items: center;
+  padding: var(--p-y) var(--p-x);
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--round);
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  z-index: 1;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.radio-dashboard-label {
+  cursor: pointer;
+  outline: none;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--muted);
+  background: transparent;
+  padding: 8px 14px;
+  text-decoration: none;
+  user-select: none;
+  transition: color 0.25s ease, opacity 0.25s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  position: relative;
+  z-index: 2;
+  white-space: nowrap;
+}
+
+.radio-dashboard-label:hover {
+  color: var(--text);
+}
+
+.radio-dashboard-label.active {
+  color: #fff;
+  font-weight: 600;
+}
+
+html.light-theme .radio-dashboard-label.active {
+  color: #0b1320;
+}
+
+.radio-dashboard-badge {
+  font-size: 9px;
+  font-family: var(--font-mono, monospace);
+  padding: 1px 5px;
+  border-radius: 9999px;
+  background: rgba(0, 159, 227, 0.2);
+  color: #009fe3;
+  border: 1px solid rgba(0, 159, 227, 0.35);
+}
+
+.radio-dashboard-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  transition: transform 0.45s cubic-bezier(0.33, 0.83, 0.99, 0.98), width 0.35s cubic-bezier(0.33, 0.83, 0.99, 0.98);
+}
+
+.radio-dashboard-bar::before,
+.radio-dashboard-bar::after {
+  content: "";
+  position: absolute;
+  height: 2.5px;
+  width: 70%;
+  left: 15%;
+  background: #009fe3;
+  box-shadow: 0 0 8px rgba(0, 159, 227, 0.6);
+}
+
+.radio-dashboard-bar::before {
+  top: 0;
+  border-radius: 0 0 9999px 9999px;
+}
+
+.radio-dashboard-bar::after {
+  bottom: 0;
+  border-radius: 9999px 9999px 0 0;
+}
+
+.radio-dashboard-slidebar {
+  position: absolute;
+  top: var(--p-y);
+  left: 0;
+  height: calc(100% - (var(--p-y) * 2));
+  border-radius: calc(var(--round) - var(--p-y));
+  background: rgba(0, 159, 227, 0.16);
+  border: 1px solid rgba(0, 159, 227, 0.3);
+  pointer-events: none;
+  z-index: 0;
+  transition: transform 0.45s cubic-bezier(0.33, 0.83, 0.99, 0.98), width 0.35s cubic-bezier(0.33, 0.83, 0.99, 0.98);
+}
+
+/* ========================================================================= */
+/* 2. Radio Button Glider Tabs                                               */
+/* ========================================================================= */
+.glider-tabs-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  background-color: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  padding: 3.5px;
+  border-radius: 99px;
+  max-width: 100%;
+}
+
+.glider-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 14px;
+  height: 32px;
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-weight: 500;
+  border-radius: 99px;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  position: relative;
+  z-index: 2;
+  transition: color 0.2s ease-in-out;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.glider-tab-btn:hover {
+  color: var(--text);
+}
+
+.glider-tab-btn.active {
+  color: #009fe3;
+  font-weight: 600;
+}
+
+html.light-theme .glider-tab-btn.active {
+  color: #0077b6;
+}
+
+.glider-pill {
+  position: absolute;
+  top: 3.5px;
+  left: 0;
+  height: 32px;
+  background-color: rgba(0, 159, 227, 0.15);
+  border: 1px solid rgba(0, 159, 227, 0.25);
+  z-index: 1;
+  border-radius: 99px;
+  pointer-events: none;
+  transition: transform 0.25s ease-out, width 0.25s ease-out;
+}
+
+.glider-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 99px;
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--muted);
+  transition: all 0.2s ease-in;
+}
+
+.glider-tab-btn.active .glider-tab-badge {
+  background-color: #009fe3;
+  color: #fff;
+}
+
+/* ========================================================================= */
+/* 3. Radio Option Selection                                                 */
+/* ========================================================================= */
+.radio-option-container {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  max-width: 100%;
+}
+
+.radio-option-btn {
+  background-color: transparent;
+  border: none;
+  padding: 9px 12px;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  position: relative;
+  gap: 8px;
+  cursor: pointer;
+  border-radius: 6px;
+  margin: 2px 4px;
+  font-size: 13px;
+  transition: all 0.2s ease;
+  text-align: left;
+  user-select: none;
+}
+
+.radio-option-btn:hover {
+  background-color: var(--raised);
+}
+
+.radio-option-btn:focus,
+.radio-option-btn:active,
+.radio-option-btn.active {
+  background-color: rgba(0, 159, 227, 0.12);
+  outline: none;
+}
+
+.radio-option-btn::before {
+  content: "";
+  position: absolute;
+  top: 15%;
+  left: 2px;
+  width: 3.5px;
+  height: 70%;
+  background-color: #009fe3;
+  border-radius: 4px;
+  opacity: 0;
+  transform: scaleY(0.4);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.radio-option-btn:hover::before {
+  opacity: 0.6;
+  transform: scaleY(0.7);
+}
+
+.radio-option-btn:focus::before,
+.radio-option-btn:active::before,
+.radio-option-btn.active::before {
+  opacity: 1;
+  transform: scaleY(1);
+}
+
+.radio-option-btn svg {
+  width: 15px;
+  height: 15px;
+  color: #009fe3;
+  flex-shrink: 0;
+}
+
 
 
 

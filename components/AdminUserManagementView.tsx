@@ -35,6 +35,7 @@ import {
   Info
 } from 'lucide-react';
 import { UserRole, Profile } from '@/types/refinery';
+import GliderTabs from './GliderTabs';
 import { 
   getProfiles, 
   addProfile, 
@@ -615,26 +616,20 @@ export default function AdminUserManagementView() {
       </section>
 
       {/* 2. Admin Section Navigation Sub-Tabs */}
-      <div className="segs" style={{ '--c': 2, maxWidth: '520px' } as React.CSSProperties}>
-        <button
-          className="seg"
-          aria-pressed={activeAdminSubTab === 'personnel'}
-          type="button"
-          onClick={() => setActiveAdminSubTab('personnel')}
-        >
-          Personnel and access control
-        </button>
-        <button
-          className="seg"
-          aria-pressed={activeAdminSubTab === 'retention'}
-          type="button"
-          onClick={() => {
-            setActiveAdminSubTab('retention');
-            refreshStorage();
+      <div style={{ maxWidth: '520px' }}>
+        <GliderTabs
+          items={[
+            { id: 'personnel', label: 'Personnel and access control' },
+            { id: 'retention', label: 'Data retention and prune policy' },
+          ]}
+          activeId={activeAdminSubTab}
+          onChange={(id) => {
+            setActiveAdminSubTab(id as 'personnel' | 'retention');
+            if (id === 'retention') {
+              refreshStorage();
+            }
           }}
-        >
-          Data retention and prune policy
-        </button>
+        />
       </div>
 
       {activeAdminSubTab === 'personnel' ? (

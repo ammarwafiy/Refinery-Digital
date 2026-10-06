@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { ModernButton } from './ModernButton';
+import ProductOptionSelector from './ProductOptionSelector';
 import { 
   ProcessSheet, 
   ProcessEntry, 
@@ -47,6 +48,30 @@ import {
   AlertCircle,
   FlaskConical
 } from 'lucide-react';
+
+const REQUIRED_PROCESS_PARAM_FIELDS: { key: keyof ProcessEntry; label: string }[] = [
+  { key: 'oil_feed_rate_litre', label: 'Oil Feed Rate' },
+  { key: 'deod_time_set_hr', label: 'Deod Time Set' },
+  { key: 'vacuum_torr', label: 'Vacuum Reach' },
+  { key: 'tray_1_temp_c', label: 'Tray 1' },
+  { key: 'tray_2_temp_c', label: 'Tray 2' },
+  { key: 'tray_3_temp_c', label: 'Tray 3' },
+  { key: 'tray_4_temp_c', label: 'Tray 4' },
+  { key: 'tray_5_temp_c', label: 'Tray 5' },
+  { key: 'tray_6_temp_c', label: 'Tray 6' },
+  { key: 'tray_7_temp_c', label: 'Tray 7' },
+  { key: 'bc101_water_in_c', label: 'BC 101 Water In' },
+  { key: 'bc101_water_out_c', label: 'BC 101 Water Out' },
+  { key: 'chill_water_in_c', label: 'Chill Water In' },
+  { key: 'chill_water_out_c', label: 'Chill Water Out' },
+  { key: 'tray_steam_supply_bar', label: 'Tray Steam' },
+  { key: 'booster_press_bar', label: 'Booster Press' },
+  { key: 'ejector_press_bar', label: 'Ejector Press' },
+  { key: 'strip_steam_pct_of_oil', label: 'Stripping Steam %' },
+  { key: 'strip_steam_flow_kghr', label: 'Stripping Steam Flow' },
+  { key: 'fp101a_press_bar', label: 'FP 101A Press' },
+  { key: 'fp101b_press_bar', label: 'FP 101B Press' },
+];
 
 interface ProcessLogViewProps {
   currentRole?: UserRole;
@@ -100,7 +125,15 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
   const [unlockPassword, setUnlockPassword] = useState('');
   const [unlockError, setUnlockError] = useState<string | null>(null);
 
+  const [attemptedCommit, setAttemptedCommit] = useState(false);
   const limits = getParameterLimits();
+
+  const getMissingClass = (key: keyof ProcessEntry) => {
+    if (!attemptedCommit) return '';
+    const val = formData[key];
+    const isMissing = val === undefined || val === null || val === '' || isNaN(Number(val));
+    return isMissing ? '!border-rose-500 !bg-rose-500/15 ring-2 ring-rose-500/60 animate-pulse' : '';
+  };
 
   // SessionStorage draft persistence helpers to guarantee zero data loss
   const getDraftKey = (date: string, slot: number) => `refinery_process_draft_${date}_slot_${slot}`;
@@ -348,6 +381,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
       return;
     }
     if (selectedSlotIndex === idx) return;
+    setAttemptedCommit(false);
     // Preserve draft of previous slot if it was edited
     if (isDirtyRef.current) {
       saveDraft(activeShiftDate, selectedSlotIndex, formDataRef.current);
@@ -400,6 +434,22 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
       setValidationError(`Hour ${selectedSlotLabel} is locked (Read-Only). Readings can only be saved during the active live window (${String(((currentSlotIndex + 7) % 24) * 100).padStart(4, '0')}).`);
       return;
     }
+
+    // STRICT PLANT COMPLIANCE: Every parameter box must be filled before committing
+    const missing = REQUIRED_PROCESS_PARAM_FIELDS.filter(f => {
+      const val = formData[f.key];
+      return val === undefined || val === null || val === '' || isNaN(Number(val));
+    });
+
+    if (missing.length > 0) {
+      setAttemptedCommit(true);
+      setValidationError(
+        `Wajib isi setiap kotak bacaan parameter proses (${missing.length} parameter belum diisi: ${missing.slice(0, 3).map(m => m.label).join(', ')}${missing.length > 3 ? ` dan ${missing.length - 3} lagi` : ''}) sebelum boleh commit log jam ini!`
+      );
+      return;
+    }
+
+    setAttemptedCommit(false);
     setValidationError(null);
     setIsSaving(true);
 
@@ -861,24 +911,17 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
 
         {/* Form Inputs Grid */}
         <form onSubmit={handleSaveEntry}>
-          {/* Section A: Product Picker */}
+          {/* Section A: Product Picker with Radio Option Animation */}
           <div className="row">
             <label htmlFor="prod">Product specification and oil type</label>
-            <div className="sel-wrap">
-              <select
-                id="prod"
-                value={formData.product_id || ''}
-                onChange={e => handleProductChange(e.target.value)}
+            <div className="w-full max-w-md">
+              <ProductOptionSelector
+                value={formData.product_id || (products[0]?.id || '')}
+                onChange={handleProductChange}
+                options={products}
                 disabled={isSlotDisabled}
-                className="bg-[var(--bg)] border border-[var(--line)] rounded-lg px-3 py-2 text-sm text-[var(--text)]"
-              >
-                {products.map(p => (
-                  <option key={p.id} value={p.id} className="bg-[var(--bg)] text-[var(--text)]">
-                    {p.name}
-                  </option>
-                ))}
-              </select>
-              <span className="hint">
+              />
+              <span className="hint block mt-1.5">
                 Carried over from previous hour unless changed.
               </span>
             </div>
@@ -950,7 +993,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     value={formData.oil_feed_rate_litre ?? ''}
                     onChange={e => handleFieldChange('oil_feed_rate_litre', e.target.value ? Number(e.target.value) : null)}
                     disabled={isSlotDisabled}
-                    className="w-full bg-[var(--bg)] border border-[var(--line)] rounded-lg px-3 py-2 text-xs font-mono text-[var(--text)] placeholder:text-[var(--muted)]/50 focus:outline-none focus:border-[var(--red)] disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`w-full bg-[var(--bg)] border border-[var(--line)] rounded-lg px-3 py-2 text-xs font-mono text-[var(--text)] placeholder:text-[var(--muted)]/50 focus:outline-none focus:border-[var(--red)] disabled:opacity-50 disabled:cursor-not-allowed ${getMissingClass('oil_feed_rate_litre')}`}
                   />
                   {ghostData.oil_feed_rate_litre !== undefined && (
                     <span className="absolute right-2.5 top-2 text-[10px] font-mono text-[var(--muted)] pointer-events-none">
@@ -972,7 +1015,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                   value={formData.deod_time_set_hr ?? ''}
                   onChange={e => handleFieldChange('deod_time_set_hr', e.target.value ? Number(e.target.value) : null)}
                   disabled={isSlotDisabled}
-                  className="w-full bg-[var(--bg)] border border-[var(--line)] rounded-lg px-3 py-2 text-xs font-mono text-[var(--text)] placeholder:text-[var(--muted)]/50 focus:outline-none focus:border-[var(--red)] disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`w-full bg-[var(--bg)] border border-[var(--line)] rounded-lg px-3 py-2 text-xs font-mono text-[var(--text)] placeholder:text-[var(--muted)]/50 focus:outline-none focus:border-[var(--red)] disabled:opacity-50 disabled:cursor-not-allowed ${getMissingClass('deod_time_set_hr')}`}
                 />
               </div>
 
@@ -990,7 +1033,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     value={formData.vacuum_torr ?? ''}
                     onChange={e => handleFieldChange('vacuum_torr', e.target.value ? Number(e.target.value) : null)}
                     disabled={isSlotDisabled}
-                    className={`w-full bg-[var(--bg)] border rounded-lg px-3 py-2 text-xs font-mono text-[var(--text)] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${
+                    className={`w-full bg-[var(--bg)] border rounded-lg px-3 py-2 text-xs font-mono text-[var(--text)] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${getMissingClass('vacuum_torr')} ${
                       checkLimit('vacuum_torr', formData.vacuum_torr) === 'soft_warn'
                         ? 'border-[var(--amber)] bg-[rgba(224,160,48,0.12)] text-[var(--amber)]'
                         : checkLimit('vacuum_torr', formData.vacuum_torr) === 'hard_error'
@@ -1038,7 +1081,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                         value={val ?? ''}
                         onChange={e => handleFieldChange(key, e.target.value ? Number(e.target.value) : null)}
                         disabled={isSlotDisabled}
-                        className={`w-full bg-[var(--bg)] border rounded-lg px-2.5 py-2 text-xs font-mono text-[var(--text)] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${
+                        className={`w-full bg-[var(--bg)] border rounded-lg px-2.5 py-2 text-xs font-mono text-[var(--text)] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${getMissingClass(key)} ${
                           status === 'soft_warn'
                             ? 'border-[var(--amber)] text-[var(--amber)] bg-[rgba(224,160,48,0.12)]'
                             : status === 'hard_error'
@@ -1070,7 +1113,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     value={formData.bc101_water_in_c ?? ''}
                     onChange={e => handleFieldChange('bc101_water_in_c', e.target.value ? Number(e.target.value) : null)}
                     disabled={isSlotDisabled}
-                    className="w-full bg-[var(--bg)] border border-[var(--line)] rounded-lg px-2.5 py-2 text-xs font-mono text-[var(--text)] placeholder:text-[var(--muted)]/50 focus:outline-none focus:border-[var(--red)] disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`w-full bg-[var(--bg)] border border-[var(--line)] rounded-lg px-2.5 py-2 text-xs font-mono text-[var(--text)] placeholder:text-[var(--muted)]/50 focus:outline-none focus:border-[var(--red)] disabled:opacity-50 disabled:cursor-not-allowed ${getMissingClass('bc101_water_in_c')}`}
                   />
                 </div>
                 <div>
@@ -1082,7 +1125,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     value={formData.bc101_water_out_c ?? ''}
                     onChange={e => handleFieldChange('bc101_water_out_c', e.target.value ? Number(e.target.value) : null)}
                     disabled={isSlotDisabled}
-                    className="w-full bg-[var(--bg)] border border-[var(--line)] rounded-lg px-2.5 py-2 text-xs font-mono text-[var(--text)] placeholder:text-[var(--muted)]/50 focus:outline-none focus:border-[var(--red)] disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`w-full bg-[var(--bg)] border border-[var(--line)] rounded-lg px-2.5 py-2 text-xs font-mono text-[var(--text)] placeholder:text-[var(--muted)]/50 focus:outline-none focus:border-[var(--red)] disabled:opacity-50 disabled:cursor-not-allowed ${getMissingClass('bc101_water_out_c')}`}
                   />
                 </div>
               </div>
@@ -1103,7 +1146,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     value={formData.chill_water_in_c ?? ''}
                     onChange={e => handleFieldChange('chill_water_in_c', e.target.value ? Number(e.target.value) : null)}
                     disabled={isSlotDisabled}
-                    className="w-full bg-[var(--bg)] border border-[var(--line)] rounded-lg px-2.5 py-2 text-xs font-mono text-[var(--text)] placeholder:text-[var(--muted)]/50 focus:outline-none focus:border-[var(--red)] disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`w-full bg-[var(--bg)] border border-[var(--line)] rounded-lg px-2.5 py-2 text-xs font-mono text-[var(--text)] placeholder:text-[var(--muted)]/50 focus:outline-none focus:border-[var(--red)] disabled:opacity-50 disabled:cursor-not-allowed ${getMissingClass('chill_water_in_c')}`}
                   />
                 </div>
                 <div>
@@ -1115,7 +1158,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     value={formData.chill_water_out_c ?? ''}
                     onChange={e => handleFieldChange('chill_water_out_c', e.target.value ? Number(e.target.value) : null)}
                     disabled={isSlotDisabled}
-                    className="w-full bg-[var(--bg)] border border-[var(--line)] rounded-lg px-2.5 py-2 text-xs font-mono text-[var(--text)] placeholder:text-[var(--muted)]/50 focus:outline-none focus:border-[var(--red)] disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`w-full bg-[var(--bg)] border border-[var(--line)] rounded-lg px-2.5 py-2 text-xs font-mono text-[var(--text)] placeholder:text-[var(--muted)]/50 focus:outline-none focus:border-[var(--red)] disabled:opacity-50 disabled:cursor-not-allowed ${getMissingClass('chill_water_out_c')}`}
                   />
                 </div>
               </div>
@@ -1143,7 +1186,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     value={formData.tray_steam_supply_bar ?? ''}
                     onChange={e => handleFieldChange('tray_steam_supply_bar', e.target.value ? Number(e.target.value) : null)}
                     disabled={isSlotDisabled}
-                    className="w-full bg-[var(--bg)] border border-[rgba(224,160,48,0.5)] focus:border-[var(--amber)] rounded-lg px-2 py-2 text-xs font-mono text-[var(--text)] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`w-full bg-[var(--bg)] border border-[rgba(224,160,48,0.5)] focus:border-[var(--amber)] rounded-lg px-2 py-2 text-xs font-mono text-[var(--text)] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${getMissingClass('tray_steam_supply_bar')}`}
                   />
                 </div>
                 <div>
@@ -1157,7 +1200,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     value={formData.booster_press_bar ?? ''}
                     onChange={e => handleFieldChange('booster_press_bar', e.target.value ? Number(e.target.value) : null)}
                     disabled={isSlotDisabled}
-                    className="w-full bg-[var(--bg)] border border-[var(--line)] rounded-lg px-2 py-2 text-xs font-mono text-[var(--text)] placeholder:text-[var(--muted)]/50 focus:outline-none focus:border-[var(--red)] disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`w-full bg-[var(--bg)] border border-[var(--line)] rounded-lg px-2 py-2 text-xs font-mono text-[var(--text)] placeholder:text-[var(--muted)]/50 focus:outline-none focus:border-[var(--red)] disabled:opacity-50 disabled:cursor-not-allowed ${getMissingClass('booster_press_bar')}`}
                   />
                 </div>
                 <div>
@@ -1171,7 +1214,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     value={formData.ejector_press_bar ?? ''}
                     onChange={e => handleFieldChange('ejector_press_bar', e.target.value ? Number(e.target.value) : null)}
                     disabled={isSlotDisabled}
-                    className="w-full bg-[var(--bg)] border border-[var(--line)] rounded-lg px-2 py-2 text-xs font-mono text-[var(--text)] placeholder:text-[var(--muted)]/50 focus:outline-none focus:border-[var(--red)] disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`w-full bg-[var(--bg)] border border-[var(--line)] rounded-lg px-2 py-2 text-xs font-mono text-[var(--text)] placeholder:text-[var(--muted)]/50 focus:outline-none focus:border-[var(--red)] disabled:opacity-50 disabled:cursor-not-allowed ${getMissingClass('ejector_press_bar')}`}
                   />
                 </div>
               </div>
@@ -1200,7 +1243,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     value={formData.strip_steam_pct_of_oil ?? ''}
                     onChange={e => handleFieldChange('strip_steam_pct_of_oil', e.target.value ? Number(e.target.value) : null)}
                     disabled={isSlotDisabled}
-                    className="w-full bg-[var(--bg)] border border-[var(--line)] focus:border-[var(--red)] rounded-lg px-2.5 py-2 text-xs font-mono text-[var(--text)] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`w-full bg-[var(--bg)] border border-[var(--line)] focus:border-[var(--red)] rounded-lg px-2.5 py-2 text-xs font-mono text-[var(--text)] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed ${getMissingClass('strip_steam_pct_of_oil')}`}
                   />
                 </div>
                 <div>
@@ -1212,7 +1255,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     value={formData.strip_steam_flow_kghr ?? ''}
                     onChange={e => handleFieldChange('strip_steam_flow_kghr', e.target.value ? Number(e.target.value) : null)}
                     disabled={isSlotDisabled}
-                    className="w-full bg-[var(--bg)] border border-[var(--line)] rounded-lg px-2.5 py-2 text-xs font-mono text-[var(--text)] placeholder:text-[var(--muted)]/50 focus:outline-none focus:border-[var(--red)] disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`w-full bg-[var(--bg)] border border-[var(--line)] rounded-lg px-2.5 py-2 text-xs font-mono text-[var(--text)] placeholder:text-[var(--muted)]/50 focus:outline-none focus:border-[var(--red)] disabled:opacity-50 disabled:cursor-not-allowed ${getMissingClass('strip_steam_flow_kghr')}`}
                   />
                 </div>
               </div>
@@ -1233,7 +1276,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     value={formData.fp101a_press_bar ?? ''}
                     onChange={e => handleFieldChange('fp101a_press_bar', e.target.value ? Number(e.target.value) : null)}
                     disabled={isSlotDisabled}
-                    className="w-full bg-[var(--bg)] border border-[var(--line)] rounded-lg px-2.5 py-2 text-xs font-mono text-[var(--text)] placeholder:text-[var(--muted)]/50 focus:outline-none focus:border-[var(--red)] disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`w-full bg-[var(--bg)] border border-[var(--line)] rounded-lg px-2.5 py-2 text-xs font-mono text-[var(--text)] placeholder:text-[var(--muted)]/50 focus:outline-none focus:border-[var(--red)] disabled:opacity-50 disabled:cursor-not-allowed ${getMissingClass('fp101a_press_bar')}`}
                   />
                 </div>
                 <div>
@@ -1245,7 +1288,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     value={formData.fp101b_press_bar ?? ''}
                     onChange={e => handleFieldChange('fp101b_press_bar', e.target.value ? Number(e.target.value) : null)}
                     disabled={isSlotDisabled}
-                    className="w-full bg-[var(--bg)] border border-[var(--line)] rounded-lg px-2.5 py-2 text-xs font-mono text-[var(--text)] placeholder:text-[var(--muted)]/50 focus:outline-none focus:border-[var(--red)] disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`w-full bg-[var(--bg)] border border-[var(--line)] rounded-lg px-2.5 py-2 text-xs font-mono text-[var(--text)] placeholder:text-[var(--muted)]/50 focus:outline-none focus:border-[var(--red)] disabled:opacity-50 disabled:cursor-not-allowed ${getMissingClass('fp101b_press_bar')}`}
                   />
                 </div>
               </div>
@@ -1300,17 +1343,17 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
               >
                 {isJustSaved ? (
                   <>
-                    <Check className="h-3.5 w-3.5 text-white mr-1.5" />
+                    <Check className="h-3.5 w-3.5 shrink-0 text-white" />
                     <span>Hour {selectedSlotLabel} Recorded!</span>
                   </>
                 ) : isSaving ? (
                   <>
-                    <Clock className="h-3.5 w-3.5 animate-spin text-white mr-1.5" />
+                    <Clock className="h-3.5 w-3.5 shrink-0 animate-spin text-white" />
                     <span>Committing Hour {selectedSlotLabel}...</span>
                   </>
                 ) : isSlotDisabled ? (
                   <>
-                    <Lock className="h-3.5 w-3.5 text-white/70 mr-1.5" />
+                    <Lock className="h-3.5 w-3.5 shrink-0 text-white/70" />
                     <span>
                       {sheet.status === 'verified'
                         ? 'Sheet Locked (Verified)'
@@ -1325,7 +1368,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                   </>
                 ) : (
                   <>
-                    <Save className="h-3.5 w-3.5 mr-1.5" />
+                    <Save className="h-3.5 w-3.5 shrink-0" />
                     <span>Commit Hour {selectedSlotLabel} Log</span>
                   </>
                 )}

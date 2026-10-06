@@ -4,6 +4,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatedCheckbox } from './AnimatedCheckbox';
 import { ModernButton } from './ModernButton';
+import GliderTabs from './GliderTabs';
+import ProductOptionSelector from './ProductOptionSelector';
 import { 
   SampleReport, 
   Product, 
@@ -739,25 +741,14 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
           </p>
         </div>
 
-        <div className="segs" style={{ '--c': 2, margin: 0, width: '280px' } as React.CSSProperties}>
-          <button
-            type="button"
-            className="seg"
-            aria-pressed={activeSubTab !== 'new'}
-            onClick={() => setActiveSubTab('list')}
-          >
-            Lab queue ({reports.length})
-          </button>
-
-          <button
-            type="button"
-            className="seg"
-            aria-pressed={activeSubTab === 'new'}
-            onClick={() => setActiveSubTab('new')}
-          >
-            Raise sample
-          </button>
-        </div>
+        <GliderTabs
+          items={[
+            { id: 'list', label: 'Lab queue', badge: reports.length },
+            { id: 'new', label: 'Raise sample' },
+          ]}
+          activeId={activeSubTab}
+          onChange={(id) => setActiveSubTab(id as 'list' | 'new')}
+        />
       </section>
 
 
@@ -846,17 +837,14 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
             {/* Product Picker */}
             <div className="fld" style={{ marginBottom: '20px' }}>
               <label>Product Selection (Standard List)</label>
-              <select
+              <ProductOptionSelector
                 value={newProductId}
-                onChange={e => setNewProductId(e.target.value)}
-                className="inp"
-                style={{ width: '100%' }}
-              >
-                {products.map(p => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-                <option value="others">Others — Free Text Entry</option>
-              </select>
+                onChange={val => setNewProductId(val)}
+                options={[
+                  ...products,
+                  { id: 'others', name: 'Others — Free Text Entry' }
+                ]}
+              />
 
               {newProductId === 'others' && (
                 <div style={{ marginTop: '12px' }}>
@@ -1076,44 +1064,39 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
               />
-              <div className="chips">
-                {[
-                  { id: 'all', label: `All (${reports.length})` },
-                  { id: 'awaiting', label: `Awaiting (${countAwaiting})` },
-                  { id: 'accepted', label: `Accepted (${countAccepted})` },
-                  { id: 'rejected', label: `Rejected (${countRejected})` },
-                ].map(f => (
-                  <button
-                    key={f.id}
-                    className="seg"
-                    aria-pressed={filterStatus === f.id}
-                    type="button"
-                    onClick={() => {
-                      setFilterStatus(f.id);
-                      const q = searchQuery.trim().toLowerCase();
-                      const matching = reports.filter(r => {
-                        const matchSearch = !q ||
-                                            (r.lot_no || '').toLowerCase().includes(q) ||
-                                            (r.product_name || '').toLowerCase().includes(q) ||
-                                            (r.report_no || '').toLowerCase().includes(q);
-                        if (!matchSearch) return false;
-                        const dec = r.decision?.decision;
-                        const isAcc = dec === 'accept' || dec === 'accept_concession';
-                        const isRej = dec === 'reject';
-                        const isAw = !isAcc && !isRej;
-                        if (f.id === 'awaiting') return isAw;
-                        if (f.id === 'accepted') return isAcc;
-                        if (f.id === 'rejected') return isRej;
-                        return true;
-                      });
-                      if (matching.length > 0 && !matching.some(m => m.id === selectedReportId)) {
-                        setSelectedReportId(matching[0].id);
-                      }
-                    }}
-                  >
-                    {f.label}
-                  </button>
-                ))}
+              <div className="mt-2.5">
+                <GliderTabs
+                  size="sm"
+                  items={[
+                    { id: 'all', label: 'All', badge: reports.length },
+                    { id: 'awaiting', label: 'Awaiting', badge: countAwaiting },
+                    { id: 'accepted', label: 'Accepted', badge: countAccepted },
+                    { id: 'rejected', label: 'Rejected', badge: countRejected },
+                  ]}
+                  activeId={filterStatus}
+                  onChange={(newStatus) => {
+                    setFilterStatus(newStatus);
+                    const q = searchQuery.trim().toLowerCase();
+                    const matching = reports.filter(r => {
+                      const matchSearch = !q ||
+                                          (r.lot_no || '').toLowerCase().includes(q) ||
+                                          (r.product_name || '').toLowerCase().includes(q) ||
+                                          (r.report_no || '').toLowerCase().includes(q);
+                      if (!matchSearch) return false;
+                      const dec = r.decision?.decision;
+                      const isAcc = dec === 'accept' || dec === 'accept_concession';
+                      const isRej = dec === 'reject';
+                      const isAw = !isAcc && !isRej;
+                      if (newStatus === 'awaiting') return isAw;
+                      if (newStatus === 'accepted') return isAcc;
+                      if (newStatus === 'rejected') return isRej;
+                      return true;
+                    });
+                    if (matching.length > 0 && !matching.some(m => m.id === selectedReportId)) {
+                      setSelectedReportId(matching[0].id);
+                    }
+                  }}
+                />
               </div>
             </div>
 

@@ -28,6 +28,7 @@ import {
   syncProcessSheetsFromSupabase
 } from '@/lib/data-service';
 import { ProcessEntry } from '@/types/refinery';
+import GliderTabs from './GliderTabs';
 
 type ReportPeriod = 'daily' | 'monthly' | 'yearly';
 type ReportCategory = 'process' | 'qc' | 'deviations' | 'master';
@@ -427,31 +428,17 @@ export default function ReportExportView() {
         <div className="cfg">
           <div>
             <h3>Timeframe</h3>
-            <div className="segs">
-              <button
-                className="seg"
-                aria-pressed={period === 'daily'}
-                type="button"
-                onClick={() => setPeriod('daily')}
-              >
-                Daily
-              </button>
-              <button
-                className="seg"
-                aria-pressed={period === 'monthly'}
-                type="button"
-                onClick={() => setPeriod('monthly')}
-              >
-                Monthly
-              </button>
-              <button
-                className="seg"
-                aria-pressed={period === 'yearly'}
-                type="button"
-                onClick={() => setPeriod('yearly')}
-              >
-                Yearly
-              </button>
+            <div className="mb-2.5">
+              <GliderTabs
+                size="sm"
+                items={[
+                  { id: 'daily', label: 'Daily' },
+                  { id: 'monthly', label: 'Monthly' },
+                  { id: 'yearly', label: 'Yearly' },
+                ]}
+                activeId={period}
+                onChange={(id) => setPeriod(id as ReportPeriod)}
+              />
             </div>
             <div className="dr">
               {period === 'daily' && (
@@ -491,39 +478,18 @@ export default function ReportExportView() {
 
           <div>
             <h3>Data category</h3>
-            <div className="segs" style={{ '--c': 2 } as React.CSSProperties}>
-              <button
-                className="seg"
-                aria-pressed={category === 'process'}
-                type="button"
-                onClick={() => setCategory('process')}
-              >
-                Process Log
-              </button>
-              <button
-                className="seg"
-                aria-pressed={category === 'qc'}
-                type="button"
-                onClick={() => setCategory('qc')}
-              >
-                QC Lab
-              </button>
-              <button
-                className="seg"
-                aria-pressed={category === 'deviations'}
-                type="button"
-                onClick={() => setCategory('deviations')}
-              >
-                Deviations
-              </button>
-              <button
-                className="seg"
-                aria-pressed={category === 'master'}
-                type="button"
-                onClick={() => setCategory('master')}
-              >
-                Master Combined
-              </button>
+            <div className="mb-2.5">
+              <GliderTabs
+                size="sm"
+                items={[
+                  { id: 'process', label: 'Process Log' },
+                  { id: 'qc', label: 'QC Lab' },
+                  { id: 'deviations', label: 'Deviations' },
+                  { id: 'master', label: 'Master Combined' },
+                ]}
+                activeId={category}
+                onChange={(id) => setCategory(id as ReportCategory)}
+              />
             </div>
             <select
               aria-label="Product"

@@ -10,6 +10,17 @@ import AnalyticsTrendsView from '@/components/AnalyticsTrendsView';
 import OfficialFormsExportView from '@/components/OfficialFormsExportView';
 import AdminUserManagementView from '@/components/AdminUserManagementView';
 import ReportExportView from '@/components/ReportExportView';
+import RadioDashboardNav, { RadioDashboardNavItem } from '@/components/RadioDashboardNav';
+import StarFieldBackground from '@/components/StarFieldBackground';
+import { 
+  Flame, 
+  FlaskConical, 
+  Activity, 
+  FileSpreadsheet, 
+  ShieldCheck, 
+  BarChart3, 
+  Users 
+} from 'lucide-react';
 import { Profile } from '@/types/refinery';
 import { 
   getAuthUser, 
@@ -195,10 +206,31 @@ export default function RefineryDashboard() {
     subtitle: 'Record and monitor hourly process parameters, observations and operational status'
   };
 
+  const allNavDefinitions: Record<string, { label: string; icon: any }> = {
+    process: { label: 'Process Log', icon: Flame },
+    qc: { label: 'QC Lab', icon: FlaskConical },
+    supervisor: { label: 'Abnormality', icon: Activity },
+    report: { label: 'Reports', icon: FileSpreadsheet },
+    export: { label: 'Certificates', icon: ShieldCheck },
+    analytics: { label: 'Trends', icon: BarChart3 },
+    admin: { label: 'Users', icon: Users },
+  };
+
+  const dashboardNavItems: RadioDashboardNavItem[] = allowedTabs
+    .filter(tabId => allNavDefinitions[tabId])
+    .map(tabId => ({
+      id: tabId,
+      label: allNavDefinitions[tabId].label,
+      icon: allNavDefinitions[tabId].icon,
+    }));
+
   return (
-    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] flex flex-col overflow-x-hidden animate-dashboard-enter">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] flex flex-col overflow-x-hidden animate-dashboard-enter relative">
+      {/* Background Star Particle Transition (Transition/animation/Pattern) */}
+      <StarFieldBackground />
+
       {/* Sidebar (Desktop) + Mobile Topbar / Drawer */}
-      <div className="no-print">
+      <div className="no-print relative z-30">
         <Navbar 
           activeTab={currentTab} 
           setActiveTab={handleTabChange} 
@@ -209,23 +241,38 @@ export default function RefineryDashboard() {
       </div>
 
       {/* Main Content Area (Offset by sidebar width 248px on desktop and topbar height 64px) */}
-      <div className="flex-1 flex flex-col min-w-0 max-w-full overflow-x-hidden lg:pl-[248px] lg:pt-16">
+      <div className="flex-1 flex flex-col min-w-0 max-w-full overflow-x-hidden lg:pl-[248px] lg:pt-16 relative z-10">
         {/* Dynamic Page Header & Breadcrumbs matching redesign */}
         <div className="px-6 lg:px-8 pt-6 pb-2 no-print">
-          <p className="crumb-redesign">
-            <span 
-              onClick={() => handleTabChange('process')}
-              className="hover:underline cursor-pointer"
-            >
-              Home
-            </span> / <b>{currentHeaderInfo.title}</b>
-          </p>
-          <h1 className="h1-redesign">
-            {currentHeaderInfo.title}
-          </h1>
-          <p className="lede-redesign">
-            {currentHeaderInfo.subtitle}.
-          </p>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-2">
+            <div>
+              <p className="crumb-redesign">
+                <span 
+                  onClick={() => handleTabChange('process')}
+                  className="hover:underline cursor-pointer"
+                >
+                  Home
+                </span> / <b>{currentHeaderInfo.title}</b>
+              </p>
+              <h1 className="h1-redesign">
+                {currentHeaderInfo.title}
+              </h1>
+              <p className="lede-redesign">
+                {currentHeaderInfo.subtitle}.
+              </p>
+            </div>
+
+            {/* Radio Dashboard Sliding Animated Navigation (Transition/animation/Radio Dashboard) */}
+            {dashboardNavItems.length > 1 && (
+              <div className="shrink-0 self-start md:self-end">
+                <RadioDashboardNav
+                  items={dashboardNavItems}
+                  activeTab={currentTab}
+                  onTabChange={handleTabChange}
+                />
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Main Work Area - Strictly renders only the view allowed for current role */}

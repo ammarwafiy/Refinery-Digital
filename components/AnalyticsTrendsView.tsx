@@ -24,6 +24,7 @@ import {
   syncSampleReportsFromSupabase
 } from '@/lib/data-service';
 import { SampleReport, ProcessSheet } from '@/types/refinery';
+import GliderTabs from './GliderTabs';
 import { 
   BarChart3, 
   TrendingUp, 
@@ -347,32 +348,15 @@ export default function AnalyticsTrendsView() {
             Banded tolerance shading, multi-tray temperature overlays, statistical rejection Pareto
           </p>
         </div>
-        <div className="segs" style={{ '--c': 3, margin: 0 } as React.CSSProperties}>
-          <button
-            className="seg"
-            aria-pressed={activeMetric === 'trays'}
-            type="button"
-            onClick={() => setActiveMetric('trays')}
-          >
-            Tray temps (1, 4, 7)
-          </button>
-          <button
-            className="seg"
-            aria-pressed={activeMetric === 'vacuum'}
-            type="button"
-            onClick={() => setActiveMetric('vacuum')}
-          >
-            Deodorizer vacuum
-          </button>
-          <button
-            className="seg"
-            aria-pressed={activeMetric === 'steam'}
-            type="button"
-            onClick={() => setActiveMetric('steam')}
-          >
-            Steam pressure
-          </button>
-        </div>
+        <GliderTabs
+          items={[
+            { id: 'trays', label: 'Tray temps (1, 4, 7)' },
+            { id: 'vacuum', label: 'Deodorizer vacuum' },
+            { id: 'steam', label: 'Steam pressure' },
+          ]}
+          activeId={activeMetric}
+          onChange={(id) => setActiveMetric(id as any)}
+        />
       </section>
 
       {/* 2. Banded Time-Series Chart */}

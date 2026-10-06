@@ -17,6 +17,7 @@ import {
   getProductSpecs
 } from '@/lib/data-service';
 import type { SampleReport, ProcessSheet, AuditLogEntry } from '@/types/refinery';
+import GliderTabs from './GliderTabs';
 import { 
   FileText, 
   Printer, 
@@ -452,34 +453,25 @@ export default function OfficialFormsExportView() {
 
         {/* Industrial Segmented Document Switcher */}
         <div className="tl">
-          <div className="segs" style={{ '--c': 3, maxWidth: '780px' } as React.CSSProperties}>
-            <button
-              className="seg"
-              aria-pressed={activeFormType === 'rf_fr_004'}
-              type="button"
-              onClick={() => setActiveFormType('rf_fr_004')}
-            >
-              RF-FR-004: 24-hour process sheet
-            </button>
-            <button
-              className="seg"
-              aria-pressed={activeFormType === 'rf_fr_001'}
-              type="button"
-              onClick={() => setActiveFormType('rf_fr_001')}
-            >
-              RF-FR-001: sample analysis certificate
-            </button>
-            <button
-              className="seg"
-              aria-pressed={activeFormType === 'audit'}
-              type="button"
-              onClick={() => {
-                setActiveFormType('audit');
-                syncAuditLogsFromSupabase().catch(() => {});
+          <div style={{ maxWidth: '820px' }}>
+            <GliderTabs
+              items={[
+                { id: 'rf_fr_004', label: 'RF-FR-004: 24-hour process sheet' },
+                { id: 'rf_fr_001', label: 'RF-FR-001: sample analysis certificate' },
+                {
+                  id: 'audit',
+                  label: 'Immutable audit trail',
+                  badge: filteredAuditLogs.length !== auditLogs.length ? `${filteredAuditLogs.length}/${auditLogs.length}` : auditLogs.length,
+                },
+              ]}
+              activeId={activeFormType}
+              onChange={(id) => {
+                setActiveFormType(id as 'rf_fr_004' | 'rf_fr_001' | 'audit');
+                if (id === 'audit') {
+                  syncAuditLogsFromSupabase().catch(() => {});
+                }
               }}
-            >
-              Immutable audit trail ({filteredAuditLogs.length !== auditLogs.length ? `${filteredAuditLogs.length}/${auditLogs.length}` : auditLogs.length})
-            </button>
+            />
           </div>
 
         {/* When activeFormType === 'rf_fr_004', show Shift Date Selector */}
