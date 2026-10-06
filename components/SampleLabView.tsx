@@ -1,6 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
+import { AnimatedCheckbox } from './AnimatedCheckbox';
+import { ModernButton } from './ModernButton';
 import { 
   SampleReport, 
   Product, 
@@ -139,6 +142,22 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleteSuccessMessage, setDeleteSuccessMessage] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (isDecisionModalOpen || reportToDelete) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isDecisionModalOpen, reportToDelete]);
 
   useEffect(() => {
     const activeR = currentRole || currentUser?.role || getCurrentRole();
@@ -919,29 +938,23 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
               </label>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px', fontSize: '13px', color: 'var(--text)' }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
+                  <AnimatedCheckbox
                     checked={newRemarkFlushing}
-                    onChange={e => setNewRemarkFlushing(e.target.checked)}
-                    style={{ accentColor: 'var(--red)' }}
+                    onChange={checked => setNewRemarkFlushing(checked)}
                   />
                   <span>Flushing</span>
                 </label>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
+                  <AnimatedCheckbox
                     checked={newRemarkCooling}
-                    onChange={e => setNewRemarkCooling(e.target.checked)}
-                    style={{ accentColor: 'var(--red)' }}
+                    onChange={checked => setNewRemarkCooling(checked)}
                   />
                   <span>Cooling</span>
                 </label>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
+                  <AnimatedCheckbox
                     checked={newRemarkPushover}
-                    onChange={e => setNewRemarkPushover(e.target.checked)}
-                    style={{ accentColor: 'var(--red)' }}
+                    onChange={checked => setNewRemarkPushover(checked)}
                   />
                   <span>Pushover</span>
                 </label>
@@ -963,7 +976,10 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                   return (
                     <label
                       key={param.id}
-                      onClick={() => toggleParam(param.id)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        toggleParam(param.id);
+                      }}
                       style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -971,17 +987,15 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                         padding: '10px 12px',
                         borderRadius: '8px',
                         border: '1px solid var(--line)',
-                        background: isChecked ? 'rgba(216,31,44,.12)' : 'var(--surface)',
+                        background: isChecked ? 'rgba(0, 159, 227, 0.12)' : 'var(--surface)',
                         color: isChecked ? 'var(--text)' : 'var(--muted)',
                         cursor: 'pointer',
                         fontSize: '13px'
                       }}
                     >
-                      <input
-                        type="checkbox"
+                      <AnimatedCheckbox
                         checked={isChecked}
-                        readOnly
-                        style={{ accentColor: 'var(--red)' }}
+                        onChange={() => toggleParam(param.id)}
                       />
                       <span>{param.name} {param.unit ? `(${param.unit})` : ''}</span>
                     </label>
@@ -993,12 +1007,10 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
               <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--line)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <input
-                      type="checkbox"
+                    <AnimatedCheckbox
                       id="new-temp-master"
                       checked={selectedParamIds.includes('param-temp') && selectedTempKeys.length === 9}
-                      onChange={e => handleToggleAllTempsForNew(e.target.checked)}
-                      style={{ accentColor: 'var(--red)' }}
+                      onChange={checked => handleToggleAllTempsForNew(checked)}
                     />
                     <label htmlFor="new-temp-master" style={{ margin: 0, fontWeight: 600, fontSize: '13px', color: 'var(--text)', cursor: 'pointer' }}>
                       Temperature Test Points ({selectedTempKeys.length} / 9 Active)
@@ -1038,12 +1050,13 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
               >
                 Cancel
               </button>
-              <button
+              <ModernButton
                 type="submit"
-                className="primary"
+                variant="primary"
+                size="md"
               >
                 Submit Sample to Lab Queue
-              </button>
+              </ModernButton>
             </div>
           </form>
         </section>
@@ -1188,29 +1201,29 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                         </span>
 
                         {(role === 'qc_analyst' || role === 'qc_manager' || role === 'admin') && (
-                          <button
+                          <ModernButton
                             type="button"
                             onClick={() => handleOpenDecisionModal(selectedReport.decision?.decision || 'accept')}
-                            className="ghost"
-                            style={{ whiteSpace: 'nowrap' }}
+                            variant="primary"
+                            size="sm"
                           >
                             Update Decision
-                          </button>
+                          </ModernButton>
                         )}
                       </>
                     ) : (
                       <>
                         <span className="bd a">Awaiting</span>
                         {(role === 'qc_analyst' || role === 'qc_manager' || role === 'admin') && (
-                          <button
+                          <ModernButton
                             type="button"
                             onClick={() => handleOpenDecisionModal('accept')}
-                            className="primary font-semibold"
-                            style={{ whiteSpace: 'nowrap' }}
+                            variant="primary"
+                            size="md"
                             title="Buka borang keputusan QC (Accept / Concession / Reject)"
                           >
                             Record Decision
-                          </button>
+                          </ModernButton>
                         )}
                       </>
                     )}
@@ -1507,12 +1520,10 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                           return (
                             <tr key={res.id} style={{ opacity: isUnticked ? 0.45 : 1 }}>
                               <td style={{ textAlign: 'center' }}>
-                                <input
-                                  type="checkbox"
+                                <AnimatedCheckbox
                                   checked={!isUnticked}
-                                  onChange={e => handleToggleResultParam(res.id, e.target.checked)}
+                                  onChange={checked => handleToggleResultParam(res.id, checked)}
                                   disabled={!canEdit}
-                                  style={{ accentColor: 'var(--red)', width: '16px', height: '16px', cursor: 'pointer' }}
                                   title="Tick/untick test parameter"
                                 />
                               </td>
@@ -1571,12 +1582,11 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                         {tempResults.length > 0 && (
                           <tr style={{ background: 'var(--raised)' }}>
                             <td style={{ textAlign: 'center' }}>
-                              <input
-                                type="checkbox"
+                              <AnimatedCheckbox
                                 checked={isTempAllTicked}
-                                onChange={e => handleToggleMasterTemp(e.target.checked)}
+                                onChange={checked => handleToggleMasterTemp(checked)}
                                 disabled={!(role === 'qc_analyst' || role === 'qc_manager' || role === 'admin')}
-                                style={{ accentColor: 'var(--red)', width: '16px', height: '16px', cursor: 'pointer' }}
+                                title="Toggle all temperature test points"
                               />
                             </td>
                             <td>
@@ -1612,12 +1622,11 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                           return (
                             <tr key={res.id} style={{ opacity: isUnticked ? 0.45 : 1 }}>
                               <td style={{ textAlign: 'center' }}>
-                                <input
-                                  type="checkbox"
+                                <AnimatedCheckbox
                                   checked={!isUnticked}
-                                  onChange={e => handleToggleResultParam(res.id, e.target.checked)}
+                                  onChange={checked => handleToggleResultParam(res.id, checked)}
                                   disabled={!canEdit}
-                                  style={{ accentColor: 'var(--red)', width: '16px', height: '16px', cursor: 'pointer' }}
+                                  title="Tick/untick temperature test"
                                 />
                               </td>
                               <td style={{ paddingLeft: '28px', verticalAlign: 'middle', padding: '8px 12px 8px 28px' }}>
@@ -1675,15 +1684,13 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                         {customParamRows.map((crow) => (
                           <tr key={crow.id} style={{ background: 'rgba(0, 159, 227, 0.04)' }}>
                             <td style={{ textAlign: 'center' }}>
-                              <input
-                                type="checkbox"
+                              <AnimatedCheckbox
                                 checked={crow.requested}
-                                onChange={e => {
-                                  const checked = e.target.checked;
+                                onChange={checked => {
                                   setCustomParamRows(prev => prev.map(r => r.id === crow.id ? { ...r, requested: checked } : r));
                                 }}
                                 disabled={!canEdit}
-                                style={{ accentColor: 'var(--red)', width: '16px', height: '16px', cursor: 'pointer' }}
+                                title="Tick/untick custom parameter"
                               />
                             </td>
                             <td>
@@ -1747,34 +1754,28 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
 
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px', marginBottom: '14px', fontSize: '13px', color: 'var(--text)' }}>
                       <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                        <input
-                          type="checkbox"
+                        <AnimatedCheckbox
                           disabled={!canEdit}
                           checked={qcRemarkFlushing}
-                          onChange={e => setQcRemarkFlushing(e.target.checked)}
-                          style={{ accentColor: 'var(--red)' }}
+                          onChange={checked => setQcRemarkFlushing(checked)}
                         />
                         <span>Flushing (Sampling line flushed)</span>
                       </label>
 
                       <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                        <input
-                          type="checkbox"
+                        <AnimatedCheckbox
                           disabled={!canEdit}
                           checked={qcRemarkCooling}
-                          onChange={e => setQcRemarkCooling(e.target.checked)}
-                          style={{ accentColor: 'var(--red)' }}
+                          onChange={checked => setQcRemarkCooling(checked)}
                         />
                         <span>Cooling (Crystallizer active cooling)</span>
                       </label>
 
                       <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                        <input
-                          type="checkbox"
+                        <AnimatedCheckbox
                           disabled={!canEdit}
                           checked={qcRemarkPushover}
-                          onChange={e => setQcRemarkPushover(e.target.checked)}
-                          style={{ accentColor: 'var(--red)' }}
+                          onChange={checked => setQcRemarkPushover(checked)}
                         />
                         <span>Push over (Transfer operation)</span>
                       </label>
@@ -1793,12 +1794,13 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                   {(role === 'qc_analyst' || role === 'qc_manager' || role === 'admin') && (
                     <div className="foot">
                       <p>All recorded laboratory entries comply with ISO / 21 CFR Part 11 integrity standards.</p>
-                      <button
+                      <ModernButton
                         type="submit"
-                        className="primary"
+                        variant="primary"
+                        size="lg"
                       >
                         Commit Lab Results
-                      </button>
+                      </ModernButton>
                     </div>
                   )}
                 </form>
@@ -1813,15 +1815,16 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
       )}
 
 
-      {/* 3. QC Decision Modal with Electronic Signature */}
-      {isDecisionModalOpen && selectedReport && (
+      {/* 3. QC Decision Modal with Electronic Signature (Portaled to document.body for instant viewport centering) */}
+      {isMounted && typeof document !== 'undefined' && isDecisionModalOpen && selectedReport && createPortal(
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none animate-alert-overlay-in"
+          className="fixed inset-0 z-[99999] flex items-center justify-center p-4 select-none bg-black/80 backdrop-blur-md animate-alert-overlay-in"
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99999 }}
           onClick={() => setIsDecisionModalOpen(false)}
         >
           <div 
             onClick={(e) => e.stopPropagation()}
-            className="panel relative w-full max-w-lg rounded-2xl bg-[#0F1524] border border-[#1F2E43] shadow-[0_20px_50px_rgba(0,0,0,0.75)] p-6 overflow-hidden animate-alert-content-in"
+            className="panel relative w-full max-w-lg rounded-2xl bg-[#0F1524] border border-[#1F2E43] shadow-[0_25px_60px_rgba(0,0,0,0.85)] p-6 overflow-hidden animate-alert-content-in max-h-[90vh] overflow-y-auto"
             style={{ margin: 0 }}
           >
             {/* Top accent beam */}
@@ -1974,23 +1977,26 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                 >
                   Cancel
                 </button>
-                <button
+                <ModernButton
                   type="submit"
+                  variant={decisionType === 'reject' ? 'danger' : 'success'}
+                  size="md"
                   disabled={missingTickedParams.length > 0}
-                  className="primary transition-all duration-150 active:scale-[0.97] hover:shadow-[0_0_15px_rgba(0,159,227,0.4)] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Sign & Commit Decision
-                </button>
+                </ModernButton>
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Modal: Delete Sample Confirmation (QC Correction) */}
-      {reportToDelete && (
+      {isMounted && typeof document !== 'undefined' && reportToDelete && createPortal(
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none animate-alert-overlay-in"
+          className="fixed inset-0 z-[99999] flex items-center justify-center p-4 select-none bg-black/80 backdrop-blur-md animate-alert-overlay-in"
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99999 }}
           onClick={() => {
             setReportToDelete(null);
             setDeleteError(null);
@@ -1998,7 +2004,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
         >
           <div 
             onClick={(e) => e.stopPropagation()}
-            className="panel relative w-full max-w-lg rounded-2xl bg-[#0F1524] border border-[#1F2E43] shadow-[0_20px_50px_rgba(0,0,0,0.75)] p-6 overflow-hidden animate-alert-content-in"
+            className="panel relative w-full max-w-lg rounded-2xl bg-[#0F1524] border border-[#1F2E43] shadow-[0_25px_60px_rgba(0,0,0,0.85)] p-6 overflow-hidden animate-alert-content-in max-h-[90vh] overflow-y-auto"
             style={{ margin: 0 }}
           >
             {/* Top red accent beam */}
@@ -2103,18 +2109,19 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                 >
                   Cancel
                 </button>
-                <button
+                <ModernButton
                   type="submit"
+                  variant="danger"
+                  size="md"
                   disabled={isDeleting}
-                  className="primary transition-all duration-150 active:scale-[0.97] hover:shadow-[0_0_15px_rgba(216,31,44,0.4)] cursor-pointer"
-                  style={{ background: 'var(--red)' }}
                 >
                   {isDeleting ? 'Deleting Sample...' : 'Confirm & Delete Sample'}
-                </button>
+                </ModernButton>
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { ModernButton } from './ModernButton';
 import { 
   ProcessSheet, 
   ProcessEntry, 
@@ -84,6 +86,11 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
 
   // Supervisor verification modal state
   const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
   const [signaturePassword, setSignaturePassword] = useState('');
   const [verifyError, setVerifyError] = useState<string | null>(null);
 
@@ -1285,10 +1292,11 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
             </div>
 
             <div className="flex items-center gap-3">
-              <button
+              <ModernButton
                 type="submit"
                 disabled={isSlotDisabled || isSaving}
-                className="primary"
+                variant="primary"
+                size="md"
               >
                 {isJustSaved ? (
                   <>
@@ -1321,17 +1329,24 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                     <span>Commit Hour {selectedSlotLabel} Log</span>
                   </>
                 )}
-              </button>
+              </ModernButton>
             </div>
           </div>
         </form>
       </section>
 
       {/* Supervisor Verification Modal */}
-      {isVerifyModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
-          <div className="w-full max-w-md rounded-lg border border-[#1F2E43] bg-[#101927] p-6 shadow-2xl">
-            <div className="flex items-center gap-3 text-green-600 mb-3">
+      {isMounted && typeof document !== 'undefined' && isVerifyModalOpen && createPortal(
+        <div 
+          className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 select-none animate-alert-overlay-in"
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99999 }}
+          onClick={() => setIsVerifyModalOpen(false)}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md rounded-2xl border border-[#1F2E43] bg-[#0F1524] p-6 shadow-[0_25px_60px_rgba(0,0,0,0.85)] animate-alert-content-in"
+          >
+            <div className="flex items-center gap-3 text-emerald-500 mb-3">
               <FileCheck2 className="h-5 w-5" />
               <h3 className="text-base font-bold text-white font-sans">
                 Electronic Signature: Verify Shift Sheet
@@ -1371,23 +1386,32 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                 >
                   Cancel
                 </button>
-                <button
+                <ModernButton
                   type="submit"
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-mono font-medium text-xs uppercase px-4 py-1.5 rounded transition-all border border-emerald-500 cursor-pointer shadow-xs"
+                  variant="success"
+                  size="sm"
                 >
                   Confirm & Sign Lock
-                </button>
+                </ModernButton>
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Admin Unlock Modal */}
-      {isUnlockModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
-          <div className="w-full max-w-md rounded-lg border border-[#1F2E43] bg-[#101927] p-6 shadow-2xl">
-            <div className="flex items-center gap-3 text-amber-600 mb-3">
+      {isMounted && typeof document !== 'undefined' && isUnlockModalOpen && createPortal(
+        <div 
+          className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 select-none animate-alert-overlay-in"
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99999 }}
+          onClick={() => setIsUnlockModalOpen(false)}
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md rounded-2xl border border-[#1F2E43] bg-[#0F1524] p-6 shadow-[0_25px_60px_rgba(0,0,0,0.85)] animate-alert-content-in"
+          >
+            <div className="flex items-center gap-3 text-amber-500 mb-3">
               <div className="rounded border border-[#F59E0B]/40 bg-[#F59E0B]/15 p-2">
                 <Unlock className="h-5 w-5" />
               </div>
@@ -1395,7 +1419,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                 <h3 className="text-base font-bold text-white font-sans">
                   Admin Unlock: Process Sheet
                 </h3>
-                <span className="text-[10px] font-mono text-amber-600 uppercase tracking-wider font-medium">
+                <span className="text-[10px] font-mono text-amber-500 uppercase tracking-wider font-medium">
                   Plant Administrator Override
                 </span>
               </div>
@@ -1448,17 +1472,18 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                 >
                   Cancel
                 </button>
-                <button
+                <ModernButton
                   type="submit"
-                  className="bg-amber-600 hover:bg-[#F59E0B]/150 text-white font-mono font-medium text-xs uppercase px-4 py-1.5 rounded transition-all flex items-center gap-1.5 border border-amber-500 cursor-pointer shadow-xs"
+                  variant="danger"
+                  size="sm"
                 >
-                  <Unlock className="h-3.5 w-3.5" />
-                  <span>Confirm & Unlock</span>
-                </button>
+                  Confirm & Unlock
+                </ModernButton>
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

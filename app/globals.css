@@ -1641,18 +1641,15 @@ html.light-theme .inp,
   0% {
     opacity: 0;
     transform: scale(0.992) translateY(6px);
-    filter: blur(2px);
   }
   100% {
     opacity: 1;
-    transform: scale(1) translateY(0);
-    filter: blur(0px);
+    transform: none;
   }
 }
 
 .animate-dashboard-enter {
-  animation: dashboard-enter 240ms cubic-bezier(0.23, 1, 0.32, 1) forwards;
-  will-change: transform, opacity, filter;
+  animation: dashboard-enter 240ms cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 /* Login Split Screen */
@@ -2579,6 +2576,299 @@ html.light-theme .cfg select,
 .theme-switch-input:checked + .theme-switch-toggle .theme-star--6 {
   transition: all 300ms 350ms cubic-bezier(0.445, 0.05, 0.55, 0.95);
 }
+
+/* ==========================================================================
+   Animated 3D Flip Checkbox (from Transition/animation/checkbox)
+   ========================================================================== */
+.animated-cbx {
+  perspective: 40px;
+  -webkit-perspective: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+  vertical-align: middle;
+}
+
+.animated-cbx.disabled {
+  cursor: not-allowed !important;
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.animated-cbx input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  pointer-events: none;
+}
+
+.animated-cbx .flip {
+  display: block;
+  transition: transform 0.35s cubic-bezier(0.23, 1, 0.32, 1);
+  transform-style: preserve-3d;
+  position: relative;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+}
+
+.animated-cbx input[type="checkbox"]:checked ~ .flip {
+  transform: rotateY(180deg);
+}
+
+.animated-cbx .front,
+.animated-cbx .back {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.animated-cbx .front {
+  background: var(--surface);
+  border: 1.5px solid var(--line);
+  z-index: 1;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.animated-cbx:hover:not(.disabled) .front {
+  border-color: #009fe3;
+  box-shadow: 0 0 6px rgba(0, 159, 227, 0.3);
+}
+
+.animated-cbx .back {
+  transform: rotateY(180deg);
+  background: #009fe3;
+  border: 1.5px solid #009fe3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 8px rgba(0, 159, 227, 0.45);
+}
+
+.animated-cbx .back svg {
+  fill: none;
+  display: block;
+  margin: auto;
+}
+
+.animated-cbx .back svg path {
+  stroke: #ffffff;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ==========================================================================
+   Modern Animated Button (from Transition/animation/Modern Button)
+   ========================================================================== */
+.modern-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background-color: transparent;
+  border-radius: 9999px;
+  font-weight: 600;
+  cursor: pointer;
+  overflow: hidden;
+  border: 1.5px solid transparent;
+  transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+  white-space: nowrap;
+  user-select: none;
+  text-decoration: none;
+}
+
+.modern-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed !important;
+  pointer-events: none;
+  box-shadow: none !important;
+}
+
+/* Sizes */
+.modern-btn-sm {
+  padding: 5px 24px;
+  font-size: 12px;
+  min-height: 30px;
+}
+.modern-btn-md {
+  padding: 7px 28px;
+  font-size: 13px;
+  min-height: 36px;
+}
+.modern-btn-lg {
+  padding: 10px 34px;
+  font-size: 14px;
+  min-height: 42px;
+}
+
+/* Arrows */
+.modern-btn svg {
+  position: absolute;
+  width: 15px;
+  height: 15px;
+  z-index: 3;
+  transition: all 0.65s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.modern-btn-sm svg {
+  width: 13px;
+  height: 13px;
+}
+.modern-btn-lg svg {
+  width: 17px;
+  height: 17px;
+}
+
+.modern-btn .modern-arr-1 {
+  right: 10px;
+}
+.modern-btn-sm .modern-arr-1 {
+  right: 8px;
+}
+.modern-btn-lg .modern-arr-1 {
+  right: 12px;
+}
+
+.modern-btn .modern-arr-2 {
+  left: -40%;
+}
+
+/* Circle expanding effect */
+.modern-btn .modern-btn-circle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  opacity: 0;
+  z-index: 1;
+  transition: all 0.65s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* Text & Icon */
+.modern-btn .modern-btn-text {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transform: translateX(-5px);
+  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.modern-btn .modern-btn-icon {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Hover States */
+.modern-btn:hover:not(:disabled) {
+  border-radius: 8px;
+}
+
+.modern-btn:hover:not(:disabled) .modern-arr-1 {
+  right: -40%;
+}
+
+.modern-btn:hover:not(:disabled) .modern-arr-2 {
+  left: 10px;
+}
+.modern-btn-sm:hover:not(:disabled) .modern-arr-2 {
+  left: 8px;
+}
+.modern-btn-lg:hover:not(:disabled) .modern-arr-2 {
+  left: 12px;
+}
+
+.modern-btn:hover:not(:disabled) .modern-btn-text {
+  transform: translateX(7px);
+}
+
+.modern-btn:hover:not(:disabled) .modern-btn-circle {
+  width: 320px;
+  height: 320px;
+  opacity: 1;
+}
+
+.modern-btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+/* Variant Primary (Refinery Cyan #009fe3) */
+.modern-btn-primary {
+  color: #009fe3;
+  box-shadow: 0 0 0 1.5px #009fe3;
+  background: rgba(0, 159, 227, 0.1);
+}
+.modern-btn-primary svg {
+  fill: #009fe3;
+}
+.modern-btn-primary .modern-btn-circle {
+  background-color: #009fe3;
+}
+.modern-btn-primary:hover:not(:disabled) {
+  box-shadow: 0 0 16px rgba(0, 159, 227, 0.5);
+  color: #ffffff;
+}
+.modern-btn-primary:hover:not(:disabled) svg {
+  fill: #ffffff;
+}
+
+/* Variant Success (Emerald #10b981) */
+.modern-btn-success {
+  color: #10b981;
+  box-shadow: 0 0 0 1.5px #10b981;
+  background: rgba(16, 185, 129, 0.1);
+}
+.modern-btn-success svg {
+  fill: #10b981;
+}
+.modern-btn-success .modern-btn-circle {
+  background-color: #10b981;
+}
+.modern-btn-success:hover:not(:disabled) {
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.5);
+  color: #ffffff;
+}
+.modern-btn-success:hover:not(:disabled) svg {
+  fill: #ffffff;
+}
+
+/* Variant Danger (Red #ef4444) */
+.modern-btn-danger {
+  color: #ef4444;
+  box-shadow: 0 0 0 1.5px #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+.modern-btn-danger svg {
+  fill: #ef4444;
+}
+.modern-btn-danger .modern-btn-circle {
+  background-color: #ef4444;
+}
+.modern-btn-danger:hover:not(:disabled) {
+  box-shadow: 0 0 16px rgba(239, 68, 68, 0.5);
+  color: #ffffff;
+}
+.modern-btn-danger:hover:not(:disabled) svg {
+  fill: #ffffff;
+}
+
 
 
 
