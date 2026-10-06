@@ -25,26 +25,47 @@ export default function RadioDashboardNav({
   className = '',
 }: RadioDashboardNavProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [indicatorStyle, setIndicatorStyle] = useState<{ left: number; width: number }>({
-    left: 0,
-    width: 0,
+  const [indicatorStyle, setIndicatorStyle] = useState<{ top: number; height: number; opacity: number }>({
+    top: 0,
+    height: 38,
+    opacity: 0,
   });
 
-  // Calculate sliding indicator position based on active tab
+  // Calculate sliding vertical indicator position (atas ke bawah) based on active tab
   useEffect(() => {
     if (!containerRef.current) return;
     const activeEl = containerRef.current.querySelector<HTMLElement>(`[data-tab-id="${activeTab}"]`);
     if (activeEl) {
       setIndicatorStyle({
-        left: activeEl.offsetLeft,
-        width: activeEl.offsetWidth,
+        top: activeEl.offsetTop,
+        height: activeEl.offsetHeight || 38,
+        opacity: 1,
       });
+    } else {
+      setIndicatorStyle((prev) => ({ ...prev, opacity: 0 }));
     }
   }, [activeTab, items]);
 
+  // Recalculate on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (!containerRef.current) return;
+      const activeEl = containerRef.current.querySelector<HTMLElement>(`[data-tab-id="${activeTab}"]`);
+      if (activeEl) {
+        setIndicatorStyle({
+          top: activeEl.offsetTop,
+          height: activeEl.offsetHeight || 38,
+          opacity: 1,
+        });
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [activeTab]);
+
   return (
-    <div className={`radio-dashboard-container select-none ${className}`}>
-      <div className="radio-dashboard-wrap" ref={containerRef} role="tablist">
+    <div className={`radio-vnav-container select-none ${className}`}>
+      <div className="radio-vnav-wrap" ref={containerRef} role="tablist" aria-orientation="vertical">
         {items.map((item, index) => {
           const isActive = activeTab === item.id;
           const Icon = item.icon;
@@ -53,49 +74,55 @@ export default function RadioDashboardNav({
             <React.Fragment key={item.id}>
               <input
                 type="radio"
-                id={`rd-tab-${item.id}`}
-                name="radio-dashboard-nav"
-                className={`rd-tab-${index}`}
+                id={`rd-vnav-${item.id}`}
+                name="radio-dashboard-vnav"
+                className={`rd-vnav-${index}`}
                 checked={isActive}
                 onChange={() => onTabChange(item.id)}
                 hidden
               />
-              <label
-                htmlFor={`rd-tab-${item.id}`}
+              <button
+                type="button"
                 data-tab-id={item.id}
                 role="tab"
                 aria-selected={isActive}
-                className={`radio-dashboard-label ${isActive ? 'active' : ''}`}
+                aria-current={isActive ? 'page' : undefined}
+                className={`radio-vnav-btn ${isActive ? 'active' : ''}`}
                 style={{ '--index': index } as React.CSSProperties}
-                onClick={(e) => {
-                  e.preventDefault();
-                  onTabChange(item.id);
-                }}
+                onClick={() => onTabChange(item.id)}
               >
-                {Icon && <Icon className="h-3.5 w-3.5 shrink-0 opacity-80" />}
-                <span className="truncate">{item.label}</span>
-                {item.badge && (
-                  <span className="radio-dashboard-badge">{item.badge}</span>
+                {Icon && (
+                  <Icon
+                    className={`h-4 w-4 shrink-0 transition-colors ${
+                      isActive ? 'text-[var(--red)] opacity-100' : 'opacity-70'
+                    }`}
+                  />
                 )}
-              </label>
+                <span className="truncate flex-1">{item.label}</span>
+                {item.badge && (
+                  <span className="radio-vnav-badge">{item.badge}</span>
+                )}
+              </button>
             </React.Fragment>
           );
         })}
 
-        {/* Sliding Indicator Pill and Accent Bars from Transition/animation/Radio Dashboard */}
+        {/* Sliding Indicator Pill and Accent Bars from Transition/animation/Radio Dashboard (Vertical: Atas ke Bawah) */}
         <div
-          className="radio-dashboard-bar"
+          className="radio-vnav-bar"
           style={{
-            transform: `translateX(${indicatorStyle.left}px)`,
-            width: `${indicatorStyle.width}px`,
+            transform: `translateY(${indicatorStyle.top}px)`,
+            height: `${indicatorStyle.height}px`,
+            opacity: indicatorStyle.opacity,
           }}
           aria-hidden="true"
         />
         <div
-          className="radio-dashboard-slidebar"
+          className="radio-vnav-slidebar"
           style={{
-            transform: `translateX(${indicatorStyle.left}px)`,
-            width: `${indicatorStyle.width}px`,
+            transform: `translateY(${indicatorStyle.top}px)`,
+            height: `${indicatorStyle.height}px`,
+            opacity: indicatorStyle.opacity,
           }}
           aria-hidden="true"
         />

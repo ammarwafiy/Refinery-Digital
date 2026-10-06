@@ -10,17 +10,7 @@ import AnalyticsTrendsView from '@/components/AnalyticsTrendsView';
 import OfficialFormsExportView from '@/components/OfficialFormsExportView';
 import AdminUserManagementView from '@/components/AdminUserManagementView';
 import ReportExportView from '@/components/ReportExportView';
-import RadioDashboardNav, { RadioDashboardNavItem } from '@/components/RadioDashboardNav';
 import StarFieldBackground from '@/components/StarFieldBackground';
-import { 
-  Flame, 
-  FlaskConical, 
-  Activity, 
-  FileSpreadsheet, 
-  ShieldCheck, 
-  BarChart3, 
-  Users 
-} from 'lucide-react';
 import { Profile } from '@/types/refinery';
 import { 
   getAuthUser, 
@@ -206,24 +196,6 @@ export default function RefineryDashboard() {
     subtitle: 'Record and monitor hourly process parameters, observations and operational status'
   };
 
-  const allNavDefinitions: Record<string, { label: string; icon: any }> = {
-    process: { label: 'Process Log', icon: Flame },
-    qc: { label: 'QC Lab', icon: FlaskConical },
-    supervisor: { label: 'Abnormality', icon: Activity },
-    report: { label: 'Reports', icon: FileSpreadsheet },
-    export: { label: 'Certificates', icon: ShieldCheck },
-    analytics: { label: 'Trends', icon: BarChart3 },
-    admin: { label: 'Users', icon: Users },
-  };
-
-  const dashboardNavItems: RadioDashboardNavItem[] = allowedTabs
-    .filter(tabId => allNavDefinitions[tabId])
-    .map(tabId => ({
-      id: tabId,
-      label: allNavDefinitions[tabId].label,
-      icon: allNavDefinitions[tabId].icon,
-    }));
-
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] flex flex-col overflow-x-hidden animate-dashboard-enter relative">
       {/* Background Star Particle Transition (Transition/animation/Pattern) */}
@@ -261,17 +233,6 @@ export default function RefineryDashboard() {
                 {currentHeaderInfo.subtitle}.
               </p>
             </div>
-
-            {/* Radio Dashboard Sliding Animated Navigation (Transition/animation/Radio Dashboard) */}
-            {dashboardNavItems.length > 1 && (
-              <div className="shrink-0 self-start md:self-end">
-                <RadioDashboardNav
-                  items={dashboardNavItems}
-                  activeTab={currentTab}
-                  onTabChange={handleTabChange}
-                />
-              </div>
-            )}
           </div>
         </div>
 

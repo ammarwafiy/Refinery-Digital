@@ -30,6 +30,7 @@ import {
 import SettingsModal from '@/components/SettingsModal';
 import HelpSupportModal from '@/components/HelpSupportModal';
 import ThemeSwitch from '@/components/ThemeSwitch';
+import RadioDashboardNav from '@/components/RadioDashboardNav';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -357,21 +358,12 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
 
         {/* Navigation Items List */}
         <div className="flex-1 overflow-y-auto">
-          <nav aria-label="Main" className="flex flex-col gap-[2px]">
-            {visibleNavItems.map((item) => {
-              const isActive = activeTab === item.id;
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => setActiveTab(item.id)}
-                  aria-current={isActive ? 'page' : undefined}
-                  className={`nav-link-redesign ${isActive ? 'active' : ''}`}
-                >
-                  <span className="truncate">{item.label}</span>
-                </button>
-              );
-            })}
+          <nav aria-label="Main" className="w-full">
+            <RadioDashboardNav
+              items={visibleNavItems}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+            />
 
 
 
