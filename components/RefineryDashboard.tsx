@@ -211,7 +211,7 @@ export default function RefineryDashboard() {
       {/* Main Content Area (Offset by sidebar width 248px on desktop and topbar height 64px) */}
       <div className="flex-1 flex flex-col min-w-0 max-w-full overflow-x-hidden lg:pl-[248px] lg:pt-16">
         {/* Dynamic Page Header & Breadcrumbs matching redesign */}
-        <div className="px-6 lg:px-10 pt-8 pb-2 no-print">
+        <div className="px-6 lg:px-8 pt-6 pb-2 no-print">
           <p className="crumb-redesign">
             <span 
               onClick={() => handleTabChange('process')}
@@ -229,7 +229,7 @@ export default function RefineryDashboard() {
         </div>
 
         {/* Main Work Area - Strictly renders only the view allowed for current role */}
-        <main className="content-redesign pt-0 w-full max-w-full overflow-x-hidden">
+        <main className="content-redesign pt-0 w-full max-w-full">
           {currentTab === 'process' && allowedTabs.includes('process') && (
             <ProcessLogView currentRole={authUser.role} currentUser={authUser} />
           )}

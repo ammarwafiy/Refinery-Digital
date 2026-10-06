@@ -29,6 +29,7 @@ import {
 } from '@/lib/data-service';
 import SettingsModal from '@/components/SettingsModal';
 import HelpSupportModal from '@/components/HelpSupportModal';
+import ThemeSwitch from '@/components/ThemeSwitch';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -433,25 +434,8 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
             {formattedDateTime || '08/12/2024 14:25:00'}
           </span>
 
-          {/* Quick Theme Toggle Button (Dark / Light) */}
-          <button
-            type="button"
-            onClick={toggleTheme}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[var(--line)] bg-[var(--surface)] hover:bg-[var(--raised)] text-[var(--text)] transition-all cursor-pointer shadow-xs active:scale-95 text-xs font-mono select-none"
-            title={currentTheme === 'light' ? 'Switch to Dark Industrial Mode' : 'Switch to Daylight SCADA Mode'}
-          >
-            {currentTheme === 'light' ? (
-              <>
-                <Sun className="h-4 w-4 text-amber-500 animate-pulse" />
-                <span className="font-semibold text-slate-800 hidden sm:inline">Light</span>
-              </>
-            ) : (
-              <>
-                <Moon className="h-4 w-4 text-[#009FE3]" />
-                <span className="font-semibold text-slate-200 hidden sm:inline">Dark</span>
-              </>
-            )}
-          </button>
+          {/* Quick Theme Toggle Button (Dark / Light Day-Night Switch) */}
+          <ThemeSwitch currentTheme={currentTheme} onToggle={toggleTheme} />
 
           {/* User Profile Chip */}
           <div 
@@ -574,16 +558,9 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
           {/* Quick Theme Toggle Button on Mobile */}
           <div className="flex items-center justify-between p-2 rounded-md bg-[#0A1018] border border-[#1F2E43]">
             <span className="text-xs text-slate-300 font-mono flex items-center gap-1.5">
-              {currentTheme === 'light' ? <Sun className="h-3.5 w-3.5 text-amber-500" /> : <Moon className="h-3.5 w-3.5 text-[#009FE3]" />}
               <span>Mode Tema</span>
             </span>
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className="px-2.5 py-1 rounded bg-[#172235] hover:bg-[#1E2D42] text-xs font-mono text-slate-200 border border-[#2A3E5B] flex items-center gap-1.5 transition-colors cursor-pointer"
-            >
-              <span>{currentTheme === 'light' ? 'Light (Daylight)' : 'Dark (Industri)'}</span>
-            </button>
+            <ThemeSwitch currentTheme={currentTheme} onToggle={toggleTheme} />
           </div>
 
           {/* Mobile Navigation Tabs List (Button #4) */}

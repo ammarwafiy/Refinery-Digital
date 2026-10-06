@@ -300,12 +300,6 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
   }, [selectedReport, displayResults, requestedMap, resultInputs, customParamRows]);
 
   const handleOpenDecisionModal = (targetType: 'accept' | 'accept_concession' | 'reject' = 'accept') => {
-    if (missingTickedParams.length > 0) {
-      setValidationWarning(
-        `Wajib isi blank box bagi ${missingTickedParams.length} parameter yang ditick sebelum membuat keputusan QC (Pass/Reject): ${missingTickedParams.slice(0, 4).join(', ')}${missingTickedParams.length > 4 ? ` dan ${missingTickedParams.length - 4} lagi` : ''}.`
-      );
-      return;
-    }
     setValidationWarning(null);
     setDecisionType(targetType);
     setIsDecisionModalOpen(true);
@@ -1160,32 +1154,33 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    gap: '16px',
-                    flexWrap: 'wrap',
+                    gap: '12px',
+                    flexWrap: 'nowrap',
+                    padding: '16px 20px',
                     position: 'sticky',
                     top: 0,
                     zIndex: 20,
                     background: 'var(--surface)',
                   }}
                 >
-                  <div style={{ minWidth: 0, flex: '1 1 auto' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                      <h2 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text)' }}>
+                  <div style={{ minWidth: 0, flex: '1 1 auto', overflow: 'hidden' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                      <h2 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text)', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
                         {qcLotNo || selectedReport.lot_no}
                       </h2>
-                      <span className="hint">({selectedReport.report_no})</span>
+                      <span className="hint" style={{ fontSize: '11px', flexShrink: 0 }}>({selectedReport.report_no})</span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '6px', fontSize: '13px', color: 'var(--muted)', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px', fontSize: '12px', color: 'var(--muted)', flexWrap: 'wrap' }}>
                       <span>Product: <strong style={{ color: 'var(--text)' }}>{qcProductName || selectedReport.product_name}</strong></span>
                       <span>•</span>
-                      <span>Batch: <strong style={{ color: 'var(--text)' }}>{selectedReport.crystallizer_no || selectedReport.batch_no || 'BP-2609-01'}</strong></span>
+                      <span>Batch: <strong style={{ color: 'var(--text)' }}>{selectedReport.crystallizer_no || selectedReport.batch_no || 'CR-04'}</strong></span>
                       <span>•</span>
                       <span>Submitted: <strong>{selectedReport.submitted_by_name}</strong></span>
                     </div>
                   </div>
 
                   {/* Actions & Decision */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, marginLeft: 'auto' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
                     {selectedReport.decision?.decision ? (
                       <>
                         <span className={`bd ${selectedReport.decision.decision === 'reject' ? 'r' : selectedReport.decision.decision === 'accept' ? 'g' : 'a'}`}>
@@ -1197,6 +1192,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                             type="button"
                             onClick={() => handleOpenDecisionModal(selectedReport.decision?.decision || 'accept')}
                             className="ghost"
+                            style={{ whiteSpace: 'nowrap' }}
                           >
                             Update Decision
                           </button>
@@ -1209,9 +1205,9 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                           <button
                             type="button"
                             onClick={() => handleOpenDecisionModal('accept')}
-                            className="primary"
-                            style={missingTickedParams.length > 0 ? { opacity: 0.9 } : undefined}
-                            title={missingTickedParams.length > 0 ? `Wajib isi ${missingTickedParams.length} parameter yang ditick dahulu sebelum membuat keputusan` : undefined}
+                            className="primary font-semibold"
+                            style={{ whiteSpace: 'nowrap' }}
+                            title="Buka borang keputusan QC (Accept / Concession / Reject)"
                           >
                             Record Decision
                           </button>
@@ -1224,6 +1220,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                         type="button"
                         onClick={() => onNavigateToCertificate(selectedReport.id)}
                         className="ghost"
+                        style={{ whiteSpace: 'nowrap' }}
                       >
                         Certificate
                       </button>
@@ -1234,6 +1231,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                         type="button"
                         onClick={() => setReportToDelete(selectedReport)}
                         className="ghost dng"
+                        style={{ whiteSpace: 'nowrap' }}
                       >
                         Delete
                       </button>
@@ -1243,7 +1241,7 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
 
                 {/* Validation Warning Alert Banner if blank boxes are missing */}
                 {validationWarning && (
-                  <div style={{ margin: '14px 28px 0', padding: '12px 16px', background: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.4)', borderRadius: '10px', color: '#f87171', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                  <div style={{ margin: '14px 20px 0', padding: '12px 16px', background: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.4)', borderRadius: '10px', color: '#f87171', fontSize: '13px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <span style={{ fontWeight: 'bold' }}>⚠️ Perhatian:</span>
                       <span>{validationWarning}</span>
@@ -1259,14 +1257,14 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                   </div>
                 )}
 
-                {/* Product, Lot Number, Sampling Point & Batch row (Balanced 2x2 Card Grid) */}
-                <div style={{ padding: '16px 28px', borderBottom: '1px solid var(--line)' }}>
+                {/* Product, Lot Number, Sampling Point & Batch row (Balanced 2x2 Card Grid - Never Overflows) */}
+                <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--line)' }}>
                   <div style={{ 
                     display: 'grid', 
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', 
-                    gap: '14px',
+                    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', 
+                    gap: '12px',
                     background: 'rgba(255, 255, 255, 0.02)',
-                    padding: '16px 18px',
+                    padding: '14px 16px',
                     borderRadius: '12px',
                     border: '1px solid rgba(255, 255, 255, 0.06)'
                   }}>
@@ -1849,6 +1847,17 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
 
             {decisionError && (
               <p className="err" style={{ marginBottom: '12px' }}>{decisionError}</p>
+            )}
+
+            {missingTickedParams.length > 0 && (
+              <div style={{ marginBottom: '16px', padding: '12px 16px', background: 'rgba(239, 68, 68, 0.14)', border: '1px solid rgba(239, 68, 68, 0.5)', borderRadius: '10px', color: '#f87171', fontSize: '12px' }}>
+                <div style={{ fontWeight: 700, marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span>⚠️ Perhatian: Nilai Blank Box Belum Lengkap ({missingTickedParams.length} parameter)</span>
+                </div>
+                <p style={{ margin: 0, lineHeight: 1.4 }}>
+                  Parameter berikut ditick tetapi blank box masih kosong: <strong>{missingTickedParams.slice(0, 4).join(', ')}{missingTickedParams.length > 4 ? ` dan ${missingTickedParams.length - 4} lagi` : ''}</strong>. Anda wajib mengisi nilai di borang parameter makmal terlebih dahulu sebelum boleh membuat keputusan Pass atau Reject.
+                </p>
+              </div>
             )}
 
             <form onSubmit={handleSubmitDecision}>

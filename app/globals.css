@@ -1491,9 +1491,12 @@ html.light-theme ::-webkit-scrollbar-thumb:hover {
 /* QC Management Grid & List */
 .qc {
   display: grid;
-  grid-template-columns: 340px minmax(0, 1fr);
-  gap: 20px;
+  grid-template-columns: 290px minmax(0, 1fr);
+  gap: 16px;
   align-items: start;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 .lot {
   display: block;
@@ -2338,59 +2341,245 @@ html.light-theme .cfg select,
   overflow-wrap: anywhere;
 }
 
-/* QC View Layout */
-.qc {
-  display: grid;
-  grid-template-columns: 340px minmax(0, 1fr);
-  gap: 20px;
-  align-items: start;
-}
-.lot {
-  display: block;
-  width: 100%;
-  text-align: left;
-  padding: 14px 16px;
-  border: 0;
-  border-bottom: 1px solid var(--line);
-  background: none;
-  cursor: pointer;
-  color: var(--text);
-  transition: background 0.15s ease;
-}
-.lot:hover, .lot[aria-pressed=true] {
-  background: var(--raised);
-}
-.lot[aria-pressed=true] {
-  box-shadow: inset 2px 0 0 var(--red);
-}
-.lot div {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-}
-.lot span {
-  color: var(--muted);
-  font-size: 12px;
-}
-.chips {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-.chips .seg {
-  height: 30px;
-  padding: 0 12px;
-  border: 1px solid var(--line);
+/* ========================================================================= */
+/* DAY / NIGHT THEME SWITCH (Adapted for Dark/Light Mode)                    */
+/* ========================================================================= */
+.theme-switch-container {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  user-select: none;
+  height: 34px;
+  padding: 0 46px; /* space for LIGHT and DARK labels */
 }
 
-@media (max-width: 900px) {
-  .qc {
-    grid-template-columns: 1fr !important;
-  }
-  .cfg {
-    grid-template-columns: 1fr;
-  }
+.theme-switch-input {
+  position: absolute;
+  left: -9999px;
+  opacity: 0;
+  width: 0;
+  height: 0;
 }
+
+.theme-switch-toggle {
+  cursor: pointer;
+  display: inline-block;
+  position: relative;
+  width: 68px;
+  height: 34px;
+  background-color: #72c8f2;
+  border-radius: 40px;
+  transition: background-color 300ms cubic-bezier(0.445, 0.05, 0.55, 0.95), box-shadow 300ms ease;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+.theme-switch-toggle:before {
+  content: "LIGHT";
+  position: absolute;
+  left: -44px;
+  top: 9px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #f59e0b;
+  transition: color 250ms ease, opacity 250ms ease;
+  font-family: var(--font-mono), monospace;
+}
+
+.theme-switch-toggle:after {
+  content: "DARK";
+  position: absolute;
+  right: -42px;
+  top: 9px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  transition: color 250ms ease, opacity 250ms ease;
+  font-family: var(--font-mono), monospace;
+}
+
+.theme-switch-handler {
+  display: inline-block;
+  position: relative;
+  z-index: 2;
+  top: 3px;
+  left: 3px;
+  width: 28px;
+  height: 28px;
+  background-color: #ffcf96;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  transition: all 400ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  transform: rotate(-45deg);
+}
+
+.theme-switch-handler .theme-crater {
+  position: absolute;
+  background-color: #e8cda5;
+  opacity: 0;
+  transition: opacity 250ms ease-in-out;
+  border-radius: 100%;
+}
+
+.theme-switch-handler .theme-crater--1 {
+  top: 11px;
+  left: 6px;
+  width: 3px;
+  height: 3px;
+}
+
+.theme-switch-handler .theme-crater--2 {
+  top: 18px;
+  left: 14px;
+  width: 4px;
+  height: 4px;
+}
+
+.theme-switch-handler .theme-crater--3 {
+  top: 6px;
+  left: 16px;
+  width: 5px;
+  height: 5px;
+}
+
+.theme-star {
+  position: absolute;
+  background-color: #fff;
+  transition: all 300ms cubic-bezier(0.445, 0.05, 0.55, 0.95);
+  border-radius: 50%;
+}
+
+/* Clouds during Day / Light mode */
+.theme-star--1 {
+  top: 7px;
+  left: 24px;
+  z-index: 1;
+  width: 20px;
+  height: 3px;
+  border-radius: 4px;
+}
+
+.theme-star--2 {
+  top: 14px;
+  left: 20px;
+  z-index: 1;
+  width: 22px;
+  height: 3px;
+  border-radius: 4px;
+}
+
+.theme-star--3 {
+  top: 21px;
+  left: 28px;
+  z-index: 1;
+  width: 18px;
+  height: 3px;
+  border-radius: 4px;
+}
+
+.theme-star--4,
+.theme-star--5,
+.theme-star--6 {
+  opacity: 0;
+  transition: all 300ms cubic-bezier(0.445, 0.05, 0.55, 0.95);
+}
+
+.theme-star--4 {
+  top: 10px;
+  left: 8px;
+  z-index: 1;
+  width: 2px;
+  height: 2px;
+  transform: translate3d(2px, 0, 0);
+}
+
+.theme-star--5 {
+  top: 20px;
+  left: 12px;
+  z-index: 1;
+  width: 2.5px;
+  height: 2.5px;
+  transform: translate3d(2px, 0, 0);
+}
+
+.theme-star--6 {
+  top: 24px;
+  left: 18px;
+  z-index: 1;
+  width: 2px;
+  height: 2px;
+  transform: translate3d(2px, 0, 0);
+}
+
+/* Checked State: Dark Mode (Night Sky & Glowing Moon) */
+.theme-switch-input:checked + .theme-switch-toggle {
+  background-color: #24344d;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.15);
+}
+
+.theme-switch-input:checked + .theme-switch-toggle:before {
+  color: var(--muted);
+  opacity: 0.6;
+}
+
+.theme-switch-input:checked + .theme-switch-toggle:after {
+  color: #009fe3;
+  opacity: 1;
+}
+
+.theme-switch-input:checked + .theme-switch-toggle .theme-switch-handler {
+  background-color: #ffe5b5;
+  transform: translate3d(34px, 0, 0) rotate(0);
+  box-shadow: 0 0 8px rgba(255, 229, 181, 0.4);
+}
+
+.theme-switch-input:checked + .theme-switch-toggle .theme-switch-handler .theme-crater {
+  opacity: 1;
+}
+
+.theme-switch-input:checked + .theme-switch-toggle .theme-star--1 {
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  left: 14px;
+}
+
+.theme-switch-input:checked + .theme-switch-toggle .theme-star--2 {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  transform: translate3d(-3px, 0, 0);
+  left: 20px;
+}
+
+.theme-switch-input:checked + .theme-switch-toggle .theme-star--3 {
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  transform: translate3d(-4px, 0, 0);
+  left: 12px;
+}
+
+.theme-switch-input:checked + .theme-switch-toggle .theme-star--4,
+.theme-switch-input:checked + .theme-switch-toggle .theme-star--5,
+.theme-switch-input:checked + .theme-switch-toggle .theme-star--6 {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+.theme-switch-input:checked + .theme-switch-toggle .theme-star--4 {
+  transition: all 300ms 150ms cubic-bezier(0.445, 0.05, 0.55, 0.95);
+}
+
+.theme-switch-input:checked + .theme-switch-toggle .theme-star--5 {
+  transition: all 300ms 250ms cubic-bezier(0.445, 0.05, 0.55, 0.95);
+}
+
+.theme-switch-input:checked + .theme-switch-toggle .theme-star--6 {
+  transition: all 300ms 350ms cubic-bezier(0.445, 0.05, 0.55, 0.95);
+}
+
 
 
 
