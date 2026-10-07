@@ -169,6 +169,7 @@ CREATE OR REPLACE FUNCTION next_rev_id() RETURNS text AS $$
 $$ LANGUAGE sql;
 
 -- 4. DROP ALL EXISTING TABLES CLEANLY (CASCADE)
+DROP TABLE IF EXISTS profiles CASCADE;
 DROP TABLE IF EXISTS attachments CASCADE;
 DROP TABLE IF EXISTS qc_decisions CASCADE;
 DROP TABLE IF EXISTS sample_results CASCADE;
@@ -206,7 +207,7 @@ CREATE TABLE plants (
 );
 
 -- 5.2. PROFILES (USR001, ADM001, OPR001, QCS001, SUP001, MGR001)
-CREATE TABLE IF NOT EXISTS profiles (
+CREATE TABLE profiles (
   employee_no text PRIMARY KEY,
   id text UNIQUE,
   full_name text NOT NULL,
@@ -217,7 +218,11 @@ CREATE TABLE IF NOT EXISTS profiles (
   plant_id text REFERENCES plants(id),
   created_at timestamptz NOT NULL DEFAULT now()
 );
+
+-- Ensure backwards-compatibility columns if profiles was not dropped
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS plant_id text REFERENCES plants(id);
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS id text;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS avatar_url text;
 UPDATE profiles SET id = employee_no WHERE id IS NULL;
 
 -- 5.3. PRODUCTS (PRD001 to PRD045)
