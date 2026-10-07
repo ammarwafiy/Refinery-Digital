@@ -71,9 +71,7 @@ export default function RadioDashboardNav({
         opacity: 1,
       });
     }
-    React.startTransition(() => {
-      onTabChange(itemId);
-    });
+    onTabChange(itemId);
   };
 
   return (
@@ -102,7 +100,6 @@ export default function RadioDashboardNav({
                 aria-current={isActive ? 'page' : undefined}
                 className={`radio-vnav-btn ${isActive ? 'active' : ''}`}
                 style={{ '--index': index } as React.CSSProperties}
-                onPointerDown={(e) => handleSelectTab(item.id, e.currentTarget)}
                 onClick={(e) => handleSelectTab(item.id, e.currentTarget)}
               >
                 {Icon && (

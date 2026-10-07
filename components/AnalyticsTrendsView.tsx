@@ -25,6 +25,7 @@ import {
 } from '@/lib/data-service';
 import { SampleReport, ProcessSheet } from '@/types/refinery';
 import GliderTabs from './GliderTabs';
+import SearchableSelect from './SearchableSelect';
 import { 
   BarChart3, 
   TrendingUp, 
@@ -440,23 +441,24 @@ export default function AnalyticsTrendsView() {
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto', flexWrap: 'wrap' }}>
               {/* Month Selector */}
-              <select
-                value={selectedMonth}
-                onChange={(e) => {
-                  setSelectedMonth(e.target.value);
-                  setSelectedReasonFilter(null);
-                }}
-                className="inp"
-                style={{ height: '28px', padding: '0 8px', fontSize: '12px', minWidth: '130px', width: 'auto' }}
-                title="Filter by shift month"
-              >
-                <option value="all">All Shifts (All-Time MTD)</option>
-                {availableMonths.map((m) => (
-                  <option key={m} value={m}>
-                    {formatMonthLabel(m)}
-                  </option>
-                ))}
-              </select>
+              <div style={{ minWidth: '190px' }}>
+                <SearchableSelect
+                  value={selectedMonth}
+                  onChange={(val) => {
+                    setSelectedMonth(val);
+                    setSelectedReasonFilter(null);
+                  }}
+                  placeholder="Filter by shift month"
+                  searchPlaceholder="Search month..."
+                  options={[
+                    { value: 'all', label: 'All Shifts (All-Time MTD)' },
+                    ...availableMonths.map((m) => ({
+                      value: m,
+                      label: formatMonthLabel(m)
+                    }))
+                  ]}
+                />
+              </div>
 
               {/* Disposition Scope Toggle */}
               <div className="segs" style={{ '--c': 2, margin: 0, height: '28px' } as React.CSSProperties}>
@@ -683,23 +685,24 @@ export default function AnalyticsTrendsView() {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
             {/* Synchronized Month Selector directly in table header */}
-            <select
-              value={selectedMonth}
-              onChange={(e) => {
-                setSelectedMonth(e.target.value);
-                setSelectedReasonFilter(null);
-              }}
-              className="inp"
-              style={{ height: '28px', padding: '0 8px', fontSize: '12px', minWidth: '130px', width: 'auto' }}
-              title="Filter by shift month"
-            >
-              <option value="all">All Shifts (All-Time)</option>
-              {availableMonths.map((m) => (
-                <option key={m} value={m}>
-                  {formatMonthLabel(m)}
-                </option>
-              ))}
-            </select>
+            <div style={{ minWidth: '190px' }}>
+              <SearchableSelect
+                value={selectedMonth}
+                onChange={(val) => {
+                  setSelectedMonth(val);
+                  setSelectedReasonFilter(null);
+                }}
+                placeholder="Filter by shift month"
+                searchPlaceholder="Search month..."
+                options={[
+                  { value: 'all', label: 'All Shifts (All-Time)' },
+                  ...availableMonths.map((m) => ({
+                    value: m,
+                    label: formatMonthLabel(m)
+                  }))
+                ]}
+              />
+            </div>
 
             {/* Synchronized Scope Toggle */}
             <div className="segs" style={{ '--c': 2, margin: 0, height: '28px' } as React.CSSProperties}>

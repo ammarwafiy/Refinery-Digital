@@ -86,16 +86,16 @@ export default function ProductOptionSelector({
       {/* Dropdown with Radio Option Animation and Smooth Scroll */}
       {isOpen && (
         <div className="absolute top-[calc(100%+6px)] left-0 w-full z-[9999] animate-in fade-in zoom-in-95 duration-150">
-          <div className="radio-option-dropdown-card bg-[#0d1117] border border-[#30363d] p-1.5 shadow-2xl rounded-lg">
-            {/* Pinned search input at top */}
-            <div className="p-1 mb-1 border-b border-[#21262d] sticky top-0 bg-[#0d1117] z-10">
+          <div className="bg-[#0b0f19] border border-[#21262d] p-2.5 shadow-2xl rounded-xl">
+            {/* Pinned search input with Glowing Red Border from User Image */}
+            <div className="mb-2">
               <input
                 ref={inputRef}
                 type="text"
                 placeholder="Search product specification..."
                 value={searchFilter}
                 onChange={(e) => setSearchFilter(e.target.value)}
-                className="w-full bg-[#161b22] border border-[#30363d] rounded px-2.5 py-1 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-[#009fe3]"
+                className="w-full bg-[#0d1117] border-[1.5px] border-[#d81f2c] rounded-lg px-3 py-2 text-xs sm:text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none shadow-[0_0_10px_rgba(216,31,44,0.3)] transition-all"
               />
             </div>
 
@@ -107,6 +107,7 @@ export default function ProductOptionSelector({
                 maxHeight: '260px',
                 overflowY: 'auto',
                 scrollbarWidth: 'thin',
+                scrollbarColor: '#30363d transparent',
               }}
             >
               {filteredOptions.length === 0 ? (
@@ -129,17 +130,12 @@ export default function ProductOptionSelector({
                       }}
                       className={`radio-option-btn w-full ${isSelected ? 'active text-white' : 'text-slate-300'}`}
                     >
-                      <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                        <path
-                          fill="currentColor"
-                          d="M8 1c-2.8 3.5-5 6.2-5 8.8 0 2.9 2.2 5.2 5 5.2s5-2.3 5-5.2C13 7.2 10.8 4.5 8 1zm0 12c-1.7 0-3-1.3-3-3.2 0-1.8 1.6-3.9 3-5.8 1.4 1.9 3 4 3 5.8 0 1.9-1.3 3.2-3 3.2z"
-                        />
-                      </svg>
-                      <span className="flex-1 truncate font-medium text-xs text-left">
+                      <Droplets className="h-4 w-4 text-[#00d2ff] shrink-0" />
+                      <span className="flex-1 truncate font-medium text-xs sm:text-sm text-left">
                         {opt.name}
                       </span>
                       {isSelected && (
-                        <Check className="h-3.5 w-3.5 text-[#009fe3] shrink-0 ml-1" />
+                        <Check className="h-3.5 w-3.5 text-[#00d2ff] shrink-0 ml-1" />
                       )}
                     </button>
                   );

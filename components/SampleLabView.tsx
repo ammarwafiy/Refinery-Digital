@@ -6,6 +6,7 @@ import { AnimatedCheckbox } from './AnimatedCheckbox';
 import { ModernButton } from './ModernButton';
 import GliderTabs from './GliderTabs';
 import ProductOptionSelector from './ProductOptionSelector';
+import SearchableSelect from './SearchableSelect';
 import { 
   SampleReport, 
   Product, 
@@ -920,30 +921,32 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '20px' }}>
               <div className="fld">
                 <label>Feed Tank</label>
-                <select
+                <SearchableSelect
                   value={newFeedTankId}
-                  onChange={e => setNewFeedTankId(e.target.value)}
-                  className="inp"
-                  style={{ width: '100%' }}
-                >
-                  {tanks.filter(t => t.kind === 'feed' || t.kind === 'both').map(t => (
-                    <option key={t.id} value={t.id}>{t.code}</option>
-                  ))}
-                </select>
+                  onChange={val => setNewFeedTankId(val)}
+                  placeholder="Select Feed Tank"
+                  searchPlaceholder="Search feed tank..."
+                  options={tanks.filter(t => t.kind === 'feed' || t.kind === 'both').map(t => ({
+                    value: t.id,
+                    label: t.code,
+                    sublabel: t.kind === 'both' ? 'Feed / Discharge' : 'Feed Tank'
+                  }))}
+                />
               </div>
 
               <div className="fld">
                 <label>Discharge Tank</label>
-                <select
+                <SearchableSelect
                   value={newDischargeTankId}
-                  onChange={e => setNewDischargeTankId(e.target.value)}
-                  className="inp"
-                  style={{ width: '100%' }}
-                >
-                  {tanks.filter(t => t.kind === 'discharge' || t.kind === 'both').map(t => (
-                    <option key={t.id} value={t.id}>{t.code}</option>
-                  ))}
-                </select>
+                  onChange={val => setNewDischargeTankId(val)}
+                  placeholder="Select Discharge Tank"
+                  searchPlaceholder="Search discharge tank..."
+                  options={tanks.filter(t => t.kind === 'discharge' || t.kind === 'both').map(t => ({
+                    value: t.id,
+                    label: t.code,
+                    sublabel: t.kind === 'both' ? 'Feed / Discharge' : 'Discharge Tank'
+                  }))}
+                />
               </div>
 
               <div className="fld">
@@ -960,16 +963,16 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
 
               <div className="fld">
                 <label>Sampling Point</label>
-                <select
+                <SearchableSelect
                   value={newSamplingPointId}
-                  onChange={e => setNewSamplingPointId(e.target.value)}
-                  className="inp"
-                  style={{ width: '100%' }}
-                >
-                  {samplingPoints.map(sp => (
-                    <option key={sp.id} value={sp.id}>{sp.name}</option>
-                  ))}
-                </select>
+                  onChange={val => setNewSamplingPointId(val)}
+                  placeholder="Select Sampling Point"
+                  searchPlaceholder="Search sampling point..."
+                  options={samplingPoints.map(sp => ({
+                    value: sp.id,
+                    label: sp.name
+                  }))}
+                />
               </div>
             </div>
 
@@ -1394,11 +1397,12 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                           Titik persampelan
                         </span>
                       </label>
-                      <select
+                      <SearchableSelect
                         value={qcSamplingPointId}
                         disabled={!canEdit}
-                        onChange={e => {
-                          const val = e.target.value;
+                        placeholder="-- Select Sampling Point --"
+                        searchPlaceholder="Search sampling point..."
+                        onChange={val => {
                           setQcSamplingPointId(val);
                           const matched = samplingPoints.find(sp => sp.id === val);
                           if (selectedReport) {
@@ -1406,14 +1410,11 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                             selectedReport.sampling_point_name = matched?.name || '';
                           }
                         }}
-                        className="inp"
-                        style={{ width: '100%', height: '38px' }}
-                      >
-                        <option value="">-- Select Sampling Point --</option>
-                        {samplingPoints.map(sp => (
-                          <option key={sp.id} value={sp.id}>{sp.name}</option>
-                        ))}
-                      </select>
+                        options={samplingPoints.map(sp => ({
+                          value: sp.id,
+                          label: sp.name
+                        }))}
+                      />
                     </div>
 
                     {/* 4. Crystallizer / Batch No */}
@@ -1972,35 +1973,34 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                 <>
                   <div className="fld">
                     <label>Rejection Reason Code (Pareto categorized) *</label>
-                    <select
-                      required
+                    <SearchableSelect
                       value={decisionReasonId}
-                      onChange={e => setDecisionReasonId(e.target.value)}
-                      className="inp"
-                      style={{ width: '100%' }}
-                    >
-                      <option value="">-- Choose Reason Code --</option>
-                      {reasons.map(r => (
-                        <option key={r.id} value={r.id}>{r.label}</option>
-                      ))}
-                    </select>
+                      onChange={val => setDecisionReasonId(val)}
+                      placeholder="-- Choose Reason Code --"
+                      searchPlaceholder="Search reason code..."
+                      options={reasons.map(r => ({
+                        value: r.id,
+                        label: r.label
+                      }))}
+                    />
                   </div>
 
                   {decisionType === 'reject' && (
                     <div className="fld">
                       <label>Mandatory Product Disposition *</label>
-                      <select
+                      <SearchableSelect
                         value={decisionDisposition}
-                        onChange={e => setDecisionDisposition(e.target.value as Disposition)}
-                        className="inp"
-                        style={{ width: '100%', color: 'var(--amber)', fontWeight: 600 }}
-                      >
-                        <option value="reprocess">Reprocess (Return to Deodorizer)</option>
-                        <option value="rework">Rework (Bleaching/Pre-treatment)</option>
-                        <option value="downgrade">Downgrade to Lower Grade Product</option>
-                        <option value="hold">Quality Hold (Quarantine Tank)</option>
-                        <option value="scrap">Scrap / By-product Tank</option>
-                      </select>
+                        onChange={val => setDecisionDisposition(val as Disposition)}
+                        placeholder="Select Disposition"
+                        searchPlaceholder="Search disposition..."
+                        options={[
+                          { value: 'reprocess', label: 'Reprocess (Return to Deodorizer)' },
+                          { value: 'rework', label: 'Rework (Bleaching/Pre-treatment)' },
+                          { value: 'downgrade', label: 'Downgrade to Lower Grade Product' },
+                          { value: 'hold', label: 'Quality Hold (Quarantine Tank)' },
+                          { value: 'scrap', label: 'Scrap / By-product Tank' }
+                        ]}
+                      />
                     </div>
                   )}
 
@@ -2133,20 +2133,20 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
             <form onSubmit={handleConfirmDelete}>
               <div className="fld">
                 <label>Reason for Deletion *</label>
-                <select
-                  required
+                <SearchableSelect
                   value={deleteReason}
-                  onChange={e => setDeleteReason(e.target.value)}
-                  className="inp"
-                  style={{ width: '100%' }}
-                >
-                  <option value="Wrong analytical readings entered">Wrong analytical readings / parameters entered</option>
-                  <option value="Incorrect product or tank selection">Incorrect product or tank selection</option>
-                  <option value="Duplicate sample lot in queue">Duplicate sample lot generated in queue</option>
-                  <option value="Contaminated or invalid physical sample">Contaminated or invalid physical sample</option>
-                  <option value="Process log entry cancelled or obsolete">Process log entry cancelled or obsolete</option>
-                  <option value="other">Other reason (specify below)...</option>
-                </select>
+                  onChange={val => setDeleteReason(val)}
+                  placeholder="Select reason..."
+                  searchPlaceholder="Search reason..."
+                  options={[
+                    { value: 'Wrong analytical readings entered', label: 'Wrong analytical readings / parameters entered' },
+                    { value: 'Incorrect product or tank selection', label: 'Incorrect product or tank selection' },
+                    { value: 'Duplicate sample lot in queue', label: 'Duplicate sample lot generated in queue' },
+                    { value: 'Contaminated or invalid physical sample', label: 'Contaminated or invalid physical sample' },
+                    { value: 'Process log entry cancelled or obsolete', label: 'Process log entry cancelled or obsolete' },
+                    { value: 'other', label: 'Other reason (specify below)...' }
+                  ]}
+                />
               </div>
 
               {deleteReason === 'other' && (

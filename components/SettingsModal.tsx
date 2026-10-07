@@ -71,6 +71,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import SearchableSelect from './SearchableSelect';
 import { 
   getAuditLogs, 
   ROLE_ID_SERIES, 
@@ -1416,16 +1417,18 @@ export default function SettingsModal({
                       <label className="block text-xs font-medium text-slate-300 mb-1.5">
                         {t.department}
                       </label>
-                      <select
+                      <SearchableSelect
                         value={department}
-                        onChange={(e) => setDepartment(e.target.value)}
-                        className="w-full bg-[#101927] border border-[#1F2E43] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#009FE3]"
-                      >
-                        <option value="Refinery Plant Operations">Refinery Plant Operations</option>
-                        <option value="Quality Control & Analytical Lab">Quality Control & Analytical Lab</option>
-                        <option value="Engineering & Maintenance">Engineering & Maintenance</option>
-                        <option value="Plant Administration & Executive">Plant Administration & Executive</option>
-                      </select>
+                        onChange={(val) => setDepartment(val)}
+                        placeholder="Select Department"
+                        searchPlaceholder="Search department..."
+                        options={[
+                          { value: 'Refinery Plant Operations', label: 'Refinery Plant Operations' },
+                          { value: 'Quality Control & Analytical Lab', label: 'Quality Control & Analytical Lab' },
+                          { value: 'Engineering & Maintenance', label: 'Engineering & Maintenance' },
+                          { value: 'Plant Administration & Executive', label: 'Plant Administration & Executive' }
+                        ]}
+                      />
                     </div>
 
                     <div>
@@ -1535,14 +1538,16 @@ export default function SettingsModal({
                       <Globe className="h-3.5 w-3.5 text-[#009FE3]" />
                       <span>{t.language}</span>
                     </label>
-                    <select
+                    <SearchableSelect
                       value={settings.language}
-                      onChange={(e) => handleSaveSettings({ ...settings, language: e.target.value as any })}
-                      className="w-full bg-[#101927] border border-[#1F2E43] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#009FE3]"
-                    >
-                      <option value="en">English (UK / Plant Standard)</option>
-                      <option value="ms">Bahasa Melayu (Loji Penapisan Lam Soon)</option>
-                    </select>
+                      onChange={(val) => handleSaveSettings({ ...settings, language: val as any })}
+                      placeholder="Select Language"
+                      searchPlaceholder="Search language..."
+                      options={[
+                        { value: 'en', label: 'English (UK / Plant Standard)' },
+                        { value: 'ms', label: 'Bahasa Melayu (Loji Penapisan Lam Soon)' }
+                      ]}
+                    />
                   </div>
 
                   <div>
@@ -1550,45 +1555,51 @@ export default function SettingsModal({
                       <Clock className="h-3.5 w-3.5 text-[#009FE3]" />
                       <span>{t.timeFormat}</span>
                     </label>
-                    <select
+                    <SearchableSelect
                       value={settings.timeFormat}
-                      onChange={(e) => handleSaveSettings({ ...settings, timeFormat: e.target.value as any })}
-                      className="w-full bg-[#101927] border border-[#1F2E43] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#009FE3]"
-                    >
-                      <option value="24h">24-Hour (00:00 – 23:59) [SCADA Standard]</option>
-                      <option value="12h">12-Hour (12:00 AM – 11:59 PM)</option>
-                    </select>
+                      onChange={(val) => handleSaveSettings({ ...settings, timeFormat: val as any })}
+                      placeholder="Select Time Format"
+                      searchPlaceholder="Search time format..."
+                      options={[
+                        { value: '24h', label: '24-Hour (00:00 – 23:59) [SCADA Standard]' },
+                        { value: '12h', label: '12-Hour (12:00 AM – 11:59 PM)' }
+                      ]}
+                    />
                   </div>
 
                   <div>
                     <label className="block text-xs font-medium text-slate-300 mb-1.5">
                       {t.dateFormat}
                     </label>
-                    <select
+                    <SearchableSelect
                       value={settings.dateFormat}
-                      onChange={(e) => handleSaveSettings({ ...settings, dateFormat: e.target.value as any })}
-                      className="w-full bg-[#101927] border border-[#1F2E43] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#009FE3]"
-                    >
-                      <option value="DD/MM/YYYY">DD/MM/YYYY (25/09/2026)</option>
-                      <option value="YYYY-MM-DD">YYYY-MM-DD (2026-09-25)</option>
-                      <option value="DD MMM YYYY">DD MMM YYYY (25 Sep 2026)</option>
-                    </select>
+                      onChange={(val) => handleSaveSettings({ ...settings, dateFormat: val as any })}
+                      placeholder="Select Date Format"
+                      searchPlaceholder="Search date format..."
+                      options={[
+                        { value: 'DD/MM/YYYY', label: 'DD/MM/YYYY (25/09/2026)' },
+                        { value: 'YYYY-MM-DD', label: 'YYYY-MM-DD (2026-09-25)' },
+                        { value: 'DD MMM YYYY', label: 'DD MMM YYYY (25 Sep 2026)' }
+                      ]}
+                    />
                   </div>
 
                   <div>
                     <label className="block text-xs font-medium text-slate-300 mb-1.5">
                       {t.autoLogout}
                     </label>
-                    <select
+                    <SearchableSelect
                       value={settings.autoLogout}
-                      onChange={(e) => handleSaveSettings({ ...settings, autoLogout: e.target.value as any })}
-                      className="w-full bg-[#101927] border border-[#1F2E43] rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-[#009FE3]"
-                    >
-                      <option value="15">15 Minutes (Strict Security Mode)</option>
-                      <option value="30">30 Minutes (Standard Production Shift)</option>
-                      <option value="60">60 Minutes (Supervisory Monitoring)</option>
-                      <option value="never">Never (Continuous SCADA Display)</option>
-                    </select>
+                      onChange={(val) => handleSaveSettings({ ...settings, autoLogout: val as any })}
+                      placeholder="Select Auto-Logout"
+                      searchPlaceholder="Search timeout..."
+                      options={[
+                        { value: '15', label: '15 Minutes (Strict Security Mode)' },
+                        { value: '30', label: '30 Minutes (Standard Production Shift)' },
+                        { value: '60', label: '60 Minutes (Supervisory Monitoring)' },
+                        { value: 'never', label: 'Never (Continuous SCADA Display)' }
+                      ]}
+                    />
                   </div>
                 </div>
               </div>

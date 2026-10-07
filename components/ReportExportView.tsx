@@ -27,8 +27,8 @@ import {
   syncSampleReportsFromSupabase,
   syncProcessSheetsFromSupabase
 } from '@/lib/data-service';
-import { ProcessEntry } from '@/types/refinery';
 import GliderTabs from './GliderTabs';
+import SearchableSelect from './SearchableSelect';
 
 type ReportPeriod = 'daily' | 'monthly' | 'yearly';
 type ReportCategory = 'process' | 'qc' | 'deviations' | 'master';
@@ -463,15 +463,18 @@ export default function ReportExportView() {
                 />
               )}
               {period === 'yearly' && (
-                <select
+                <SearchableSelect
                   value={selectedYear}
-                  onChange={(e) => setSelectedYear(e.target.value)}
+                  onChange={(val) => setSelectedYear(val)}
+                  placeholder="Select Year"
+                  searchPlaceholder="Search year..."
                   aria-label="Report year"
-                >
-                  <option value="2026">2026 (Operational Year)</option>
-                  <option value="2025">2025 (Historical Archive)</option>
-                  <option value="2024">2024 (Baseline Year)</option>
-                </select>
+                  options={[
+                    { value: '2026', label: '2026 (Operational Year)' },
+                    { value: '2025', label: '2025 (Historical Archive)' },
+                    { value: '2024', label: '2024 (Baseline Year)' }
+                  ]}
+                />
               )}
             </div>
           </div>
@@ -491,18 +494,20 @@ export default function ReportExportView() {
                 onChange={(id) => setCategory(id as ReportCategory)}
               />
             </div>
-            <select
+            <SearchableSelect
               aria-label="Product"
               value={selectedProductId}
-              onChange={(e) => setSelectedProductId(e.target.value)}
-            >
-              <option value="all">All products (unfiltered)</option>
-              {products.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
+              onChange={(val) => setSelectedProductId(val)}
+              placeholder="Select Product"
+              searchPlaceholder="Search product..."
+              options={[
+                { value: 'all', label: 'All products (unfiltered)' },
+                ...products.map((p) => ({
+                  value: p.id,
+                  label: p.name
+                }))
+              ]}
+            />
           </div>
 
           <div>

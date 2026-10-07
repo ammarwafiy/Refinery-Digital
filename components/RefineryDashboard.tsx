@@ -110,11 +110,9 @@ export default function RefineryDashboard() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // Instant glitch-free tab change: updates state and syncs browser URL bar
+  // Instant glitch-free tab change: updates state and syncs browser URL bar immediately
   const handleTabChange = (tab: string) => {
-    React.startTransition(() => {
-      setActiveTab(tab);
-    });
+    setActiveTab(tab);
     if (typeof window !== 'undefined') {
       const targetPath = `/dashboard/${tab}`;
       if (window.location.pathname !== targetPath) {
@@ -240,21 +238,23 @@ export default function RefineryDashboard() {
 
         {/* Main Work Area - Strictly renders only the view allowed for current role */}
         <main className="content-redesign pt-0 w-full max-w-full">
-          {currentTab === 'process' && allowedTabs.includes('process') && (
-            <ProcessLogView currentRole={authUser.role} currentUser={authUser} />
-          )}
-          {currentTab === 'supervisor' && allowedTabs.includes('supervisor') && <SupervisorBoardView />}
-          {currentTab === 'report' && allowedTabs.includes('report') && <ReportExportView />}
-          {currentTab === 'qc' && allowedTabs.includes('qc') && (
-            <SampleLabView 
-              currentRole={authUser.role} 
-              currentUser={authUser} 
-              onNavigateToCertificate={handleNavigateToCertificate}
-            />
-          )}
-          {currentTab === 'analytics' && allowedTabs.includes('analytics') && <AnalyticsTrendsView />}
-          {currentTab === 'export' && allowedTabs.includes('export') && <OfficialFormsExportView />}
-          {currentTab === 'admin' && allowedTabs.includes('admin') && <AdminUserManagementView />}
+          <div key={currentTab} className="tab-view-container">
+            {currentTab === 'process' && allowedTabs.includes('process') && (
+              <ProcessLogView currentRole={authUser.role} currentUser={authUser} />
+            )}
+            {currentTab === 'supervisor' && allowedTabs.includes('supervisor') && <SupervisorBoardView />}
+            {currentTab === 'report' && allowedTabs.includes('report') && <ReportExportView />}
+            {currentTab === 'qc' && allowedTabs.includes('qc') && (
+              <SampleLabView 
+                currentRole={authUser.role} 
+                currentUser={authUser} 
+                onNavigateToCertificate={handleNavigateToCertificate}
+              />
+            )}
+            {currentTab === 'analytics' && allowedTabs.includes('analytics') && <AnalyticsTrendsView />}
+            {currentTab === 'export' && allowedTabs.includes('export') && <OfficialFormsExportView />}
+            {currentTab === 'admin' && allowedTabs.includes('admin') && <AdminUserManagementView />}
+          </div>
         </main>
 
         {/* Industrial Plant Footer */}

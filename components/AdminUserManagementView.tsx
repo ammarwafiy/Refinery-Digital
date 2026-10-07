@@ -36,6 +36,7 @@ import {
 } from 'lucide-react';
 import { UserRole, Profile } from '@/types/refinery';
 import GliderTabs from './GliderTabs';
+import SearchableSelect from './SearchableSelect';
 import { 
   getProfiles, 
   addProfile, 
@@ -712,21 +713,22 @@ export default function AdminUserManagementView() {
                 <form onSubmit={handleAddUserSubmit}>
                   <div className="fld">
                     <label htmlFor="ro">Assigned role</label>
-                    <select
+                    <SearchableSelect
                       id="ro"
-                      className="inp w"
-                      style={{ height: '42px' }}
                       disabled={!isAdmin}
                       value={selectedRole}
-                      onChange={(e) => handleRoleSelectChange(e.target.value as UserRole)}
-                    >
-                      <option value="operator">Plant Operator (Series OP-1xxx)</option>
-                      <option value="supervisor">Shift Supervisor (Series SV-2xxx)</option>
-                      <option value="qc_analyst">QC Laboratory Analyst (Series QC-3xxx)</option>
-                      <option value="qc_manager">Quality Control Manager (Series QM-4xxx)</option>
-                      <option value="admin">Plant Administrator / Admin (Series AD-5xxx)</option>
-                      <option value="viewer">Quality Auditor (Series AU-9xxx)</option>
-                    </select>
+                      onChange={(val) => handleRoleSelectChange(val as UserRole)}
+                      placeholder="Select Assigned Role"
+                      searchPlaceholder="Search role..."
+                      options={[
+                        { value: 'operator', label: 'Plant Operator (Series OP-1xxx)' },
+                        { value: 'supervisor', label: 'Shift Supervisor (Series SV-2xxx)' },
+                        { value: 'qc_analyst', label: 'QC Laboratory Analyst (Series QC-3xxx)' },
+                        { value: 'qc_manager', label: 'Quality Control Manager (Series QM-4xxx)' },
+                        { value: 'admin', label: 'Plant Administrator / Admin (Series AD-5xxx)' },
+                        { value: 'viewer', label: 'Quality Auditor (Series AU-9xxx)' }
+                      ]}
+                    />
                   </div>
 
                   <div className="fld">
@@ -789,21 +791,24 @@ export default function AdminUserManagementView() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
-                  <select
-                    className="inp"
-                    style={{ width: '150px' }}
-                    aria-label="Filter by role"
-                    value={roleFilter}
-                    onChange={(e) => setRoleFilter(e.target.value)}
-                  >
-                    <option value="all">All roles</option>
-                    <option value="operator">Operator (OP)</option>
-                    <option value="supervisor">Supervisor (SV)</option>
-                    <option value="qc_analyst">QC Analyst (QC)</option>
-                    <option value="qc_manager">QC Manager (QM)</option>
-                    <option value="admin">Admin (AD)</option>
-                    <option value="viewer">Viewer (AU)</option>
-                  </select>
+                  <div style={{ width: '160px' }}>
+                    <SearchableSelect
+                      aria-label="Filter by role"
+                      value={roleFilter}
+                      onChange={(val) => setRoleFilter(val)}
+                      placeholder="Filter by role"
+                      searchPlaceholder="Search role..."
+                      options={[
+                        { value: 'all', label: 'All roles' },
+                        { value: 'operator', label: 'Operator (OP)' },
+                        { value: 'supervisor', label: 'Supervisor (SV)' },
+                        { value: 'qc_analyst', label: 'QC Analyst (QC)' },
+                        { value: 'qc_manager', label: 'QC Manager (QM)' },
+                        { value: 'admin', label: 'Admin (AD)' },
+                        { value: 'viewer', label: 'Viewer (AU)' }
+                      ]}
+                    />
+                  </div>
                 </div>
               </div>
 

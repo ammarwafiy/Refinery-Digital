@@ -23,6 +23,7 @@ import {
   Info
 } from 'lucide-react';
 import { Profile } from '@/types/refinery';
+import SearchableSelect from './SearchableSelect';
 import { addAuditLog } from '@/lib/data-service';
 
 interface HelpSupportModalProps {
@@ -635,17 +636,19 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
                       <label className="block text-[11px] font-medium text-slate-300 mb-1">
                         Issue Category
                       </label>
-                      <select
+                      <SearchableSelect
                         value={ticketCategory}
-                        onChange={(e) => setTicketCategory(e.target.value)}
-                        className="w-full bg-[#080D18] border border-[#1F2E43] rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-[#009FE3]"
-                      >
-                        <option value="process">Shift Operations & Hourly Log (RF-FR-004)</option>
-                        <option value="qc">QC Laboratory Testing & Sample Results (RF-FR-001)</option>
-                        <option value="scada">Physical Sensor / DCS Connectivity</option>
-                        <option value="security">User Authentication & Role Permissions</option>
-                        <option value="general">System Feature Enhancement Request</option>
-                      </select>
+                        onChange={(val) => setTicketCategory(val)}
+                        placeholder="Select Issue Category"
+                        searchPlaceholder="Search category..."
+                        options={[
+                          { value: 'process', label: 'Shift Operations & Hourly Log (RF-FR-004)' },
+                          { value: 'qc', label: 'QC Laboratory Testing & Sample Results (RF-FR-001)' },
+                          { value: 'scada', label: 'Physical Sensor / DCS Connectivity' },
+                          { value: 'security', label: 'User Authentication & Role Permissions' },
+                          { value: 'general', label: 'System Feature Enhancement Request' }
+                        ]}
+                      />
                     </div>
 
                     <div>

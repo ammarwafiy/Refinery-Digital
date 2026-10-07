@@ -18,6 +18,7 @@ import {
 } from '@/lib/data-service';
 import type { SampleReport, ProcessSheet, AuditLogEntry } from '@/types/refinery';
 import GliderTabs from './GliderTabs';
+import SearchableSelect from './SearchableSelect';
 import { 
   FileText, 
   Printer, 
@@ -581,17 +582,19 @@ export default function OfficialFormsExportView() {
                 <FileText className="h-3.5 w-3.5 text-[#009FE3]" />
                 Select Sample Lot / Certificate:
               </span>
-              <select
-                value={selectedReportId}
-                onChange={e => setSelectedReportId(e.target.value)}
-                className="bg-[#0A1018] border border-[#1F2E43] text-slate-200 rounded-lg px-3 py-1.5 focus:border-[#009FE3] focus:outline-none max-w-sm md:max-w-md text-xs font-mono"
-              >
-                {reports.map(r => (
-                  <option key={r.id} value={r.id} className="bg-[#101927] text-slate-200">
-                    {r.lot_no} — {r.product_name} ({r.time_check} · {String(r.status || 'draft').toUpperCase()})
-                  </option>
-                ))}
-              </select>
+              <div className="w-full max-w-sm md:max-w-md">
+                <SearchableSelect
+                  value={selectedReportId}
+                  onChange={val => setSelectedReportId(val)}
+                  placeholder="Select Sample Lot / Certificate"
+                  searchPlaceholder="Search lot no, product..."
+                  options={reports.map(r => ({
+                    value: r.id,
+                    label: `${r.lot_no} — ${r.product_name}`,
+                    sublabel: `(${r.time_check} · ${String(r.status || 'draft').toUpperCase()})`
+                  }))}
+                />
+              </div>
             </div>
 
             <div className="flex items-center gap-2">
