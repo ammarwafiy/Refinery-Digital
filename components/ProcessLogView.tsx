@@ -152,12 +152,8 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
   const [attemptedCommit, setAttemptedCommit] = useState(false);
   const limits = getParameterLimits();
 
-  const getMissingClass = (key: keyof ProcessEntry) => {
-    if (!attemptedCommit) return '';
-    const val = formData[key];
-    const isMissing = val === undefined || val === null || val === '' || isNaN(Number(val));
-    return isMissing ? '!border-rose-500 !bg-rose-500/15 ring-2 ring-rose-500/60 animate-pulse' : '';
-  };
+  // Relaxed commitment rule: empty fields are permitted without red error alerts
+  const getMissingClass = (_key: keyof ProcessEntry) => '';
 
   // SessionStorage draft persistence helpers to guarantee zero data loss
   const getDraftKey = (date: string, slot: number) => `refinery_process_draft_${date}_slot_${slot}`;
@@ -463,20 +459,6 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
     e.preventDefault();
     if (isSlotDisabled) {
       setValidationError(`Hour ${selectedSlotLabel} is locked (Read-Only). Readings can only be saved during the active live window (${String(((currentSlotIndex + 7) % 24) * 100).padStart(4, '0')}).`);
-      return;
-    }
-
-    // STRICT PLANT COMPLIANCE: Every parameter box must be filled before committing
-    const missing = REQUIRED_PROCESS_PARAM_FIELDS.filter(f => {
-      const val = formData[f.key];
-      return val === undefined || val === null || val === '' || isNaN(Number(val));
-    });
-
-    if (missing.length > 0) {
-      setAttemptedCommit(true);
-      setValidationError(
-        `Wajib isi setiap kotak bacaan parameter proses (${missing.length} parameter belum diisi: ${missing.slice(0, 3).map(m => m.label).join(', ')}${missing.length > 3 ? ` dan ${missing.length - 3} lagi` : ''}) sebelum boleh commit log jam ini!`
-      );
       return;
     }
 

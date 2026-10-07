@@ -164,7 +164,7 @@ export default function AnalyticsTrendsView() {
   }, []);
 
   // Selected parameter view
-  const [activeMetric, setActiveMetric] = useState<'trays' | 'vacuum' | 'steam'>('trays');
+  const [activeMetric, setActiveMetric] = useState<'trays' | 'bc101' | 'chilling' | 'steam' | 'vacuum'>('trays');
 
   // Discover available shift months from live reports
   const availableMonths = useMemo(() => {
@@ -197,11 +197,20 @@ export default function AnalyticsTrendsView() {
     time: entry.slot_label,
     vacuum: entry.vacuum_torr,
     tray1: entry.tray_1_temp_c,
+    tray2: entry.tray_2_temp_c,
+    tray3: entry.tray_3_temp_c,
     tray4: entry.tray_4_temp_c,
+    tray5: entry.tray_5_temp_c,
+    tray6: entry.tray_6_temp_c,
     tray7: entry.tray_7_temp_c,
-    feedRate: entry.oil_feed_rate_litre,
+    bc101In: entry.bc101_water_in_c,
+    bc101Out: entry.bc101_water_out_c,
+    chillIn: entry.chill_water_in_c,
+    chillOut: entry.chill_water_out_c,
+    traySteam: entry.tray_steam_supply_bar,
     boosterPress: entry.booster_press_bar,
     ejectorPress: entry.ejector_press_bar,
+    feedRate: entry.oil_feed_rate_litre,
   }));
 
   // Filter reports that qualify for Pareto defect analysis based on disposition scope
@@ -351,9 +360,11 @@ export default function AnalyticsTrendsView() {
         </div>
         <GliderTabs
           items={[
-            { id: 'trays', label: 'Tray temps (1, 4, 7)' },
+            { id: 'trays', label: 'Tray temps (1-7)' },
+            { id: 'bc101', label: 'BC 101 (°C)' },
+            { id: 'chilling', label: 'Chilling (°C)' },
+            { id: 'steam', label: 'Steam Press (Bar)' },
             { id: 'vacuum', label: 'Deodorizer vacuum' },
-            { id: 'steam', label: 'Steam pressure' },
           ]}
           activeId={activeMetric}
           onChange={(id) => setActiveMetric(id as any)}
@@ -364,9 +375,11 @@ export default function AnalyticsTrendsView() {
       <section className="panel">
         <div className="ph">
           <span>
-            {activeMetric === 'trays' && 'Deodorizer tray temperatures (°C) with configured operating bands'}
+            {activeMetric === 'trays' && 'Deodorizer tray temperatures (°C) for Trays 1 to 7 with configured operating bands'}
+            {activeMetric === 'bc101' && 'BC 101 Condenser Water Temperatures (°C) - Water In vs Water Out'}
+            {activeMetric === 'chilling' && 'Chilling Water Temperatures (°C) - Water In vs Water Out'}
+            {activeMetric === 'steam' && 'Steam Supply Pressures (Bar) - Tray Steam, Booster & Ejector'}
             {activeMetric === 'vacuum' && 'Deodorizer vacuum (Torr) with operating band'}
-            {activeMetric === 'steam' && 'Steam supply booster vs ejector pressures (bar)'}
           </span>
           <span className="hint" style={{ fontWeight: 400 }}>
             Shift <span style={{ color: 'var(--text)' }}>{sheet.shift_date}</span>, live process data
@@ -379,7 +392,7 @@ export default function AnalyticsTrendsView() {
               <LineChart data={timeSeriesData} margin={{ top: 10, right: 20, bottom: 5, left: -10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,.06)" />
                 <XAxis dataKey="time" stroke="var(--muted)" tick={{ fontSize: 11, fontFamily: 'monospace', fill: 'var(--muted)' }} />
-                <YAxis domain={[180, 280]} stroke="var(--muted)" tick={{ fontSize: 11, fontFamily: 'monospace', fill: 'var(--muted)' }} />
+                <YAxis domain={[180, 280]} stroke="var(--muted)" tick={{ fontSize: 11, fontFamily: 'monospace', fill: 'var(--muted)' }} unit="°C" />
                 <Tooltip
                   contentStyle={{ backgroundColor: 'var(--raised)', borderColor: 'var(--line)', borderRadius: '6px', color: 'var(--text)', fontSize: '12px' }}
                   itemStyle={{ fontSize: 12, fontFamily: 'monospace', color: 'var(--text)' }}
@@ -387,15 +400,62 @@ export default function AnalyticsTrendsView() {
                 <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
                 <ReferenceLine y={250} stroke="var(--green)" strokeDasharray="3 3" strokeOpacity={0.6} label={{ value: 'Band Min 250°C', fill: 'var(--green)', fontSize: 10 }} />
                 <ReferenceLine y={268} stroke="var(--green)" strokeDasharray="3 3" strokeOpacity={0.6} label={{ value: 'Band Max 268°C', fill: 'var(--green)', fontSize: 10 }} />
-                <Line type="monotone" dataKey="tray1" name="Tray 1 (°C)" stroke="#8a92a6" strokeWidth={1.5} dot={{ r: 3 }} />
-                <Line type="monotone" dataKey="tray4" name="Tray 4 Peak (°C)" stroke="#d81f2c" strokeWidth={2.5} dot={{ r: 4 }} />
-                <Line type="monotone" dataKey="tray7" name="Tray 7 Final (°C)" stroke="#f3f5f9" strokeWidth={1.5} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="tray1" name="Tray 1 (°C)" stroke="#38bdf8" strokeWidth={1.8} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="tray2" name="Tray 2 (°C)" stroke="#0284c7" strokeWidth={1.8} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="tray3" name="Tray 3 (°C)" stroke="#818cf8" strokeWidth={1.8} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="tray4" name="Tray 4 Peak (°C)" stroke="#d81f2c" strokeWidth={2.8} dot={{ r: 4.5 }} />
+                <Line type="monotone" dataKey="tray5" name="Tray 5 (°C)" stroke="#f59e0b" strokeWidth={1.8} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="tray6" name="Tray 6 (°C)" stroke="#10b981" strokeWidth={1.8} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="tray7" name="Tray 7 Final (°C)" stroke="#f8fafc" strokeWidth={2} dot={{ r: 3 }} />
               </LineChart>
-            ) : activeMetric === 'vacuum' ? (
+            ) : activeMetric === 'bc101' ? (
+              <LineChart data={timeSeriesData} margin={{ top: 10, right: 20, bottom: 5, left: -10 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,.06)" />
+                <XAxis dataKey="time" stroke="var(--muted)" tick={{ fontSize: 11, fontFamily: 'monospace', fill: 'var(--muted)' }} />
+                <YAxis domain={['auto', 'auto']} stroke="var(--muted)" tick={{ fontSize: 11, fontFamily: 'monospace', fill: 'var(--muted)' }} unit="°C" />
+                <Tooltip
+                  contentStyle={{ backgroundColor: 'var(--raised)', borderColor: 'var(--line)', borderRadius: '6px', color: 'var(--text)', fontSize: '12px' }}
+                  itemStyle={{ fontSize: 12, fontFamily: 'monospace', color: 'var(--text)' }}
+                />
+                <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
+                <ReferenceLine y={45} stroke="var(--amber)" strokeDasharray="3 3" strokeOpacity={0.6} label={{ value: 'Warn Max 45°C', fill: 'var(--amber)', fontSize: 10 }} />
+                <Line type="monotone" dataKey="bc101In" name="BC 101 Water In (°C)" stroke="#00d2ff" strokeWidth={2.2} dot={{ r: 3.5 }} />
+                <Line type="monotone" dataKey="bc101Out" name="BC 101 Water Out (°C)" stroke="#f43f5e" strokeWidth={2.2} dot={{ r: 3.5 }} />
+              </LineChart>
+            ) : activeMetric === 'chilling' ? (
+              <LineChart data={timeSeriesData} margin={{ top: 10, right: 20, bottom: 5, left: -10 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,.06)" />
+                <XAxis dataKey="time" stroke="var(--muted)" tick={{ fontSize: 11, fontFamily: 'monospace', fill: 'var(--muted)' }} />
+                <YAxis domain={['auto', 'auto']} stroke="var(--muted)" tick={{ fontSize: 11, fontFamily: 'monospace', fill: 'var(--muted)' }} unit="°C" />
+                <Tooltip
+                  contentStyle={{ backgroundColor: 'var(--raised)', borderColor: 'var(--line)', borderRadius: '6px', color: 'var(--text)', fontSize: '12px' }}
+                  itemStyle={{ fontSize: 12, fontFamily: 'monospace', color: 'var(--text)' }}
+                />
+                <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
+                <ReferenceLine y={16} stroke="var(--green)" strokeDasharray="3 3" strokeOpacity={0.6} label={{ value: 'Target Max 16°C', fill: 'var(--green)', fontSize: 10 }} />
+                <Line type="monotone" dataKey="chillIn" name="Chilling Water In (°C)" stroke="#38bdf8" strokeWidth={2.2} dot={{ r: 3.5 }} />
+                <Line type="monotone" dataKey="chillOut" name="Chilling Water Out (°C)" stroke="#009fe3" strokeWidth={2.2} dot={{ r: 3.5 }} />
+              </LineChart>
+            ) : activeMetric === 'steam' ? (
+              <LineChart data={timeSeriesData} margin={{ top: 10, right: 20, bottom: 5, left: -10 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,.06)" />
+                <XAxis dataKey="time" stroke="var(--muted)" tick={{ fontSize: 11, fontFamily: 'monospace', fill: 'var(--muted)' }} />
+                <YAxis domain={['auto', 'auto']} stroke="var(--muted)" tick={{ fontSize: 11, fontFamily: 'monospace', fill: 'var(--muted)' }} unit=" bar" />
+                <Tooltip
+                  contentStyle={{ backgroundColor: 'var(--raised)', borderColor: 'var(--line)', borderRadius: '6px', color: 'var(--text)', fontSize: '12px' }}
+                  itemStyle={{ fontSize: 12, fontFamily: 'monospace', color: 'var(--text)' }}
+                />
+                <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
+                <ReferenceLine y={3.0} stroke="var(--green)" strokeDasharray="3 3" strokeOpacity={0.6} label={{ value: 'Tray Set 3.00 Bar', fill: 'var(--green)', fontSize: 10 }} />
+                <Line type="monotone" dataKey="traySteam" name="Tray Steam Supply (Bar)" stroke="#eab308" strokeWidth={2.2} dot={{ r: 3.5 }} />
+                <Line type="monotone" dataKey="boosterPress" name="Booster Pressure (Bar)" stroke="#d81f2c" strokeWidth={2.2} dot={{ r: 3.5 }} />
+                <Line type="monotone" dataKey="ejectorPress" name="Ejector Pressure (Bar)" stroke="#94a3b8" strokeWidth={1.8} dot={{ r: 3.5 }} />
+              </LineChart>
+            ) : (
               <AreaChart data={timeSeriesData} margin={{ top: 10, right: 20, bottom: 5, left: -10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,.06)" />
                 <XAxis dataKey="time" stroke="var(--muted)" tick={{ fontSize: 11, fontFamily: 'monospace', fill: 'var(--muted)' }} />
-                <YAxis domain={[0, 8]} stroke="var(--muted)" tick={{ fontSize: 11, fontFamily: 'monospace', fill: 'var(--muted)' }} />
+                <YAxis domain={[0, 8]} stroke="var(--muted)" tick={{ fontSize: 11, fontFamily: 'monospace', fill: 'var(--muted)' }} unit=" Torr" />
                 <Tooltip
                   contentStyle={{ backgroundColor: 'var(--raised)', borderColor: 'var(--line)', borderRadius: '6px', color: 'var(--text)', fontSize: '12px' }}
                   itemStyle={{ fontSize: 12, fontFamily: 'monospace', color: 'var(--text)' }}
@@ -403,19 +463,6 @@ export default function AnalyticsTrendsView() {
                 <ReferenceLine y={4.5} label={{ value: 'Soft Max: 4.5 Torr', fill: 'var(--amber)', fontSize: 10 }} stroke="var(--amber)" strokeDasharray="4 4" />
                 <Area type="monotone" dataKey="vacuum" name="Vacuum (Torr)" stroke="#d81f2c" fill="#d81f2c" fillOpacity={0.12} strokeWidth={2} />
               </AreaChart>
-            ) : (
-              <LineChart data={timeSeriesData} margin={{ top: 10, right: 20, bottom: 5, left: -10 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,.06)" />
-                <XAxis dataKey="time" stroke="var(--muted)" tick={{ fontSize: 11, fontFamily: 'monospace', fill: 'var(--muted)' }} />
-                <YAxis domain={[6, 14]} stroke="var(--muted)" tick={{ fontSize: 11, fontFamily: 'monospace', fill: 'var(--muted)' }} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: 'var(--raised)', borderColor: 'var(--line)', borderRadius: '6px', color: 'var(--text)', fontSize: '12px' }}
-                  itemStyle={{ fontSize: 12, fontFamily: 'monospace', color: 'var(--text)' }}
-                />
-                <Legend wrapperStyle={{ fontSize: 12, paddingTop: 8 }} />
-                <Line type="monotone" dataKey="boosterPress" name="Booster Pressure (Bar)" stroke="#d81f2c" strokeWidth={2} dot={{ r: 3 }} />
-                <Line type="monotone" dataKey="ejectorPress" name="Ejector Pressure (Bar)" stroke="#8a92a6" strokeWidth={1.5} dot={{ r: 3 }} />
-              </LineChart>
             )}
           </ResponsiveContainer>
         </div>
