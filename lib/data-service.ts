@@ -1115,9 +1115,11 @@ export async function addProduct(data: {
   const current = getProducts();
   const maxOrder = current.reduce((max, p) => Math.max(max, p.sort_order || 0), 0);
 
-  const newId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : (
-    '50000000-0000-4000-8000-' + Math.floor(Math.random() * 1000000000000).toString().padStart(12, '0')
-  );
+  const maxPrdNum = current.reduce((max, p) => {
+    const num = parseInt(p.id.replace(/\D/g, ''), 10);
+    return !isNaN(num) && num > max ? num : max;
+  }, 0);
+  const newId = `PRD${String(maxPrdNum + 1).padStart(3, '0')}`;
 
   const newProduct: Product = {
     id: newId,
