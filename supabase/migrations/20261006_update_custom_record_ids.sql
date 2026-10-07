@@ -547,6 +547,12 @@ SELECT setval('seq_crt_id', GREATEST(2, (SELECT COALESCE(MAX(NULLIF(regexp_repla
 SELECT setval('seq_att_id', GREATEST(2, (SELECT COALESCE(MAX(NULLIF(regexp_replace(id, '\D', '', 'g'), '')::bigint), 1) FROM attachments)));
 SELECT setval('seq_rev_id', GREATEST(2, (SELECT COALESCE(MAX(NULLIF(regexp_replace(id, '\D', '', 'g'), '')::bigint), 1) FROM document_revisions)));
 
+-- 8. GRANT PERMISSIONS FOR POSTGREST & SUPABASE ACCESS
+GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL ROUTINES IN SCHEMA public TO anon, authenticated, service_role;
+
 -- ==============================================================================
 -- End of Migration Script
 -- ==============================================================================
+
