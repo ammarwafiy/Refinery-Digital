@@ -274,13 +274,20 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
     const handleSheetUpdated = () => {
       refreshSheet(false, true); // background sync!
     };
+    const handleProductsUpdated = () => {
+      setProducts(getProducts());
+    };
 
     window.addEventListener('refinery_reports_updated', handleReportsUpdated);
     window.addEventListener('refinery_sheet_updated', handleSheetUpdated);
+    window.addEventListener('refinery_products_synced', handleProductsUpdated);
+    window.addEventListener('storage', handleProductsUpdated);
 
     return () => {
       window.removeEventListener('refinery_reports_updated', handleReportsUpdated);
       window.removeEventListener('refinery_sheet_updated', handleSheetUpdated);
+      window.removeEventListener('refinery_products_synced', handleProductsUpdated);
+      window.removeEventListener('storage', handleProductsUpdated);
     };
   }, [currentRole, currentUser?.id, activeShiftDate]);
 

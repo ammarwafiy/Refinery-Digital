@@ -187,12 +187,14 @@ export const STORAGE_KEYS = {
   DEVIATIONS: 'refinery_deviations',
   AUDIT_LOGS: 'refinery_audit_logs',
   DELETED_REPORTS: 'refinery_deleted_sample_reports',
+  PRODUCTS: 'refinery_products',
 };
 
 // In-Memory fallback store
 let memoryAuthUser: Profile | null = null;
 let memoryRole: UserRole = 'operator';
 let memoryProfiles: Profile[] = JSON.parse(JSON.stringify(INITIAL_PROFILES));
+let memoryProducts: Product[] = JSON.parse(JSON.stringify(INITIAL_PRODUCTS));
 let memorySheet: ProcessSheet = JSON.parse(JSON.stringify(INITIAL_SHEET));
 let memoryAllSheets: Record<string, ProcessSheet> = {
   '2026-09-20': JSON.parse(JSON.stringify(INITIAL_SHEET)),
@@ -735,6 +737,7 @@ if (typeof window !== 'undefined') {
   // Initial sync upon client mounting
   setTimeout(() => {
     syncProfilesFromSupabase().catch(() => {});
+    syncProductsFromSupabase().catch(() => {});
     syncProcessSheetsFromSupabase().catch(() => {});
     syncSampleReportsFromSupabase().catch(() => {});
     syncAuditLogsFromSupabase().catch(() => {});
@@ -743,6 +746,7 @@ if (typeof window !== 'undefined') {
   // Background auto-sync interval (every 20 seconds)
   setInterval(() => {
     syncProfilesFromSupabase().catch(() => {});
+    syncProductsFromSupabase().catch(() => {});
     syncProcessSheetsFromSupabase().catch(() => {});
     syncSampleReportsFromSupabase().catch(() => {});
     syncAuditLogsFromSupabase().catch(() => {});
@@ -759,6 +763,18 @@ if (typeof window !== 'undefined') {
           (payload) => {
             console.info('[Supabase Realtime] Profile table change detected:', payload.eventType, payload.new || payload.old);
             syncProfilesFromSupabase().catch(() => {});
+          }
+        )
+        .subscribe();
+
+      supabase
+        .channel('refinery_products_live')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'products' },
+          (payload) => {
+            console.info('[Supabase Realtime] Products change detected:', payload.eventType);
+            syncProductsFromSupabase().catch(() => {});
           }
         )
         .subscribe();
@@ -1021,7 +1037,147 @@ export async function deleteProfile(identifier: string): Promise<boolean> {
 }
 
 export function getProducts(): Product[] {
-  return INITIAL_PRODUCTS;
+  const stored = getStored<Product[]>(STORAGE_KEYS.PRODUCTS, memoryProducts);
+  if (!stored || !Array.isArray(stored) || stored.length === 0) {
+    setStored(STORAGE_KEYS.PRODUCTS, INITIAL_PRODUCTS);
+    memoryProducts = INITIAL_PRODUCTS;
+    return INITIAL_PRODUCTS;
+  }
+  return stored;
+}
+
+// Fetch live products from Supabase and synchronize local state
+export async function syncProductsFromSupabase(): Promise<{ success: boolean; count: number; products: Product[]; error?: string }> {
+  try {
+    const res = await fetch('/api/products', { cache: 'no-store' });
+    const contentType = res.headers.get('content-type') || '';
+    if (res.ok && contentType.includes('application/json')) {
+      const json = await res.json();
+      if (json.success && Array.isArray(json.products) && json.products.length > 0) {
+        const liveProducts: Product[] = json.products;
+        memoryProducts = liveProducts;
+        setStored(STORAGE_KEYS.PRODUCTS, liveProducts);
+
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('refinery_products_synced', { detail: liveProducts }));
+        }
+        return { success: true, count: liveProducts.length, products: liveProducts };
+      }
+    }
+  } catch (apiErr) {
+    console.warn('[Sync] /api/products fetch encountered error, attempting direct client fallback:', apiErr);
+  }
+
+  // Resilient fallback: Direct Supabase Client Query
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .order('sort_order', { ascending: true });
+
+      if (!error && Array.isArray(data) && data.length > 0) {
+        const liveProducts: Product[] = data;
+        memoryProducts = liveProducts;
+        setStored(STORAGE_KEYS.PRODUCTS, liveProducts);
+
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('refinery_products_synced', { detail: liveProducts }));
+        }
+        return { success: true, count: liveProducts.length, products: liveProducts };
+      }
+    } catch (sbErr) {
+      console.warn('[Sync] Direct Supabase products query error:', sbErr);
+    }
+  }
+
+  const cached = getProducts();
+  return { success: true, count: cached.length, products: cached };
+}
+
+// Add a new product and sync immediately to Supabase
+export async function addProduct(data: {
+  name: string;
+  code?: string;
+  category?: string;
+  active?: boolean;
+}): Promise<Product> {
+  const cleanName = data.name.trim();
+  if (!cleanName) {
+    throw new Error('Product name is required');
+  }
+
+  const cleanCode = (
+    data.code?.trim() || cleanName.toUpperCase().replace(/[^A-Z0-9]/g, '_').replace(/_+/g, '_')
+  ).toUpperCase();
+  const cleanCategory = (data.category?.trim() || 'specialty').toLowerCase();
+
+  const current = getProducts();
+  const maxOrder = current.reduce((max, p) => Math.max(max, p.sort_order || 0), 0);
+
+  const newId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : (
+    '50000000-0000-4000-8000-' + Math.floor(Math.random() * 1000000000000).toString().padStart(12, '0')
+  );
+
+  const newProduct: Product = {
+    id: newId,
+    code: cleanCode,
+    name: cleanName,
+    category: cleanCategory,
+    sort_order: maxOrder + 1,
+    active: data.active !== false,
+  };
+
+  // Immediate optimistic update in memory & local storage
+  const updated = [...current.filter(p => p.id !== newId && p.code !== cleanCode), newProduct];
+  memoryProducts = updated;
+  setStored(STORAGE_KEYS.PRODUCTS, updated);
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('refinery_products_synced', { detail: updated }));
+    try {
+      window.dispatchEvent(new StorageEvent('storage', { key: STORAGE_KEYS.PRODUCTS }));
+    } catch {}
+  }
+
+  // Sync to Supabase via /api/products
+  if (typeof window !== 'undefined') {
+    let savedSuccessfully = false;
+
+    try {
+      const res = await fetch('/api/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newProduct),
+      });
+
+      if (res.ok) {
+        const json = await res.json().catch(() => ({}));
+        if (json.success) savedSuccessfully = true;
+      }
+    } catch (apiErr) {
+      console.warn('[API /api/products POST] Failed, falling back to direct client:', apiErr);
+    }
+
+    if (!savedSuccessfully && supabase) {
+      try {
+        const { error } = await supabase.from('products').upsert(newProduct);
+        if (!error) savedSuccessfully = true;
+        else console.error('[Supabase Direct] Product insert error:', error);
+      } catch (sbErr) {
+        console.error('[Supabase Direct] Product insert exception:', sbErr);
+      }
+    }
+
+    // Background sync to ensure all replicas have identical records
+    syncProductsFromSupabase().catch(() => {});
+  }
+
+  try {
+    addAuditLog('products', newProduct.id, 'insert', null, { product: newProduct });
+  } catch {}
+
+  return newProduct;
 }
 
 export function getTanks(): Tank[] {

@@ -191,14 +191,17 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
 
     const handleUpdate = () => {
       refreshReports();
+      setProducts(getProducts());
     };
 
     window.addEventListener('refinery_reports_updated', handleUpdate);
     window.addEventListener('refinery_sheet_updated', handleUpdate);
+    window.addEventListener('refinery_products_synced', handleUpdate);
     window.addEventListener('storage', handleUpdate);
     return () => {
       window.removeEventListener('refinery_reports_updated', handleUpdate);
       window.removeEventListener('refinery_sheet_updated', handleUpdate);
+      window.removeEventListener('refinery_products_synced', handleUpdate);
       window.removeEventListener('storage', handleUpdate);
     };
   }, []);
