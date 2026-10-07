@@ -931,6 +931,11 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
               <ProductOptionSelector
                 value={formData.product_id || (products[0]?.id || '')}
                 onChange={handleProductChange}
+                onProductCreated={(created) => {
+                  const updated = getProducts();
+                  setProducts(updated);
+                  handleProductChange(created.id);
+                }}
                 options={products}
                 disabled={isSlotDisabled}
               />

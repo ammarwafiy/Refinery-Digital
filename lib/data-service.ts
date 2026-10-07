@@ -1055,13 +1055,31 @@ export async function syncProductsFromSupabase(): Promise<{ success: boolean; co
       const json = await res.json();
       if (json.success && Array.isArray(json.products) && json.products.length > 0) {
         const liveProducts: Product[] = json.products;
-        memoryProducts = liveProducts;
-        setStored(STORAGE_KEYS.PRODUCTS, liveProducts);
+        const currentLocal = getProducts();
+        const productMap = new Map<string, Product>();
+
+        // 1. Add all live products from Supabase
+        for (const p of liveProducts) {
+          productMap.set(p.id, p);
+        }
+        // 2. Preserve any local custom added products that might still be syncing
+        for (const p of currentLocal) {
+          if (!productMap.has(p.id)) {
+            productMap.set(p.id, p);
+          }
+        }
+
+        const mergedProducts = Array.from(productMap.values()).sort(
+          (a, b) => (a.sort_order || 0) - (b.sort_order || 0)
+        );
+
+        memoryProducts = mergedProducts;
+        setStored(STORAGE_KEYS.PRODUCTS, mergedProducts);
 
         if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('refinery_products_synced', { detail: liveProducts }));
+          window.dispatchEvent(new CustomEvent('refinery_products_synced', { detail: mergedProducts }));
         }
-        return { success: true, count: liveProducts.length, products: liveProducts };
+        return { success: true, count: mergedProducts.length, products: mergedProducts };
       }
     }
   } catch (apiErr) {
@@ -1077,14 +1095,27 @@ export async function syncProductsFromSupabase(): Promise<{ success: boolean; co
         .order('sort_order', { ascending: true });
 
       if (!error && Array.isArray(data) && data.length > 0) {
-        const liveProducts: Product[] = data;
-        memoryProducts = liveProducts;
-        setStored(STORAGE_KEYS.PRODUCTS, liveProducts);
+        const currentLocal = getProducts();
+        const productMap = new Map<string, Product>();
+        for (const p of data) {
+          productMap.set(p.id, p);
+        }
+        for (const p of currentLocal) {
+          if (!productMap.has(p.id)) {
+            productMap.set(p.id, p);
+          }
+        }
+        const mergedProducts = Array.from(productMap.values()).sort(
+          (a, b) => (a.sort_order || 0) - (b.sort_order || 0)
+        );
+
+        memoryProducts = mergedProducts;
+        setStored(STORAGE_KEYS.PRODUCTS, mergedProducts);
 
         if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('refinery_products_synced', { detail: liveProducts }));
+          window.dispatchEvent(new CustomEvent('refinery_products_synced', { detail: mergedProducts }));
         }
-        return { success: true, count: liveProducts.length, products: liveProducts };
+        return { success: true, count: mergedProducts.length, products: mergedProducts };
       }
     } catch (sbErr) {
       console.warn('[Sync] Direct Supabase products query error:', sbErr);
@@ -1155,7 +1186,12 @@ export async function addProduct(data: {
 
       if (res.ok) {
         const json = await res.json().catch(() => ({}));
-        if (json.success) savedSuccessfully = true;
+        if (json.success) {
+          savedSuccessfully = true;
+          if (json.product?.id) {
+            newProduct.id = json.product.id;
+          }
+        }
       }
     } catch (apiErr) {
       console.warn('[API /api/products POST] Failed, falling back to direct client:', apiErr);
@@ -1171,8 +1207,8 @@ export async function addProduct(data: {
       }
     }
 
-    // Background sync to ensure all replicas have identical records
-    syncProductsFromSupabase().catch(() => {});
+    // Sync to ensure all replicas have identical records without dropping newly added product
+    await syncProductsFromSupabase().catch(() => {});
   }
 
   try {

@@ -61,10 +61,21 @@ export default function ProductOptionSelector({
     setMounted(true);
   }, []);
 
-  // Synchronize options prop with localOptions
+  // Synchronize options prop with localOptions without dropping newly created options
   useEffect(() => {
     if (options && options.length > 0) {
-      setLocalOptions(options);
+      setLocalOptions((prev) => {
+        const map = new Map<string, ProductOption>();
+        for (const opt of options) {
+          map.set(opt.id, opt);
+        }
+        for (const opt of prev) {
+          if (!map.has(opt.id)) {
+            map.set(opt.id, opt);
+          }
+        }
+        return Array.from(map.values());
+      });
     }
   }, [options]);
 
@@ -73,13 +84,22 @@ export default function ProductOptionSelector({
     const handleSync = (e: any) => {
       const live = e.detail || getProducts();
       if (Array.isArray(live) && live.length > 0) {
-        setLocalOptions(
-          live.map((p: any) => ({
-            id: p.id,
-            name: p.name,
-            grade: p.category || p.grade,
-          }))
-        );
+        setLocalOptions((prev) => {
+          const map = new Map<string, ProductOption>();
+          for (const p of live) {
+            map.set(p.id, {
+              id: p.id,
+              name: p.name,
+              grade: p.category || (p as any).grade,
+            });
+          }
+          for (const opt of prev) {
+            if (!map.has(opt.id)) {
+              map.set(opt.id, opt);
+            }
+          }
+          return Array.from(map.values());
+        });
       }
     };
 

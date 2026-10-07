@@ -898,6 +898,11 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
               <ProductOptionSelector
                 value={newProductId}
                 onChange={val => setNewProductId(val)}
+                onProductCreated={(created) => {
+                  const updated = getProducts();
+                  setProducts(updated);
+                  setNewProductId(created.id);
+                }}
                 options={[
                   ...products,
                   { id: 'others', name: 'Others — Free Text Entry' }
@@ -1336,6 +1341,12 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
                         value={qcProductId || selectedReport?.product_id || ''}
                         disabled={!canEdit}
                         options={products}
+                        onProductCreated={(created) => {
+                          const updated = getProducts();
+                          setProducts(updated);
+                          setQcProductId(created.id);
+                          setQcProductName(created.name);
+                        }}
                         onChange={val => {
                           setQcProductId(val);
                           const matched = products.find(p => p.id === val || p.code === val);
