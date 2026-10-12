@@ -30,8 +30,8 @@ export const INITIAL_PLANT: Plant = {
 
 export const INITIAL_PROFILES: Profile[] = [
   {
-    id: 'OPR001',
-    employee_no: 'OPR001',
+    id: '1042',
+    employee_no: '1042',
     full_name: 'Ahmad Razak (Operator)',
     role: 'operator',
     status: 'active',
@@ -40,8 +40,8 @@ export const INITIAL_PROFILES: Profile[] = [
     created_at: '2026-01-10T00:00:00Z',
   },
   {
-    id: 'SUP001',
-    employee_no: 'SUP001',
+    id: '2014',
+    employee_no: '2014',
     full_name: 'Chong Wei Lun (Supervisor)',
     role: 'supervisor',
     status: 'active',
@@ -50,8 +50,8 @@ export const INITIAL_PROFILES: Profile[] = [
     created_at: '2026-01-10T00:00:00Z',
   },
   {
-    id: 'QCS001',
-    employee_no: 'QCS001',
+    id: '3001',
+    employee_no: '3001',
     full_name: 'Siti Nurhaliza (QC Staff)',
     role: 'qc_analyst',
     status: 'active',
@@ -60,8 +60,8 @@ export const INITIAL_PROFILES: Profile[] = [
     created_at: '2026-01-10T00:00:00Z',
   },
   {
-    id: 'MGR001',
-    employee_no: 'MGR001',
+    id: '4001',
+    employee_no: '4001',
     full_name: 'Dr. Tan Keng Boon (Manager)',
     role: 'qc_manager',
     status: 'active',
@@ -70,8 +70,8 @@ export const INITIAL_PROFILES: Profile[] = [
     created_at: '2026-01-10T00:00:00Z',
   },
   {
-    id: 'ADM001',
-    employee_no: 'ADM001',
+    id: '5001',
+    employee_no: '5001',
     full_name: 'Haris Iskandar (Administrator)',
     role: 'admin',
     status: 'active',
@@ -80,8 +80,8 @@ export const INITIAL_PROFILES: Profile[] = [
     created_at: '2026-01-10T00:00:00Z',
   },
   {
-    id: 'USR001',
-    employee_no: 'USR001',
+    id: '9001',
+    employee_no: '9001',
     full_name: 'ISO Quality Auditor (User)',
     role: 'viewer',
     status: 'active',

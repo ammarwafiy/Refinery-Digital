@@ -260,20 +260,30 @@ export const DOCUMENT_MANAGEMENT_CODES = {
 } as const;
 
 export const USER_ALIAS_MAP: Record<string, string> = {
-  // Legacy -> Standard
-  'op-1042': 'opr001',
-  'sv-2014': 'sup001',
-  'qc-3201': 'qcs001',
-  'qm-4502': 'mgr001',
-  'ad-5010': 'adm001',
-  'au-9901': 'usr001',
-  // Standard -> Legacy
-  'opr001': 'op-1042',
-  'sup001': 'sv-2014',
-  'qcs001': 'qc-3201',
-  'mgr001': 'qm-4502',
-  'adm001': 'ad-5010',
-  'usr001': 'au-9901',
+  // Numeric Employee IDs <-> Standard Codes
+  '1042': 'opr001',
+  '2014': 'sup001',
+  '3001': 'qcs001',
+  '3201': 'qcs001',
+  '4001': 'mgr001',
+  '4502': 'mgr001',
+  '5001': 'adm001',
+  '5010': 'adm001',
+  '9001': 'usr001',
+  '9901': 'usr001',
+  'opr001': '1042',
+  'sup001': '2014',
+  'qcs001': '3001',
+  'mgr001': '4001',
+  'adm001': '5001',
+  'usr001': '9001',
+  // Legacy String Aliases <-> Numeric
+  'op-1042': '1042',
+  'sv-2014': '2014',
+  'qc-3201': '3001',
+  'qm-4502': '4001',
+  'ad-5010': '5001',
+  'au-9901': '9001',
 };
 
 // Formats table name to official standard category
@@ -407,14 +417,14 @@ export function formatAuditRecordId(entry: AuditLogEntry | { table_name?: string
 }
 
 // Consistent Industrial Employee ID Configuration
-// Format: Standardized Role Prefix + 3-Digit Sequence (e.g. OPR001, SUP001, QCS001, MGR001, ADM001, USR001)
+// Format: Numeric 4-Digit Series (1042 Operator, 2014 Supervisor, 3001 QC Staff, 4001 QC Manager, 5001 Admin, 9001 Auditor)
 export const ROLE_ID_SERIES: Record<UserRole, { prefix: string; label: string; start: number; example: string }> = {
-  operator:   { prefix: 'OPR', label: 'Operator (OPR001)', start: 1, example: 'OPR001' },
-  supervisor: { prefix: 'SUP', label: 'Supervisor (SUP001)', start: 1, example: 'SUP001' },
-  qc_analyst: { prefix: 'QCS', label: 'QC Staff (QCS001)', start: 1, example: 'QCS001' },
-  qc_manager: { prefix: 'MGR', label: 'Manager (MGR001)', start: 1, example: 'MGR001' },
-  admin:      { prefix: 'ADM', label: 'Administrator (ADM001)', start: 1, example: 'ADM001' },
-  viewer:     { prefix: 'USR', label: 'User (USR001)', start: 1, example: 'USR001' },
+  operator:   { prefix: '', label: 'Plant Operator (Series 1000 · e.g. 1042)', start: 1042, example: '1042' },
+  supervisor: { prefix: '', label: 'Shift Supervisor (Series 2000 · e.g. 2014)', start: 2014, example: '2014' },
+  qc_analyst: { prefix: '', label: 'QC Laboratory Analyst (Series 3000 · e.g. 3001)', start: 3001, example: '3001' },
+  qc_manager: { prefix: '', label: 'Quality Control Manager (Series 4000 · e.g. 4001)', start: 4001, example: '4001' },
+  admin:      { prefix: '', label: 'Plant Administrator (Series 5000 · e.g. 5001)', start: 5001, example: '5001' },
+  viewer:     { prefix: '', label: 'Quality Auditor (Series 9000 · e.g. 9001)', start: 9001, example: '9001' },
 };
 
 // Role-Based Views & Navigation Rules (RBAC)
@@ -437,24 +447,41 @@ export const ROLE_DEFAULT_TAB: Record<UserRole, string> = {
 };
 
 export function generateNextEmployeeId(role: UserRole): string {
-  const meta = ROLE_ID_SERIES[role] || { prefix: 'USR', start: 1 };
+  const baseMap: Record<UserRole, number> = {
+    operator: 1000,
+    supervisor: 2000,
+    qc_analyst: 3000,
+    qc_manager: 4000,
+    admin: 5000,
+    viewer: 9000,
+  };
+  const defaultStarts: Record<UserRole, number> = {
+    operator: 1042,
+    supervisor: 2014,
+    qc_analyst: 3001,
+    qc_manager: 4001,
+    admin: 5001,
+    viewer: 9001,
+  };
+
+  const base = baseMap[role] || 1000;
   const all = getProfiles();
-  
+
+  // Find all purely numeric IDs in the given 1000-band
   const existingNums = all
-    .map(p => (p?.employee_no || '').trim().toUpperCase())
-    .filter(id => id.startsWith(meta.prefix))
-    .map(id => {
-      const digits = id.slice(meta.prefix.length).replace(/\D/g, '');
-      return digits ? parseInt(digits, 10) : NaN;
+    .map(p => {
+      const idStr = (p?.employee_no || p?.id || '').trim();
+      const num = parseInt(idStr, 10);
+      return !isNaN(num) && String(num) === idStr ? num : NaN;
     })
-    .filter(n => !isNaN(n));
+    .filter(n => !isNaN(n) && n >= base && n < base + 1000);
 
   if (existingNums.length === 0) {
-    return `${meta.prefix}${String(meta.start).padStart(3, '0')}`;
+    return String(defaultStarts[role] || base + 1);
   }
 
-  const maxNum = Math.max(...existingNums, meta.start - 1);
-  return `${meta.prefix}${String(maxNum + 1).padStart(3, '0')}`;
+  const maxNum = Math.max(...existingNums);
+  return String(maxNum + 1);
 }
 
 // 1. Authentication & Session Management
@@ -475,7 +502,7 @@ export function loginUser(identifier: string, password?: string): { success: boo
   if (!cleanId) {
     return { 
       success: false, 
-      error: 'Please enter your Employee ID or Refinery ID.' 
+      error: 'Please enter your Employee ID.' 
     };
   }
   const aliasId = USER_ALIAS_MAP[cleanId];
@@ -494,7 +521,7 @@ export function loginUser(identifier: string, password?: string): { success: boo
   if (!found) {
     return { 
       success: false, 
-      error: `Employee ID "${identifier}" was not found in the plant directory. Please verify your ID (e.g., OPR001, SUP001, QCS001, ADM001).` 
+      error: `Employee ID "${identifier}" was not found in the plant directory. Please verify your Employee ID (e.g., 1042, 2014, 3001, 5001).` 
     };
   }
 
@@ -524,7 +551,7 @@ export async function authenticateUser(identifier: string, password?: string): P
   if (!cleanId) {
     return { 
       success: false, 
-      error: 'Please enter your Employee ID or Refinery ID.' 
+      error: 'Please enter your Employee ID.' 
     };
   }
   const aliasId = USER_ALIAS_MAP[cleanId];

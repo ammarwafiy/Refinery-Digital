@@ -33,7 +33,7 @@ export default function LoginView({ onLogin }: LoginViewProps) {
     if (authStatus === 'authenticating' || authStatus === 'success') return;
 
     if (!identifier.trim()) {
-      handleAuthFailure('Please enter your Employee ID or Refinery ID.');
+      handleAuthFailure('Please enter your Employee ID.');
       return;
     }
 
@@ -123,11 +123,11 @@ export default function LoginView({ onLogin }: LoginViewProps) {
         {isSuccess && <div className="login-portal-beam" aria-hidden="true" />}
 
         <h2>Log in</h2>
-        <p className="hint">Use the ID and access key from your plant administrator.</p>
+        <p className="hint">Use your numeric Employee ID and access key from your plant administrator.</p>
 
-        {/* Refinery ID Field */}
+        {/* Employee ID Field */}
         <div className="fld">
-          <label htmlFor="rid">Refinery ID</label>
+          <label htmlFor="rid">Employee ID</label>
           <input
             id="rid"
             type="text"
@@ -139,7 +139,7 @@ export default function LoginView({ onLogin }: LoginViewProps) {
               setIdentifier(e.target.value);
               if (errorMessage) setErrorMessage(null);
             }}
-            placeholder="e.g. ADM001, OPR001"
+            placeholder="e.g. 1042, 2014, 5001"
           />
         </div>
 

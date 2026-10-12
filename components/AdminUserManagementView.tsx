@@ -73,7 +73,13 @@ export default function AdminUserManagementView() {
   const [selectedRole, setSelectedRole] = useState<UserRole>('operator');
   const [fullName, setFullName] = useState('');
   const [customPassword, setCustomPassword] = useState('password123');
-  const [autoId, setAutoId] = useState('');
+  const [autoId, setAutoId] = useState(() => {
+    try {
+      return generateNextEmployeeId('operator');
+    } catch {
+      return '1042';
+    }
+  });
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -435,6 +441,12 @@ export default function AdminUserManagementView() {
       return;
     }
 
+    const cleanEmpId = (autoId || '').trim();
+    if (!cleanEmpId) {
+      setStatusMessage({ type: 'error', text: 'Please enter or generate an Employee ID.' });
+      return;
+    }
+
     setIsSubmitting(true);
     setStatusMessage(null);
 
@@ -442,7 +454,7 @@ export default function AdminUserManagementView() {
       const created = await addProfile({
         full_name: fullName.trim(),
         role: selectedRole,
-        employee_no: autoId,
+        employee_no: cleanEmpId,
         password: customPassword.trim() || 'password123',
       });
 
@@ -574,11 +586,12 @@ export default function AdminUserManagementView() {
       return matchesSearch && matchesRole;
     })
     .sort((a, b) => {
-      const isStdA = a.employee_no.startsWith('OPR') || a.employee_no.startsWith('SUP') || a.employee_no.startsWith('QCS') || a.employee_no.startsWith('MGR') || a.employee_no.startsWith('ADM') || a.employee_no.startsWith('USR');
-      const isStdB = b.employee_no.startsWith('OPR') || b.employee_no.startsWith('SUP') || b.employee_no.startsWith('QCS') || b.employee_no.startsWith('MGR') || b.employee_no.startsWith('ADM') || b.employee_no.startsWith('USR');
-      if (isStdA && !isStdB) return -1;
-      if (!isStdA && isStdB) return 1;
-      return 0;
+      const isNumA = /^\d+$/.test(a.employee_no);
+      const isNumB = /^\d+$/.test(b.employee_no);
+      if (isNumA && !isNumB) return -1;
+      if (!isNumA && isNumB) return 1;
+      if (isNumA && isNumB) return parseInt(a.employee_no, 10) - parseInt(b.employee_no, 10);
+      return a.employee_no.localeCompare(b.employee_no);
     });
 
   // Metrics
@@ -686,22 +699,22 @@ export default function AdminUserManagementView() {
             <div className="panel">
               <label>Operators</label>
               <b>{operatorCount}</b>
-              <p>Series OP-1xxx</p>
+              <p>Series 1000</p>
             </div>
             <div className="panel">
               <label>Supervisors</label>
               <b>{supervisorCount}</b>
-              <p>Series SV-2xxx</p>
+              <p>Series 2000</p>
             </div>
             <div className="panel">
               <label>QC laboratory</label>
               <b>{qcCount}</b>
-              <p>Series QC / QM</p>
+              <p>Series 3000 / 4000</p>
             </div>
             <div className="panel">
               <label>Admin & audit</label>
               <b>{adminCount}</b>
-              <p>Series AD / AU</p>
+              <p>Series 5000 / 9000</p>
             </div>
           </div>
 
@@ -722,19 +735,28 @@ export default function AdminUserManagementView() {
                       placeholder="Select Assigned Role"
                       searchPlaceholder="Search role..."
                       options={[
-                        { value: 'operator', label: 'Plant Operator (Series OP-1xxx)' },
-                        { value: 'supervisor', label: 'Shift Supervisor (Series SV-2xxx)' },
-                        { value: 'qc_analyst', label: 'QC Laboratory Analyst (Series QC-3xxx)' },
-                        { value: 'qc_manager', label: 'Quality Control Manager (Series QM-4xxx)' },
-                        { value: 'admin', label: 'Plant Administrator / Admin (Series AD-5xxx)' },
-                        { value: 'viewer', label: 'Quality Auditor (Series AU-9xxx)' }
+                        { value: 'operator', label: 'Plant Operator (Series 1000 · e.g. 1042)' },
+                        { value: 'supervisor', label: 'Shift Supervisor (Series 2000 · e.g. 2014)' },
+                        { value: 'qc_analyst', label: 'QC Laboratory Analyst (Series 3000 · e.g. 3001)' },
+                        { value: 'qc_manager', label: 'Quality Control Manager (Series 4000 · e.g. 4001)' },
+                        { value: 'admin', label: 'Plant Administrator (Series 5000 · e.g. 5001)' },
+                        { value: 'viewer', label: 'Quality Auditor (Series 9000 · e.g. 9001)' }
                       ]}
                     />
                   </div>
 
                   <div className="fld">
-                    <label htmlFor="ri">Employee ID (auto-generated)</label>
-                    <input id="ri" value={autoId} readOnly />
+                    <label htmlFor="ri">Employee ID (Numeric)</label>
+                    <input 
+                      id="ri" 
+                      disabled={!isAdmin}
+                      value={autoId} 
+                      onChange={(e) => setAutoId(e.target.value.replace(/\D/g, ''))}
+                      placeholder="e.g. 1042" 
+                    />
+                    <span className="hint" style={{ fontSize: '11px', marginTop: '4px' }}>
+                      Auto-generated or enter custom numeric staff ID.
+                    </span>
                   </div>
 
                   <div className="fld">
@@ -801,12 +823,12 @@ export default function AdminUserManagementView() {
                       searchPlaceholder="Search role..."
                       options={[
                         { value: 'all', label: 'All roles' },
-                        { value: 'operator', label: 'Operator (OP)' },
-                        { value: 'supervisor', label: 'Supervisor (SV)' },
-                        { value: 'qc_analyst', label: 'QC Analyst (QC)' },
-                        { value: 'qc_manager', label: 'QC Manager (QM)' },
-                        { value: 'admin', label: 'Admin (AD)' },
-                        { value: 'viewer', label: 'Viewer (AU)' }
+                        { value: 'operator', label: 'Operator (Series 1000)' },
+                        { value: 'supervisor', label: 'Supervisor (Series 2000)' },
+                        { value: 'qc_analyst', label: 'QC Analyst (Series 3000)' },
+                        { value: 'qc_manager', label: 'QC Manager (Series 4000)' },
+                        { value: 'admin', label: 'Admin (Series 5000)' },
+                        { value: 'viewer', label: 'Viewer (Series 9000)' }
                       ]}
                     />
                   </div>
