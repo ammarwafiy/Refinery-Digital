@@ -117,14 +117,14 @@ export default function QCNotificationDropdown({
       onClick={(e) => e.stopPropagation()}
     >
       {/* 1. Header with clear actionable buttons */}
-      <div className="flex items-center justify-between px-3.5 py-2.5 bg-[#0F1726] border-b border-[#1F2E43]">
-        <div className="flex items-center gap-2">
-          <FlaskConical className="h-4 w-4 text-[#009FE3]" />
-          <h4 className="text-xs font-bold text-white tracking-tight">
-            QC Sample Notifications
+      <div className="flex items-center justify-between px-3.5 py-2.5 bg-[#0F1726] border-b border-[#1F2E43] gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <FlaskConical className="h-4 w-4 text-[#009FE3] shrink-0" />
+          <h4 className="text-xs font-bold text-white tracking-tight truncate">
+            QC Notifications
           </h4>
           {unreadCount > 0 && (
-            <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold bg-red-500 text-white">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-red-500 text-white whitespace-nowrap shrink-0 leading-none shadow-xs">
               {unreadCount} new
             </span>
           )}
