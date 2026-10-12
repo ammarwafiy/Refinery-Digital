@@ -51,6 +51,7 @@ export const MASTER_REPORTS: SampleReport[] = masterSamplesSeed as unknown as Sa
 
 import { supabase, isSupabaseConfigured } from './supabase';
 import { sanitizeInputString } from './security';
+import { sendBroadcastMessage } from './broadcast-service';
 
 const PLANT_ADMIN_SIGNATURE = 'NISSHIN-DEODORIZER-SECURE-AUTH-2026';
 
@@ -1921,6 +1922,24 @@ export function dispatchSampleToQC(
 
   // Create & enqueue sample report in QC Lab queue
   const qcReport = ensureAutoDispatchedQC(targetSlotIndex, targetShiftDate, explicitProductId);
+  if (qcReport) {
+    try {
+      const profile = getCurrentProfile();
+      sendBroadcastMessage({
+        type: 'qc_dispatch',
+        title: 'QC Sample Dispatched',
+        message: `Operator ${profile?.full_name || 'Plant Operator'} dispatched oil sample for Lot ${qcReport.lot_no} (${qcReport.product_name}) to QC Lab.`,
+        sender_id: profile?.id || 'OPR001',
+        sender_name: profile?.full_name || 'Plant Operator',
+        sender_role: 'Plant Operator',
+        lot_no: qcReport.lot_no,
+        report_no: qcReport.report_no,
+        showToastNotification: true,
+      });
+    } catch (e) {
+      console.warn('[Broadcast] Error sending dispatch message:', e);
+    }
+  }
   return qcReport;
 }
 
@@ -3310,6 +3329,30 @@ export function submitQCDecision(data: {
   }).catch(err => {
     console.warn('[Supabase Sync] Decision direct sync warning on submitQCDecision:', err);
   });
+
+  // Broadcast real-time message & toast to operators & plant team
+  try {
+    const isAcc = data.decision === 'accept';
+    const isCon = data.decision === 'accept_concession';
+    sendBroadcastMessage({
+      type: isAcc ? 'qc_accept' : isCon ? 'qc_concession' : 'qc_reject',
+      title: isAcc ? 'QC Lot Approved & Released' : isCon ? 'QC Lot Approved on Concession' : 'QC Disposition: Lot Rejected',
+      message: isAcc 
+        ? `QC Chemist ${profile.full_name} APPROVED Lot ${report.lot_no} (${report.product_name}). Parameter results in-spec.`
+        : isCon
+        ? `QC Chemist ${profile.full_name} granted CONCESSION release for Lot ${report.lot_no} (${report.product_name}). ${data.reason_detail || ''}`
+        : `QC Chemist ${profile.full_name} REJECTED Lot ${report.lot_no} (${report.product_name}). Reason: ${resolvedReasonLabel || 'Out of spec'}. Disposition: ${(data.disposition || 'Hold').toUpperCase()}.`,
+      sender_id: profile.id,
+      sender_name: profile.full_name,
+      sender_role: 'QC Chemist',
+      lot_no: report.lot_no,
+      report_no: report.report_no,
+      priority: data.decision === 'reject' ? 'urgent' : 'normal',
+      showToastNotification: true,
+    });
+  } catch (e) {
+    console.warn('[Broadcast] Error sending decision broadcast:', e);
+  }
 
   // Dispatch Telegram alert for QC Decisions
   if (typeof window !== 'undefined') {
