@@ -3975,11 +3975,11 @@ export function importPlantSnapshotData(snapshotData: any): {
       const existingLogs = getAuditLogs();
       const logMap = new Map<string, AuditLogEntry>();
       snapshotData.audit_logs.forEach((l: AuditLogEntry) => {
-        logMap.set(l.id, l);
+        logMap.set(String(l.id), l);
       });
       existingLogs.forEach((l: AuditLogEntry) => {
-        if (!logMap.has(l.id)) {
-          logMap.set(l.id, l);
+        if (!logMap.has(String(l.id))) {
+          logMap.set(String(l.id), l);
         }
       });
       const mergedLogs = Array.from(logMap.values());
