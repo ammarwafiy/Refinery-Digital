@@ -992,59 +992,6 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
             </div>
           </div>
 
-          {/* Section A.1: QC Sample Dispatch */}
-          <div className="row dispatch">
-            <div>
-              <div className="flex items-center gap-2">
-                <b>QC Sample Dispatch</b>
-                {matchingQCReport ? (
-                  <span className="font-mono text-[11px] text-[var(--muted)]">
-                    (Lot: {matchingQCReport.lot_no || matchingQCReport.report_no})
-                  </span>
-                ) : null}
-              </div>
-              <p>
-                {matchingQCReport 
-                  ? 'Sample has been dispatched to QC Lab. Awaiting chemist testing or disposition.' 
-                  : 'Dispatch a physical oil sample for this hour to the QC Lab queue for quality inspection.'}
-              </p>
-            </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              {matchingQCReport?.decision ? (
-                matchingQCReport.decision.decision === 'accept' ? (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                    <CheckCircle2 className="h-3.5 w-3.5" />
-                    <span>QC Accepted &amp; Released</span>
-                  </span>
-                ) : matchingQCReport.decision.decision === 'accept_concession' ? (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-medium bg-sky-500/15 text-sky-400 border border-sky-500/30">
-                    <AlertTriangle className="h-3.5 w-3.5" />
-                    <span>QC Concession Released</span>
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-medium bg-red-500/15 text-red-400 border border-red-500/30">
-                    <AlertCircle className="h-3.5 w-3.5" />
-                    <span>QC Rejected: {matchingQCReport.decision.reason_label || matchingQCReport.decision.reason_detail || 'Non-compliant'}</span>
-                  </span>
-                )
-              ) : matchingQCReport ? (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono font-medium bg-amber-500/15 text-amber-300 border border-amber-500/30">
-                  <FlaskConical className="h-3.5 w-3.5 animate-pulse" />
-                  <span>Awaiting QC Lab Analysis</span>
-                </span>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleSendSampleToQC}
-                  disabled={isSlotDisabled || isSendingQC}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-500/40 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <FlaskConical className="h-3.5 w-3.5" />
-                  <span>Send Sample to QC</span>
-                </button>
-              )}
-            </div>
-          </div>
 
           {/* Section B: Processing Conditions (Feed Rate, Deod Time, Vacuum) */}
           <div className="rounded-[10px] border border-[var(--line)] bg-[var(--surface)] p-4">
