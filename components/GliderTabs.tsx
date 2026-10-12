@@ -30,14 +30,31 @@ export default function GliderTabs({
   });
 
   useEffect(() => {
-    if (!containerRef.current) return;
-    const activeBtn = containerRef.current.querySelector<HTMLElement>(`[data-tab-id="${activeId}"]`);
-    if (activeBtn) {
-      setGliderStyle({
-        left: activeBtn.offsetLeft,
-        width: activeBtn.offsetWidth,
-      });
-    }
+    const updateGlider = () => {
+      if (!containerRef.current) return;
+      const activeBtn = containerRef.current.querySelector<HTMLElement>(`[data-tab-id="${activeId}"]`);
+      if (activeBtn) {
+        setGliderStyle({
+          left: activeBtn.offsetLeft,
+          width: activeBtn.offsetWidth,
+        });
+
+        // Ensure active tab is within visible scroll area if container overflows
+        const cLeft = containerRef.current.scrollLeft;
+        const cWidth = containerRef.current.clientWidth;
+        const bLeft = activeBtn.offsetLeft;
+        const bWidth = activeBtn.offsetWidth;
+        if (bLeft < cLeft) {
+          containerRef.current.scrollTo({ left: bLeft, behavior: 'smooth' });
+        } else if (bLeft + bWidth > cLeft + cWidth) {
+          containerRef.current.scrollTo({ left: bLeft + bWidth - cWidth, behavior: 'smooth' });
+        }
+      }
+    };
+
+    updateGlider();
+    window.addEventListener('resize', updateGlider);
+    return () => window.removeEventListener('resize', updateGlider);
   }, [activeId, items]);
 
   return (
@@ -61,7 +78,8 @@ export default function GliderTabs({
             style={{
               height: size === 'sm' ? '26px' : '32px',
               fontSize: size === 'sm' ? '11px' : '12px',
-              padding: size === 'sm' ? '0 10px' : '0 14px',
+              padding: size === 'sm' ? '0 8px' : '0 14px',
+              gap: size === 'sm' ? '5px' : '6px',
             }}
           >
             <span>{item.label}</span>

@@ -1122,16 +1122,16 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
         <div className="qc">
           {/* Left Column: Sample Reports List */}
           <section className="panel" style={{ margin: 0, maxHeight: '850px', overflowY: 'auto' }}>
-            <div className="ph" style={{ flexDirection: 'column', alignItems: 'stretch', fontWeight: 400, gap: '10px' }}>
+            <div className="ph" style={{ flexDirection: 'column', alignItems: 'stretch', fontWeight: 400, gap: '10px', padding: '14px 16px' }}>
               <input
                 className="inp w"
                 type="search"
-                placeholder="Search lot no, product, report no"
+                placeholder="Search lot, product, report no..."
                 aria-label="Search samples"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
               />
-              <div className="mt-2.5">
+              <div className="mt-2.5 w-full flex justify-center overflow-x-auto no-scrollbar">
                 <GliderTabs
                   size="sm"
                   items={[
