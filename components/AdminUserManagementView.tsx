@@ -566,9 +566,10 @@ export default function AdminUserManagementView() {
   // Filtered Profiles: prioritize standard profiles
   const filteredProfiles = profiles
     .filter(p => {
-      const matchesSearch = 
-        p.employee_no.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.full_name.toLowerCase().includes(searchQuery.toLowerCase());
+      const q = searchQuery.trim().toLowerCase();
+      const matchesSearch = !q ||
+        (p.employee_no || '').toLowerCase().includes(q) ||
+        (p.full_name || '').toLowerCase().includes(q);
       const matchesRole = roleFilter === 'all' || p.role === roleFilter;
       return matchesSearch && matchesRole;
     })

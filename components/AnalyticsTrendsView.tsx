@@ -703,7 +703,7 @@ export default function AnalyticsTrendsView() {
             {highestRejectProduct && highestRejectProduct.effectiveRejects > 0 ? (
               <span>
                 Highest non-conformance: <b>{highestRejectProduct.product}</b> with {highestRejectProduct.effectiveRejects} of {highestRejectProduct.lots} lots (
-                {((highestRejectProduct.effectiveRejects / highestRejectProduct.lots) * 100).toFixed(1)}% fail rate). Synchronized live with RF-FR-001 QC Lab decisions.
+                {((highestRejectProduct.effectiveRejects / (highestRejectProduct.lots || 1)) * 100).toFixed(1)}% fail rate). Synchronized live with RF-FR-001 QC Lab decisions.
               </span>
             ) : (
               <span>All {scopedReports.length} tested lots passed with 0 rejections across all product grades.</span>

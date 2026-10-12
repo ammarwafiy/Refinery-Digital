@@ -44,6 +44,15 @@ next-env.d.ts
 scripts/
 
 # agent & ide config
-.agents/*
-!.agents/skills/
+.agents/
+
+# installers & temporary files
+*.exe
+scratch/
+supabase/.temp/
+refinery-management-system/
+*.csv
+Refinery_Plant_Snapshot_*.json
+alert.transition
+checklist-cell.md
 

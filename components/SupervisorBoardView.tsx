@@ -119,13 +119,13 @@ export default function SupervisorBoardView() {
       <div className="cards">
         <div className="panel">
           <label>Deodorizer vacuum</label>
-          <b>{latestEntry?.vacuum_torr ? latestEntry.vacuum_torr.toFixed(1) : '–'} <small>Torr</small></b>
+          <b>{latestEntry?.vacuum_torr != null ? Number(latestEntry.vacuum_torr).toFixed(1) : '–'} <small>Torr</small></b>
           <p>Spec 1.0 to 4.5 Torr</p>
         </div>
 
         <div className="panel">
           <label>Tray 4 temperature</label>
-          <b>{latestEntry?.tray_4_temp_c ? latestEntry.tray_4_temp_c.toFixed(1) : '–'} <small>°C</small></b>
+          <b>{latestEntry?.tray_4_temp_c != null ? Number(latestEntry.tray_4_temp_c).toFixed(1) : '–'} <small>°C</small></b>
           <p>Spec 250 to 268 °C</p>
         </div>
 

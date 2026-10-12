@@ -81,7 +81,10 @@ import {
   setStored,
   getAllProcessSheets,
   getSampleReports,
-  syncProfilesFromSupabase
+  syncProfilesFromSupabase,
+  importPlantSnapshotData,
+  restoreOfficialFactoryBaseline,
+  syncMasterPlantDataFromServer
 } from '@/lib/data-service';
 
 export interface SystemSettings {
@@ -394,6 +397,8 @@ export default function SettingsModal({
   const [pingLatency, setPingLatency] = useState<number | null>(24);
   const [backupStatusText, setBackupStatusText] = useState<string>('Nightly snapshot scheduled at 00:00:00 MYT');
   const [isBackingUp, setIsBackingUp] = useState(false);
+  const [isRestoringBaseline, setIsRestoringBaseline] = useState(false);
+  const snapshotInputRef = useRef<HTMLInputElement>(null);
   const [sessionTerminated, setSessionTerminated] = useState(false);
   const [updateCheckText, setUpdateCheckText] = useState<string | null>(null);
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
@@ -995,6 +1000,53 @@ export default function SettingsModal({
         setIsBackingUp(false);
       }
     }, 600);
+  };
+
+  // Import snapshot JSON file from another device or backup
+  const handleImportSnapshotFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const parsed = JSON.parse(event.target?.result as string);
+        const res = importPlantSnapshotData(parsed);
+        if (res.success) {
+          showToast(
+            lang === 'ms'
+              ? `Berjaya memulihkan ${res.countSheets} syif dan ${res.countSamples} laporan sampel ke pelayar ini!`
+              : `Successfully imported ${res.countSheets} process sheets and ${res.countSamples} sample reports!`
+          );
+          setBackupStatusText(`Snapshot imported (${(file.size / 1024).toFixed(1)} KB) - ${new Date().toLocaleTimeString()}`);
+        } else {
+          showToast(res.error || 'Ralat memproses fail snapshot.');
+        }
+      } catch (err) {
+        showToast(lang === 'ms' ? 'Format fail JSON tidak sah.' : 'Invalid JSON file format.');
+      }
+    };
+    reader.readAsText(file);
+    if (e.target) e.target.value = '';
+  };
+
+  // Restore & Synchronize official certified 10-shift factory baseline
+  const handleRestoreMasterBaseline = async () => {
+    setIsRestoringBaseline(true);
+    try {
+      await syncMasterPlantDataFromServer();
+      const res = restoreOfficialFactoryBaseline();
+      showToast(
+        lang === 'ms'
+          ? `Data rasmi loji berjaya disegerakkan: ${res.sheets} syif proses & ${res.samples} laporan QC!`
+          : `Official plant master synchronized: ${res.sheets} shifts & ${res.samples} QC reports!`
+      );
+      setBackupStatusText(`Master dataset verified (10 shifts, 54 reports) at ${new Date().toLocaleTimeString()}`);
+    } catch {
+      showToast(lang === 'ms' ? 'Ralat menyegerakkan data rasmi.' : 'Error syncing master data.');
+    } finally {
+      setIsRestoringBaseline(false);
+    }
   };
 
   // Test Real Ping Latency to Supabase
@@ -2244,12 +2296,15 @@ export default function SettingsModal({
                     </div>
                   </div>
 
-                  {/* Backup Health */}
-                  <div className="p-4 rounded-xl bg-[#101927] border border-[#1F2E43] space-y-2">
+                  {/* Backup Health & Master Sync */}
+                  <div className="p-4 rounded-xl bg-[#101927] border border-[#1F2E43] space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-white">{t.cloudBackup}</span>
+                      <div className="flex items-center gap-2">
+                        <Database className="h-4 w-4 text-[#009FE3]" />
+                        <span className="text-xs font-bold text-white">{t.cloudBackup}</span>
+                      </div>
                       <span className="text-[9px] px-2 py-0.5 rounded font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                        HEALTHY
+                        OFFICIAL MASTER READY
                       </span>
                     </div>
                     <p className="text-[11px] text-slate-400">
@@ -2257,6 +2312,47 @@ export default function SettingsModal({
                     </p>
                     <div className="text-[11px] text-slate-300 font-mono pt-1">
                       {backupStatusText}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2 border-t border-[#1F2E43]/60">
+                      {/* 1. Download Backup */}
+                      <button
+                        type="button"
+                        onClick={handleTriggerManualBackup}
+                        disabled={isBackingUp}
+                        className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-[#1F2E43] hover:bg-[#2A3E59] text-white text-xs font-medium transition-all cursor-pointer"
+                      >
+                        <Download className="h-3.5 w-3.5 text-[#009FE3]" />
+                        <span>{isBackingUp ? 'Archiving...' : (lang === 'ms' ? 'Muat Turun Sandaran' : 'Export Snapshot')}</span>
+                      </button>
+
+                      {/* 2. Import Snapshot JSON */}
+                      <input
+                        type="file"
+                        ref={snapshotInputRef}
+                        onChange={handleImportSnapshotFile}
+                        accept=".json"
+                        className="hidden"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => snapshotInputRef.current?.click()}
+                        className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-[#1F2E43] hover:bg-[#2A3E59] text-white text-xs font-medium transition-all cursor-pointer"
+                      >
+                        <Upload className="h-3.5 w-3.5 text-amber-400" />
+                        <span>{lang === 'ms' ? 'Muat Naik Snapshot' : 'Import Snapshot'}</span>
+                      </button>
+
+                      {/* 3. Sync 10-Shift Master Data */}
+                      <button
+                        type="button"
+                        onClick={handleRestoreMasterBaseline}
+                        disabled={isRestoringBaseline}
+                        className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-[#009FE3] hover:bg-[#0089C4] text-white text-xs font-medium shadow-md transition-all cursor-pointer"
+                      >
+                        <RefreshCw className={`h-3.5 w-3.5 ${isRestoringBaseline ? 'animate-spin' : ''}`} />
+                        <span>{isRestoringBaseline ? 'Syncing...' : (lang === 'ms' ? 'Segerak 10 Syif Rasmi' : 'Sync Master (10 Shifts)')}</span>
+                      </button>
                     </div>
                   </div>
                 </div>

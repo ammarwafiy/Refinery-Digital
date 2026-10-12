@@ -771,7 +771,9 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
       const matchSearch = !q ||
                           (r.lot_no || '').toLowerCase().includes(q) ||
                           (r.product_name || '').toLowerCase().includes(q) ||
-                          (r.report_no || '').toLowerCase().includes(q);
+                          (r.report_no || '').toLowerCase().includes(q) ||
+                          (r.sample_date || '').toLowerCase().includes(q) ||
+                          (r.sampling_point_name || '').toLowerCase().includes(q);
       if (!matchSearch) return false;
 
       const dec = r.decision?.decision;

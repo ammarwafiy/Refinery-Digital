@@ -32,6 +32,16 @@ export default function LoginView({ onLogin }: LoginViewProps) {
     e.preventDefault();
     if (authStatus === 'authenticating' || authStatus === 'success') return;
 
+    if (!identifier.trim()) {
+      handleAuthFailure('Please enter your Employee ID or Refinery ID.');
+      return;
+    }
+
+    if (!password) {
+      handleAuthFailure('Please enter your access key.');
+      return;
+    }
+
     setErrorMessage(null);
     setAuthStatus('authenticating');
 

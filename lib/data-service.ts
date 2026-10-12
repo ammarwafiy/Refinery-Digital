@@ -43,6 +43,12 @@ import {
   PARAM_IDS
 } from './mock-data';
 
+import masterSheetsSeed from './initial-sheets.json';
+import masterSamplesSeed from './initial-samples.json';
+
+export const MASTER_SHEETS: Record<string, ProcessSheet> = masterSheetsSeed as unknown as Record<string, ProcessSheet>;
+export const MASTER_REPORTS: SampleReport[] = masterSamplesSeed as unknown as SampleReport[];
+
 import { supabase, isSupabaseConfigured } from './supabase';
 import { sanitizeInputString } from './security';
 
@@ -195,11 +201,9 @@ let memoryAuthUser: Profile | null = null;
 let memoryRole: UserRole = 'operator';
 let memoryProfiles: Profile[] = JSON.parse(JSON.stringify(INITIAL_PROFILES));
 let memoryProducts: Product[] = JSON.parse(JSON.stringify(INITIAL_PRODUCTS));
-let memorySheet: ProcessSheet = JSON.parse(JSON.stringify(INITIAL_SHEET));
-let memoryAllSheets: Record<string, ProcessSheet> = {
-  '2026-09-20': JSON.parse(JSON.stringify(INITIAL_SHEET)),
-};
-let memoryReports: SampleReport[] = JSON.parse(JSON.stringify(INITIAL_REPORTS));
+let memorySheet: ProcessSheet = (MASTER_SHEETS['2026-09-30'] || MASTER_SHEETS['2026-09-20'] || INITIAL_SHEET) as ProcessSheet;
+let memoryAllSheets: Record<string, ProcessSheet> = JSON.parse(JSON.stringify(MASTER_SHEETS));
+let memoryReports: SampleReport[] = JSON.parse(JSON.stringify(MASTER_REPORTS && MASTER_REPORTS.length > 0 ? MASTER_REPORTS : INITIAL_REPORTS));
 let memoryDeviations: Deviation[] = JSON.parse(JSON.stringify(INITIAL_DEVIATIONS));
 let memoryAuditLogs: AuditLogEntry[] = JSON.parse(JSON.stringify(INITIAL_AUDIT_LOGS));
 
@@ -467,7 +471,13 @@ export function setAuthUser(profile: Profile | null): void {
 }
 
 export function loginUser(identifier: string, password?: string): { success: boolean; profile?: Profile; error?: string } {
-  const cleanId = identifier.trim().toLowerCase();
+  const cleanId = (identifier || '').trim().toLowerCase();
+  if (!cleanId) {
+    return { 
+      success: false, 
+      error: 'Please enter your Employee ID or Refinery ID.' 
+    };
+  }
   const aliasId = USER_ALIAS_MAP[cleanId];
   const allProfiles = getProfiles();
 
@@ -510,7 +520,13 @@ export function loginUser(identifier: string, password?: string): { success: boo
 
 // Live Supabase Authentication Engine: Queries Supabase for live credentials with offline fallback
 export async function authenticateUser(identifier: string, password?: string): Promise<{ success: boolean; profile?: Profile; error?: string }> {
-  const cleanId = identifier.trim().toLowerCase();
+  const cleanId = (identifier || '').trim().toLowerCase();
+  if (!cleanId) {
+    return { 
+      success: false, 
+      error: 'Please enter your Employee ID or Refinery ID.' 
+    };
+  }
   const aliasId = USER_ALIAS_MAP[cleanId];
 
   // 1. Proactively query Supabase directly first to get live credentials & latest full_name
@@ -734,8 +750,32 @@ if (typeof window !== 'undefined') {
     }
   } catch {}
 
-  // Initial sync upon client mounting
+  // Auto-hydrate full 10-shift master dataset if missing on this client/laptop
+  try {
+    const rawSheets = localStorage.getItem(STORAGE_KEYS.ALL_SHEETS);
+    const parsedSheets = rawSheets ? JSON.parse(rawSheets) : {};
+    const hasFullMasterDates = parsedSheets && Object.keys(parsedSheets).length >= 10 && Boolean(parsedSheets['2026-09-30']);
+    if (!hasFullMasterDates) {
+      const mergedSheets = { ...MASTER_SHEETS, ...parsedSheets };
+      localStorage.setItem(STORAGE_KEYS.ALL_SHEETS, JSON.stringify(mergedSheets));
+      memoryAllSheets = mergedSheets;
+    }
+
+    const rawReports = localStorage.getItem(STORAGE_KEYS.REPORTS);
+    const parsedReports = rawReports ? JSON.parse(rawReports) : [];
+    if (!parsedReports || parsedReports.length < 50) {
+      const repMap = new Map();
+      MASTER_REPORTS.forEach((r: any) => repMap.set(r.report_no || r.id, r));
+      (parsedReports || []).forEach((r: any) => repMap.set(r.report_no || r.id, r));
+      const mergedReps = Array.from(repMap.values());
+      localStorage.setItem(STORAGE_KEYS.REPORTS, JSON.stringify(mergedReps));
+      memoryReports = mergedReps;
+    }
+  } catch {}
+
+  // Initial sync upon client mounting (both from server master API and Supabase)
   setTimeout(() => {
+    syncMasterPlantDataFromServer().catch(() => {});
     syncProfilesFromSupabase().catch(() => {});
     syncProductsFromSupabase().catch(() => {});
     syncProcessSheetsFromSupabase().catch(() => {});
@@ -1337,37 +1377,14 @@ export function getAllProcessSheets(): Record<string, ProcessSheet> {
     stored[legacy.shift_date] = legacy;
   }
 
-  // Seed sample verified past sheets if missing
+  // Seed master plant verified past sheets if missing
   let changed = false;
-  if (!stored['2026-09-21']) {
-    const s21: ProcessSheet = JSON.parse(JSON.stringify(INITIAL_SHEET));
-    s21.id = makeSheetUuid('2026-09-21');
-    s21.shift_date = '2026-09-21';
-    s21.status = 'verified';
-    s21.opened_at = '2026-09-21T06:55:00+08:00';
-    s21.verified_by = 'SV-2014';
-    s21.verified_by_name = 'Chong Wei Lun (SV-2014)';
-    s21.verified_at = '2026-09-21T19:30:00+08:00';
-    s21.entries = (s21.entries || []).map(e => ({
-      ...e,
-      id: makeEntryUuid('2026-09-21', e.slot_index),
-      sheet_id: makeSheetUuid('2026-09-21'),
-      slot_start: `2026-09-21T${e.slot_label.slice(0, 2)}:00:00+08:00`,
-      recorded_at: `2026-09-21T${e.slot_label.slice(0, 2)}:55:00+08:00`,
-    }));
-    stored['2026-09-21'] = s21;
-    changed = true;
-  }
-
-  if (!stored['2026-09-20']) {
-    const s20: ProcessSheet = JSON.parse(JSON.stringify(INITIAL_SHEET));
-    s20.status = 'verified';
-    s20.verified_by = 'SV-2014';
-    s20.verified_by_name = 'Chong Wei Lun (SV-2014)';
-    s20.verified_at = '2026-09-20T19:30:00+08:00';
-    stored['2026-09-20'] = s20;
-    changed = true;
-  }
+  Object.keys(MASTER_SHEETS).forEach(dateKey => {
+    if (!stored[dateKey]) {
+      stored[dateKey] = JSON.parse(JSON.stringify(MASTER_SHEETS[dateKey]));
+      changed = true;
+    }
+  });
 
   if (changed || !getStored(STORAGE_KEYS.ALL_SHEETS, null)) {
     setStored(STORAGE_KEYS.ALL_SHEETS, stored);
@@ -2157,17 +2174,18 @@ export function getSampleReports(): SampleReport[] {
 
   const reports = getStored<SampleReport[]>(STORAGE_KEYS.REPORTS, memoryReports);
 
-  // Ensure all baseline refinery product sample reports exist in local storage
-  const existingReportNos = new Set(reports.map(r => r.report_no));
-  let addedBaseline = false;
-  INITIAL_REPORTS.forEach(baseRep => {
-    if (!existingReportNos.has(baseRep.report_no)) {
+  // Ensure all master plant sample reports exist in local storage
+  const existingReportNos = new Set(reports.map(r => r.report_no || r.id));
+  let addedMaster = false;
+  MASTER_REPORTS.forEach(baseRep => {
+    const key = baseRep.report_no || baseRep.id;
+    if (!existingReportNos.has(key)) {
       reports.push(JSON.parse(JSON.stringify(baseRep)));
-      existingReportNos.add(baseRep.report_no);
-      addedBaseline = true;
+      existingReportNos.add(key);
+      addedMaster = true;
     }
   });
-  if (addedBaseline) {
+  if (addedMaster) {
     setStored(STORAGE_KEYS.REPORTS, reports);
     memoryReports = reports;
   }
@@ -3834,3 +3852,151 @@ export async function executePruneRetentionPolicy(
     }
   };
 }
+
+// =============================================================================
+// Cross-Device Plant Master Synchronization & Snapshot Import Engines
+// =============================================================================
+
+// Synchronize master plant data from server API (/api/plant-data) across all workstations
+export async function syncMasterPlantDataFromServer(): Promise<boolean> {
+  if (typeof window === 'undefined') return false;
+  try {
+    const res = await fetch('/api/plant-data', { cache: 'no-store' });
+    if (!res.ok) return false;
+    const json = await res.json();
+    if (!json || !json.success) return false;
+
+    let updatedSheets = false;
+    if (json.sheets && typeof json.sheets === 'object') {
+      const currentSheets = getAllProcessSheets();
+      Object.keys(json.sheets).forEach(d => {
+        const remoteSheet = json.sheets[d];
+        if (!currentSheets[d] || ((remoteSheet.entries?.length || 0) > (currentSheets[d].entries?.length || 0))) {
+          currentSheets[d] = remoteSheet;
+          updatedSheets = true;
+        }
+      });
+      if (updatedSheets) {
+        saveAllProcessSheets(currentSheets);
+        window.dispatchEvent(new CustomEvent('refinery_sheet_updated', { detail: currentSheets }));
+      }
+    }
+
+    if (Array.isArray(json.samples) && json.samples.length > 0) {
+      const currentReports = getSampleReports();
+      const currentKeys = new Set(currentReports.map(r => r.report_no || r.id));
+      let repAdded = false;
+      json.samples.forEach((s: any) => {
+        const k = s.report_no || s.id;
+        if (!currentKeys.has(k)) {
+          currentReports.push(s);
+          currentKeys.add(k);
+          repAdded = true;
+        }
+      });
+      if (repAdded) {
+        setStored(STORAGE_KEYS.REPORTS, currentReports);
+        memoryReports = currentReports;
+        window.dispatchEvent(new CustomEvent('refinery_reports_updated', { detail: currentReports }));
+      }
+    }
+
+    return true;
+  } catch (err) {
+    console.warn('[Sync Master Data] Background server ping note:', err);
+    return false;
+  }
+}
+
+// Restore official factory certified baseline (all 10 shifts & 54 QC reports) with one click
+export function restoreOfficialFactoryBaseline(): { success: boolean; sheets: number; samples: number } {
+  saveAllProcessSheets(JSON.parse(JSON.stringify(MASTER_SHEETS)));
+  setStored(STORAGE_KEYS.REPORTS, JSON.parse(JSON.stringify(MASTER_REPORTS)));
+  memoryReports = JSON.parse(JSON.stringify(MASTER_REPORTS));
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('refinery_sheet_updated', { detail: MASTER_SHEETS }));
+    window.dispatchEvent(new CustomEvent('refinery_reports_updated', { detail: MASTER_REPORTS }));
+  }
+
+  return {
+    success: true,
+    sheets: Object.keys(MASTER_SHEETS).length,
+    samples: MASTER_REPORTS.length
+  };
+}
+
+// Import external full snapshot JSON file (e.g. from another laptop or manual backup)
+export function importPlantSnapshotData(snapshotData: any): { 
+  success: boolean; 
+  error?: string; 
+  countSheets?: number; 
+  countSamples?: number; 
+} {
+  if (!snapshotData || typeof snapshotData !== 'object') {
+    return { success: false, error: 'Fail format tidak sah. Sila pilih fail JSON yang betul.' };
+  }
+
+  try {
+    let sheetCount = 0;
+    let sampleCount = 0;
+
+    if (snapshotData.sheets && typeof snapshotData.sheets === 'object') {
+      const existingSheets = getAllProcessSheets();
+      const mergedSheets = { ...existingSheets, ...snapshotData.sheets };
+      saveAllProcessSheets(mergedSheets);
+      sheetCount = Object.keys(mergedSheets).length;
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('refinery_sheet_updated', { detail: mergedSheets }));
+      }
+    }
+
+    if (Array.isArray(snapshotData.samples) && snapshotData.samples.length > 0) {
+      const existingReports = getSampleReports();
+      const reportMap = new Map<string, SampleReport>();
+      snapshotData.samples.forEach((s: SampleReport) => {
+        reportMap.set(s.report_no || s.id, s);
+      });
+      existingReports.forEach((s: SampleReport) => {
+        if (!reportMap.has(s.report_no || s.id)) {
+          reportMap.set(s.report_no || s.id, s);
+        }
+      });
+      const mergedReports = Array.from(reportMap.values());
+      setStored(STORAGE_KEYS.REPORTS, mergedReports);
+      memoryReports = mergedReports;
+      sampleCount = mergedReports.length;
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('refinery_reports_updated', { detail: mergedReports }));
+      }
+    }
+
+    if (Array.isArray(snapshotData.audit_logs) && snapshotData.audit_logs.length > 0) {
+      const existingLogs = getAuditLogs();
+      const logMap = new Map<string, AuditLogEntry>();
+      snapshotData.audit_logs.forEach((l: AuditLogEntry) => {
+        logMap.set(l.id, l);
+      });
+      existingLogs.forEach((l: AuditLogEntry) => {
+        if (!logMap.has(l.id)) {
+          logMap.set(l.id, l);
+        }
+      });
+      const mergedLogs = Array.from(logMap.values());
+      setStored(STORAGE_KEYS.AUDIT_LOGS, mergedLogs);
+      memoryAuditLogs = mergedLogs;
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('refinery_audit_updated', { detail: mergedLogs }));
+      }
+    }
+
+    return { 
+      success: true, 
+      countSheets: sheetCount || Object.keys(getAllProcessSheets()).length, 
+      countSamples: sampleCount || getSampleReports().length 
+    };
+  } catch (err: any) {
+    return { success: false, error: err?.message || 'Ralat memproses fail sandaran.' };
+  }
+}
+
