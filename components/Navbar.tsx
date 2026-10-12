@@ -20,7 +20,9 @@ import {
   HelpCircle,
   Sun,
   Moon,
-  Bell
+  Bell,
+  Sparkles,
+  BookOpen
 } from 'lucide-react';
 import { UserRole, Profile } from '@/types/refinery';
 import {
@@ -35,6 +37,7 @@ import QCNotificationDropdown from '@/components/QCNotificationDropdown';
 import ToastContainer from '@/components/ToastContainer';
 import ThemeSwitch from '@/components/ThemeSwitch';
 import RadioDashboardNav from '@/components/RadioDashboardNav';
+import InteractiveTutorialModal from '@/components/InteractiveTutorialModal';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -65,6 +68,7 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [isHelpOpen, setIsHelpOpen] = useState<boolean>(false);
+  const [isTutorialOpen, setIsTutorialOpen] = useState<boolean>(false);
   const [notificationAnchor, setNotificationAnchor] = useState<'desktop' | 'mobile' | null>(null);
   const [unreadBroadcastCount, setUnreadBroadcastCount] = useState<number>(0);
   const [currentTheme, setCurrentTheme] = useState<'dark' | 'light' | 'system'>('dark');
@@ -134,6 +138,9 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
     };
     updateUnread();
     window.addEventListener('refinery_broadcast_updated', updateUnread);
+
+    const handleOpenTutorial = () => setIsTutorialOpen(true);
+    window.addEventListener('refinery_open_tutorial', handleOpenTutorial);
 
     const getSystemSettings = () => {
       if (typeof window === 'undefined') return { timeFormat: '24h', dateFormat: 'DD/MM/YYYY', theme: 'dark', language: 'en' };
@@ -248,6 +255,7 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
     return () => {
       clearInterval(timer);
       window.removeEventListener('refinery_broadcast_updated', updateUnread);
+      window.removeEventListener('refinery_open_tutorial', handleOpenTutorial);
       window.removeEventListener('refinery_settings_updated', handleSettingsUpdate);
       window.removeEventListener('refinery_profile_updated', handleProfileUpdate as EventListener);
       window.removeEventListener('refinery_auth_changed', handleAuthChanged as EventListener);
@@ -376,6 +384,17 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
               )}
             </div>
 
+            {/* Quick Tutorial Icon in Mobile Topbar */}
+            <div
+              role="button"
+              tabIndex={0}
+              onClick={() => setIsTutorialOpen(true)}
+              className="flex items-center justify-center h-8 w-8 rounded-lg bg-[#101927] border border-[#1F2E43] text-[#009FE3] hover:text-white hover:border-[#009FE3]/50 transition-colors cursor-pointer select-none"
+              title="Interactive System Tutorial"
+            >
+              <Sparkles className="h-4 w-4" />
+            </div>
+
             {/* Quick Settings Icon in Mobile Topbar */}
             <div
               role="button"
@@ -436,6 +455,15 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
             {/* Auxiliary Menu Items */}
             <button
               type="button"
+              onClick={() => setIsTutorialOpen(true)}
+              className="nav-link-redesign text-[#009FE3] flex items-center gap-2"
+              title="Interactive Tutorial & Guide"
+            >
+              <Sparkles className="h-4 w-4 text-[#009FE3]" />
+              <span>Tutorial Guide</span>
+            </button>
+            <button
+              type="button"
               onClick={() => setIsSettingsOpen(true)}
               className="nav-link-redesign"
               title="Refinery System Settings & Preferences"
@@ -484,11 +512,22 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
         <div className="flex-1" />
 
         {/* Clock, User Profile & Sign Out */}
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-5">
           {/* Formatted Date & Time */}
           <span id="clock" className="font-mono text-xs text-[var(--muted)] tabular-nums">
             {formattedDateTime || '08/12/2024 14:25:00'}
           </span>
+
+          {/* Interactive Tutorial Button */}
+          <button
+            type="button"
+            onClick={() => setIsTutorialOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#009FE3]/15 hover:bg-[#009FE3]/25 border border-[#009FE3]/35 text-[#009FE3] hover:text-[#00B4FF] text-xs font-mono font-bold transition-all cursor-pointer shadow-xs active:scale-95"
+            title="Buka Tutorial Interaktif Cara Penggunaan Loji"
+          >
+            <Sparkles className="h-3.5 w-3.5 animate-pulse text-[#009FE3]" />
+            <span>Tutorial</span>
+          </button>
 
           {/* Quick Theme Toggle Button (Dark / Light Day-Night Switch) */}
           <ThemeSwitch currentTheme={currentTheme} onToggle={toggleTheme} />
@@ -871,6 +910,13 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
       <ToastContainer
         onOpenDrawer={() => setNotificationAnchor('desktop')}
         onNavigateTab={(tab) => setActiveTab(tab)}
+      />
+
+      {/* Interactive Onboarding Tutorial Modal for Operators & New Users */}
+      <InteractiveTutorialModal
+        isOpen={isTutorialOpen}
+        onClose={() => setIsTutorialOpen(false)}
+        currentRole={role}
       />
     </>
   );

@@ -47,7 +47,9 @@ import {
   Check, 
   FileCheck2, 
   AlertCircle,
-  FlaskConical
+  FlaskConical,
+  Sparkles,
+  BookOpen
 } from 'lucide-react';
 
 const REQUIRED_PROCESS_PARAM_FIELDS: { key: keyof ProcessEntry; label: string }[] = [
@@ -839,6 +841,35 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
               )}
             </button>
           </div>
+        </div>
+
+        {/* Operator Quick Guide & Interactive Tutorial Banner */}
+        <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl bg-gradient-to-r from-[#0C1524] to-[#0A101C] p-3 text-xs border border-[#1F2E43] shadow-md">
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg border border-[#009FE3]/30 bg-[#009FE3]/15 p-2 text-[#009FE3] shrink-0">
+              <Sparkles className="h-4 w-4 animate-pulse" />
+            </div>
+            <div>
+              <span className="font-semibold text-white text-xs block font-mono">
+                Operator System Tutorial &amp; Workflow Guide
+              </span>
+              <span className="text-slate-400 block text-[11px] mt-0.5">
+                New operator? Learn how to log hourly readings, copy previous hours, and send samples to QC.
+              </span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('refinery_open_tutorial'));
+              }
+            }}
+            className="bg-[#009FE3] hover:bg-[#00B4FF] text-white font-mono font-bold text-xs px-3.5 py-1.5 rounded-lg transition-all shrink-0 border border-[#009FE3]/50 cursor-pointer shadow-md flex items-center gap-1.5 self-start sm:self-auto active:scale-95"
+          >
+            <BookOpen className="h-3.5 w-3.5" />
+            <span>Launch Tutorial</span>
+          </button>
         </div>
 
         {/* Validation & Alert feedback banners */}
