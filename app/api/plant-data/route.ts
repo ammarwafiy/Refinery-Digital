@@ -1,6 +1,4 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
 
 import initialSheetsSeed from '@/lib/initial-sheets.json';
 import initialSamplesSeed from '@/lib/initial-samples.json';
@@ -8,46 +6,24 @@ import initialSamplesSeed from '@/lib/initial-samples.json';
 export const dynamic = 'force-dynamic';
 
 // In-memory cache for ultra-fast serving across all clients
-let cachedSnapshot: any = null;
+let cachedSnapshot: any = {
+  plant: 'Lam Soon Edible Oils Sdn. Bhd.',
+  unit: 'Nisshin Deodorizer Plant (PRD-REF-001)',
+  timestamp: '2026-09-30T17:00:00+08:00',
+  sheets: initialSheetsSeed,
+  samples: initialSamplesSeed,
+  audit_logs: [],
+  profiles_count: 6,
+};
 
-function loadSnapshotFromDisk(): any {
-  if (cachedSnapshot) return cachedSnapshot;
-
-  const candidatePaths = [
-    path.join(process.cwd(), 'public', 'plant-snapshot.json'),
-    path.join(process.cwd(), 'Refinery_Plant_Snapshot_2026-09-30.json'),
-  ];
-
-  for (const p of candidatePaths) {
-    try {
-      if (fs.existsSync(p)) {
-        const raw = fs.readFileSync(p, 'utf8');
-        cachedSnapshot = JSON.parse(raw);
-        console.info(`[API /api/plant-data] Successfully loaded master snapshot from ${p}`);
-        return cachedSnapshot;
-      }
-    } catch (err) {
-      console.warn(`[API /api/plant-data] Could not read ${p}:`, err);
-    }
-  }
-
-  // Resilient fallback to imported static seed bundles
-  cachedSnapshot = {
-    plant: 'Lam Soon Edible Oils Sdn. Bhd.',
-    unit: 'Nisshin Deodorizer Plant (PRD-REF-001)',
-    timestamp: '2026-09-30T17:00:00+08:00',
-    sheets: initialSheetsSeed,
-    samples: initialSamplesSeed,
-    audit_logs: [],
-    profiles_count: 6,
-  };
+function getSnapshot(): any {
   return cachedSnapshot;
 }
 
 // GET: Deliver master plant dataset (10 process sheets, 54 sample reports, audit logs) to any client
 export async function GET() {
   try {
-    const snapshot = loadSnapshotFromDisk();
+    const snapshot = getSnapshot();
 
     if (!snapshot) {
       return NextResponse.json(
@@ -87,11 +63,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: 'Invalid payload' }, { status: 400 });
     }
 
-    if (!cachedSnapshot) {
-      loadSnapshotFromDisk();
-    }
-
-    if (cachedSnapshot) {
+    const snap = getSnapshot();
+    if (snap) {
       if (body.sheets && typeof body.sheets === 'object') {
         cachedSnapshot.sheets = { ...cachedSnapshot.sheets, ...body.sheets };
       }
