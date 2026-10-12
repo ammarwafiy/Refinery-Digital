@@ -412,14 +412,14 @@ export function formatAuditRecordId(entry: AuditLogEntry | { table_name?: string
 }
 
 // Consistent Industrial Employee ID Configuration
-// Format: Numeric 4-Digit Series (1042 Operator, 2014 Supervisor, 3001 QC Staff, 4001 QC Manager, 5001 Admin, 9001 Auditor)
+// Flexible Employee ID Configuration (Any unique number/string allowed for any role)
 export const ROLE_ID_SERIES: Record<UserRole, { prefix: string; label: string; start: number; example: string }> = {
-  operator:   { prefix: '', label: 'Plant Operator (Series 1000 · e.g. 1042)', start: 1042, example: '1042' },
-  supervisor: { prefix: '', label: 'Shift Supervisor (Series 2000 · e.g. 2014)', start: 2014, example: '2014' },
-  qc_analyst: { prefix: '', label: 'QC Laboratory Analyst (Series 3000 · e.g. 3001)', start: 3001, example: '3001' },
-  qc_manager: { prefix: '', label: 'Quality Control Manager (Series 4000 · e.g. 4001)', start: 4001, example: '4001' },
-  admin:      { prefix: '', label: 'Plant Administrator (Series 5000 · e.g. 5001)', start: 5001, example: '5001' },
-  viewer:     { prefix: '', label: 'Quality Auditor (Series 9000 · e.g. 9001)', start: 9001, example: '9001' },
+  operator:   { prefix: '', label: 'Plant Operator', start: 1042, example: '1042' },
+  supervisor: { prefix: '', label: 'Shift Supervisor', start: 2014, example: '2014' },
+  qc_analyst: { prefix: '', label: 'QC Laboratory Analyst', start: 3001, example: '3001' },
+  qc_manager: { prefix: '', label: 'Quality Control Manager', start: 4001, example: '4001' },
+  admin:      { prefix: '', label: 'Plant Administrator', start: 5001, example: '5001' },
+  viewer:     { prefix: '', label: 'Quality Auditor (Viewer)', start: 9001, example: '9001' },
 };
 
 // Role-Based Views & Navigation Rules (RBAC)
@@ -441,42 +441,42 @@ export const ROLE_DEFAULT_TAB: Record<UserRole, string> = {
   viewer: 'export',
 };
 
-export function generateNextEmployeeId(role: UserRole): string {
-  const baseMap: Record<UserRole, number> = {
-    operator: 1000,
-    supervisor: 2000,
-    qc_analyst: 3000,
-    qc_manager: 4000,
-    admin: 5000,
-    viewer: 9000,
-  };
-  const defaultStarts: Record<UserRole, number> = {
-    operator: 1042,
-    supervisor: 2014,
-    qc_analyst: 3001,
-    qc_manager: 4001,
-    admin: 5001,
-    viewer: 9001,
-  };
-
-  const base = baseMap[role] || 1000;
+// Check if an Employee ID is available (Strict duplicate prevention)
+export function isEmployeeIdAvailable(employeeNo: string, excludeId?: string): { available: boolean; existingProfile?: Profile } {
+  const clean = (employeeNo || '').trim().toLowerCase();
+  if (!clean) return { available: false };
   const all = getProfiles();
-
-  // Find all purely numeric IDs in the given 1000-band
-  const existingNums = all
-    .map(p => {
-      const idStr = (p?.employee_no || p?.id || '').trim();
-      const num = parseInt(idStr, 10);
-      return !isNaN(num) && String(num) === idStr ? num : NaN;
-    })
-    .filter(n => !isNaN(n) && n >= base && n < base + 1000);
-
-  if (existingNums.length === 0) {
-    return String(defaultStarts[role] || base + 1);
+  const found = all.find(p => {
+    const pId = (p.employee_no || p.id || '').trim().toLowerCase();
+    if (excludeId && pId === excludeId.trim().toLowerCase()) return false;
+    return pId === clean;
+  });
+  if (found) {
+    return { available: false, existingProfile: found };
   }
+  return { available: true };
+}
 
-  const maxNum = Math.max(...existingNums);
-  return String(maxNum + 1);
+// Generate the next available unique Employee ID suggestion
+export function generateNextEmployeeId(role?: UserRole): string {
+  const all = getProfiles();
+  const existingSet = new Set(all.map(p => (p.employee_no || p.id || '').trim().toLowerCase()));
+
+  const defaultStarts: Record<UserRole, number> = {
+    operator: 1043,
+    supervisor: 2015,
+    qc_analyst: 3002,
+    qc_manager: 4002,
+    admin: 5002,
+    viewer: 9002,
+  };
+
+  const start = role && defaultStarts[role] ? defaultStarts[role] : 1001;
+  let candidate = start;
+  while (existingSet.has(String(candidate).toLowerCase())) {
+    candidate += 1;
+  }
+  return String(candidate);
 }
 
 // 1. Authentication & Session Management
@@ -721,6 +721,26 @@ export async function syncProfilesFromSupabase(): Promise<{ success: boolean; co
         memoryProfiles = liveProfiles;
         setStored(STORAGE_KEYS.PROFILES, liveProfiles);
 
+        // Reconcile current auth user session with live profile from Supabase
+        const currentAuth = getAuthUser();
+        if (currentAuth) {
+          const liveMatch = liveProfiles.find(p => p.employee_no === currentAuth.employee_no || p.id === currentAuth.id);
+          if (liveMatch) {
+            if (
+              liveMatch.full_name !== currentAuth.full_name ||
+              liveMatch.role !== currentAuth.role ||
+              liveMatch.status !== currentAuth.status ||
+              liveMatch.employee_no !== currentAuth.employee_no
+            ) {
+              memoryAuthUser = liveMatch;
+              setStored(STORAGE_KEYS.AUTH_USER, liveMatch);
+              if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('refinery_auth_changed', { detail: liveMatch }));
+              }
+            }
+          }
+        }
+
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('refinery_profiles_synced', { detail: liveProfiles }));
         }
@@ -761,6 +781,25 @@ export async function syncProfilesFromSupabase(): Promise<{ success: boolean; co
 
         memoryProfiles = liveProfiles;
         setStored(STORAGE_KEYS.PROFILES, liveProfiles);
+
+        const currentAuth = getAuthUser();
+        if (currentAuth) {
+          const liveMatch = liveProfiles.find(p => p.employee_no === currentAuth.employee_no || p.id === currentAuth.id);
+          if (liveMatch) {
+            if (
+              liveMatch.full_name !== currentAuth.full_name ||
+              liveMatch.role !== currentAuth.role ||
+              liveMatch.status !== currentAuth.status ||
+              liveMatch.employee_no !== currentAuth.employee_no
+            ) {
+              memoryAuthUser = liveMatch;
+              setStored(STORAGE_KEYS.AUTH_USER, liveMatch);
+              if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('refinery_auth_changed', { detail: liveMatch }));
+              }
+            }
+          }
+        }
 
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('refinery_profiles_synced', { detail: liveProfiles }));
@@ -971,6 +1010,12 @@ export async function addProfile(data: { full_name: string; role: UserRole; empl
   const employee_no = (data.employee_no?.trim() || generateNextEmployeeId(data.role)).toUpperCase();
   const current = getProfiles();
 
+  // Strict duplicate prevention
+  const check = isEmployeeIdAvailable(employee_no);
+  if (!check.available && check.existingProfile) {
+    throw new Error(`Employee ID "${employee_no}" is already registered to ${check.existingProfile.full_name} (${check.existingProfile.role}). Please use a unique Employee ID.`);
+  }
+
   const newProfile: Profile = {
     id: employee_no,
     employee_no: employee_no,
@@ -984,7 +1029,7 @@ export async function addProfile(data: { full_name: string; role: UserRole; empl
   };
 
   // Immediate optimistic update in local state
-  const updated = [...current.filter(p => p.employee_no !== employee_no), newProfile];
+  const updated = [...current, newProfile];
   memoryProfiles = updated;
   setStored(STORAGE_KEYS.PROFILES, updated);
 
@@ -1015,9 +1060,19 @@ export async function addProfile(data: { full_name: string; role: UserRole; empl
         console.info('[Supabase Sync Success] Profile recorded into Supabase via API:', employee_no);
       } else {
         const errJson = await res.json().catch(() => ({}));
+        if (res.status === 409 || errJson.error?.includes('already')) {
+          memoryProfiles = current;
+          setStored(STORAGE_KEYS.PROFILES, current);
+          throw new Error(errJson.error || `Employee ID "${employee_no}" already exists!`);
+        }
         console.warn('[Supabase API Sync Warning]', errJson);
       }
-    } catch (apiErr) {
+    } catch (apiErr: any) {
+      if (apiErr?.message?.includes('already')) {
+        memoryProfiles = current;
+        setStored(STORAGE_KEYS.PROFILES, current);
+        throw apiErr;
+      }
       console.warn('[Supabase API Fetch Warning]', apiErr);
     }
 
@@ -1026,22 +1081,28 @@ export async function addProfile(data: { full_name: string; role: UserRole; empl
       try {
         const { error: directErr } = await supabase
           .from('profiles')
-          .upsert([{
+          .insert([{
             employee_no: newProfile.employee_no,
             full_name: newProfile.full_name,
             role: newProfile.role,
             status: newProfile.status,
             password: newProfile.password,
             created_at: newProfile.created_at
-          }], { onConflict: 'employee_no' });
+          }]);
 
         if (!directErr) {
           savedSuccessfully = true;
           console.info('[Supabase Direct Sync Success] Profile saved directly via client:', employee_no);
         } else {
           console.error('[Supabase Direct Client Error]', directErr);
+          if (directErr.code === '23505') {
+            memoryProfiles = current;
+            setStored(STORAGE_KEYS.PROFILES, current);
+            throw new Error(`Employee ID "${employee_no}" already exists in database!`);
+          }
         }
-      } catch (clientErr) {
+      } catch (clientErr: any) {
+        if (clientErr?.message?.includes('already')) throw clientErr;
         console.error('[Supabase Direct Exception]', clientErr);
       }
     }
@@ -1059,6 +1120,87 @@ export async function addProfile(data: { full_name: string; role: UserRole; empl
 
   addAuditLog('profiles', newProfile.employee_no, 'insert', null, newProfile);
   return newProfile;
+}
+
+export async function updateProfile(
+  originalEmployeeNo: string, 
+  data: { full_name?: string; role?: UserRole; employee_no?: string; password?: string; status?: 'active' | 'unactive' }
+): Promise<Profile> {
+  const current = getProfiles();
+  const origClean = originalEmployeeNo.trim().toUpperCase();
+  const idx = current.findIndex(p => p.employee_no.toUpperCase() === origClean);
+  if (idx === -1) {
+    throw new Error(`Profile with Employee ID "${origClean}" not found.`);
+  }
+
+  const existingProfile = current[idx];
+  const targetEmployeeNo = data.employee_no ? data.employee_no.trim().toUpperCase() : existingProfile.employee_no;
+
+  // Duplicate prevention if changing ID
+  if (targetEmployeeNo !== existingProfile.employee_no) {
+    const check = isEmployeeIdAvailable(targetEmployeeNo, existingProfile.employee_no);
+    if (!check.available && check.existingProfile) {
+      throw new Error(`Employee ID "${targetEmployeeNo}" is already in use by ${check.existingProfile.full_name} (${check.existingProfile.role})!`);
+    }
+  }
+
+  const updatedProfile: Profile = {
+    ...existingProfile,
+    id: targetEmployeeNo,
+    employee_no: targetEmployeeNo,
+    full_name: data.full_name !== undefined ? data.full_name.trim() : existingProfile.full_name,
+    role: data.role !== undefined ? data.role : existingProfile.role,
+    password: data.password !== undefined ? data.password.trim() : existingProfile.password,
+    status: data.status !== undefined ? data.status : existingProfile.status,
+    active: data.status !== undefined ? data.status === 'active' : existingProfile.active,
+  };
+
+  const updatedList = current.map(p => p.employee_no.toUpperCase() === origClean ? updatedProfile : p);
+  memoryProfiles = updatedList;
+  setStored(STORAGE_KEYS.PROFILES, updatedList);
+
+  // If user is currently logged in, update session
+  const authUser = getAuthUser();
+  if (authUser && authUser.employee_no.toUpperCase() === origClean) {
+    setAuthUser(updatedProfile);
+  }
+
+  if (typeof window !== 'undefined') {
+    try {
+      const res = await fetch('/api/profiles', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-plant-admin-signature': PLANT_ADMIN_SIGNATURE,
+        },
+        body: JSON.stringify({
+          original_employee_no: origClean,
+          employee_no: updatedProfile.employee_no,
+          full_name: updatedProfile.full_name,
+          role: updatedProfile.role,
+          password: updatedProfile.password,
+          status: updatedProfile.status,
+        }),
+      });
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        if (res.status === 409) {
+          memoryProfiles = current;
+          setStored(STORAGE_KEYS.PROFILES, current);
+          throw new Error(errJson.error || `Employee ID "${targetEmployeeNo}" already exists!`);
+        }
+      }
+    } catch (err: any) {
+      if (err?.message?.includes('already')) throw err;
+      console.warn('[Supabase Sync Error]', err);
+    }
+
+    await syncProfilesFromSupabase();
+  }
+
+  addAuditLog('profiles', updatedProfile.employee_no, 'update', existingProfile, updatedProfile);
+  return updatedProfile;
 }
 
 export async function toggleProfileActive(identifier: string): Promise<boolean> {

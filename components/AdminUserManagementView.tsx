@@ -32,7 +32,8 @@ import {
   Zap,
   X,
   AlertCircle,
-  Info
+  Info,
+  Edit
 } from 'lucide-react';
 import { UserRole, Profile } from '@/types/refinery';
 import GliderTabs from './GliderTabs';
@@ -40,6 +41,8 @@ import SearchableSelect from './SearchableSelect';
 import { 
   getProfiles, 
   addProfile, 
+  updateProfile,
+  isEmployeeIdAvailable,
   generateNextEmployeeId, 
   getCurrentRole, 
   getCurrentProfile, 
@@ -84,6 +87,14 @@ export default function AdminUserManagementView() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncedAt, setLastSyncedAt] = useState<string>('Just now');
+
+  // Edit User State
+  const [editingProfile, setEditingProfile] = useState<Profile | null>(null);
+  const [editFullName, setEditFullName] = useState('');
+  const [editRole, setEditRole] = useState<UserRole>('operator');
+  const [editEmployeeNo, setEditEmployeeNo] = useState('');
+  const [editPassword, setEditPassword] = useState('');
+  const [isEditingSubmitting, setIsEditingSubmitting] = useState(false);
 
   // Navigation Sub-tab
   const [activeAdminSubTab, setActiveAdminSubTab] = useState<'personnel' | 'retention'>('personnel');
@@ -431,19 +442,29 @@ export default function AdminUserManagementView() {
 
   const handleRoleSelectChange = (role: UserRole) => {
     setSelectedRole(role);
-    setAutoId(generateNextEmployeeId(role));
+    if (!autoId.trim()) {
+      setAutoId(generateNextEmployeeId(role));
+    }
   };
 
   const handleAddUserSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName.trim()) {
-      setStatusMessage({ type: 'error', text: 'Please enter the employee full name.' });
+      setStatusMessage({ type: 'error', text: 'Sila masukkan nama penuh staf.' });
       return;
     }
 
     const cleanEmpId = (autoId || '').trim();
     if (!cleanEmpId) {
-      setStatusMessage({ type: 'error', text: 'Please enter or generate an Employee ID.' });
+      setStatusMessage({ type: 'error', text: 'Sila masukkan nombor Employee ID.' });
+      return;
+    }
+
+    const check = isEmployeeIdAvailable(cleanEmpId);
+    if (!check.available && check.existingProfile) {
+      const errMsg = `Nombor ID "${cleanEmpId}" sudah digunakan oleh kakitangan lain (${check.existingProfile.full_name} · ${check.existingProfile.role}). Sila gunakan nombor ID yang unik!`;
+      setStatusMessage({ type: 'error', text: errMsg });
+      showToast('error', 'Nombor ID Duplikasi', errMsg);
       return;
     }
 
@@ -460,19 +481,71 @@ export default function AdminUserManagementView() {
 
       refreshData();
       setFullName('');
-      const successMsg = `✓ Staff member ${created.full_name} (${created.employee_no}) registered and synced to Supabase database successfully!`;
+      const successMsg = `✓ Kakitangan baru ${created.full_name} (${created.employee_no}) berjaya didaftarkan dan diselaraskan ke database cloud Supabase!`;
       setStatusMessage({ 
         type: 'success', 
         text: successMsg 
       });
-      showToast('success', 'Staff Member Registered', successMsg);
+      showToast('success', 'Kakitangan Berjaya Didaftarkan', successMsg);
       setAutoId(generateNextEmployeeId(selectedRole));
     } catch (err: any) {
-      const errMsg = err?.message || 'Failed to register staff member. Please try again.';
+      const errMsg = err?.message || 'Gagal mendaftar kakitangan. Sila cuba lagi.';
       setStatusMessage({ type: 'error', text: errMsg });
-      showToast('error', 'Failed to Register Staff', errMsg);
+      showToast('error', 'Ralat Pendaftaran Staf', errMsg);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleOpenEdit = (p: Profile) => {
+    setEditingProfile(p);
+    setEditFullName(p.full_name);
+    setEditRole(p.role);
+    setEditEmployeeNo(p.employee_no);
+    setEditPassword(p.password || 'password123');
+  };
+
+  const handleSaveEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProfile) return;
+    if (!editFullName.trim()) {
+      showToast('error', 'Nama Diperlukan', 'Sila masukkan nama penuh staf.');
+      return;
+    }
+    const cleanId = editEmployeeNo.trim();
+    if (!cleanId) {
+      showToast('error', 'ID Diperlukan', 'Sila masukkan nombor Employee ID.');
+      return;
+    }
+
+    const check = isEmployeeIdAvailable(cleanId, editingProfile.employee_no);
+    if (!check.available && check.existingProfile) {
+      showToast(
+        'error', 
+        'Nombor ID Duplikasi', 
+        `Employee ID "${cleanId}" sudah digunakan oleh ${check.existingProfile.full_name} (${check.existingProfile.role})! Sila pilih nombor unik.`
+      );
+      return;
+    }
+
+    setIsEditingSubmitting(true);
+    try {
+      const updated = await updateProfile(editingProfile.employee_no, {
+        full_name: editFullName.trim(),
+        role: editRole,
+        employee_no: cleanId,
+        password: editPassword.trim() || 'password123',
+      });
+
+      refreshData();
+      setEditingProfile(null);
+      const msg = `✓ Profil kakitangan "${updated.full_name}" (${updated.employee_no}) berjaya dikemaskini dan diselaraskan ke Supabase!`;
+      setStatusMessage({ type: 'success', text: msg });
+      showToast('success', 'Profil Dikemaskini', msg);
+    } catch (err: any) {
+      showToast('error', 'Ralat Kemaskini', err?.message || 'Gagal mengemaskini profil kakitangan.');
+    } finally {
+      setIsEditingSubmitting(false);
     }
   };
 
@@ -608,6 +681,12 @@ export default function AdminUserManagementView() {
   const qcCount = activeProfiles.filter(p => p.role === 'qc_analyst' || p.role === 'qc_manager').length;
   const adminCount = activeProfiles.filter(p => p.role === 'admin').length;
 
+  // Real-time check on autoId for Add User form (Strict duplicate prevention)
+  const cleanAutoId = (autoId || '').trim();
+  const idAvailability = cleanAutoId ? isEmployeeIdAvailable(cleanAutoId) : { available: true };
+  const isIdDuplicate = !idAvailability.available;
+  const duplicateUser = idAvailability.existingProfile;
+
   const roleStyles: Record<UserRole, { bg: string; text: string; border: string }> = {
     operator: { bg: 'bg-emerald-950/50', text: 'text-emerald-400', border: 'border-emerald-800/60' },
     supervisor: { bg: 'bg-amber-950/50', text: 'text-amber-400', border: 'border-amber-800/60' },
@@ -706,22 +785,22 @@ export default function AdminUserManagementView() {
             <div className="panel">
               <label>Operators</label>
               <b>{operatorCount}</b>
-              <p>Series 1000</p>
+              <p>Operational floor</p>
             </div>
             <div className="panel">
               <label>Supervisors</label>
               <b>{supervisorCount}</b>
-              <p>Series 2000</p>
+              <p>Shift management</p>
             </div>
             <div className="panel">
               <label>QC laboratory</label>
               <b>{qcCount}</b>
-              <p>Series 3000 / 4000</p>
+              <p>QC laboratory</p>
             </div>
             <div className="panel">
               <label>Admin & audit</label>
               <b>{adminCount}</b>
-              <p>Series 5000 / 9000</p>
+              <p>Administration & audit</p>
             </div>
           </div>
 
@@ -742,28 +821,44 @@ export default function AdminUserManagementView() {
                       placeholder="Select Assigned Role"
                       searchPlaceholder="Search role..."
                       options={[
-                        { value: 'operator', label: 'Plant Operator (Series 1000 · e.g. 1042)' },
-                        { value: 'supervisor', label: 'Shift Supervisor (Series 2000 · e.g. 2014)' },
-                        { value: 'qc_analyst', label: 'QC Laboratory Analyst (Series 3000 · e.g. 3001)' },
-                        { value: 'qc_manager', label: 'Quality Control Manager (Series 4000 · e.g. 4001)' },
-                        { value: 'admin', label: 'Plant Administrator (Series 5000 · e.g. 5001)' },
-                        { value: 'viewer', label: 'Quality Auditor (Series 9000 · e.g. 9001)' }
+                        { value: 'operator', label: 'Plant Operator' },
+                        { value: 'supervisor', label: 'Shift Supervisor' },
+                        { value: 'qc_analyst', label: 'QC Laboratory Analyst' },
+                        { value: 'qc_manager', label: 'Quality Control Manager' },
+                        { value: 'admin', label: 'Plant Administrator' },
+                        { value: 'viewer', label: 'Quality Auditor (Viewer)' }
                       ]}
                     />
                   </div>
 
                   <div className="fld">
-                    <label htmlFor="ri">Employee ID (Numeric)</label>
+                    <label htmlFor="ri">Employee ID (Nombor Fleksibel)</label>
                     <input 
                       id="ri" 
                       disabled={!isAdmin}
                       value={autoId} 
                       onChange={(e) => setAutoId(e.target.value.replace(/\D/g, ''))}
                       placeholder="e.g. 1042" 
+                      style={{
+                        borderColor: isIdDuplicate ? '#f43f5e' : undefined,
+                        backgroundColor: isIdDuplicate ? 'rgba(244, 63, 94, 0.08)' : undefined
+                      }}
                     />
-                    <span className="hint" style={{ fontSize: '11px', marginTop: '4px' }}>
-                      Auto-generated or enter custom numeric staff ID.
-                    </span>
+                    {isIdDuplicate && duplicateUser ? (
+                      <div style={{ marginTop: '6px', padding: '8px 10px', borderRadius: '6px', background: 'rgba(244, 63, 94, 0.12)', border: '1px solid rgba(244, 63, 94, 0.3)', color: '#fda4af', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <AlertCircle style={{ width: '14px', height: '14px', flexShrink: 0, color: '#f43f5e' }} />
+                        <span>ID <strong>&quot;{cleanAutoId}&quot;</strong> sudah digunakan oleh <strong>{duplicateUser.full_name}</strong> ({duplicateUser.role}). Nombor ID mestilah unik!</span>
+                      </div>
+                    ) : cleanAutoId ? (
+                      <div style={{ marginTop: '4px', fontSize: '11px', color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <CheckCircle2 style={{ width: '12px', height: '12px', flexShrink: 0 }} />
+                        <span>Nombor ID &quot;{cleanAutoId}&quot; unik dan tersedia.</span>
+                      </div>
+                    ) : (
+                      <span className="hint" style={{ fontSize: '11px', marginTop: '4px' }}>
+                        Masukkan sebarang nombor kakitangan unik (bebas / fleksibel).
+                      </span>
+                    )}
                   </div>
 
                   <div className="fld">
@@ -793,9 +888,13 @@ export default function AdminUserManagementView() {
                   <button
                     className="primary wide"
                     type="submit"
-                    disabled={!isAdmin || isSubmitting}
+                    disabled={!isAdmin || isSubmitting || isIdDuplicate || !cleanAutoId || !fullName.trim()}
+                    style={{
+                      opacity: (isIdDuplicate || !cleanAutoId || !fullName.trim()) ? 0.6 : 1,
+                      cursor: (isIdDuplicate || !cleanAutoId || !fullName.trim()) ? 'not-allowed' : 'pointer'
+                    }}
                   >
-                    {isSubmitting ? 'Registering...' : 'Register staff and generate credentials'}
+                    {isSubmitting ? 'Registering...' : isIdDuplicate ? 'Nombor ID Duplikasi (Mestilah Unik)' : 'Register staff and generate credentials'}
                   </button>
 
                   <p className="hint" style={{ marginTop: '12px', fontSize: '12px' }}>
@@ -830,12 +929,12 @@ export default function AdminUserManagementView() {
                       searchPlaceholder="Search role..."
                       options={[
                         { value: 'all', label: 'All roles' },
-                        { value: 'operator', label: 'Operator (Series 1000)' },
-                        { value: 'supervisor', label: 'Supervisor (Series 2000)' },
-                        { value: 'qc_analyst', label: 'QC Analyst (Series 3000)' },
-                        { value: 'qc_manager', label: 'QC Manager (Series 4000)' },
-                        { value: 'admin', label: 'Admin (Series 5000)' },
-                        { value: 'viewer', label: 'Viewer (Series 9000)' }
+                        { value: 'operator', label: 'Operator' },
+                        { value: 'supervisor', label: 'Supervisor' },
+                        { value: 'qc_analyst', label: 'QC Analyst' },
+                        { value: 'qc_manager', label: 'QC Manager' },
+                        { value: 'admin', label: 'Admin' },
+                        { value: 'viewer', label: 'Viewer' }
                       ]}
                     />
                   </div>
@@ -903,7 +1002,17 @@ export default function AdminUserManagementView() {
                             </td>
                             <td style={{ textAlign: 'right' }}>
                               {isAdmin ? (
-                                <div className="dr" style={{ justifyContent: 'flex-end' }}>
+                                <div className="dr" style={{ justifyContent: 'flex-end', gap: '6px' }}>
+                                  <button
+                                    type="button"
+                                    className="ghost transition-all duration-150 active:scale-[0.96] cursor-pointer"
+                                    onClick={() => handleOpenEdit(p)}
+                                    title="Edit profil kakitangan"
+                                    style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                                  >
+                                    <Edit style={{ width: '13px', height: '13px' }} />
+                                    <span>Edit</span>
+                                  </button>
                                   <button
                                     type="button"
                                     className="ghost transition-all duration-150 active:scale-[0.96] cursor-pointer"
@@ -1629,6 +1738,166 @@ export default function AdminUserManagementView() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 4. Edit Staff Profile Modal */}
+      {editingProfile && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
+          onClick={() => setEditingProfile(null)}
+        >
+          <div 
+            className="w-full max-w-md bg-[#0F1722] border border-[#1F2E43] rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[#1F2E43] bg-[#141E2E]/60">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-lg bg-[#009FE3]/10 border border-[#009FE3]/20 text-[#009FE3]">
+                  <Edit className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-100 font-sans">
+                    Kemaskini Profil Kakitangan
+                  </h3>
+                  <p className="text-[11px] text-slate-400 font-mono">
+                    ID Asal: {editingProfile.employee_no} · {editingProfile.role}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditingProfile(null)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-[#1A2638] transition-colors cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Modal Body Form */}
+            <form onSubmit={handleSaveEditSubmit} className="p-5 space-y-4">
+              {/* Full Name */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-mono text-slate-300 font-semibold block">
+                  Nama Penuh (Full Name)
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editFullName}
+                  onChange={(e) => setEditFullName(e.target.value)}
+                  className="w-full bg-[#0A1018] border border-[#1F2E43] rounded-lg px-3 py-2 text-xs font-mono text-slate-100 placeholder-slate-500 focus:outline-none focus:border-[#009FE3]"
+                  placeholder="e.g. Ammar Wafiy"
+                />
+              </div>
+
+              {/* Role Selection */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-mono text-slate-300 font-semibold block">
+                  Jawatan / Role (Fleksibel)
+                </label>
+                <SearchableSelect
+                  value={editRole}
+                  onChange={(val) => setEditRole(val as UserRole)}
+                  placeholder="Pilih Jawatan"
+                  searchPlaceholder="Cari jawatan..."
+                  options={[
+                    { value: 'operator', label: 'Plant Operator' },
+                    { value: 'supervisor', label: 'Shift Supervisor' },
+                    { value: 'qc_analyst', label: 'QC Laboratory Analyst' },
+                    { value: 'qc_manager', label: 'Quality Control Manager' },
+                    { value: 'admin', label: 'Plant Administrator' },
+                    { value: 'viewer', label: 'Quality Auditor (Viewer)' }
+                  ]}
+                />
+              </div>
+
+              {/* Employee ID (Flexible Number) */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-mono text-slate-300 font-semibold block">
+                  Employee ID (Nombor Fleksibel)
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editEmployeeNo}
+                  onChange={(e) => setEditEmployeeNo(e.target.value.replace(/\D/g, ''))}
+                  className={`w-full bg-[#0A1018] border rounded-lg px-3 py-2 text-xs font-mono text-slate-100 placeholder-slate-500 focus:outline-none ${
+                    editEmployeeNo.trim() && !isEmployeeIdAvailable(editEmployeeNo.trim(), editingProfile.employee_no).available
+                      ? 'border-rose-500 bg-rose-950/20 text-rose-200'
+                      : 'border-[#1F2E43] focus:border-[#009FE3]'
+                  }`}
+                  placeholder="e.g. 1042"
+                />
+                {(() => {
+                  const check = isEmployeeIdAvailable(editEmployeeNo.trim(), editingProfile.employee_no);
+                  if (editEmployeeNo.trim() && !check.available && check.existingProfile) {
+                    return (
+                      <div className="p-2 rounded-lg bg-rose-950/40 border border-rose-800 text-rose-300 text-[11px] font-mono flex items-center gap-2">
+                        <AlertCircle className="h-3.5 w-3.5 shrink-0 text-rose-400" />
+                        <span>ID &quot;{editEmployeeNo}&quot; sudah digunakan oleh {check.existingProfile.full_name}! Sila pilih nombor unik.</span>
+                      </div>
+                    );
+                  }
+                  if (editEmployeeNo.trim() && check.available) {
+                    return (
+                      <div className="text-[11px] font-mono text-emerald-400 flex items-center gap-1.5">
+                        <CheckCircle2 className="h-3 w-3 shrink-0" />
+                        <span>Nombor ID &quot;{editEmployeeNo}&quot; sah dan unik.</span>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+              </div>
+
+              {/* Password */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-mono text-slate-300 font-semibold block">
+                  Kata Laluan Log Masuk (Password)
+                </label>
+                <input
+                  type="text"
+                  value={editPassword}
+                  onChange={(e) => setEditPassword(e.target.value)}
+                  className="w-full bg-[#0A1018] border border-[#1F2E43] rounded-lg px-3 py-2 text-xs font-mono text-slate-100 placeholder-slate-500 focus:outline-none focus:border-[#009FE3]"
+                  placeholder="Kata laluan akaun..."
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-[#1F2E43]">
+                <button
+                  type="button"
+                  disabled={isEditingSubmitting}
+                  onClick={() => setEditingProfile(null)}
+                  className="px-4 py-2 rounded-lg border border-[#1F2E43] bg-[#0A1018] hover:bg-[#172235] text-slate-300 font-mono text-xs transition-colors cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={
+                    isEditingSubmitting || 
+                    !editFullName.trim() || 
+                    !editEmployeeNo.trim() ||
+                    !isEmployeeIdAvailable(editEmployeeNo.trim(), editingProfile.employee_no).available
+                  }
+                  className="px-5 py-2 rounded-lg bg-[#009FE3] hover:bg-[#0089C4] text-white font-mono text-xs font-bold transition-all shadow-md active:scale-[0.98] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {isEditingSubmitting ? (
+                    <>
+                      <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                      <span>Menyimpan...</span>
+                    </>
+                  ) : (
+                    <span>Simpan Perubahan & Selaras Supabase</span>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

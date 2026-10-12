@@ -132,9 +132,27 @@ export async function POST(req: Request) {
     };
 
     const supabaseAdmin = getSupabaseAdmin();
+
+    // Enforce Unique Employee ID (No Duplicates Allowed)
+    const { data: existingUser } = await supabaseAdmin
+      .from('profiles')
+      .select('employee_no, full_name, role')
+      .eq('employee_no', cleanEmployeeNo)
+      .maybeSingle();
+
+    if (existingUser) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: `Employee ID "${cleanEmployeeNo}" is already in use by ${existingUser.full_name} (${existingUser.role}). Duplicate Employee IDs are not permitted.` 
+        },
+        { status: 409 }
+      );
+    }
+
     const { data, error } = await supabaseAdmin
       .from('profiles')
-      .upsert([payload], { onConflict: 'employee_no' })
+      .insert([payload])
       .select();
 
     if (error) {
@@ -178,17 +196,40 @@ export async function PATCH(req: Request) {
     }
 
     const body = await req.json().catch(() => ({}));
-    const { employee_no, status, role, full_name, password, avatar_url } = body;
+    const { original_employee_no, employee_no, status, role, full_name, password, avatar_url } = body;
 
-    const cleanEmployeeNo = sanitizeInputString(employee_no).toUpperCase();
-    if (!cleanEmployeeNo) {
+    const targetEmployeeNo = sanitizeInputString(original_employee_no || employee_no).toUpperCase();
+    if (!targetEmployeeNo) {
       return NextResponse.json(
         { success: false, error: 'employee_no is required for update.' },
         { status: 400 }
       );
     }
 
+    const supabaseAdmin = getSupabaseAdmin();
     const updates: Record<string, any> = {};
+
+    // If changing employee_no, check duplicate
+    if (employee_no !== undefined) {
+      const newEmployeeNo = sanitizeInputString(employee_no).toUpperCase();
+      if (newEmployeeNo && newEmployeeNo !== targetEmployeeNo) {
+        const { data: duplicate } = await supabaseAdmin
+          .from('profiles')
+          .select('employee_no, full_name')
+          .eq('employee_no', newEmployeeNo)
+          .maybeSingle();
+
+        if (duplicate) {
+          return NextResponse.json(
+            { success: false, error: `Employee ID "${newEmployeeNo}" is already taken by ${duplicate.full_name}!` },
+            { status: 409 }
+          );
+        }
+        updates.employee_no = newEmployeeNo;
+        updates.id = newEmployeeNo;
+      }
+    }
+
     if (status !== undefined) {
       updates.status = status === 'unactive' ? 'unactive' : 'active';
     }
@@ -209,11 +250,10 @@ export async function PATCH(req: Request) {
       updates.avatar_url = avatar_url;
     }
 
-    const supabaseAdmin = getSupabaseAdmin();
     const { data, error } = await supabaseAdmin
       .from('profiles')
       .update(updates)
-      .eq('employee_no', cleanEmployeeNo)
+      .eq('employee_no', targetEmployeeNo)
       .select();
 
     if (error) {
@@ -224,7 +264,7 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ 
       success: true, 
       profile: data?.[0],
-      message: `Profile ${cleanEmployeeNo} status updated in Supabase!`
+      message: `Profile ${targetEmployeeNo} updated in Supabase!`
     });
   } catch (err: any) {
     console.error('[API /api/profiles PATCH] Exception:', err);

@@ -216,10 +216,29 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
     };
     window.addEventListener('refinery_profile_updated', handleProfileUpdate as EventListener);
 
+    const handleAuthChanged = (e: any) => {
+      if (e?.detail) {
+        setProfile(e.detail);
+        setRole(e.detail.role);
+        if (onRoleChange) onRoleChange(e.detail);
+      }
+    };
+    const handleProfilesSynced = () => {
+      const latestProfile = getCurrentProfile();
+      if (latestProfile) {
+        setProfile(latestProfile);
+        setRole(latestProfile.role);
+      }
+    };
+    window.addEventListener('refinery_auth_changed', handleAuthChanged as EventListener);
+    window.addEventListener('refinery_profiles_synced', handleProfilesSynced as EventListener);
+
     return () => {
       clearInterval(timer);
       window.removeEventListener('refinery_settings_updated', handleSettingsUpdate);
       window.removeEventListener('refinery_profile_updated', handleProfileUpdate as EventListener);
+      window.removeEventListener('refinery_auth_changed', handleAuthChanged as EventListener);
+      window.removeEventListener('refinery_profiles_synced', handleProfilesSynced as EventListener);
     };
   }, [currentUser]);
 

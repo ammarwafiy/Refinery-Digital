@@ -72,7 +72,7 @@ export const INITIAL_PROFILES: Profile[] = [
   {
     id: '5001',
     employee_no: '5001',
-    full_name: 'Ahmad Ammar Wafiy (Plant Administrator)',
+    full_name: 'Ammar Wafiy (Plant Administrator)',
     role: 'admin',
     status: 'active',
     active: true,

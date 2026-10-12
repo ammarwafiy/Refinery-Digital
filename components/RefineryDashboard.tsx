@@ -110,6 +110,27 @@ export default function RefineryDashboard() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
+  // Real-time synchronization across devices and Supabase updates
+  useEffect(() => {
+    const handleAuthChanged = (e: any) => {
+      if (e?.detail) {
+        setAuthUserState(e.detail);
+      }
+    };
+    const handleProfilesSynced = () => {
+      const latestAuth = getAuthUser();
+      if (latestAuth) {
+        setAuthUserState({ ...latestAuth });
+      }
+    };
+    window.addEventListener('refinery_auth_changed', handleAuthChanged as EventListener);
+    window.addEventListener('refinery_profiles_synced', handleProfilesSynced as EventListener);
+    return () => {
+      window.removeEventListener('refinery_auth_changed', handleAuthChanged as EventListener);
+      window.removeEventListener('refinery_profiles_synced', handleProfilesSynced as EventListener);
+    };
+  }, []);
+
   // Instant glitch-free tab change: updates state and syncs browser URL bar immediately
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
