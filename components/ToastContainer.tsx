@@ -142,8 +142,8 @@ export default function ToastContainer({ onOpenDrawer, onNavigateTab }: ToastCon
                 <p className="text-[11px] text-slate-300 leading-relaxed font-sans line-clamp-2">
                   {toast.message}
                 </p>
-                <div className="flex items-center gap-2 mt-1.5 text-[10px] font-mono text-slate-400">
-                  <span className="text-[#009FE3] hover:underline">Click to view feed →</span>
+                <div className="flex items-center gap-2 mt-1 text-[10px] font-mono text-slate-400">
+                  <span className="text-[#009FE3]">Click to view details →</span>
                 </div>
               </div>
 

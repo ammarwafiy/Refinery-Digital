@@ -3336,12 +3336,12 @@ export function submitQCDecision(data: {
     const isCon = data.decision === 'accept_concession';
     sendBroadcastMessage({
       type: isAcc ? 'qc_accept' : isCon ? 'qc_concession' : 'qc_reject',
-      title: isAcc ? 'QC Lot Approved & Released' : isCon ? 'QC Lot Approved on Concession' : 'QC Disposition: Lot Rejected',
+      title: isAcc ? 'QC Sample Accepted (Diterima)' : isCon ? 'QC Sample Concession' : 'QC Sample Rejected (Ditolak)',
       message: isAcc 
-        ? `QC Chemist ${profile.full_name} APPROVED Lot ${report.lot_no} (${report.product_name}). Parameter results in-spec.`
+        ? `Lot ${report.lot_no} (${report.product_name}) PASSED QC analysis and is approved.`
         : isCon
-        ? `QC Chemist ${profile.full_name} granted CONCESSION release for Lot ${report.lot_no} (${report.product_name}). ${data.reason_detail || ''}`
-        : `QC Chemist ${profile.full_name} REJECTED Lot ${report.lot_no} (${report.product_name}). Reason: ${resolvedReasonLabel || 'Out of spec'}. Disposition: ${(data.disposition || 'Hold').toUpperCase()}.`,
+        ? `Lot ${report.lot_no} (${report.product_name}) approved on CONCESSION release. ${data.reason_detail || ''}`
+        : `Lot ${report.lot_no} (${report.product_name}) REJECTED by QC. Reason: ${resolvedReasonLabel || 'Out of spec'}. Disposition: ${(data.disposition || 'Hold').toUpperCase()}.`,
       sender_id: profile.id,
       sender_name: profile.full_name,
       sender_role: 'QC Chemist',

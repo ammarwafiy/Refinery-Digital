@@ -31,7 +31,7 @@ import {
 import { getUnreadBroadcastCount } from '@/lib/broadcast-service';
 import SettingsModal from '@/components/SettingsModal';
 import HelpSupportModal from '@/components/HelpSupportModal';
-import LiveBroadcastDrawer from '@/components/LiveBroadcastDrawer';
+import QCNotificationDropdown from '@/components/QCNotificationDropdown';
 import ToastContainer from '@/components/ToastContainer';
 import ThemeSwitch from '@/components/ThemeSwitch';
 import RadioDashboardNav from '@/components/RadioDashboardNav';
@@ -65,7 +65,7 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [isHelpOpen, setIsHelpOpen] = useState<boolean>(false);
-  const [isBroadcastDrawerOpen, setIsBroadcastDrawerOpen] = useState<boolean>(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState<boolean>(false);
   const [unreadBroadcastCount, setUnreadBroadcastCount] = useState<number>(0);
   const [currentTheme, setCurrentTheme] = useState<'dark' | 'light' | 'system'>('dark');
 
@@ -344,20 +344,33 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
               {roleBadgeLabel}
             </span>
 
-            {/* Quick Live Broadcast Bell Icon in Mobile Topbar */}
-            <button
-              type="button"
-              onClick={() => setIsBroadcastDrawerOpen(true)}
-              className="relative flex items-center justify-center h-8 w-8 rounded-lg bg-[#101927] border border-[#1F2E43] text-slate-300 hover:text-white hover:border-[#009FE3]/50 transition-colors cursor-pointer select-none"
-              title="Live Operator ⇄ QC Broadcast Feed"
-            >
-              <Bell className={`h-4 w-4 ${unreadBroadcastCount > 0 ? 'text-[#009FE3]' : 'text-slate-400'}`} />
-              {unreadBroadcastCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-3.5 min-w-[14px] px-0.5 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white shadow-md font-mono">
-                  {unreadBroadcastCount}
-                </span>
+            {/* Quick QC Notification Bell in Mobile Topbar */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+                className="relative flex items-center justify-center h-8 w-8 rounded-lg bg-[#101927] border border-[#1F2E43] text-slate-300 hover:text-white hover:border-[#009FE3]/50 transition-colors cursor-pointer select-none"
+                title="QC Sample Status (Accepted / Rejected)"
+              >
+                <Bell className={`h-4 w-4 ${unreadBroadcastCount > 0 ? 'text-[#009FE3]' : 'text-slate-400'}`} />
+                {unreadBroadcastCount > 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-3.5 min-w-[14px] px-0.5 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white shadow-md font-mono">
+                    {unreadBroadcastCount}
+                  </span>
+                )}
+              </button>
+
+              {isNotificationOpen && (
+                <QCNotificationDropdown
+                  isOpen={isNotificationOpen}
+                  onClose={() => {
+                    setIsNotificationOpen(false);
+                    setUnreadBroadcastCount(getUnreadBroadcastCount());
+                  }}
+                  onViewQC={() => setActiveTab('qc')}
+                />
               )}
-            </button>
+            </div>
 
             {/* Quick Settings Icon in Mobile Topbar */}
             <div
@@ -509,20 +522,33 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
             </div>
           </div>
 
-          {/* Live Operator ⇄ QC Broadcast Notification Bell (Sebelah Kiri Sign Out) */}
-          <button
-            type="button"
-            onClick={() => setIsBroadcastDrawerOpen(true)}
-            className="relative flex items-center justify-center h-9 w-9 rounded-xl bg-[var(--surface)] hover:bg-[var(--raised)] border border-[var(--line)] text-slate-300 hover:text-white transition-all duration-150 active:scale-[0.96] cursor-pointer shadow-xs"
-            title="Live Broadcast Feed & QC Notifications"
-          >
-            <Bell className={`h-4 w-4 ${unreadBroadcastCount > 0 ? 'text-[#009FE3] animate-pulse' : 'text-slate-400'}`} />
-            {unreadBroadcastCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-md font-mono animate-bounce">
-                {unreadBroadcastCount}
-              </span>
+          {/* QC Sample Status Notification Bell (Sebelah Kiri Sign Out) */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+              className="relative flex items-center justify-center h-9 w-9 rounded-xl bg-[var(--surface)] hover:bg-[var(--raised)] border border-[var(--line)] text-slate-300 hover:text-white transition-all duration-150 active:scale-[0.96] cursor-pointer shadow-xs"
+              title="QC Sample Status (Accepted / Rejected)"
+            >
+              <Bell className={`h-4 w-4 ${unreadBroadcastCount > 0 ? 'text-[#009FE3] animate-pulse' : 'text-slate-400'}`} />
+              {unreadBroadcastCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-md font-mono animate-bounce">
+                  {unreadBroadcastCount}
+                </span>
+              )}
+            </button>
+
+            {isNotificationOpen && (
+              <QCNotificationDropdown
+                isOpen={isNotificationOpen}
+                onClose={() => {
+                  setIsNotificationOpen(false);
+                  setUnreadBroadcastCount(getUnreadBroadcastCount());
+                }}
+                onViewQC={() => setActiveTab('qc')}
+              />
             )}
-          </button>
+          </div>
 
           {/* Sign Out Button with Animated Alert Dialog */}
           {onLogout && (
@@ -833,20 +859,9 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
         />
       )}
 
-      {/* Live Operator ⇄ QC Broadcast Feed Drawer */}
-      <LiveBroadcastDrawer
-        isOpen={isBroadcastDrawerOpen}
-        onClose={() => {
-          setIsBroadcastDrawerOpen(false);
-          setUnreadBroadcastCount(getUnreadBroadcastCount());
-        }}
-        currentUser={profile}
-        onNavigateToQC={() => setActiveTab('qc')}
-      />
-
       {/* Global Toast Notification Container */}
       <ToastContainer
-        onOpenDrawer={() => setIsBroadcastDrawerOpen(true)}
+        onOpenDrawer={() => setIsNotificationOpen(true)}
         onNavigateTab={(tab) => setActiveTab(tab)}
       />
     </>
