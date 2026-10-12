@@ -490,7 +490,7 @@ export default function OfficialFormsExportView() {
                   type="button"
                   onClick={() => handleStepDay(-1)}
                   className="px-2.5 py-1 text-slate-400 hover:text-white hover:bg-[#172235] transition-colors border-r border-[#1F2E43] cursor-pointer"
-                  title="Previous Day (Hari Sebelumnya)"
+                  title="Previous Day"
                 >
                   <ChevronLeft className="h-3.5 w-3.5" />
                 </button>
@@ -514,7 +514,7 @@ export default function OfficialFormsExportView() {
                   type="button"
                   onClick={() => handleStepDay(1)}
                   className="px-2.5 py-1 text-slate-400 hover:text-white hover:bg-[#172235] transition-colors border-l border-[#1F2E43] cursor-pointer"
-                  title="Next Day (Hari Berikutnya)"
+                  title="Next Day"
                 >
                   <ChevronRight className="h-3.5 w-3.5" />
                 </button>
@@ -625,7 +625,7 @@ export default function OfficialFormsExportView() {
                   type="button"
                   onClick={() => handleAuditStepDay(-1)}
                   className="px-2.5 py-1 text-slate-400 hover:text-white hover:bg-[#172235] transition-colors border-r border-[#1F2E43] cursor-pointer"
-                  title="Previous Day (Hari Sebelumnya)"
+                  title="Previous Day"
                 >
                   <ChevronLeft className="h-3.5 w-3.5" />
                 </button>
@@ -655,7 +655,7 @@ export default function OfficialFormsExportView() {
                   type="button"
                   onClick={() => handleAuditStepDay(1)}
                   className="px-2.5 py-1 text-slate-400 hover:text-white hover:bg-[#172235] transition-colors border-l border-[#1F2E43] cursor-pointer"
-                  title="Next Day (Hari Berikutnya)"
+                  title="Next Day"
                 >
                   <ChevronRight className="h-3.5 w-3.5" />
                 </button>

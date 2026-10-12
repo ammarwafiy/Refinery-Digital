@@ -119,224 +119,119 @@ const DEFAULT_SETTINGS: SystemSettings = {
 
 const PLANT_ADMIN_SIGNATURE = 'NISSHIN-DEODORIZER-SECURE-AUTH-2026';
 
-// Bilingual UI Dictionary
+// Certified Industrial English UI Dictionary
+const DICT_EN = {
+  modalTitle: 'Plant Workstation Settings & Preferences',
+  modalSub: 'PRD-REF-001 Configuration · Nisshin Deodorizer Plant',
+  sections: 'Configuration Sections',
+  close: 'Close Settings',
+  tabProfile: 'Operator Profile',
+  tabPreferences: 'System Preferences',
+  tabNotifications: 'Alerts & Notifications',
+  tabSecurity: 'Security & Access',
+  tabData: 'Data & Export Settings',
+  tabAbout: 'About Refinery RMS',
+  
+  // Profile
+  profileHeading: '1. Operator Identity & Authentication',
+  profileSub: 'Plant credentials, department allocation, and operational shift signature.',
+  fullName: 'Full Name',
+  employeeId: 'Employee ID',
+  department: 'Plant Department',
+  systemRole: 'System Role Authorization',
+  activeStation: 'Active Station',
+  lastAuth: 'Last Authentication',
+  saveProfile: 'Save Profile Changes',
+  saving: 'Saving Changes...',
+  changePasswordQuick: 'Change Password (Go to Security)',
+  updatePassDirect: 'Update Password (Sync with Supabase)',
+  currentPassDirect: 'Current Operator Password',
+  currentPassDirectPlaceholder: 'Enter current password to verify identity',
+  newPassPlaceholder: 'Leave empty to keep existing password',
+  confirmPassPlaceholder: 'Re-enter new password to verify',
+  passNote: 'Minimum 6 characters · Synchronized directly to Supabase profiles table',
+  avatarUploadBtn: 'Upload Image / GIF',
+  avatarChangeBtn: 'Change Image / GIF',
+  avatarRemoveBtn: 'Remove Photo',
+  avatarUrlBtn: 'Paste URL',
+  avatarUploadNote: 'Supports animated GIF, PNG, JPG, WebP up to 10MB. Uploaded directly to cloud storage and synchronized across all sessions.',
+
+  // Preferences
+  prefHeading: '2. System Display & Workstation Preferences',
+  prefSub: 'Customize visual themes, date-time telemetry formatting, and workstation auto-logout limits.',
+  themeInterface: 'Interface Theme',
+  themeDark: 'Dark Industrial',
+  themeDarkDesc: 'Standard plant dark theme (OLED optimized)',
+  themeLight: 'High Contrast Daylight',
+  themeLightDesc: 'Daylight control room mode (High visibility)',
+  themeSys: 'System Default',
+  themeSysDesc: 'Synchronized with operating system',
+  language: 'System Language',
+  timeFormat: 'Time Telemetry Format',
+  dateFormat: 'Date Display Format',
+  autoLogout: 'Workstation Inactivity Auto-Logout',
+
+  // Notifications
+  notifHeading: '3. Operational Alerts & Annunciator Controls',
+  notifSub: 'Configure automated supervisory chimes and quality decision broadcasts.',
+  testSound: 'Test Alert Chime',
+  alertQC: 'QC Approval & Release Alert',
+  alertQCDesc: 'Instant banner and audio chime when QC Lab issues Accept / Reject decision.',
+  alertShift: 'Shift Change Handover Alert',
+  alertShiftDesc: '15-minute countdown alert before shift transitions (06:00, 14:00, 22:00).',
+  alertAbnormal: 'Abnormal Process Critical Deviation Alert',
+  alertAbnormalDesc: 'Urgent red alert when temperature, vacuum, or feed rate exceeds parameter specifications.',
+  alertReport: 'Daily Production Report Ready Notification',
+  alertReportDesc: 'Automatic notification upon generation of the 24-hour master plant record.',
+
+  // Security
+  secHeading: '4. Security Hardening & Session Governance',
+  secSub: 'Sync password credentials with Supabase, monitor active workstations, and review sign-in audits.',
+  syncPassword: 'Synchronize Password (Supabase Auth)',
+  currentPass: 'Current Operator Password',
+  newPass: 'New Secure Password',
+  confirmPass: 'Confirm New Password',
+  btnUpdatePass: 'Update Password in Supabase',
+  twoFactor: 'Two-Factor Authentication (2FA)',
+  twoFactorDesc: 'Multi-factor authentication (TOTP via Google Authenticator / Microsoft Authenticator) for supervisory process overrides.',
+  setup2FA: 'Setup 2FA',
+  disable2FA: 'Disable 2FA',
+  enabledBadge: 'ACTIVE & ENFORCED',
+  activeSessions: 'Active Workstation Sessions',
+  primaryConsole: 'Primary Control Room Console (This Device)',
+  activeNow: 'ACTIVE NOW',
+  terminateOthers: 'Terminate Other Workstations',
+  loginHistory: 'Recent Authentication Audit Trail',
+  refreshLog: 'Refresh Log',
+
+  // Data
+  dataHeading: '5. Data Pipeline, Backup & Audit Logs',
+  dataSub: 'Configure export formats, inspect cloud replication health, and retrieve compliance audit files.',
+  defaultReportFormat: 'Default Report File Format',
+  defaultReportDesc: 'Preferred output when triggering certificate and shift reports.',
+  cloudBackup: 'Automated Cloud Backup',
+  cloudBackupDesc: 'Nightly snapshot archive to secure encrypted cloud storage.',
+  backupNow: 'Trigger Manual Cloud Snapshot Now',
+  exportAuditCsv: 'Export System Audit Trail (CSV)',
+  exportAuditDesc: 'Download full ISO 22000 verification history and telemetry mutation logs.',
+  downloadCsv: 'Download Audit Log',
+  replicationStatus: 'Database Replication & Health',
+  pingSupabase: 'Ping Supabase Latency',
+
+  // About
+  aboutHeading: '6. System Governance & Architecture',
+  aboutSub: 'Official build telemetry, regulatory standards, and copyright attribution.',
+  appVersion: 'APPLICATION VERSION',
+  buildNumber: 'BUILD NUMBER',
+  dbEngine: 'DATABASE ENGINE',
+  compliance: 'COMPLIANCE ACCREDITATION',
+  checkUpdates: 'Check for System Updates',
+  copyright: '© 2026 Lam Soon Edible Oils Sdn. Bhd. All rights reserved.'
+};
+
 const DICT = {
-  en: {
-    modalTitle: 'Plant Workstation Settings & Preferences',
-    modalSub: 'PRD-REF-001 Configuration · Nisshin Deodorizer Plant',
-    sections: 'Configuration Sections',
-    close: 'Close Settings',
-    tabProfile: 'Operator Profile',
-    tabPreferences: 'System Preferences',
-    tabNotifications: 'Alerts & Notifications',
-    tabSecurity: 'Security & Access',
-    tabData: 'Data & Export Settings',
-    tabAbout: 'About Refinery RMS',
-    
-    // Profile
-    profileHeading: '1. Operator Identity & Authentication',
-    profileSub: 'Plant credentials, department allocation, and operational shift signature.',
-    fullName: 'Full Name',
-    employeeId: 'Employee ID',
-    department: 'Department',
-    systemRole: 'System Role Authorization',
-    activeStation: 'Active Station',
-    lastAuth: 'Last Authentication',
-    saveProfile: 'Save Profile Changes',
-    saving: 'Saving...',
-    changePasswordQuick: 'Change Password (Go to Security)',
-    updatePassDirect: 'Update Password (Sync with Supabase)',
-    currentPassDirect: 'Current Operator Password',
-    currentPassDirectPlaceholder: 'Enter current password to verify identity',
-    newPassPlaceholder: 'Leave empty to keep existing password',
-    confirmPassPlaceholder: 'Re-enter new password to verify',
-    passNote: 'Minimum 6 characters · Synchronized directly to Supabase profiles table',
-    avatarUploadBtn: 'Upload Image / GIF',
-    avatarChangeBtn: 'Change Image / GIF',
-    avatarRemoveBtn: 'Remove',
-    avatarUrlBtn: 'Paste URL',
-    avatarUploadNote: 'Supports animated GIF, PNG, JPG, WebP up to 10MB. Uploaded directly to cloud storage and synchronized across all sessions.',
-
-    // Preferences
-    prefHeading: '2. System Display & Workstation Preferences',
-    prefSub: 'Customize visual themes, date-time telemetry formatting, and workstation auto-logout limits.',
-    themeInterface: 'Theme Interface',
-    themeDark: 'Dark Industrial',
-    themeDarkDesc: 'Standard plant dark theme (OLED optimized)',
-    themeLight: 'High Contrast Daylight',
-    themeLightDesc: 'Daylight control room mode (High visibility)',
-    themeSys: 'System Default',
-    themeSysDesc: 'Synchronized with operating system',
-    language: 'Bahasa / Language',
-    timeFormat: 'Time Telemetry Format',
-    dateFormat: 'Date Display Format',
-    autoLogout: 'Workstation Inactivity Auto-Logout',
-
-    // Notifications
-    notifHeading: '3. Operational Alerts & Annunciator Controls',
-    notifSub: 'Configure automated supervisory chimes and quality decision broadcasts.',
-    testSound: 'Test Sound Chime',
-    alertQC: 'QC Approval & Release Alert',
-    alertQCDesc: 'Instant banner and audio chime when QC Lab issues Accept / Reject decision.',
-    alertShift: 'Shift Change Handover Alert',
-    alertShiftDesc: '15-minute countdown alert before shift transitions (06:00, 14:00, 22:00).',
-    alertAbnormal: 'Abnormal Process Critical Deviation Alert',
-    alertAbnormalDesc: 'Urgent red alert when temperature, vacuum, or feed rate exceeds parameter specifications.',
-    alertReport: 'Daily Production Report Ready Notification',
-    alertReportDesc: 'Automatic notification upon generation of the 24-hour master plant record.',
-
-    // Security
-    secHeading: '4. Security Hardening & Session Governance',
-    secSub: 'Sync password credentials with Supabase, monitor active workstations, and review sign-in audits.',
-    syncPassword: 'Synchronize Password (Supabase Auth)',
-    currentPass: 'Current Operator Password',
-    newPass: 'New Secure Password',
-    confirmPass: 'Confirm New Password',
-    btnUpdatePass: 'Update Password in Supabase',
-    twoFactor: 'Two-Factor Authentication (2FA)',
-    twoFactorDesc: 'Multi-factor authentication (TOTP via Google Authenticator / Microsoft Authenticator) for supervisory process overrides.',
-    setup2FA: 'Setup 2FA',
-    disable2FA: 'Disable 2FA',
-    enabledBadge: 'ACTIVE & ENFORCED',
-    activeSessions: 'Active Workstation Sessions',
-    primaryConsole: 'Primary Control Room Console (This Device)',
-    activeNow: 'ACTIVE NOW',
-    terminateOthers: 'Terminate Other Workstations',
-    loginHistory: 'Recent Authentication Audit Trail',
-    refreshLog: 'Refresh Log',
-
-    // Data
-    dataHeading: '5. Data Pipeline, Backup & Audit Logs',
-    dataSub: 'Configure export formats, inspect cloud replication health, and retrieve compliance audit files.',
-    defaultReportFormat: 'Default Report File Format',
-    defaultReportDesc: 'Preferred output when triggering certificate and shift reports.',
-    cloudBackup: 'Automated Cloud Backup',
-    cloudBackupDesc: 'Nightly snapshot archive to secure encrypted cloud storage.',
-    backupNow: 'Trigger Manual Cloud Snapshot Now',
-    exportAuditCsv: 'Export System Audit Trail (CSV)',
-    exportAuditDesc: 'Download full ISO 22000 verification history and telemetry mutation logs.',
-    downloadCsv: 'Download Audit Log',
-    replicationStatus: 'Database Replication & Health',
-    pingSupabase: 'Ping Supabase Latency',
-
-    // About
-    aboutHeading: '6. System Governance & Architecture',
-    aboutSub: 'Official build telemetry, regulatory standards, and copyright attribution.',
-    appVersion: 'APPLICATION VERSION',
-    buildNumber: 'BUILD NUMBER',
-    dbEngine: 'DATABASE ENGINE',
-    compliance: 'COMPLIANCE ACCREDITATION',
-    checkUpdates: 'Check for System Updates',
-    copyright: '© 2026 Lam Soon Edible Oils Sdn. Bhd. All rights reserved.'
-  },
-  ms: {
-    modalTitle: 'Tetapan Stesen Kerja & Keutamaan Sistem',
-    modalSub: 'Konfigurasi PRD-REF-001 · Loji Deodorizer Nisshin',
-    sections: 'Bahagian Konfigurasi',
-    close: 'Tutup Tetapan',
-    tabProfile: 'Profil Operator',
-    tabPreferences: 'Keutamaan Sistem',
-    tabNotifications: 'Pemberitahuan & Amaran',
-    tabSecurity: 'Keselamatan & Akses',
-    tabData: 'Pengurusan Data & Eksport',
-    tabAbout: 'Mengenai Sistem Loji',
-    
-    // Profile
-    profileHeading: '1. Identiti & Pengesahan Operator',
-    profileSub: 'Maklumat kakitangan loji, penempatan jabatan, dan tandatangan syif operasi.',
-    fullName: 'Nama Penuh',
-    employeeId: 'ID Pekerja (Employee ID)',
-    department: 'Jabatan Kilang',
-    systemRole: 'Kebenaran Peranan Sistem',
-    activeStation: 'Stesen Aktif',
-    lastAuth: 'Log Masuk Terakhir',
-    saveProfile: 'Simpan Perubahan Profil',
-    saving: 'Menyimpan...',
-    changePasswordQuick: 'Tukar Kata Laluan (Pergi ke Keselamatan)',
-    updatePassDirect: 'Tukar Kata Laluan (Selaras ke Supabase)',
-    currentPassDirect: 'Kata Laluan Operator Semasa',
-    currentPassDirectPlaceholder: 'Masukkan kata laluan semasa untuk pengesahan',
-    newPassPlaceholder: 'Biarkan kosong jika kekal kata laluan sedia ada',
-    confirmPassPlaceholder: 'Masukkan semula kata laluan baharu',
-    passNote: 'Sekurang-kurangnya 6 aksara · Diselaraskan terus ke pangkalan data Supabase',
-    avatarUploadBtn: 'Muat Naik Imej / GIF',
-    avatarChangeBtn: 'Tukar Imej / GIF',
-    avatarRemoveBtn: 'Padam Foto',
-    avatarUrlBtn: 'Guna Link URL',
-    avatarUploadNote: 'Menyokong animasi GIF, PNG, JPG, WebP sehingga 10MB. Disimpan terus ke storan awan Supabase & diselaras ke semua peranti.',
-
-    // Preferences
-    prefHeading: '2. Pilihan Paparan & Stesen Kerja',
-    prefSub: 'Sesuaikan tema visual, format telemetri tarikh-masa, dan had log keluar automatik.',
-    themeInterface: 'Tema Antara Muka',
-    themeDark: 'Gelap Industri (Dark)',
-    themeDarkDesc: 'Tema gelap standard loji penapisan (Mesra OLED)',
-    themeLight: 'Kontras Siang (Daylight)',
-    themeLightDesc: 'Mod bilik kawalan waktu siang (Keterlihatan tinggi)',
-    themeSys: 'Lalai Sistem Operasi',
-    themeSysDesc: 'Mengikut tetapan komputer workstation',
-    language: 'Bahasa / Language',
-    timeFormat: 'Format Waktu Telemetri',
-    dateFormat: 'Format Paparan Tarikh',
-    autoLogout: 'Log Keluar Automatik Ketidakaktifan',
-
-    // Notifications
-    notifHeading: '3. Kawalan Amaran & Sistem Penggera',
-    notifSub: 'Konfigurasi loceng amaran penyelia dan siaran keputusan makmal kualiti.',
-    testSound: 'Uji Bunyi Loceng',
-    alertQC: 'Amaran Kelulusan & Pelepasan QC',
-    alertQCDesc: 'Pemberitahuan segera dan bunyi loceng apabila Makmal QC membuat keputusan Lulus / Tolak.',
-    alertShift: 'Amaran Pertukaran Syif Kerja',
-    alertShiftDesc: 'Pengiraan undur 15 minit sebelum pertukaran syif (06:00, 14:00, 22:00).',
-    alertAbnormal: 'Amaran Sisihan Kritikal Proses Tidak Normal',
-    alertAbnormalDesc: 'Amaran merah apabila suhu deodorizer, vakum, atau kadar suapan melebihi had piawaian.',
-    alertReport: 'Pemberitahuan Laporan Harian Sedia',
-    alertReportDesc: 'Notifikasi automatik apabila rekod induk 24 jam loji selesai dijana.',
-
-    // Security
-    secHeading: '4. Pengukuhan Keselamatan & Kawalan Sesi',
-    secSub: 'Selaraskan kata laluan dengan Supabase, pantau stesen kerja aktif, dan semak log masuk.',
-    syncPassword: 'Penyegerakan Kata Laluan (Supabase Auth)',
-    currentPass: 'Kata Laluan Operator Semasa',
-    newPass: 'Kata Laluan Baharu Yang Selamat',
-    confirmPass: 'Sahkan Kata Laluan Baharu',
-    btnUpdatePass: 'Kemas Kini Kata Laluan di Supabase',
-    twoFactor: 'Pengesahan Dua-Faktor (2FA)',
-    twoFactorDesc: 'Pengesahan pelbagai faktor (kod TOTP melalui Google Authenticator) untuk pengesahan pintasan proses kritikal.',
-    setup2FA: 'Sediakan 2FA',
-    disable2FA: 'Nyahaktifkan 2FA',
-    enabledBadge: 'AKTIF & DIPERKETATKAN',
-    activeSessions: 'Sesi Stesen Kerja Aktif',
-    primaryConsole: 'Konsol Utama Bilik Kawalan (Peranti Ini)',
-    activeNow: 'SEDANG AKTIF',
-    terminateOthers: 'Tamatkan Sesi Lain',
-    loginHistory: 'Jejak Audit Log Masuk Terkini',
-    refreshLog: 'Muat Semula Log',
-
-    // Data
-    dataHeading: '5. Saluran Data, Sandaran & Log Audit',
-    dataSub: 'Konfigurasi format eksport, periksa kesihatan replikasi awan, dan muat turun jejak audit.',
-    defaultReportFormat: 'Format Fail Laporan Lalai',
-    defaultReportDesc: 'Format pilihan semasa mencetak sijil analisis dan laporan syif.',
-    cloudBackup: 'Sandaran Awan Automatik',
-    cloudBackupDesc: 'Arkib snapshot setiap malam ke storan awan yang disulitkan.',
-    backupNow: 'Mulakan Sandaran Manual Sekarang',
-    exportAuditCsv: 'Eksport Jejak Audit Sistem (CSV)',
-    exportAuditDesc: 'Muat turun sejarah pengesahan piawaian ISO 22000 dan log mutasi parameter.',
-    downloadCsv: 'Muat Turun Log Audit',
-    replicationStatus: 'Status Replikasi & Kesihatan Pangkalan Data',
-    pingSupabase: 'Uji Latensi Ping Supabase',
-
-    // About
-    aboutHeading: '6. Tadbir Urus & Senibina Sistem',
-    aboutSub: 'Telemetri binaan rasmi, piawaian kawal selia, dan hak cipta terpelihara.',
-    appVersion: 'VERSI APLIKASI',
-    buildNumber: 'NOMBOR BINAAN',
-    dbEngine: 'ENJIN PANGKALAN DATA',
-    compliance: 'AKREDITASI KEPATUHAN',
-    checkUpdates: 'Semak Kemas Kini Sistem',
-    copyright: '© 2026 Lam Soon Edible Oils Sdn. Bhd. Hak cipta terpelihara.'
-  }
+  en: DICT_EN,
+  ms: DICT_EN
 };
 
 interface SettingsModalProps {
@@ -409,17 +304,42 @@ export default function SettingsModal({
   const [isTerminatingOthers, setIsTerminatingOthers] = useState(false);
   const [isRefreshingAudit, setIsRefreshingAudit] = useState(false);
 
+  const isAdmin = currentUser?.role === 'admin';
+
+  const getRoleDefaultDepartment = (role?: string) => {
+    switch (role) {
+      case 'admin':
+        return 'Plant Administration & Executive';
+      case 'qc_analyst':
+      case 'qc_manager':
+        return 'Quality Control & Analytical Lab';
+      case 'viewer':
+        return 'Quality Assurance & Audit';
+      case 'supervisor':
+      case 'operator':
+      default:
+        return 'Refinery Plant Operations';
+    }
+  };
+
   // Sync settings and state from localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
         const stored = localStorage.getItem('refinery_system_settings');
         if (stored) {
-          setSettings(JSON.parse(stored));
+          const parsed = JSON.parse(stored);
+          setSettings({ ...parsed, language: 'en' });
         }
         if (currentUser?.employee_no) {
           const storedDept = localStorage.getItem(`refinery_department_${currentUser.employee_no}`);
-          if (storedDept) setDepartment(storedDept);
+          if (storedDept) {
+            setDepartment(storedDept);
+          } else {
+            const fallbackDept = getRoleDefaultDepartment(currentUser?.role);
+            setDepartment(fallbackDept);
+            localStorage.setItem(`refinery_department_${currentUser.employee_no}`, fallbackDept);
+          }
           const stored2Fa = localStorage.getItem(`refinery_2fa_${currentUser.employee_no}`);
           if (stored2Fa === 'true') setIs2FaEnabled(true);
         }
@@ -472,21 +392,17 @@ export default function SettingsModal({
     const maxSizeBytes = 10 * 1024 * 1024; // 10MB
 
     if (file.size > maxSizeBytes) {
-      showToast(lang === 'ms' 
-        ? `Saiz ${isGif ? 'GIF' : 'imej'} melebihi had (10MB). Sila pilih fail yang lebih kecil.` 
-        : `File size exceeds limit (10MB). Please choose a smaller file.`);
+      showToast(`File size exceeds limit (10MB). Please choose a smaller file.`);
       return;
     }
 
     if (!file.type.startsWith('image/') && !isGif && !file.name.toLowerCase().match(/\.(gif|jpg|jpeg|png|webp|svg)$/i)) {
-      showToast(lang === 'ms' 
-        ? 'Fail mestilah format imej (GIF, JPG, PNG, WebP).' 
-        : 'File must be an image format (GIF, JPG, PNG, WebP).');
+      showToast('File must be an image format (GIF, JPG, PNG, WebP).');
       return;
     }
 
     setIsUploadingAvatar(true);
-    setAvatarUploadStatus(lang === 'ms' ? 'Menyediakan fail...' : 'Preparing file...');
+    setAvatarUploadStatus('Preparing file...');
 
     // 1. Instant local preview so user sees animation right away
     try {
@@ -496,7 +412,7 @@ export default function SettingsModal({
 
     // 2. Upload to Supabase Storage via /api/avatar/upload
     try {
-      setAvatarUploadStatus(lang === 'ms' ? 'Memuat naik ke awan Supabase...' : 'Uploading to cloud storage...');
+      setAvatarUploadStatus('Uploading to cloud storage...');
       const formData = new FormData();
       formData.append('file', file);
       if (currentUser?.employee_no) {
@@ -547,14 +463,10 @@ export default function SettingsModal({
         initWorkstationTracking(updated);
       }
 
-      showToast(lang === 'ms'
-        ? 'Animasi GIF avatar berjaya dimuat naik & diselaraskan ke semua peranti!'
-        : 'Animated GIF avatar uploaded and synchronized across all workstations!');
+      showToast('Animated GIF avatar uploaded and synchronized across all workstations!');
     } catch (uploadErr: any) {
       console.error('[Avatar Upload Error]:', uploadErr);
-      showToast(lang === 'ms'
-        ? `Ralat muat naik: ${uploadErr.message || 'Gagal memuat naik fail'}`
-        : `Upload error: ${uploadErr.message || 'Failed to upload image'}`);
+      showToast(`Upload error: ${uploadErr.message || 'Failed to upload image'}`);
     } finally {
       setIsUploadingAvatar(false);
       setAvatarUploadStatus('');
@@ -567,7 +479,7 @@ export default function SettingsModal({
     if (!cleanUrl) return;
 
     if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://') && !cleanUrl.startsWith('data:image/')) {
-      showToast(lang === 'ms' ? 'Sila masukkan pautan URL yang sah (cth: https://...)' : 'Please enter a valid URL (e.g. https://...)');
+      showToast('Please enter a valid URL (e.g. https://...)');
       return;
     }
 
@@ -616,9 +528,7 @@ export default function SettingsModal({
       } catch {}
     }
 
-    showToast(lang === 'ms' 
-      ? 'URL Avatar/GIF berjaya ditetapkan & diselaraskan!' 
-      : 'Avatar/GIF URL set and synchronized successfully!');
+    showToast('Avatar/GIF URL set and synchronized successfully!');
   };
 
   const handleRemoveAvatar = async () => {
@@ -663,7 +573,7 @@ export default function SettingsModal({
         });
       } catch {}
     }
-    showToast(lang === 'ms' ? 'Foto avatar dipadamkan.' : 'Avatar photo removed.');
+    showToast('Avatar photo removed.');
   };
 
   // Keyboard Escape listener to close modal (Must be before early return to adhere to React Hook rules)
@@ -686,8 +596,8 @@ export default function SettingsModal({
 
   if (!isOpen || !mounted) return null;
 
-  const lang = settings.language === 'ms' ? 'ms' : 'en';
-  const t = DICT[lang];
+  const lang = 'en';
+  const t = DICT.en;
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -713,7 +623,7 @@ export default function SettingsModal({
         osc.start(now);
         osc.stop(now + 0.6);
       }
-      showToast(lang === 'ms' ? 'Loceng amaran dibunyikan dengan berjaya (880Hz / 1174Hz).' : 'Chime audio alert tested successfully.');
+      showToast('Chime audio alert tested successfully.');
     } catch (err) {
       showToast('Audio test completed.');
     }
@@ -764,9 +674,7 @@ export default function SettingsModal({
       } catch {}
     }
     applyTheme(newSettings.theme);
-    showToast(lang === 'ms' 
-      ? `Tema ${newSettings.theme === 'dark' ? 'Gelap Industri' : newSettings.theme === 'light' ? 'Kontras Siang' : 'Lalai Sistem'} diaktifkan.` 
-      : `Theme updated to ${newSettings.theme === 'dark' ? 'Dark Industrial' : newSettings.theme === 'light' ? 'High Contrast Daylight' : 'System Default'}.`);
+    showToast(`Theme updated to ${newSettings.theme === 'dark' ? 'Dark Industrial' : newSettings.theme === 'light' ? 'High Contrast Daylight' : 'System Default'}.`);
   };
 
   // Full Profile Update: Local state + Supabase Sync (Name + Avatar)
@@ -829,7 +737,10 @@ export default function SettingsModal({
 
       if (typeof window !== 'undefined') {
         localStorage.setItem('refinery_auth_user', JSON.stringify(updated));
-        localStorage.setItem(`refinery_department_${currentUser.employee_no}`, department);
+        // Only Plant Administrator can modify department allocation
+        if (isAdmin) {
+          localStorage.setItem(`refinery_department_${currentUser.employee_no}`, department);
+        }
         
         // Update all profiles in cache
         const all = getProfiles();
@@ -851,11 +762,9 @@ export default function SettingsModal({
       // 4. Proactive sync to ensure cache matches
       syncProfilesFromSupabase().catch(() => {});
 
-      showToast(lang === 'ms' 
-        ? 'Profil operator & avatar berjaya dikemaskini dan diselaraskan ke Supabase!' 
-        : 'Operator profile details & avatar updated and synced with Supabase.');
+      showToast('Operator profile details & avatar updated and synced with Supabase.');
     } catch (err: any) {
-      showToast(lang === 'ms' ? 'Profil dikemaskini secara tempatan.' : 'Profile updated in local session.');
+      showToast('Profile updated in local session.');
     } finally {
       setIsSavingProfile(false);
     }
@@ -876,9 +785,7 @@ export default function SettingsModal({
     if (currentPassword.trim() !== expectedOld) {
       setPasswordStatus({ 
         type: 'error', 
-        message: lang === 'ms' 
-          ? 'Kata laluan semasa tidak tepat! Sila masukkan kata laluan sedia ada yang betul.' 
-          : 'Current password is incorrect! Please enter your valid current password.' 
+        message: 'Current password is incorrect! Please enter your valid current password.' 
       });
       return;
     }
@@ -886,7 +793,7 @@ export default function SettingsModal({
     if (newPassword.length < 6) {
       setPasswordStatus({ 
         type: 'error', 
-        message: lang === 'ms' ? 'Kata laluan baharu mesti sekurang-kurangnya 6 aksara.' : 'New password must be at least 6 characters long.' 
+        message: 'New password must be at least 6 characters long.' 
       });
       return;
     }
@@ -894,7 +801,7 @@ export default function SettingsModal({
     if (newPassword !== confirmPassword) {
       setPasswordStatus({ 
         type: 'error', 
-        message: lang === 'ms' ? 'Pengesahan kata laluan baharu tidak sepadan.' : 'New password and confirmation password do not match.' 
+        message: 'New password and confirmation password do not match.' 
       });
       return;
     }
@@ -947,14 +854,12 @@ export default function SettingsModal({
       setIsUpdatingPassword(false);
       setPasswordStatus({ 
         type: 'success', 
-        message: lang === 'ms'
-          ? 'Kata laluan berjaya dikemas kini dan diselaraskan ke pangkalan data Supabase!'
-          : 'Password successfully updated and synchronized with Supabase database!' 
+        message: 'Password successfully updated and synchronized with Supabase database!' 
       });
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
-      showToast(lang === 'ms' ? 'Kata laluan baharu aktif serta-merta.' : 'New password active for next login.');
+      showToast('New password active for next login.');
     } catch (err: any) {
       setIsUpdatingPassword(false);
       setPasswordStatus({ 
@@ -993,7 +898,7 @@ export default function SettingsModal({
         URL.revokeObjectURL(url);
 
         setBackupStatusText(`Manual snapshot archived successfully (${(jsonStr.length / 1024).toFixed(1)} KB)`);
-        showToast(lang === 'ms' ? 'Sandaran data loji berjaya dimuat turun ke komputer.' : 'Plant snapshot backup downloaded successfully.');
+        showToast('Plant snapshot backup downloaded successfully.');
       } catch (err) {
         showToast('Backup completed.');
       } finally {
@@ -1013,17 +918,13 @@ export default function SettingsModal({
         const parsed = JSON.parse(event.target?.result as string);
         const res = importPlantSnapshotData(parsed);
         if (res.success) {
-          showToast(
-            lang === 'ms'
-              ? `Berjaya memulihkan ${res.countSheets} syif dan ${res.countSamples} laporan sampel ke pelayar ini!`
-              : `Successfully imported ${res.countSheets} process sheets and ${res.countSamples} sample reports!`
-          );
+          showToast(`Successfully imported ${res.countSheets} process sheets and ${res.countSamples} sample reports!`);
           setBackupStatusText(`Snapshot imported (${(file.size / 1024).toFixed(1)} KB) - ${new Date().toLocaleTimeString()}`);
         } else {
-          showToast(res.error || 'Ralat memproses fail snapshot.');
+          showToast(res.error || 'Error processing snapshot file.');
         }
       } catch (err) {
-        showToast(lang === 'ms' ? 'Format fail JSON tidak sah.' : 'Invalid JSON file format.');
+        showToast('Invalid JSON file format.');
       }
     };
     reader.readAsText(file);
@@ -1036,14 +937,10 @@ export default function SettingsModal({
     try {
       await syncMasterPlantDataFromServer();
       const res = restoreOfficialFactoryBaseline();
-      showToast(
-        lang === 'ms'
-          ? `Data rasmi loji berjaya disegerakkan: ${res.sheets} syif proses & ${res.samples} laporan QC!`
-          : `Official plant master synchronized: ${res.sheets} shifts & ${res.samples} QC reports!`
-      );
+      showToast(`Official plant master synchronized: ${res.sheets} shifts & ${res.samples} QC reports!`);
       setBackupStatusText(`Master dataset verified (10 shifts, 54 reports) at ${new Date().toLocaleTimeString()}`);
     } catch {
-      showToast(lang === 'ms' ? 'Ralat menyegerakkan data rasmi.' : 'Error syncing master data.');
+      showToast('Error syncing master data.');
     } finally {
       setIsRestoringBaseline(false);
     }
@@ -1057,7 +954,7 @@ export default function SettingsModal({
       await fetch('/api/profiles?ping=1', { cache: 'no-store' });
       const duration = Math.round(performance.now() - start);
       setPingLatency(Math.max(duration, 18));
-      showToast(lang === 'ms' ? `Ujian latensi berjaya: ${Math.max(duration, 18)} ms` : `Ping successful: ${Math.max(duration, 18)} ms`);
+      showToast(`Ping successful: ${Math.max(duration, 18)} ms`);
     } catch {
       setPingLatency(32);
       showToast('Ping latency: 32 ms');
@@ -1072,15 +969,11 @@ export default function SettingsModal({
     try {
       const res = await terminateOtherWorkstations(currentUser?.employee_no || currentUser?.full_name);
       setSessionTerminated(true);
-      showToast(
-        lang === 'ms'
-          ? `Berjaya menamatkan ${res.terminatedCount} sesi stesen kerja lain.`
-          : `Successfully terminated ${res.terminatedCount} remote workstation session(s).`
-      );
+      showToast(`Successfully terminated ${res.terminatedCount} remote workstation session(s).`);
       const trail = await getAuthenticationAuditTrail();
       setAuditTrail(trail);
     } catch {
-      showToast(lang === 'ms' ? 'Ralat menamatkan sesi stesen lain.' : 'Failed to terminate remote workstations.');
+      showToast('Failed to terminate remote workstations.');
     } finally {
       setIsTerminatingOthers(false);
     }
@@ -1090,11 +983,7 @@ export default function SettingsModal({
   const handleTerminateSingle = async (deviceId: string, stationName: string) => {
     try {
       await terminateSingleWorkstation(deviceId, currentUser?.employee_no || currentUser?.full_name);
-      showToast(
-        lang === 'ms'
-          ? `Sesi ${stationName} telah ditamatkan secara paksa.`
-          : `Session on ${stationName} terminated.`
-      );
+      showToast(`Session on ${stationName} terminated.`);
       const trail = await getAuthenticationAuditTrail();
       setAuditTrail(trail);
     } catch {
@@ -1108,7 +997,7 @@ export default function SettingsModal({
     try {
       const trail = await getAuthenticationAuditTrail();
       setAuditTrail(trail);
-      showToast(lang === 'ms' ? 'Jejak audit log masuk dikemas kini dari pangkalan data.' : 'Authentication audit trail refreshed from database.');
+      showToast('Authentication audit trail refreshed from database.');
     } catch {
       showToast('Audit trail refreshed.');
     } finally {
@@ -1121,8 +1010,8 @@ export default function SettingsModal({
     setIsCheckingUpdate(true);
     setTimeout(() => {
       setIsCheckingUpdate(false);
-      setUpdateCheckText(lang === 'ms' ? 'Sistem berada pada versi terkini (v1.0.0-RELEASE). Tiada kemas kini baharu diperlukan.' : 'Workstation is running the latest certified build (v1.0.0-RELEASE).');
-      showToast(lang === 'ms' ? 'Semakan kemas kini selesai: Sistem Terkini.' : 'System is up to date.');
+      setUpdateCheckText('Workstation is running the latest certified build (v1.0.0-RELEASE).');
+      showToast('System is up to date.');
     }, 800);
   };
 
@@ -1153,7 +1042,7 @@ export default function SettingsModal({
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      showToast(lang === 'ms' ? 'Log jejak audit sistem dimuat turun dalam format CSV.' : 'Plant audit log exported to CSV.');
+      showToast('Plant audit log exported to CSV.');
     } catch {
       showToast('Audit log export ready.');
     }
@@ -1309,7 +1198,7 @@ export default function SettingsModal({
                         <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center text-white z-20 backdrop-blur-[2px]">
                           <RefreshCw className="h-6 w-6 text-[#009FE3] animate-spin" />
                           <span className="text-[8px] font-mono text-slate-200 mt-1 font-semibold uppercase tracking-wider text-center px-1">
-                            {avatarUploadStatus || (lang === 'ms' ? 'Muat naik...' : 'Uploading...')}
+                            {avatarUploadStatus || 'Uploading...'}
                           </span>
                         </div>
                       )}
@@ -1369,7 +1258,7 @@ export default function SettingsModal({
                         {isUploadingAvatar ? (
                           <>
                             <RefreshCw className="h-3 w-3 text-[#009FE3] animate-spin" />
-                            <span>{lang === 'ms' ? 'Memuat naik...' : 'Uploading...'}</span>
+                            <span>Uploading...</span>
                           </>
                         ) : (
                           <>
@@ -1466,21 +1355,51 @@ export default function SettingsModal({
                     </div>
 
                     <div>
-                      <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                        {t.department}
-                      </label>
-                      <SearchableSelect
-                        value={department}
-                        onChange={(val) => setDepartment(val)}
-                        placeholder="Select Department"
-                        searchPlaceholder="Search department..."
-                        options={[
-                          { value: 'Refinery Plant Operations', label: 'Refinery Plant Operations' },
-                          { value: 'Quality Control & Analytical Lab', label: 'Quality Control & Analytical Lab' },
-                          { value: 'Engineering & Maintenance', label: 'Engineering & Maintenance' },
-                          { value: 'Plant Administration & Executive', label: 'Plant Administration & Executive' }
-                        ]}
-                      />
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label className="block text-xs font-medium text-slate-300">
+                          {t.department}
+                        </label>
+                        {isAdmin ? (
+                          <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded">
+                            Admin Editable
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1 text-[10px] font-mono text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded">
+                            <Lock className="w-2.5 h-2.5" />
+                            Locked (Admin Only)
+                          </span>
+                        )}
+                      </div>
+                      {isAdmin ? (
+                        <SearchableSelect
+                          value={department}
+                          onChange={(val) => setDepartment(val)}
+                          placeholder="Select Department"
+                          searchPlaceholder="Search department..."
+                          options={[
+                            { value: 'Refinery Plant Operations', label: 'Refinery Plant Operations' },
+                            { value: 'Quality Control & Analytical Lab', label: 'Quality Control & Analytical Lab' },
+                            { value: 'Engineering & Maintenance', label: 'Engineering & Maintenance' },
+                            { value: 'Plant Administration & Executive', label: 'Plant Administration & Executive' }
+                          ]}
+                        />
+                      ) : (
+                        <div className="relative">
+                          <input
+                            type="text"
+                            value={department}
+                            disabled
+                            className="w-full bg-[#070B12] border border-[#1F2E43] rounded-xl px-3 py-2 text-xs text-slate-300 font-mono cursor-not-allowed pr-8 select-none"
+                            title="Department allocation is strictly managed by Plant Administration"
+                          />
+                          <Lock className="w-3.5 h-3.5 text-slate-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        </div>
+                      )}
+                      {!isAdmin && (
+                        <p className="text-[10px] text-slate-500 mt-1 flex items-center gap-1">
+                          Department allocation is strictly managed by Plant Administration.
+                        </p>
+                      )}
                     </div>
 
                     <div>
@@ -1591,15 +1510,17 @@ export default function SettingsModal({
                       <span>{t.language}</span>
                     </label>
                     <SearchableSelect
-                      value={settings.language}
-                      onChange={(val) => handleSaveSettings({ ...settings, language: val as any })}
+                      value="en"
+                      onChange={() => handleSaveSettings({ ...settings, language: 'en' })}
                       placeholder="Select Language"
                       searchPlaceholder="Search language..."
                       options={[
-                        { value: 'en', label: 'English (UK / Plant Standard)' },
-                        { value: 'ms', label: 'Bahasa Melayu (Loji Penapisan Lam Soon)' }
+                        { value: 'en', label: 'English (UK / Plant SCADA Standard)' }
                       ]}
                     />
+                    <p className="text-[10px] text-slate-500 mt-1">
+                      Official refinery standard operating language is English.
+                    </p>
                   </div>
 
                   <div>
@@ -1882,7 +1803,7 @@ export default function SettingsModal({
                         if (currentUser?.employee_no) {
                           localStorage.setItem(`refinery_2fa_${currentUser.employee_no}`, 'false');
                         }
-                        showToast(lang === 'ms' ? '2FA telah dinyahaktifkan.' : '2FA disabled.');
+                        showToast('2FA disabled.');
                       } else {
                         setTwoFaCode('');
                         setTwoFaError(null);
@@ -1946,13 +1867,9 @@ export default function SettingsModal({
 
                       <div className="space-y-2.5 text-xs flex-1 w-full">
                         <p className="text-slate-300 leading-relaxed">
-                          {lang === 'ms' 
-                            ? '1. Buka aplikasi Google Authenticator / Microsoft Authenticator di telefon anda.' 
-                            : '1. Open Google Authenticator or Microsoft Authenticator on your mobile phone.'}
+                          1. Open Google Authenticator or Microsoft Authenticator on your mobile phone.
                           <br />
-                          {lang === 'ms' 
-                            ? '2. Imbas kod QR di sebelah, atau masukkan kunci rahsia Base32 ini:' 
-                            : '2. Scan the QR code, or enter this Base32 secret key manually:'}
+                          2. Scan the QR code, or enter this Base32 secret key manually:
                         </p>
 
                         {/* Secret Key Display with Copy Button */}
@@ -1967,7 +1884,7 @@ export default function SettingsModal({
                                 navigator.clipboard.writeText(twoFaSecret);
                                 setIsKeyCopied(true);
                                 setTimeout(() => setIsKeyCopied(false), 2000);
-                                showToast(lang === 'ms' ? 'Kunci rahsia disalin!' : 'Secret key copied!');
+                                showToast('Secret key copied!');
                               }
                             }}
                             className="px-2.5 py-1 rounded bg-[#101927] hover:bg-[#1E2D42] text-[10px] font-mono text-slate-300 border border-[#1F2E43] cursor-pointer transition-colors shrink-0 flex items-center gap-1"
@@ -1998,7 +1915,7 @@ export default function SettingsModal({
                             disabled={isVerifying2Fa}
                             onClick={async () => {
                               if (twoFaCode.length !== 6) {
-                                setTwoFaError(lang === 'ms' ? 'Sila masukkan kod 6-digit yang lengkap.' : 'Please enter the complete 6-digit code.');
+                                setTwoFaError('Please enter the complete 6-digit code.');
                                 return;
                               }
                               setIsVerifying2Fa(true);
@@ -2013,9 +1930,9 @@ export default function SettingsModal({
                                     localStorage.setItem(`refinery_2fa_${currentUser.employee_no}`, 'true');
                                     localStorage.setItem(`refinery_2fa_secret_${currentUser.employee_no}`, twoFaSecret);
                                   }
-                                  showToast(lang === 'ms' ? '2FA berjaya diaktifkan untuk akaun anda!' : '2FA verified & activated for this account.');
+                                  showToast('2FA verified & activated for this account.');
                                 } else {
-                                  setTwoFaError(lang === 'ms' ? 'Kod tidak tepat atau telah luput. Sila semak semula kod di Google Authenticator (kod demo: 123456).' : 'Invalid or expired code. Please check Google Authenticator (demo code: 123456).');
+                                  setTwoFaError('Invalid or expired code. Please check Google Authenticator (demo code: 123456).');
                                 }
                               } catch {
                                 setTwoFaError('Error verifying code.');
@@ -2025,7 +1942,7 @@ export default function SettingsModal({
                             }}
                             className="px-3.5 py-1.5 rounded-lg bg-[#009FE3] hover:bg-[#0089C4] disabled:opacity-50 text-white font-medium text-xs cursor-pointer transition-colors shadow-sm"
                           >
-                            {isVerifying2Fa ? 'Verifying...' : (lang === 'ms' ? 'Sahkan & Aktifkan' : 'Verify & Activate')}
+                            {isVerifying2Fa ? 'Verifying...' : 'Verify & Activate'}
                           </button>
                         </div>
                         <p className="text-[10px] text-slate-500 font-mono">
@@ -2062,21 +1979,19 @@ export default function SettingsModal({
                           <AlertDialogHeader>
                             <AlertDialogTitle>
                               <AlertTriangle className="h-5 w-5 text-amber-500" />
-                              {lang === 'ms' ? 'Tamatkan Semua Sesi Stesen Lain?' : 'Terminate Remote Workstations?'}
+                              Terminate Remote Workstations?
                             </AlertDialogTitle>
                             <AlertDialogDescription>
-                              {lang === 'ms'
-                                ? 'Tindakan ini akan memutuskan sambungan semua stesen kerja dan peranti lain yang sedang aktif di bawah akaun loji ini. Hanya stesen semasa ini akan kekal bersambung.'
-                                : 'This action will forcefully disconnect all other active workstations and devices under this plant account. Only this workstation will remain connected.'}
+                              This action will forcefully disconnect all other active workstations and devices under this plant account. Only this workstation will remain connected.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel>{lang === 'ms' ? 'Batal' : 'Cancel'}</AlertDialogCancel>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
                             <AlertDialogAction
                               variant="destructive"
                               onConfirm={handleTerminateOtherSessions}
                             >
-                              {lang === 'ms' ? 'Sahkan Tamatkan' : 'Confirm Terminate'}
+                              Confirm Terminate
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
@@ -2176,13 +2091,11 @@ export default function SettingsModal({
                                         Disconnect {session.stationName}?
                                       </AlertDialogTitle>
                                       <AlertDialogDescription>
-                                        {lang === 'ms'
-                                          ? `Putuskan sesi stesen kerja ${session.stationName} (IP: ${session.ip}) secara paksa?`
-                                          : `Forcefully terminate session for ${session.stationName} (IP: ${session.ip})?`}
+                                        Forcefully terminate session for {session.stationName} (IP: {session.ip})?
                                       </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
-                                      <AlertDialogCancel size="sm">{lang === 'ms' ? 'Batal' : 'Cancel'}</AlertDialogCancel>
+                                      <AlertDialogCancel size="sm">Cancel</AlertDialogCancel>
                                       <AlertDialogAction
                                         size="sm"
                                         variant="destructive"
@@ -2323,7 +2236,7 @@ export default function SettingsModal({
                         className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-[#1F2E43] hover:bg-[#2A3E59] text-white text-xs font-medium transition-all cursor-pointer"
                       >
                         <Download className="h-3.5 w-3.5 text-[#009FE3]" />
-                        <span>{isBackingUp ? 'Archiving...' : (lang === 'ms' ? 'Muat Turun Sandaran' : 'Export Snapshot')}</span>
+                        <span>{isBackingUp ? 'Archiving...' : 'Export Snapshot'}</span>
                       </button>
 
                       {/* 2. Import Snapshot JSON */}
@@ -2340,7 +2253,7 @@ export default function SettingsModal({
                         className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-[#1F2E43] hover:bg-[#2A3E59] text-white text-xs font-medium transition-all cursor-pointer"
                       >
                         <Upload className="h-3.5 w-3.5 text-amber-400" />
-                        <span>{lang === 'ms' ? 'Muat Naik Snapshot' : 'Import Snapshot'}</span>
+                        <span>Import Snapshot</span>
                       </button>
 
                       {/* 3. Sync 10-Shift Master Data */}
@@ -2351,7 +2264,7 @@ export default function SettingsModal({
                         className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-[#009FE3] hover:bg-[#0089C4] text-white text-xs font-medium shadow-md transition-all cursor-pointer"
                       >
                         <RefreshCw className={`h-3.5 w-3.5 ${isRestoringBaseline ? 'animate-spin' : ''}`} />
-                        <span>{isRestoringBaseline ? 'Syncing...' : (lang === 'ms' ? 'Segerak 10 Syif Rasmi' : 'Sync Master (10 Shifts)')}</span>
+                        <span>{isRestoringBaseline ? 'Syncing...' : 'Sync Master (10 Shifts)'}</span>
                       </button>
                     </div>
                   </div>

@@ -96,7 +96,7 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
       const result = await response.json();
 
       if (!response.ok || !result.success) {
-        throw new Error(result.error || 'Gagal menghantar tiket aduan.');
+        throw new Error(result.error || 'Failed to submit support ticket.');
       }
 
       const ticketId = result.ticketId;
@@ -108,11 +108,11 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
 
       if (tgSent) {
         setTicketSuccessMessage(
-          `✅ Tiket [${ticketId}] berjaya didaftarkan & notifikasi segera telah dihantar ke Telegram Pengurus Loji (@Refinery_alert_bot).`
+          `✅ Ticket [${ticketId}] registered successfully and notification was dispatched to Plant Management Telegram (@Refinery_alert_bot).`
         );
       } else {
         setTicketSuccessMessage(
-          `Tiket [${ticketId}] berjaya didaftarkan ke Audit Log Kilang. Sila buka Telegram bot (@Refinery_alert_bot) untuk mengaktifkan notifikasi segera.`
+          `Ticket [${ticketId}] logged to Plant Audit Trail. Please open Telegram bot (@Refinery_alert_bot) to activate real-time notifications.`
         );
       }
 
@@ -131,7 +131,7 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
       setTicketDescription('');
     } catch (err: any) {
       console.error('[Incident Ticket Dispatch Error]:', err);
-      setTicketErrorMessage(err.message || 'Ralat semasa menghantar tiket aduan.');
+      setTicketErrorMessage(err.message || 'Error submitting support ticket.');
     } finally {
       setIsSubmittingTicket(false);
     }
@@ -566,7 +566,7 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
                   <span>Report Plant Incident or Technical Issue</span>
                 </h3>
                 <p className="text-xs text-slate-400 mb-4">
-                  Log isu operasi, percanggahan nilai makmal, penderia SCADA atau sistem. Aduan akan terus disalurkan ke Telegram Pengurus Loji (@Refinery_alert_bot) secara automatik.
+                  Log operational anomalies, lab parameter discrepancies, SCADA sensor alerts, or system errors. Incident notifications are instantly routed to the Plant Management Telegram Bot (@Refinery_alert_bot).
                 </p>
 
                 {ticketSuccessMessage && (
@@ -588,7 +588,7 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
                             <svg className="w-3.5 h-3.5 fill-current text-sky-400 shrink-0" viewBox="0 0 24 24">
                               <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.3-.6.3l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.121l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.136-.953l11.57-4.458c.538-.196 1.006.128.832.941z"/>
                             </svg>
-                            Telegram Alert: Terus ke @Refinery_alert_bot {ticketTelegramMessageId ? `(Msg #${ticketTelegramMessageId})` : ''} · Tiada tindakan lanjut diperlukan
+                            Telegram Alert: Dispatched to @Refinery_alert_bot {ticketTelegramMessageId ? `(Msg #${ticketTelegramMessageId})` : ''} · No further action required
                           </span>
                         </div>
                       </div>
@@ -600,8 +600,8 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
                           <AlertTriangle className="h-3.5 w-3.5 text-amber-400 shrink-0" />
                           <span className="text-[11px] text-amber-300 font-mono">
                             {ticketTelegramError 
-                              ? `Status Bot: ${ticketTelegramError}. Sila buka bot dan tekan 'Start' di Telegram untuk mengaktifkan notifikasi:`
-                              : 'Untuk menerima notifikasi segera, buka bot Telegram dan tekan /start:'}
+                              ? `Bot Status: ${ticketTelegramError}. Please open the bot and press 'Start' on Telegram to activate notifications:`
+                              : 'To receive real-time notifications, open the Telegram bot and press /start:'}
                           </span>
                         </div>
 

@@ -501,13 +501,13 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
                     Sign Out of Plant Session?
                   </AlertDialogTitle>
                   <AlertDialogDescription>
-                    Adakah anda pasti ingin menamatkan sesi operasi anda sekarang? Sebarang perubahan atau draf laporan yang belum disimpan akan terbatal.
+                    Are you sure you want to terminate your plant session now? Any unsaved changes or draft entries will be lost.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Batal / Cancel</AlertDialogCancel>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
                   <AlertDialogAction variant="destructive" onConfirm={onLogout}>
-                    Sahkan Keluar / Sign Out
+                    Sign Out
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -691,11 +691,11 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
                       Sign Out of Session?
                     </AlertDialogTitle>
                     <AlertDialogDescription>
-                      Tamatkan sesi stesen kerja ini dan kembali ke skrin log masuk loji penapisan.
+                      Terminate this workstation session and return to the refinery sign-in screen.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Batal</AlertDialogCancel>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
                     <AlertDialogAction
                       variant="destructive"
                       onConfirm={() => {
@@ -703,7 +703,7 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
                         onLogout();
                       }}
                     >
-                      Sahkan Keluar
+                      Sign Out
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>

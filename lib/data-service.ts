@@ -3312,8 +3312,8 @@ export function submitQCDecision(data: {
         title: alertTitle,
         type: alertType,
         message: data.decision === 'reject'
-          ? `Lot ${report.lot_no} bagi produk ${report.product_name} telah DITOLAK oleh pihak QC.\nSebab: ${reasonObj?.label || 'Deviation'}\nPelupusan: ${(data.disposition || 'Hold').toUpperCase()}`
-          : `Lot ${report.lot_no} bagi produk ${report.product_name} telah disahkan (${data.decision.toUpperCase()}) oleh ${profile.full_name}.`,
+          ? `Lot ${report.lot_no} for product ${report.product_name} has been REJECTED by QC.\nReason: ${reasonObj?.label || 'Deviation'}\nDisposition: ${(data.disposition || 'Hold').toUpperCase()}`
+          : `Lot ${report.lot_no} for product ${report.product_name} has been verified (${data.decision.toUpperCase()}) by ${profile.full_name}.`,
         metadata: {
           'Lot No': report.lot_no,
           'Product': report.product_name,
@@ -4159,7 +4159,7 @@ export function importPlantSnapshotData(snapshotData: any): {
   countSamples?: number; 
 } {
   if (!snapshotData || typeof snapshotData !== 'object') {
-    return { success: false, error: 'Fail format tidak sah. Sila pilih fail JSON yang betul.' };
+    return { success: false, error: 'Invalid file format. Please select a valid JSON backup file.' };
   }
 
   try {
@@ -4221,7 +4221,7 @@ export function importPlantSnapshotData(snapshotData: any): {
       countSamples: sampleCount || getSampleReports().length 
     };
   } catch (err: any) {
-    return { success: false, error: err?.message || 'Ralat memproses fail sandaran.' };
+    return { success: false, error: err?.message || 'Error processing backup snapshot file.' };
   }
 }
 

@@ -157,7 +157,7 @@ ${escapeHtml(description)}
       telegramSent,
       telegramMessageId,
       telegramError,
-      message: `Tiket insiden ${ticketId} berjaya didaftarkan${telegramSent ? ' dan notifikasi telah dihantar ke Telegram Pengurus Loji' : ''}.`,
+      message: `Incident ticket ${ticketId} registered successfully${telegramSent ? ' and notification dispatched to Plant Manager Telegram' : ''}.`,
     });
   } catch (error: any) {
     console.error('[/api/support/ticket Error]:', error);

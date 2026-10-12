@@ -450,21 +450,21 @@ export default function AdminUserManagementView() {
   const handleAddUserSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName.trim()) {
-      setStatusMessage({ type: 'error', text: 'Sila masukkan nama penuh staf.' });
+      setStatusMessage({ type: 'error', text: 'Please enter the staff member\'s full name.' });
       return;
     }
 
     const cleanEmpId = (autoId || '').trim();
     if (!cleanEmpId) {
-      setStatusMessage({ type: 'error', text: 'Sila masukkan nombor Employee ID.' });
+      setStatusMessage({ type: 'error', text: 'Please enter an Employee ID number.' });
       return;
     }
 
     const check = isEmployeeIdAvailable(cleanEmpId);
     if (!check.available && check.existingProfile) {
-      const errMsg = `Nombor ID "${cleanEmpId}" sudah digunakan oleh kakitangan lain (${check.existingProfile.full_name} · ${check.existingProfile.role}). Sila gunakan nombor ID yang unik!`;
+      const errMsg = `Employee ID "${cleanEmpId}" is already assigned to ${check.existingProfile.full_name} (${check.existingProfile.role}). Please use a unique Employee ID!`;
       setStatusMessage({ type: 'error', text: errMsg });
-      showToast('error', 'Nombor ID Duplikasi', errMsg);
+      showToast('error', 'Duplicate Employee ID', errMsg);
       return;
     }
 
@@ -481,17 +481,17 @@ export default function AdminUserManagementView() {
 
       refreshData();
       setFullName('');
-      const successMsg = `✓ Kakitangan baru ${created.full_name} (${created.employee_no}) berjaya didaftarkan dan diselaraskan ke database cloud Supabase!`;
+      const successMsg = `✓ New staff member ${created.full_name} (${created.employee_no}) registered and synchronized with Supabase cloud database!`;
       setStatusMessage({ 
         type: 'success', 
         text: successMsg 
       });
-      showToast('success', 'Kakitangan Berjaya Didaftarkan', successMsg);
+      showToast('success', 'Staff Member Registered', successMsg);
       setAutoId(generateNextEmployeeId(selectedRole));
     } catch (err: any) {
-      const errMsg = err?.message || 'Gagal mendaftar kakitangan. Sila cuba lagi.';
+      const errMsg = err?.message || 'Failed to register staff member. Please try again.';
       setStatusMessage({ type: 'error', text: errMsg });
-      showToast('error', 'Ralat Pendaftaran Staf', errMsg);
+      showToast('error', 'Staff Registration Error', errMsg);
     } finally {
       setIsSubmitting(false);
     }
@@ -509,12 +509,12 @@ export default function AdminUserManagementView() {
     e.preventDefault();
     if (!editingProfile) return;
     if (!editFullName.trim()) {
-      showToast('error', 'Nama Diperlukan', 'Sila masukkan nama penuh staf.');
+      showToast('error', 'Full Name Required', 'Please enter the staff member\'s full name.');
       return;
     }
     const cleanId = editEmployeeNo.trim();
     if (!cleanId) {
-      showToast('error', 'ID Diperlukan', 'Sila masukkan nombor Employee ID.');
+      showToast('error', 'Employee ID Required', 'Please enter an Employee ID number.');
       return;
     }
 
@@ -522,8 +522,8 @@ export default function AdminUserManagementView() {
     if (!check.available && check.existingProfile) {
       showToast(
         'error', 
-        'Nombor ID Duplikasi', 
-        `Employee ID "${cleanId}" sudah digunakan oleh ${check.existingProfile.full_name} (${check.existingProfile.role})! Sila pilih nombor unik.`
+        'Duplicate Employee ID', 
+        `Employee ID "${cleanId}" is already in use by ${check.existingProfile.full_name} (${check.existingProfile.role})! Please choose a unique ID.`
       );
       return;
     }
@@ -539,11 +539,11 @@ export default function AdminUserManagementView() {
 
       refreshData();
       setEditingProfile(null);
-      const msg = `✓ Profil kakitangan "${updated.full_name}" (${updated.employee_no}) berjaya dikemaskini dan diselaraskan ke Supabase!`;
+      const msg = `✓ Staff profile "${updated.full_name}" (${updated.employee_no}) updated successfully and synchronized with Supabase!`;
       setStatusMessage({ type: 'success', text: msg });
-      showToast('success', 'Profil Dikemaskini', msg);
+      showToast('success', 'Profile Updated', msg);
     } catch (err: any) {
-      showToast('error', 'Ralat Kemaskini', err?.message || 'Gagal mengemaskini profil kakitangan.');
+      showToast('error', 'Update Error', err?.message || 'Failed to update staff profile.');
     } finally {
       setIsEditingSubmitting(false);
     }
@@ -643,7 +643,7 @@ export default function AdminUserManagementView() {
       type: 'success',
       text: switchMsg
     });
-    showToast('info', 'Sesi Pentadbir Diaktifkan', switchMsg);
+    showToast('info', 'Plant Administrator Session Activated', switchMsg);
   };
 
   const isAdmin = currentRole === 'admin';
@@ -832,7 +832,7 @@ export default function AdminUserManagementView() {
                   </div>
 
                   <div className="fld">
-                    <label htmlFor="ri">Employee ID (Nombor Fleksibel)</label>
+                    <label htmlFor="ri">Employee ID (Flexible Number)</label>
                     <input 
                       id="ri" 
                       disabled={!isAdmin}
@@ -847,16 +847,16 @@ export default function AdminUserManagementView() {
                     {isIdDuplicate && duplicateUser ? (
                       <div style={{ marginTop: '6px', padding: '8px 10px', borderRadius: '6px', background: 'rgba(244, 63, 94, 0.12)', border: '1px solid rgba(244, 63, 94, 0.3)', color: '#fda4af', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <AlertCircle style={{ width: '14px', height: '14px', flexShrink: 0, color: '#f43f5e' }} />
-                        <span>ID <strong>&quot;{cleanAutoId}&quot;</strong> sudah digunakan oleh <strong>{duplicateUser.full_name}</strong> ({duplicateUser.role}). Nombor ID mestilah unik!</span>
+                        <span>ID <strong>&quot;{cleanAutoId}&quot;</strong> is already in use by <strong>{duplicateUser.full_name}</strong> ({duplicateUser.role}). Employee ID must be unique!</span>
                       </div>
                     ) : cleanAutoId ? (
                       <div style={{ marginTop: '4px', fontSize: '11px', color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <CheckCircle2 style={{ width: '12px', height: '12px', flexShrink: 0 }} />
-                        <span>Nombor ID &quot;{cleanAutoId}&quot; unik dan tersedia.</span>
+                        <span>Employee ID &quot;{cleanAutoId}&quot; is unique and available.</span>
                       </div>
                     ) : (
                       <span className="hint" style={{ fontSize: '11px', marginTop: '4px' }}>
-                        Masukkan sebarang nombor kakitangan unik (bebas / fleksibel).
+                        Enter any unique staff ID number (flexible numeric sequence).
                       </span>
                     )}
                   </div>
@@ -894,7 +894,7 @@ export default function AdminUserManagementView() {
                       cursor: (isIdDuplicate || !cleanAutoId || !fullName.trim()) ? 'not-allowed' : 'pointer'
                     }}
                   >
-                    {isSubmitting ? 'Registering...' : isIdDuplicate ? 'Nombor ID Duplikasi (Mestilah Unik)' : 'Register staff and generate credentials'}
+                    {isSubmitting ? 'Registering...' : isIdDuplicate ? 'Duplicate Employee ID (Must Be Unique)' : 'Register staff and generate credentials'}
                   </button>
 
                   <p className="hint" style={{ marginTop: '12px', fontSize: '12px' }}>
@@ -1007,7 +1007,7 @@ export default function AdminUserManagementView() {
                                     type="button"
                                     className="ghost transition-all duration-150 active:scale-[0.96] cursor-pointer"
                                     onClick={() => handleOpenEdit(p)}
-                                    title="Edit profil kakitangan"
+                                    title="Edit staff profile"
                                     style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                                   >
                                     <Edit style={{ width: '13px', height: '13px' }} />
@@ -1555,7 +1555,7 @@ export default function AdminUserManagementView() {
               type="button"
               onClick={() => dismissToast(t.id)}
               className="shrink-0 p-1 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-[#172235] transition-colors cursor-pointer"
-              title="Tutup Notifikasi"
+              title="Dismiss Notification"
             >
               <X className="h-4 w-4" />
             </button>
@@ -1635,7 +1635,7 @@ export default function AdminUserManagementView() {
               {confirmModal.details?.name && (
                 <div className="bg-[#0A1018] border border-[#1F2E43] rounded-lg p-3.5 space-y-2">
                   <div className="text-[11px] font-mono text-slate-400 uppercase tracking-wider font-semibold">
-                    Maklumat Kakitangan Terlibat:
+                    Affected Staff Member Details:
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="text-sm font-semibold text-slate-100">
@@ -1671,7 +1671,7 @@ export default function AdminUserManagementView() {
               {confirmModal.requiresPassword && (
                 <div className="space-y-1.5 pt-1">
                   <label className="text-[11px] font-mono text-slate-500 block font-semibold">
-                    Kata Laluan Pentadbir (Admin Authorization):
+                    Plant Administrator Password (Admin Authorization):
                   </label>
                   <div className="relative">
                     <Lock className="h-4 w-4 text-slate-500 absolute left-3 top-3" />
@@ -1679,7 +1679,7 @@ export default function AdminUserManagementView() {
                       type="password"
                       value={modalPasswordInput}
                       onChange={(e) => setModalPasswordInput(e.target.value)}
-                      placeholder={confirmModal.passwordPlaceholder || 'Kata laluan pentadbir...'}
+                      placeholder={confirmModal.passwordPlaceholder || 'Enter administrator password...'}
                       className="w-full bg-[#0A1018] border border-[#1F2E43] rounded-lg pl-9 pr-3 py-2 text-xs font-mono text-slate-100 placeholder-slate-500 focus:outline-none focus:border-[#009FE3]"
                       autoFocus
                     />
@@ -1760,10 +1760,10 @@ export default function AdminUserManagementView() {
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-slate-100 font-sans">
-                    Kemaskini Profil Kakitangan
+                    Edit Staff Profile
                   </h3>
                   <p className="text-[11px] text-slate-400 font-mono">
-                    ID Asal: {editingProfile.employee_no} · {editingProfile.role}
+                    Original ID: {editingProfile.employee_no} · {editingProfile.role}
                   </p>
                 </div>
               </div>
@@ -1781,7 +1781,7 @@ export default function AdminUserManagementView() {
               {/* Full Name */}
               <div className="space-y-1.5">
                 <label className="text-xs font-mono text-slate-300 font-semibold block">
-                  Nama Penuh (Full Name)
+                  Full Name
                 </label>
                 <input
                   type="text"
@@ -1796,13 +1796,13 @@ export default function AdminUserManagementView() {
               {/* Role Selection */}
               <div className="space-y-1.5">
                 <label className="text-xs font-mono text-slate-300 font-semibold block">
-                  Jawatan / Role (Fleksibel)
+                  Assigned Role (Flexible)
                 </label>
                 <SearchableSelect
                   value={editRole}
                   onChange={(val) => setEditRole(val as UserRole)}
-                  placeholder="Pilih Jawatan"
-                  searchPlaceholder="Cari jawatan..."
+                  placeholder="Select Assigned Role"
+                  searchPlaceholder="Search role..."
                   options={[
                     { value: 'operator', label: 'Plant Operator' },
                     { value: 'supervisor', label: 'Shift Supervisor' },
@@ -1817,7 +1817,7 @@ export default function AdminUserManagementView() {
               {/* Employee ID (Flexible Number) */}
               <div className="space-y-1.5">
                 <label className="text-xs font-mono text-slate-300 font-semibold block">
-                  Employee ID (Nombor Fleksibel)
+                  Employee ID (Flexible Number)
                 </label>
                 <input
                   type="text"
@@ -1837,7 +1837,7 @@ export default function AdminUserManagementView() {
                     return (
                       <div className="p-2 rounded-lg bg-rose-950/40 border border-rose-800 text-rose-300 text-[11px] font-mono flex items-center gap-2">
                         <AlertCircle className="h-3.5 w-3.5 shrink-0 text-rose-400" />
-                        <span>ID &quot;{editEmployeeNo}&quot; sudah digunakan oleh {check.existingProfile.full_name}! Sila pilih nombor unik.</span>
+                        <span>ID &quot;{editEmployeeNo}&quot; is already in use by {check.existingProfile.full_name}! Please choose a unique number.</span>
                       </div>
                     );
                   }
@@ -1845,7 +1845,7 @@ export default function AdminUserManagementView() {
                     return (
                       <div className="text-[11px] font-mono text-emerald-400 flex items-center gap-1.5">
                         <CheckCircle2 className="h-3 w-3 shrink-0" />
-                        <span>Nombor ID &quot;{editEmployeeNo}&quot; sah dan unik.</span>
+                        <span>Employee ID &quot;{editEmployeeNo}&quot; is valid and unique.</span>
                       </div>
                     );
                   }
@@ -1856,14 +1856,14 @@ export default function AdminUserManagementView() {
               {/* Password */}
               <div className="space-y-1.5">
                 <label className="text-xs font-mono text-slate-300 font-semibold block">
-                  Kata Laluan Log Masuk (Password)
+                  Login Access Key / Password
                 </label>
                 <input
                   type="text"
                   value={editPassword}
                   onChange={(e) => setEditPassword(e.target.value)}
                   className="w-full bg-[#0A1018] border border-[#1F2E43] rounded-lg px-3 py-2 text-xs font-mono text-slate-100 placeholder-slate-500 focus:outline-none focus:border-[#009FE3]"
-                  placeholder="Kata laluan akaun..."
+                  placeholder="Account password..."
                 />
               </div>
 
@@ -1875,7 +1875,7 @@ export default function AdminUserManagementView() {
                   onClick={() => setEditingProfile(null)}
                   className="px-4 py-2 rounded-lg border border-[#1F2E43] bg-[#0A1018] hover:bg-[#172235] text-slate-300 font-mono text-xs transition-colors cursor-pointer"
                 >
-                  Batal
+                  Cancel
                 </button>
                 <button
                   type="submit"
@@ -1890,10 +1890,10 @@ export default function AdminUserManagementView() {
                   {isEditingSubmitting ? (
                     <>
                       <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                      <span>Menyimpan...</span>
+                      <span>Saving...</span>
                     </>
                   ) : (
-                    <span>Simpan Perubahan & Selaras Supabase</span>
+                    <span>Save Changes & Sync to Supabase</span>
                   )}
                 </button>
               </div>

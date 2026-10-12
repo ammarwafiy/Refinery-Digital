@@ -24,7 +24,7 @@ export default function ThemeSwitch({ currentTheme, onToggle, className = '' }: 
       <label 
         className="theme-switch-toggle" 
         htmlFor="theme-dn-switch"
-        title={isDark ? "Tukar ke Mod Siang (Light Mode)" : "Tukar ke Mod Gelap (Dark Mode)"}
+        title={isDark ? "Switch to Daylight Mode" : "Switch to Dark Industrial Mode"}
       >
         <span className="theme-switch-handler">
           <span className="theme-crater theme-crater--1"></span>
