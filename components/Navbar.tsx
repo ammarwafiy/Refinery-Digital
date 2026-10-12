@@ -65,7 +65,7 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [isHelpOpen, setIsHelpOpen] = useState<boolean>(false);
-  const [isNotificationOpen, setIsNotificationOpen] = useState<boolean>(false);
+  const [notificationAnchor, setNotificationAnchor] = useState<'desktop' | 'mobile' | null>(null);
   const [unreadBroadcastCount, setUnreadBroadcastCount] = useState<number>(0);
   const [currentTheme, setCurrentTheme] = useState<'dark' | 'light' | 'system'>('dark');
 
@@ -348,7 +348,7 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
             <div className="relative">
               <button
                 type="button"
-                onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+                onClick={() => setNotificationAnchor(prev => prev === 'mobile' ? null : 'mobile')}
                 className="relative flex items-center justify-center h-8 w-8 rounded-lg bg-[#101927] border border-[#1F2E43] text-slate-300 hover:text-white hover:border-[#009FE3]/50 transition-colors cursor-pointer select-none"
                 title="QC Sample Status (Accepted / Rejected)"
               >
@@ -360,14 +360,18 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
                 )}
               </button>
 
-              {isNotificationOpen && (
+              {notificationAnchor === 'mobile' && (
                 <QCNotificationDropdown
-                  isOpen={isNotificationOpen}
+                  isOpen={true}
                   onClose={() => {
-                    setIsNotificationOpen(false);
+                    setNotificationAnchor(null);
                     setUnreadBroadcastCount(getUnreadBroadcastCount());
                   }}
-                  onViewQC={() => setActiveTab('qc')}
+                  currentRole={role}
+                  onViewQC={() => {
+                    setNotificationAnchor(null);
+                    setActiveTab('qc');
+                  }}
                 />
               )}
             </div>
@@ -526,7 +530,7 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
           <div className="relative">
             <button
               type="button"
-              onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+              onClick={() => setNotificationAnchor(prev => prev === 'desktop' ? null : 'desktop')}
               className="relative flex items-center justify-center h-9 w-9 rounded-xl bg-[var(--surface)] hover:bg-[var(--raised)] border border-[var(--line)] text-slate-300 hover:text-white transition-all duration-150 active:scale-[0.96] cursor-pointer shadow-xs"
               title="QC Sample Status (Accepted / Rejected)"
             >
@@ -538,14 +542,18 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
               )}
             </button>
 
-            {isNotificationOpen && (
+            {notificationAnchor === 'desktop' && (
               <QCNotificationDropdown
-                isOpen={isNotificationOpen}
+                isOpen={true}
                 onClose={() => {
-                  setIsNotificationOpen(false);
+                  setNotificationAnchor(null);
                   setUnreadBroadcastCount(getUnreadBroadcastCount());
                 }}
-                onViewQC={() => setActiveTab('qc')}
+                currentRole={role}
+                onViewQC={() => {
+                  setNotificationAnchor(null);
+                  setActiveTab('qc');
+                }}
               />
             )}
           </div>
@@ -861,7 +869,7 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
 
       {/* Global Toast Notification Container */}
       <ToastContainer
-        onOpenDrawer={() => setIsNotificationOpen(true)}
+        onOpenDrawer={() => setNotificationAnchor('desktop')}
         onNavigateTab={(tab) => setActiveTab(tab)}
       />
     </>

@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { 
   BroadcastMessage, 
   getBroadcastMessages, 
   markAllBroadcastsAsRead, 
   clearBroadcastMessages 
 } from '@/lib/broadcast-service';
+import { UserRole } from '@/types/refinery';
 import { 
   CheckCircle2, 
   AlertCircle, 
@@ -22,15 +23,19 @@ interface QCNotificationDropdownProps {
   isOpen: boolean;
   onClose: () => void;
   onViewQC?: () => void;
+  currentRole?: UserRole;
 }
 
 export default function QCNotificationDropdown({
   isOpen,
   onClose,
   onViewQC,
+  currentRole = 'operator',
 }: QCNotificationDropdownProps) {
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const [messages, setMessages] = React.useState<BroadcastMessage[]>([]);
+  const [messages, setMessages] = useState<BroadcastMessage[]>([]);
+
+  const isQCRole = currentRole === 'qc_analyst' || currentRole === 'qc_manager' || currentRole === 'supervisor' || currentRole === 'admin';
 
   const refreshMessages = () => {
     setMessages(getBroadcastMessages());
@@ -52,7 +57,7 @@ export default function QCNotificationDropdown({
     };
   }, []);
 
-  // Click outside to close
+  // Click outside listener with safe delay
   useEffect(() => {
     if (!isOpen) return;
     const handleClickOutside = (event: MouseEvent) => {
@@ -60,8 +65,11 @@ export default function QCNotificationDropdown({
         onClose();
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
+    const timer = setTimeout(() => {
+      document.addEventListener('mousedown', handleClickOutside);
+    }, 80);
     return () => {
+      clearTimeout(timer);
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isOpen, onClose]);
@@ -69,15 +77,17 @@ export default function QCNotificationDropdown({
   if (!isOpen) return null;
 
   const handleMarkAllRead = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
     markAllBroadcastsAsRead();
-    refreshMessages();
+    setMessages(prev => prev.map(m => ({ ...m, read: true })));
   };
 
   const handleClearAll = (e: React.MouseEvent) => {
+    e.preventDefault();
     e.stopPropagation();
     clearBroadcastMessages();
-    refreshMessages();
+    setMessages([]);
   };
 
   const unreadCount = messages.filter(m => !m.read).length;
@@ -103,10 +113,10 @@ export default function QCNotificationDropdown({
     <div
       ref={dropdownRef}
       className="absolute right-0 top-full mt-2 w-80 sm:w-96 rounded-xl border border-[#1F2E43] bg-[#0A1018] shadow-2xl z-[99999] overflow-hidden font-sans select-none animate-alert-content-in"
-      style={{ boxShadow: '0 20px 40px rgba(0,0,0,0.7), 0 0 1px rgba(255,255,255,0.1)' }}
+      style={{ boxShadow: '0 20px 40px rgba(0,0,0,0.8), 0 0 1px rgba(255,255,255,0.1)' }}
       onClick={(e) => e.stopPropagation()}
     >
-      {/* 1. Header */}
+      {/* 1. Header with clear actionable buttons */}
       <div className="flex items-center justify-between px-3.5 py-2.5 bg-[#0F1726] border-b border-[#1F2E43]">
         <div className="flex items-center gap-2">
           <FlaskConical className="h-4 w-4 text-[#009FE3]" />
@@ -120,34 +130,42 @@ export default function QCNotificationDropdown({
           )}
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
+          {/* Read All Button */}
           {unreadCount > 0 && (
             <button
               type="button"
               onClick={handleMarkAllRead}
-              className="px-2 py-0.5 rounded text-[10px] font-mono text-slate-400 hover:text-emerald-400 hover:bg-emerald-950/30 transition-colors flex items-center gap-1 cursor-pointer"
-              title="Mark all as read"
+              className="px-2 py-1 rounded text-[10px] font-mono font-medium text-slate-300 hover:text-emerald-300 bg-slate-800/80 hover:bg-emerald-950/40 border border-slate-700/60 hover:border-emerald-500/40 transition-colors flex items-center gap-1 cursor-pointer active:scale-95"
+              title="Mark all notifications as read"
             >
-              <CheckCheck className="h-3 w-3" />
-              <span>Read</span>
+              <CheckCheck className="h-3 w-3 text-emerald-400" />
+              <span>Read All</span>
             </button>
           )}
 
+          {/* Clear All Button */}
           {messages.length > 0 && (
             <button
               type="button"
               onClick={handleClearAll}
-              className="p-1 rounded text-slate-500 hover:text-red-400 hover:bg-red-950/30 transition-colors cursor-pointer"
-              title="Clear all"
+              className="px-2 py-1 rounded text-[10px] font-mono font-medium text-slate-400 hover:text-red-300 bg-slate-800/80 hover:bg-red-950/40 border border-slate-700/60 hover:border-red-500/40 transition-colors flex items-center gap-1 cursor-pointer active:scale-95"
+              title="Clear all notification history"
             >
-              <Trash2 className="h-3 w-3" />
+              <Trash2 className="h-3 w-3 text-red-400" />
+              <span>Clear All</span>
             </button>
           )}
 
+          {/* Close Button */}
           <button
             type="button"
-            onClick={onClose}
-            className="p-1 rounded text-slate-500 hover:text-white transition-colors cursor-pointer"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onClose();
+            }}
+            className="p-1 rounded text-slate-500 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
             title="Close"
           >
             <X className="h-3.5 w-3.5" />
@@ -170,7 +188,6 @@ export default function QCNotificationDropdown({
             const isAccept = item.type === 'qc_accept';
             const isReject = item.type === 'qc_reject';
             const isConcession = item.type === 'qc_concession';
-            const isDispatch = item.type === 'qc_dispatch';
 
             return (
               <div
@@ -254,23 +271,34 @@ export default function QCNotificationDropdown({
         )}
       </div>
 
-      {/* 3. Footer */}
-      {onViewQC && (
-        <div className="p-2 bg-[#080D15] border-t border-[#1F2E43] flex items-center justify-between text-[11px] font-mono">
-          <span className="text-slate-500 text-[10px]">
-            Showing recent QC sample results
+      {/* 3. Footer: "Open QC Lab" is strictly for QC Roles only (qc_analyst, qc_manager, supervisor, admin) */}
+      {isQCRole && onViewQC ? (
+        <div className="p-2.5 bg-[#080D15] border-t border-[#1F2E43] flex items-center justify-between text-[11px] font-mono">
+          <span className="text-slate-400 text-[10px]">
+            QC Chemist Quick Navigation
           </span>
           <button
             type="button"
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
               onClose();
               onViewQC();
             }}
-            className="text-[#009FE3] hover:underline flex items-center gap-1 font-semibold cursor-pointer"
+            className="px-2.5 py-1 rounded bg-[#009FE3]/15 hover:bg-[#009FE3]/25 border border-[#009FE3]/40 text-[#009FE3] hover:text-[#00B4FF] flex items-center gap-1.5 font-semibold transition-all cursor-pointer shadow-xs active:scale-95"
+            title="Open QC Management Laboratory"
           >
             <span>Open QC Lab</span>
             <ExternalLink className="h-3 w-3" />
           </button>
+        </div>
+      ) : (
+        <div className="px-3 py-2 bg-[#080D15] border-t border-[#1F2E43] flex items-center justify-between text-[10px] font-mono text-slate-500">
+          <span>Plant Operator Live Feed</span>
+          <span className="text-emerald-500/90 flex items-center gap-1.5">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Real-time Active</span>
+          </span>
         </div>
       )}
     </div>

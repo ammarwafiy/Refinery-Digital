@@ -82,12 +82,12 @@ export function getBroadcastMessages(): BroadcastMessage[] {
   if (typeof window === 'undefined') return INITIAL_BROADCASTS;
   try {
     const raw = localStorage.getItem(STORAGE_KEY_BROADCASTS);
-    if (!raw) {
+    if (raw === null) {
       localStorage.setItem(STORAGE_KEY_BROADCASTS, JSON.stringify(INITIAL_BROADCASTS));
       return INITIAL_BROADCASTS;
     }
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : INITIAL_BROADCASTS;
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
     return INITIAL_BROADCASTS;
   }
