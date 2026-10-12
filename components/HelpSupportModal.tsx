@@ -242,11 +242,96 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
               <div className="bg-[#0E1726] border border-[#1F2E43] rounded-xl p-4">
                 <h3 className="text-sm font-semibold text-white flex items-center gap-2 mb-2">
                   <ShieldCheck className="h-4 w-4 text-[#009FE3]" />
-                  <span>Plant Operational Workflow Overview</span>
+                  <span>Plant Operational Workflow Overview &amp; User Tutorial</span>
                 </h3>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  The Refinery Digital Operations Suite unifies palm oil processing end-to-end—spanning physical hourly telemetry logs (Shift Handover), certified laboratory testing (QC Testing), multi-tiered supervisory approvals, and permanent 21 CFR Part 11 audit trails for ISO compliance.
+                <p className="text-xs text-slate-300 leading-relaxed mb-4">
+                  The Refinery Digital Operations Suite unifies palm oil processing end-to-end—spanning physical hourly telemetry logs, certified laboratory testing (QC Lab), multi-tiered supervisory approvals, and permanent 21 CFR Part 11 audit trails for ISO compliance.
                 </p>
+
+                {/* Step-by-Step Interactive Workflow Guide */}
+                <div className="border border-[#1F2E43] bg-[#070C16] rounded-xl p-4 space-y-3">
+                  <h4 className="text-xs font-bold text-[#009FE3] uppercase tracking-wider font-mono flex items-center gap-2">
+                    <Sparkles className="h-3.5 w-3.5" />
+                    <span>Quick Start: End-to-End Shift Operations Tutorial</span>
+                  </h4>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-5 gap-2.5 pt-1">
+                    {/* Step 1 */}
+                    <div className="bg-[#0D1524] border border-[#1A293E] p-3 rounded-lg flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[10px] font-mono font-bold text-[#009FE3] bg-[#009FE3]/15 px-1.5 py-0.5 rounded">STEP 1</span>
+                          <span className="text-[9px] font-mono text-slate-500">OPERATOR</span>
+                        </div>
+                        <h5 className="text-xs font-semibold text-white">Log Readings</h5>
+                        <p className="text-[11px] text-slate-400 mt-1 leading-snug">
+                          Select current active hour slot. Enter temperatures, feed rate, vacuum, and filter press data.
+                        </p>
+                      </div>
+                      <span className="text-[10px] text-slate-500 font-mono mt-2 block">Tip: Use &apos;Copy previous hour&apos;</span>
+                    </div>
+
+                    {/* Step 2 */}
+                    <div className="bg-[#0D1524] border border-[#1A293E] p-3 rounded-lg flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[10px] font-mono font-bold text-amber-400 bg-amber-400/15 px-1.5 py-0.5 rounded">STEP 2</span>
+                          <span className="text-[9px] font-mono text-slate-500">OPERATOR</span>
+                        </div>
+                        <h5 className="text-xs font-semibold text-white">Save &amp; Sample QC</h5>
+                        <p className="text-[11px] text-slate-400 mt-1 leading-snug">
+                          Click <b>Save Hour Log</b> to persist readings. Click <b>Sample For QC</b> to send oil sample to lab.
+                        </p>
+                      </div>
+                      <span className="text-[10px] text-amber-400/90 font-mono mt-2 block">Enqueues sample lot</span>
+                    </div>
+
+                    {/* Step 3 */}
+                    <div className="bg-[#0D1524] border border-[#1A293E] p-3 rounded-lg flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-400/15 px-1.5 py-0.5 rounded">STEP 3</span>
+                          <span className="text-[9px] font-mono text-slate-500">QC CHEMIST</span>
+                        </div>
+                        <h5 className="text-xs font-semibold text-white">Lab Test Run</h5>
+                        <p className="text-[11px] text-slate-400 mt-1 leading-snug">
+                          Open <b>QC Lab</b> tab. Select pending sample. Input FFA, Moisture &amp; Lovibond color readings.
+                        </p>
+                      </div>
+                      <span className="text-[10px] text-emerald-400/90 font-mono mt-2 block">Auto PORAM spec check</span>
+                    </div>
+
+                    {/* Step 4 */}
+                    <div className="bg-[#0D1524] border border-[#1A293E] p-3 rounded-lg flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[10px] font-mono font-bold text-sky-400 bg-sky-400/15 px-1.5 py-0.5 rounded">STEP 4</span>
+                          <span className="text-[9px] font-mono text-slate-500">QC CHEMIST</span>
+                        </div>
+                        <h5 className="text-xs font-semibold text-white">Submit Decision</h5>
+                        <p className="text-[11px] text-slate-400 mt-1 leading-snug">
+                          Click <b>Accept</b> (Release) or <b>Reject</b> (Hold/Rework) with password e-signature.
+                        </p>
+                      </div>
+                      <span className="text-[10px] text-sky-400/90 font-mono mt-2 block">21 CFR Part 11 signed</span>
+                    </div>
+
+                    {/* Step 5 */}
+                    <div className="bg-[#0D1524] border border-[#1A293E] p-3 rounded-lg flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[10px] font-mono font-bold text-purple-400 bg-purple-400/15 px-1.5 py-0.5 rounded">STEP 5</span>
+                          <span className="text-[9px] font-mono text-slate-500">ALL USERS</span>
+                        </div>
+                        <h5 className="text-xs font-semibold text-white">Live Status &amp; Bell</h5>
+                        <p className="text-[11px] text-slate-400 mt-1 leading-snug">
+                          Instant Toast alert &amp; Notification Bell (next to Sign Out) notifies operators of Accept/Reject.
+                        </p>
+                      </div>
+                      <span className="text-[10px] text-purple-400/90 font-mono mt-2 block">Real-time telemetry</span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
