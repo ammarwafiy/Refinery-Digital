@@ -260,30 +260,25 @@ export const DOCUMENT_MANAGEMENT_CODES = {
 } as const;
 
 export const USER_ALIAS_MAP: Record<string, string> = {
-  // Numeric Employee IDs <-> Standard Codes
-  '1042': 'opr001',
-  '2014': 'sup001',
-  '3001': 'qcs001',
-  '3201': 'qcs001',
-  '4001': 'mgr001',
-  '4502': 'mgr001',
-  '5001': 'adm001',
-  '5010': 'adm001',
-  '9001': 'usr001',
-  '9901': 'usr001',
+  // Legacy Standard Codes -> Canonical Numeric Employee IDs
   'opr001': '1042',
   'sup001': '2014',
   'qcs001': '3001',
   'mgr001': '4001',
   'adm001': '5001',
   'usr001': '9001',
-  // Legacy String Aliases <-> Numeric
+  // Legacy Prefixed Format -> Canonical Numeric Employee IDs
   'op-1042': '1042',
   'sv-2014': '2014',
   'qc-3201': '3001',
   'qm-4502': '4001',
   'ad-5010': '5001',
   'au-9901': '9001',
+  // Older numeric variations -> Standard Numeric Employee IDs
+  '3201': '3001',
+  '4502': '4001',
+  '5010': '5001',
+  '9901': '9001',
 };
 
 // Formats table name to official standard category
@@ -486,7 +481,20 @@ export function generateNextEmployeeId(role: UserRole): string {
 
 // 1. Authentication & Session Management
 export function getAuthUser(): Profile | null {
-  return getStored<Profile | null>(STORAGE_KEYS.AUTH_USER, memoryAuthUser);
+  const user = getStored<Profile | null>(STORAGE_KEYS.AUTH_USER, memoryAuthUser);
+  if (user) {
+    if (
+      user.full_name?.toLowerCase().includes('haris') ||
+      user.employee_no === 'ADM001' ||
+      user.employee_no === 'AD-5010'
+    ) {
+      const ammarAdmin = INITIAL_PROFILES.find(p => p.employee_no === '5001') || INITIAL_PROFILES[4];
+      memoryAuthUser = ammarAdmin;
+      setStored(STORAGE_KEYS.AUTH_USER, ammarAdmin);
+      return ammarAdmin;
+    }
+  }
+  return user;
 }
 
 export function setAuthUser(profile: Profile | null): void {
@@ -508,15 +516,21 @@ export function loginUser(identifier: string, password?: string): { success: boo
   const aliasId = USER_ALIAS_MAP[cleanId];
   const allProfiles = getProfiles();
 
-  // Match by employee_no (exact, lowercase, or alias), full_name, or role
-  const found = allProfiles.find(p => {
-    const empNo = p.employee_no.toLowerCase();
-    return empNo === cleanId ||
-      (aliasId && empNo === aliasId) ||
+  // Match Priority:
+  // 1. Exact employee_no match (numeric ID e.g. 5001, 1042)
+  // 2. Alias employee_no match (if entered OPR001 or ADM001 -> maps to 1042 or 5001)
+  // 3. Full name or role match
+  let found = allProfiles.find(p => p.employee_no.toLowerCase() === cleanId);
+  if (!found && aliasId) {
+    found = allProfiles.find(p => p.employee_no.toLowerCase() === aliasId);
+  }
+  if (!found) {
+    found = allProfiles.find(p => 
       p.full_name.toLowerCase() === cleanId ||
       p.full_name.toLowerCase().includes(cleanId) ||
-      p.role.toLowerCase() === cleanId;
-  });
+      p.role.toLowerCase() === cleanId
+    );
+  }
 
   if (!found) {
     return { 
@@ -555,22 +569,22 @@ export async function authenticateUser(identifier: string, password?: string): P
     };
   }
   const aliasId = USER_ALIAS_MAP[cleanId];
+  const targetId = aliasId || cleanId;
 
   // 1. Proactively query Supabase directly first to get live credentials & latest full_name
   if (isSupabaseConfigured && supabase) {
     try {
-      const orFilter = aliasId
-        ? `employee_no.ilike.${cleanId},employee_no.ilike.${aliasId},full_name.ilike.%${cleanId}%,role.ilike.${cleanId}`
-        : `employee_no.ilike.${cleanId},full_name.ilike.%${cleanId}%,role.ilike.${cleanId}`;
+      const orFilter = `employee_no.ilike.${cleanId},employee_no.ilike.${targetId},full_name.ilike.%${cleanId}%,role.ilike.${cleanId}`;
 
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .or(orFilter)
-        .limit(1);
+        .order('created_at', { ascending: false });
 
       if (!error && Array.isArray(data) && data.length > 0) {
-        const liveUser = data[0];
+        // Prioritize numeric profile if both numeric and legacy exist
+        const liveUser = data.find(p => /^\d+$/.test(p.employee_no)) || data[0];
         const mappedUser: Profile = {
           id: liveUser.employee_no,
           employee_no: liveUser.employee_no,
@@ -651,18 +665,23 @@ export function getCurrentProfile(): Profile {
 
 export function getProfiles(): Profile[] {
   const stored = getStored<Profile[]>(STORAGE_KEYS.PROFILES, memoryProfiles);
-  // Auto-upgrade if stored list is missing OPR001 or standard prefixes
-  const hasStandard = stored.some(p => p.employee_no === 'OPR001' || p.employee_no === 'ADM001');
-  if (!hasStandard) {
+  // Auto-upgrade if stored list is missing 5001 or has stale Haris Iskandar
+  const isStale = !stored || 
+    stored.length === 0 ||
+    !stored.some(p => p.employee_no === '5001') ||
+    stored.some(p => p.full_name?.toLowerCase().includes('haris')) ||
+    stored.some(p => (p.employee_no === '5001' || p.employee_no === 'ADM001') && !p.full_name?.includes('Ammar'));
+
+  if (isStale) {
     setStored(STORAGE_KEYS.PROFILES, INITIAL_PROFILES);
-    memoryProfiles = INITIAL_PROFILES;
+    memoryProfiles = JSON.parse(JSON.stringify(INITIAL_PROFILES));
     return INITIAL_PROFILES;
   }
   return stored;
 }
 
 const STANDARD_PROFILE_ORDER: Record<string, number> = {
-  'OPR001': 1, 'SUP001': 2, 'QCS001': 3, 'MGR001': 4, 'ADM001': 5, 'USR001': 6
+  '1042': 1, '2014': 2, '3001': 3, '4001': 4, '5001': 5, '9001': 6
 };
 
 // Fetch live profiles from Supabase and synchronize local state
@@ -678,7 +697,9 @@ export async function syncProfilesFromSupabase(): Promise<{ success: boolean; co
     if (res.ok && contentType.includes('application/json')) {
       const json = await res.json();
       if (json.success && Array.isArray(json.profiles) && json.profiles.length > 0) {
+        // Exclude legacy 3-letter codes so all devices receive only numeric Employee IDs
         const liveProfiles: Profile[] = json.profiles
+          .filter((p: any) => !['OPR001', 'SUP001', 'QCS001', 'MGR001', 'ADM001', 'USR001'].includes((p.employee_no || '').toUpperCase()))
           .map((p: any) => ({
             id: p.employee_no,
             employee_no: p.employee_no,
@@ -693,7 +714,8 @@ export async function syncProfilesFromSupabase(): Promise<{ success: boolean; co
           .sort((a: Profile, b: Profile) => {
             const orderA = STANDARD_PROFILE_ORDER[a.employee_no] || 99;
             const orderB = STANDARD_PROFILE_ORDER[b.employee_no] || 99;
-            return orderA - orderB;
+            if (orderA !== orderB) return orderA - orderB;
+            return a.employee_no.localeCompare(b.employee_no);
           });
 
         memoryProfiles = liveProfiles;
@@ -718,6 +740,7 @@ export async function syncProfilesFromSupabase(): Promise<{ success: boolean; co
 
       if (!error && Array.isArray(data) && data.length > 0) {
         const liveProfiles: Profile[] = data
+          .filter((p: any) => !['OPR001', 'SUP001', 'QCS001', 'MGR001', 'ADM001', 'USR001'].includes((p.employee_no || '').toUpperCase()))
           .map((p: any) => ({
             id: p.employee_no,
             employee_no: p.employee_no,
@@ -732,7 +755,8 @@ export async function syncProfilesFromSupabase(): Promise<{ success: boolean; co
           .sort((a: Profile, b: Profile) => {
             const orderA = STANDARD_PROFILE_ORDER[a.employee_no] || 99;
             const orderB = STANDARD_PROFILE_ORDER[b.employee_no] || 99;
-            return orderA - orderB;
+            if (orderA !== orderB) return orderA - orderB;
+            return a.employee_no.localeCompare(b.employee_no);
           });
 
         memoryProfiles = liveProfiles;
@@ -760,20 +784,52 @@ if (typeof window !== 'undefined') {
     if (rawAudit && (rawAudit.length > 5000 || rawAudit.includes('22e9') || rawAudit.includes('178b'))) {
       localStorage.removeItem(STORAGE_KEYS.AUDIT_LOGS);
     }
+
     const rawProfiles = localStorage.getItem(STORAGE_KEYS.PROFILES);
-    if (rawProfiles && !rawProfiles.includes('OPR001')) {
-      localStorage.removeItem(STORAGE_KEYS.PROFILES);
+    let shouldResetProfiles = false;
+    if (!rawProfiles) {
+      shouldResetProfiles = true;
+    } else {
+      try {
+        const parsed: Profile[] = JSON.parse(rawProfiles);
+        const has5001 = parsed.some(p => p.employee_no === '5001');
+        const hasHaris = parsed.some(p => p.full_name?.toLowerCase().includes('haris'));
+        const hasAmmarAdmin = parsed.some(p => (p.employee_no === '5001' || p.employee_no === 'ADM001') && p.full_name?.includes('Ammar'));
+        if (!has5001 || hasHaris || !hasAmmarAdmin) {
+          shouldResetProfiles = true;
+        }
+      } catch {
+        shouldResetProfiles = true;
+      }
     }
+
+    if (shouldResetProfiles) {
+      localStorage.setItem(STORAGE_KEYS.PROFILES, JSON.stringify(INITIAL_PROFILES));
+      memoryProfiles = JSON.parse(JSON.stringify(INITIAL_PROFILES));
+    }
+
     const rawAuth = localStorage.getItem(STORAGE_KEYS.AUTH_USER);
     if (rawAuth) {
-      const parsedAuth = JSON.parse(rawAuth);
-      if (parsedAuth && parsedAuth.employee_no === 'AD-5010') {
-        const adm = INITIAL_PROFILES.find(p => p.employee_no === 'ADM001');
-        if (adm) localStorage.setItem(STORAGE_KEYS.AUTH_USER, JSON.stringify(adm));
-      } else if (parsedAuth && parsedAuth.employee_no === 'OP-1042') {
-        const opr = INITIAL_PROFILES.find(p => p.employee_no === 'OPR001');
-        if (opr) localStorage.setItem(STORAGE_KEYS.AUTH_USER, JSON.stringify(opr));
-      }
+      try {
+        const parsedAuth = JSON.parse(rawAuth);
+        if (
+          parsedAuth && 
+          (parsedAuth.full_name?.toLowerCase().includes('haris') || 
+           parsedAuth.employee_no === 'ADM001' || 
+           parsedAuth.employee_no === 'AD-5010')
+        ) {
+          const ammarAdmin = INITIAL_PROFILES.find(p => p.employee_no === '5001') || INITIAL_PROFILES[4];
+          localStorage.setItem(STORAGE_KEYS.AUTH_USER, JSON.stringify(ammarAdmin));
+          memoryAuthUser = ammarAdmin;
+        } else if (
+          parsedAuth && 
+          (parsedAuth.employee_no === 'OPR001' || parsedAuth.employee_no === 'OP-1042')
+        ) {
+          const opr = INITIAL_PROFILES.find(p => p.employee_no === '1042') || INITIAL_PROFILES[0];
+          localStorage.setItem(STORAGE_KEYS.AUTH_USER, JSON.stringify(opr));
+          memoryAuthUser = opr;
+        }
+      } catch {}
     }
   } catch {}
 

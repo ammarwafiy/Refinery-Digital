@@ -11,7 +11,8 @@ import {
 export const dynamic = 'force-dynamic';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://zgqtulfokenthxcnkafw.supabase.co';
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpncXR1bGZva2VudGh4Y25rYWZ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk4ODI4NjksImV4cCI6MjEwNTQ1ODg2OX0._rWSXBRHXBkMbYvYMj_zpFc9hf8F1MmT6uZuGlJonns';
+const DEFAULT_SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpncXR1bGZva2VudGh4Y25rYWZ3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4OTg4Mjg2OSwiZXhwIjoyMTA1NDU4ODY5fQ.xl6sdDO0IiKEWXSeg2VMSM13qvuuk9qlKQgFLf84dAY';
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || DEFAULT_SERVICE_ROLE_KEY;
 
 function getSupabaseAdmin() {
   return createClient(supabaseUrl, supabaseKey, {
@@ -60,7 +61,12 @@ export async function GET(req: Request) {
       };
     });
 
-    return NextResponse.json({ success: true, profiles: safeProfiles });
+    // Exclude legacy 3-letter codes from the public directory so phone, laptop, and all clients only see canonical numeric employee profiles
+    const cleanProfiles = safeProfiles.filter(p => 
+      !['OPR001', 'SUP001', 'QCS001', 'MGR001', 'ADM001', 'USR001'].includes((p.employee_no || '').toUpperCase())
+    );
+
+    return NextResponse.json({ success: true, profiles: cleanProfiles });
   } catch (err: any) {
     console.error('[API /api/profiles GET] Exception:', err);
     return NextResponse.json(

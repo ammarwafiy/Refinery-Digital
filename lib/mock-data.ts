@@ -72,7 +72,7 @@ export const INITIAL_PROFILES: Profile[] = [
   {
     id: '5001',
     employee_no: '5001',
-    full_name: 'Haris Iskandar (Administrator)',
+    full_name: 'Ahmad Ammar Wafiy (Plant Administrator)',
     role: 'admin',
     status: 'active',
     active: true,
@@ -89,7 +89,10 @@ export const INITIAL_PROFILES: Profile[] = [
     password: 'password123',
     created_at: '2026-01-10T00:00:00Z',
   },
-  // Legacy aliases for backward compatibility
+];
+
+// Preserved strictly for historical lookup of legacy audit logs / sample reports
+export const LEGACY_FALLBACK_PROFILES: Profile[] = [
   {
     id: 'OPR001',
     employee_no: 'OPR001',
@@ -133,7 +136,7 @@ export const INITIAL_PROFILES: Profile[] = [
   {
     id: 'ADM001',
     employee_no: 'ADM001',
-    full_name: 'Haris Iskandar (Administrator)',
+    full_name: 'Ahmad Ammar Wafiy (Plant Administrator)',
     role: 'admin',
     status: 'active',
     active: true,

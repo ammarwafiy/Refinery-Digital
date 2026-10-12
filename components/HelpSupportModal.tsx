@@ -88,7 +88,7 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
           category: ticketCategory,
           description: ticketDescription.trim(),
           reporterName: currentUser?.full_name || 'Plant Personnel',
-          reporterId: currentUser?.employee_no || 'OPR001',
+          reporterId: currentUser?.employee_no || '1042',
           reporterRole: currentUser?.role || 'operator',
         }),
       });
@@ -122,7 +122,7 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
         subject: ticketSubject.trim(),
         category: ticketCategory,
         description: ticketDescription.trim(),
-        reporter: `${currentUser?.full_name || 'Plant Personnel'} (${currentUser?.employee_no || 'OPR001'})`,
+        reporter: `${currentUser?.full_name || 'Plant Personnel'} (${currentUser?.employee_no || '1042'})`,
         telegram_sent: tgSent,
         telegram_message_id: result.telegramMessageId || null,
       });
@@ -254,7 +254,7 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
                 <div className="bg-[#0B1320] border border-[#1F2E43] hover:border-[#009FE3]/50 rounded-xl p-4 transition-all">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-[10px] font-mono font-bold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded border border-amber-400/20">
-                      OPERATOR (OPR001)
+                      OPERATOR (1042)
                     </span>
                     <span className="text-[10px] font-mono text-slate-400">FORM: RF-FR-004</span>
                   </div>
@@ -271,7 +271,7 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
                 <div className="bg-[#0B1320] border border-[#1F2E43] hover:border-[#009FE3]/50 rounded-xl p-4 transition-all">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded border border-emerald-400/20">
-                      QC ANALYST (QCS001)
+                      QC ANALYST (3001)
                     </span>
                     <span className="text-[10px] font-mono text-slate-400">FORM: RF-FR-001</span>
                   </div>
@@ -288,7 +288,7 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
                 <div className="bg-[#0B1320] border border-[#1F2E43] hover:border-[#009FE3]/50 rounded-xl p-4 transition-all">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-[10px] font-mono font-bold text-purple-400 bg-purple-400/10 px-2 py-0.5 rounded border border-purple-400/20">
-                      SUPERVISOR / MGR (SUP001 / MGR001)
+                      SUPERVISOR / MGR (2014 / 4001)
                     </span>
                     <span className="text-[10px] font-mono text-slate-400">STATUS: APPROVED</span>
                   </div>
@@ -305,7 +305,7 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
                 <div className="bg-[#0B1320] border border-[#1F2E43] hover:border-[#009FE3]/50 rounded-xl p-4 transition-all">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-[10px] font-mono font-bold text-sky-400 bg-sky-400/10 px-2 py-0.5 rounded border border-sky-400/20">
-                      AUDITOR & ADMIN (ADM001 / USR001)
+                      AUDITOR & ADMIN (5001 / 9001)
                     </span>
                     <span className="text-[10px] font-mono text-slate-400">STANDARD: ISO 9001</span>
                   </div>
@@ -682,7 +682,7 @@ export default function HelpSupportModal({ isOpen, onClose, currentUser }: HelpS
 
                   <div className="flex items-center justify-between pt-2">
                     <div className="text-[11px] text-slate-400 font-mono">
-                      Reporter: <span className="text-[#009FE3] font-semibold">{currentUser?.full_name || 'Plant Personnel'}</span> ({currentUser?.employee_no || 'OPR001'})
+                      Reporter: <span className="text-[#009FE3] font-semibold">{currentUser?.full_name || 'Plant Personnel'}</span> ({currentUser?.employee_no || '1042'})
                     </div>
 
                     <button

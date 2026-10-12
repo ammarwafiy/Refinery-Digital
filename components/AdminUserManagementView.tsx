@@ -560,7 +560,7 @@ export default function AdminUserManagementView() {
 
   const handleSwitchToAdmin = () => {
     const all = getProfiles();
-    const adminUser = all.find(p => p.employee_no === 'ADM001') || all.find(p => p.role === 'admin') || all[0];
+    const adminUser = all.find(p => p.employee_no === '5001') || all.find(p => p.employee_no === 'ADM001') || all.find(p => p.role === 'admin') || all[0];
     setCurrentRole('admin');
     setAuthUser(adminUser);
     setCurrentRoleState('admin');
@@ -575,9 +575,13 @@ export default function AdminUserManagementView() {
 
   const isAdmin = currentRole === 'admin';
 
-  // Filtered Profiles: prioritize standard profiles
+  // Filtered Profiles: Only canonical numeric Employee IDs
   const filteredProfiles = profiles
     .filter(p => {
+      // Exclude legacy 3-letter codes from the table so only numeric Employee IDs appear
+      if (['OPR001', 'SUP001', 'QCS001', 'MGR001', 'ADM001', 'USR001'].includes((p.employee_no || '').toUpperCase())) {
+        return false;
+      }
       const q = searchQuery.trim().toLowerCase();
       const matchesSearch = !q ||
         (p.employee_no || '').toLowerCase().includes(q) ||
@@ -594,12 +598,15 @@ export default function AdminUserManagementView() {
       return a.employee_no.localeCompare(b.employee_no);
     });
 
-  // Metrics
-  const totalCount = profiles.length;
-  const operatorCount = profiles.filter(p => p.role === 'operator').length;
-  const supervisorCount = profiles.filter(p => p.role === 'supervisor').length;
-  const qcCount = profiles.filter(p => p.role === 'qc_analyst' || p.role === 'qc_manager').length;
-  const adminCount = profiles.filter(p => p.role === 'admin').length;
+  // Metrics (Clean active employee directory)
+  const activeProfiles = profiles.filter(p => 
+    !['OPR001', 'SUP001', 'QCS001', 'MGR001', 'ADM001', 'USR001'].includes((p.employee_no || '').toUpperCase())
+  );
+  const totalCount = activeProfiles.length;
+  const operatorCount = activeProfiles.filter(p => p.role === 'operator').length;
+  const supervisorCount = activeProfiles.filter(p => p.role === 'supervisor').length;
+  const qcCount = activeProfiles.filter(p => p.role === 'qc_analyst' || p.role === 'qc_manager').length;
+  const adminCount = activeProfiles.filter(p => p.role === 'admin').length;
 
   const roleStyles: Record<UserRole, { bg: string; text: string; border: string }> = {
     operator: { bg: 'bg-emerald-950/50', text: 'text-emerald-400', border: 'border-emerald-800/60' },
