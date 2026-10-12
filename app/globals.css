@@ -2883,6 +2883,26 @@ html.light-theme .cfg select,
   fill: #ffffff;
 }
 
+/* Variant Warning (Amber #f59e0b) */
+.modern-btn-warning {
+  color: #f59e0b;
+  box-shadow: 0 0 0 1.5px #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
+}
+.modern-btn-warning svg {
+  fill: #f59e0b;
+}
+.modern-btn-warning .modern-btn-circle {
+  background-color: #f59e0b;
+}
+.modern-btn-warning:hover:not(:disabled) {
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.5);
+  color: #ffffff;
+}
+.modern-btn-warning:hover:not(:disabled) svg {
+  fill: #ffffff;
+}
+
 /* ========================================================================= */
 /* 1. Radio Dashboard Animated Tab Navigation                                */
 /* ========================================================================= */

@@ -27,6 +27,7 @@ import {
   getCurrentRole,
   getRealtimeSlotIndex,
   ensureAutoDispatchedQC,
+  dispatchSampleToQC,
   syncAllProcessEntriesToQC,
   getSampleReports,
   syncSampleReportsFromSupabase,
@@ -130,6 +131,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isCopying, setIsCopying] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSendingQC, setIsSendingQC] = useState(false);
   const [isJustSaved, setIsJustSaved] = useState(false);
   const [copiedSlotLabel, setCopiedSlotLabel] = useState<string | null>(null);
 
@@ -395,8 +397,10 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
 
   const handleProductChange = (newProdId: string) => {
     handleFieldChange('product_id', newProdId);
-    // Proactively sync auto-dispatched QC report with the newly selected product
-    ensureAutoDispatchedQC(selectedSlotIndex, activeShiftDate, newProdId);
+    // If a QC report already exists for this slot, sync its product specification
+    if (matchingQCReport) {
+      ensureAutoDispatchedQC(selectedSlotIndex, activeShiftDate, newProdId);
+    }
   };
 
   const handleSlotSelect = (idx: number) => {
@@ -455,6 +459,51 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
     }
   };
 
+  const handleSendSampleToQC = () => {
+    if (isSlotDisabled) {
+      setValidationError(`Hour ${selectedSlotLabel} is locked. Sample can only be dispatched during the active live window.`);
+      return;
+    }
+
+    const currentProdId = formData.product_id || sheet.entries?.find(e => e.slot_index === selectedSlotIndex)?.product_id || (products[0]?.id || DEFAULT_PRODUCT_ID);
+    const prodObj = products.find(p => p.id === currentProdId) || products[0];
+    const prodName = prodObj?.name || 'Product';
+
+    setIsSendingQC(true);
+    setValidationError(null);
+
+    // Save unsaved operational entries as well so telemetry is persistent
+    if (isDirtyRef.current) {
+      saveProcessEntry({
+        ...formDataRef.current,
+        slot_index: selectedSlotIndex,
+        auto_dispatch_qc: true,
+      }, activeShiftDate);
+      setIsDirty(false);
+      isDirtyRef.current = false;
+      clearDraft(activeShiftDate, selectedSlotIndex);
+    }
+
+    try {
+      const rep = dispatchSampleToQC(selectedSlotIndex, activeShiftDate, currentProdId);
+      if (rep) {
+        const updatedReports = getSampleReports();
+        setSampleReports(updatedReports);
+        setSuccessMessage(`✓ Physical sample for Hour ${selectedSlotLabel} (${prodName}) has been sent to QC Lab! (Lot: ${rep.lot_no})`);
+        refreshSheet(true, false);
+      } else {
+        setValidationError('Failed to send sample to QC Lab.');
+      }
+    } catch (err: any) {
+      setValidationError(err?.message || 'Error sending sample to QC Lab.');
+    } finally {
+      setIsSendingQC(false);
+      setTimeout(() => {
+        setSuccessMessage(null);
+      }, 5000);
+    }
+  };
+
   const handleSaveEntry = (e: React.FormEvent) => {
     e.preventDefault();
     if (isSlotDisabled) {
@@ -466,10 +515,11 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
     setValidationError(null);
     setIsSaving(true);
 
+    // Save telemetry readings only - does NOT auto-dispatch to QC
     const res = saveProcessEntry({
       ...formData,
       slot_index: selectedSlotIndex,
-      auto_dispatch_qc: autoDispatchQc,
+      auto_dispatch_qc: isQCSent,
     }, activeShiftDate);
 
     if (!res.success) {
@@ -485,11 +535,7 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
 
     setIsSaving(false);
     setIsJustSaved(true);
-    if (autoDispatchQc) {
-      setSuccessMessage(`✓ Hour ${res.entry.slot_label} readings recorded! Product sample (${res.entry.product_name}) auto-dispatched to RF-FR-001 QC Lab.`);
-    } else {
-      setSuccessMessage(`✓ Hour ${res.entry.slot_label} readings recorded!`);
-    }
+    setSuccessMessage(`✓ Hour ${res.entry.slot_label} process telemetry saved! Click 'Sample For QC' when ready to send an inspection sample to the lab.`);
     refreshSheet(true, false);
 
     setTimeout(() => {
@@ -574,8 +620,9 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
 
   // Real-time synchronization of QC Lab Decision for the selected hour slot
   const matchingQCReport = sampleReports.find(
-    r => r.sample_date === activeShiftDate && (r.time_check === currentSlotTimeStr || r.time_check === selectedSlotLabel.slice(0, 2) + ':00')
+    r => r.sample_date === activeShiftDate && (r.time_check === currentSlotTimeStr || r.time_check === selectedSlotLabel.slice(0, 2) + ':00' || r.lot_no?.endsWith(`-${selectedSlotLabel}`))
   );
+  const isQCSent = Boolean(matchingQCReport);
 
   return (
     <div className="space-y-5">
@@ -945,18 +992,22 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
             </div>
           </div>
 
-          {/* Section A.1: Auto-Dispatch to RF-FR-001 QC Lab */}
+          {/* Section A.1: QC Sample Dispatch */}
           <div className="row dispatch">
             <div>
               <div className="flex items-center gap-2">
-                <b>Auto-dispatch sample lot to QC Lab</b>
+                <b>QC Sample Dispatch</b>
                 {matchingQCReport ? (
                   <span className="font-mono text-[11px] text-[var(--muted)]">
                     (Lot: {matchingQCReport.lot_no || matchingQCReport.report_no})
                   </span>
                 ) : null}
               </div>
-              <p>The sample lot is sent to the QC Lab queue when the hour starts. Operators cannot override this, per the plant QA manual.</p>
+              <p>
+                {matchingQCReport 
+                  ? 'Sample has been dispatched to QC Lab. Awaiting chemist testing or disposition.' 
+                  : 'Dispatch a physical oil sample for this hour to the QC Lab queue for quality inspection.'}
+              </p>
             </div>
             <div className="flex items-center gap-2 flex-wrap">
               {matchingQCReport?.decision ? (
@@ -982,10 +1033,15 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                   <span>Awaiting QC Lab Analysis</span>
                 </span>
               ) : (
-                <span className="sync">
-                  <i></i>
-                  <span>Synced with shift timeline</span>
-                </span>
+                <button
+                  type="button"
+                  onClick={handleSendSampleToQC}
+                  disabled={isSlotDisabled || isSendingQC}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-semibold bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-500/40 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <FlaskConical className="h-3.5 w-3.5" />
+                  <span>Send Sample to QC</span>
+                </button>
               )}
             </div>
           </div>
@@ -1352,7 +1408,47 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
               )}
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
+              {/* Button: Sample For QC */}
+              <ModernButton
+                type="button"
+                onClick={handleSendSampleToQC}
+                disabled={isSlotDisabled || isSendingQC || isQCSent}
+                variant={isQCSent ? "success" : "warning"}
+                size="md"
+                title={
+                  isQCSent 
+                    ? `Sample already sent to QC (Lot: ${matchingQCReport?.lot_no})` 
+                    : isSlotDisabled 
+                    ? "Hour locked from dispatching samples" 
+                    : `Dispatch physical sample for Hour ${selectedSlotLabel} to QC Lab`
+                }
+              >
+                {isSendingQC ? (
+                  <>
+                    <Clock className="h-3.5 w-3.5 shrink-0 animate-spin" />
+                    <span>Sending Sample...</span>
+                  </>
+                ) : isQCSent ? (
+                  <>
+                    <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                    <span>
+                      {matchingQCReport?.decision?.decision === 'accept'
+                        ? 'QC Sample: Accepted'
+                        : matchingQCReport?.decision?.decision === 'reject'
+                        ? 'QC Sample: Rejected'
+                        : 'Sample Sent to QC'}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <FlaskConical className="h-3.5 w-3.5 shrink-0" />
+                    <span>Sample For QC</span>
+                  </>
+                )}
+              </ModernButton>
+
+              {/* Button: Commit Hour Log */}
               <ModernButton
                 type="submit"
                 disabled={isSlotDisabled || isSaving}
@@ -1362,12 +1458,12 @@ export default function ProcessLogView({ currentRole, currentUser }: ProcessLogV
                 {isJustSaved ? (
                   <>
                     <Check className="h-3.5 w-3.5 shrink-0 text-white" />
-                    <span>Hour {selectedSlotLabel} Recorded!</span>
+                    <span>Hour {selectedSlotLabel} Saved!</span>
                   </>
                 ) : isSaving ? (
                   <>
                     <Clock className="h-3.5 w-3.5 shrink-0 animate-spin text-white" />
-                    <span>Committing Hour {selectedSlotLabel}...</span>
+                    <span>Saving Hour {selectedSlotLabel}...</span>
                   </>
                 ) : isSlotDisabled ? (
                   <>

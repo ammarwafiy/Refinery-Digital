@@ -1850,36 +1850,40 @@ export function saveProcessEntry(
   // Add audit log
   addAuditLog('process_entries', finalEntry.id, existingIdx >= 0 ? 'update' : 'insert', null, finalEntry);
 
-  // Auto-dispatch product sample to RF-FR-001 QC Lab Analysis queue (Mandatory SOP)
-  finalEntry.auto_dispatch_qc = updatedEntry.auto_dispatch_qc !== undefined ? updatedEntry.auto_dispatch_qc : true;
+  // User workflow decoupling:
+  // "Commit" saves process telemetry readings only.
+  // Physical QC samples are dispatched explicitly via the "Sample For QC" button.
+  finalEntry.auto_dispatch_qc = updatedEntry.auto_dispatch_qc ?? (existingIdx >= 0 ? currentSheet.entries[existingIdx]?.auto_dispatch_qc : false) ?? false;
   const defaultSpecParamIds = getDefaultParametersForProduct(finalEntry.product_id || undefined);
   finalEntry.qc_parameter_ids = defaultSpecParamIds;
 
-  if (finalEntry.auto_dispatch_qc && productName && !finalEntry.no_production_reason) {
-    try {
-      const qcReport = ensureAutoDispatchedQC(
-        updatedEntry.slot_index,
-        currentSheet.shift_date,
-        finalEntry.product_id || undefined
-      );
-      if (qcReport) {
-        const currentReports = getStored<SampleReport[]>(STORAGE_KEYS.REPORTS, memoryReports);
-        const repIdx = currentReports.findIndex(r => r.id === qcReport.id);
-        if (repIdx >= 0) {
-          if (profile) {
-            currentReports[repIdx].submitted_by = profile.id;
-            currentReports[repIdx].submitted_by_name = profile.full_name;
-          }
-          setStored(STORAGE_KEYS.REPORTS, currentReports);
-          memoryReports = currentReports;
-          if (typeof window !== 'undefined') {
-            window.dispatchEvent(new CustomEvent('refinery_reports_updated', { detail: currentReports }));
-            window.dispatchEvent(new CustomEvent('refinery_sheet_updated', { detail: currentSheet }));
-          }
-        }
+  // If a QC report ALREADY exists for this slot, sync any product or submitter updates
+  const slotTimeCheck = `${slotLabel.slice(0, 2)}:00`;
+  const currentReports = getStored<SampleReport[]>(STORAGE_KEYS.REPORTS, memoryReports);
+  const existingReportIdx = currentReports.findIndex(r => 
+    r.sample_date === currentSheet.shift_date && 
+    (r.time_check === slotTimeCheck || r.lot_no?.endsWith(`-${slotLabel}`))
+  );
+
+  if (existingReportIdx >= 0) {
+    const existing = currentReports[existingReportIdx];
+    let changed = false;
+    if (finalEntry.product_id && existing.product_id !== finalEntry.product_id && (!existing.decision)) {
+      existing.product_id = finalEntry.product_id;
+      existing.product_name = productName;
+      changed = true;
+    }
+    if (profile && (!existing.submitted_by || existing.submitted_by === 'OP-1042')) {
+      existing.submitted_by = profile.id;
+      existing.submitted_by_name = profile.full_name;
+      changed = true;
+    }
+    if (changed) {
+      setStored(STORAGE_KEYS.REPORTS, currentReports);
+      memoryReports = currentReports;
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('refinery_reports_updated', { detail: currentReports }));
       }
-    } catch (e) {
-      console.warn('[Auto-QC] Failed to sync auto-dispatched QC sample on save:', e);
     }
   }
 
@@ -1891,6 +1895,33 @@ export function saveProcessEntry(
   }
 
   return { success: true, entry: finalEntry };
+}
+
+// Explicit QC Sample Dispatch: Dispatches physical sample for the specified slot to QC Lab
+export function dispatchSampleToQC(
+  slotIndex?: number,
+  shiftDate?: string,
+  explicitProductId?: string
+): SampleReport | null {
+  const targetSlotIndex = slotIndex !== undefined ? slotIndex : getRealtimeSlotIndex();
+  const realtimeDate = getRealtimeShiftDate();
+  const targetShiftDate = shiftDate || realtimeDate;
+
+  // Mark the entry in the sheet as having its QC sample dispatched
+  const allSheets = getAllProcessSheets();
+  const currentSheet = allSheets[targetShiftDate] || getProcessSheetByDate(targetShiftDate);
+  if (currentSheet && currentSheet.entries) {
+    const entry = currentSheet.entries.find(e => e.slot_index === targetSlotIndex);
+    if (entry) {
+      entry.auto_dispatch_qc = true;
+      if (explicitProductId) entry.product_id = explicitProductId;
+      setStored(STORAGE_KEYS.SHEET, currentSheet);
+    }
+  }
+
+  // Create & enqueue sample report in QC Lab queue
+  const qcReport = ensureAutoDispatchedQC(targetSlotIndex, targetShiftDate, explicitProductId);
+  return qcReport;
 }
 
 // Proactive Auto-Dispatch: Immediately generates & enqueues sample lot in RF-FR-001 QC Lab when timeline slot changes or process entry recorded
@@ -2136,30 +2167,14 @@ export function syncAllProcessEntriesToQC(targetShiftDate?: string): number {
       if (!sheet || !Array.isArray(sheet.entries)) return;
 
       sheet.entries.forEach(entry => {
-        // Only dispatch entries that represent production (not shut down / no production)
+        // Only sync entries that were explicitly dispatched by the operator (entry.auto_dispatch_qc === true)
         if (entry.no_production_reason) return;
-        if (entry.auto_dispatch_qc === false) return;
+        if (!entry.auto_dispatch_qc) return;
 
-        // An entry has data if product_id is set or any operational readings are logged
-        const hasData = Boolean(
-          entry.product_id ||
-          entry.oil_feed_rate_litre != null ||
-          entry.vacuum_torr != null ||
-          entry.tray_1_temp_c != null ||
-          entry.strip_steam_pct_of_oil != null ||
-          entry.recorded_by != null
-        );
-
-        if (hasData) {
-          const res = ensureAutoDispatchedQC(entry.slot_index, dateStr, entry.product_id || undefined);
-          if (res) dispatchedCount++;
-        }
+        const res = ensureAutoDispatchedQC(entry.slot_index, dateStr, entry.product_id || undefined);
+        if (res) dispatchedCount++;
       });
     });
-
-    // Also ensure active realtime slot for live shift
-    const currentSlot = getRealtimeSlotIndex();
-    ensureAutoDispatchedQC(currentSlot, realtimeDate);
 
     return dispatchedCount;
   } catch (e) {
