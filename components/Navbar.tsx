@@ -503,24 +503,8 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
       {/* ========================================================================= */}
       {/* 3. DESKTOP TOP HEADER BAR (Spans content area, offset by sidebar width)   */}
       {/* ========================================================================= */}
-      <header className="hidden lg:flex fixed top-0 right-0 left-[248px] h-16 bg-[var(--bg)] border-b border-[var(--line)] z-30 items-center justify-between px-8 gap-4 select-none">
-        {/* Left Side: Plant Status Telemetry Chip (Replaces search bar) */}
-        <div className="flex items-center gap-3 shrink-0">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-mono text-xs font-semibold tracking-wide">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-            </span>
-            <span>PLANT ONLINE</span>
-          </div>
-          <span className="text-xs text-[var(--muted)] font-mono hidden xl:inline">
-            Nisshin Deodorizer · Unit #4
-          </span>
-        </div>
-
-        {/* Right Side: Telemetry Clock, Quick Actions, User Profile & Sign Out */}
-        <div className="flex items-center gap-3.5 shrink-0">
-          {/* Formatted Date & Time (Clean single-line pill) */}
+      <header className="hidden lg:flex fixed top-0 right-0 left-[248px] h-16 bg-[var(--bg)] border-b border-[var(--line)] z-30 items-center justify-end px-8 gap-3.5 select-none">
+        {/* Formatted Date & Time (Clean single-line pill) */}
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[var(--surface)] border border-[var(--line)] font-mono text-xs text-slate-300 tabular-nums whitespace-nowrap shadow-xs">
             <Clock className="h-3.5 w-3.5 text-[#009FE3] shrink-0" />
             <span>{formattedDateTime || '08/12/2024 14:25:00'}</span>
