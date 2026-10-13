@@ -687,7 +687,7 @@ export default function AdminUserManagementView() {
   const isIdDuplicate = !idAvailability.available;
   const duplicateUser = idAvailability.existingProfile;
 
-  const roleStyles: Record<UserRole, { bg: string; text: string; border: string }> = {
+  const roleBadgeStyles: Record<UserRole, { bg: string; text: string; border: string }> = {
     operator: { bg: 'bg-emerald-950/50', text: 'text-emerald-400', border: 'border-emerald-800/60' },
     supervisor: { bg: 'bg-amber-950/50', text: 'text-amber-400', border: 'border-amber-800/60' },
     qc_analyst: { bg: 'bg-sky-950/50', text: 'text-sky-400', border: 'border-sky-800/60' },
@@ -695,6 +695,7 @@ export default function AdminUserManagementView() {
     admin: { bg: 'bg-blue-950/60', text: 'text-blue-300', border: 'border-blue-700/60' },
     viewer: { bg: 'bg-slate-800/60', text: 'text-slate-400', border: 'border-slate-700/60' },
   };
+  const roleStyles = roleBadgeStyles;
 
   return (
     <div className="space-y-4">
