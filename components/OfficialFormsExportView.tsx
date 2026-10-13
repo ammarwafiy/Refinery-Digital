@@ -773,20 +773,30 @@ export default function OfficialFormsExportView() {
         <div className="paper rf-fr-004-sheet overflow-x-auto print:border-none print:shadow-none print:p-0">
           {/* Form Header */}
           <div className="border-b-2 border-slate-900 pb-4 mb-4">
-            <div className="flex items-start justify-between">
-              <div>
-                <h2 className="text-xl font-bold tracking-tight uppercase">
-                  Lam Soon Edible Oils Sdn. Bhd.
-                </h2>
-                <div className="text-sm font-semibold text-slate-500">
-                  Refinery Section · Nisshin Deodorizer Plant
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-center gap-3.5 sm:gap-4">
+                <div className="h-16 w-16 sm:h-20 sm:w-20 shrink-0 p-1.5 bg-white rounded-xl border border-slate-200 shadow-xs flex items-center justify-center">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/lamsoon-logo.png"
+                    alt="Lam Soon Brand Badge"
+                    className="w-full h-full object-contain"
+                  />
                 </div>
-                <div className="text-base font-bold text-slate-900 mt-1 uppercase">
-                  Hourly Process Control Log Sheet
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-black tracking-tight uppercase text-slate-900 m-0">
+                    Lam Soon Edible Oils Sdn. Bhd.
+                  </h2>
+                  <div className="text-xs sm:text-sm font-semibold text-slate-500 mt-0.5">
+                    Refinery Section · Nisshin Deodorizer Plant
+                  </div>
+                  <div className="text-sm sm:text-base font-bold text-slate-900 mt-1 uppercase">
+                    Hourly Process Control Log Sheet
+                  </div>
                 </div>
               </div>
 
-              <div className="text-right font-mono text-xs border border-slate-900 p-2 rounded">
+              <div className="text-right font-mono text-xs border-2 border-slate-900 p-2.5 rounded-lg bg-slate-50/80 shrink-0 space-y-0.5">
                 <div><strong>DOC:</strong> DOC001 (RF-FR-004)</div>
                 <div><strong>SOP / WI:</strong> SOP001 · WI001</div>
                 <div><strong>REVISION:</strong> REV001 (Rev 02)</div>
@@ -949,43 +959,80 @@ export default function OfficialFormsExportView() {
       {/* FORM 2: RF-FR-001 Layout */}
       {activeFormType === 'rf_fr_001' && activeReport && (
         <div className="paper rf-fr-001-sheet max-w-4xl mx-auto print:border-none print:shadow-none print:p-0">
-          <div className="border-b-2 border-slate-900 pb-4 mb-4 flex items-start justify-between">
-            <div>
-              <h2 className="text-xl font-bold tracking-tight uppercase">
-                Lam Soon Edible Oils Sdn. Bhd.
-              </h2>
-              <div className="text-sm font-semibold text-slate-500">
-                Refinery Section · Quality Assurance Department
+          {/* Form Header with Official Lam Soon Badge */}
+          <div className="border-b-2 border-slate-900 pb-4 mb-4 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+            <div className="flex items-center gap-3.5 sm:gap-4">
+              <div className="h-16 w-16 sm:h-20 sm:w-20 shrink-0 p-1.5 bg-white rounded-xl border border-slate-200 shadow-xs flex items-center justify-center">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/lamsoon-logo.png"
+                  alt="Lam Soon Brand Badge"
+                  className="w-full h-full object-contain"
+                />
               </div>
-              <div className="text-base font-bold text-slate-900 mt-1 uppercase flex items-center gap-2">
-                <span>Sample Analysis Report</span>
-                <span className="text-xs bg-emerald-100 text-emerald-800 border border-emerald-300 px-1.5 py-0.5 rounded font-mono font-bold">
-                  SR001 (Sample Report)
-                </span>
-                <span className="text-xs bg-amber-100 text-amber-800 border border-amber-300 px-1.5 py-0.5 rounded font-mono font-bold">
-                  ISO001 · CRT001
-                </span>
+              <div>
+                <h2 className="text-xl sm:text-2xl font-black tracking-tight uppercase text-slate-900 m-0">
+                  Lam Soon Edible Oils Sdn. Bhd.
+                </h2>
+                <div className="text-xs sm:text-sm font-semibold text-slate-500 mt-0.5">
+                  Refinery Section · Quality Assurance Department
+                </div>
+                <div className="text-sm sm:text-base font-bold text-slate-900 mt-1.5 uppercase flex items-center gap-2 flex-wrap">
+                  <span>Sample Analysis Report</span>
+                  <span className="text-[11px] font-mono font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded">
+                    SR001 (Sample Report)
+                  </span>
+                  <span className="text-[11px] font-mono font-bold bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded">
+                    ISO001 · CRT001
+                  </span>
+                </div>
               </div>
             </div>
 
-            <div className="text-right font-mono text-xs border border-slate-900 p-2 rounded">
-              <div><strong>DOC:</strong> DOC001 (RF-FR-001)</div>
-              <div><strong>REVISION:</strong> REV001 (Rev 02)</div>
-              <div><strong>ATTACHMENT:</strong> ATT001 (COA Spec)</div>
-              <div><strong>REPORT NO:</strong> {activeReport.report_no}</div>
+            <div className="font-mono text-xs border-2 border-slate-900 p-2.5 rounded-lg bg-slate-50/80 shrink-0 space-y-0.5 self-start text-left sm:text-right">
+              <div><strong className="text-slate-500">DOC:</strong> <strong>DOC001 (RF-FR-001)</strong></div>
+              <div><strong className="text-slate-500">REVISION:</strong> <strong>REV001 (Rev 02)</strong></div>
+              <div><strong className="text-slate-500">ATTACHMENT:</strong> <strong>ATT001 (COA Spec)</strong></div>
+              <div><strong className="text-slate-500">REPORT NO:</strong> <strong className="text-slate-900">{activeReport.report_no}</strong></div>
             </div>
           </div>
 
-          {/* Sample Metadata */}
-          <div className="grid grid-cols-3 gap-4 border border-slate-900 p-3 rounded font-mono text-xs mb-4">
-            <div><span className="text-slate-500">SAMPLE DATE:</span> <strong>{activeReport.sample_date}</strong></div>
-            <div><span className="text-slate-500">TIME CHECK:</span> <strong>{activeReport.time_check}</strong></div>
-            <div><span className="text-slate-500">LOT NUMBER:</span> <strong>{activeReport.lot_no}</strong></div>
-            <div><span className="text-slate-500">FEED TANK:</span> <strong>{activeReport.feed_tank_code || '-'}</strong></div>
-            <div><span className="text-slate-500">DISCHARGE TANK:</span> <strong>{activeReport.discharge_tank_code || '-'}</strong></div>
-            <div><span className="text-slate-500">CRYSTALLIZER/BATCH:</span> <strong>{activeReport.batch_no || '-'}</strong></div>
-            <div className="col-span-2"><span className="text-slate-500">PRODUCT:</span> <strong>{activeReport.product_name}</strong></div>
-            <div><span className="text-slate-500">SAMPLING POINT:</span> <strong>{activeReport.sampling_point_name || 'Outlet'}</strong></div>
+          {/* Sample Metadata Block */}
+          <div className="border border-slate-900 rounded-lg p-3.5 mb-4 bg-slate-50/50 font-mono text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-y-2.5 gap-x-4">
+              <div className="flex items-baseline justify-between border-b sm:border-b-0 border-slate-200 pb-1 sm:pb-0">
+                <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">SAMPLE DATE:</span>
+                <strong className="text-slate-900">{activeReport.sample_date}</strong>
+              </div>
+              <div className="flex items-baseline justify-between border-b sm:border-b-0 border-slate-200 pb-1 sm:pb-0">
+                <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">TIME CHECK:</span>
+                <strong className="text-slate-900">{activeReport.time_check}</strong>
+              </div>
+              <div className="flex items-baseline justify-between border-b sm:border-b-0 border-slate-200 pb-1 sm:pb-0">
+                <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">LOT NUMBER:</span>
+                <strong className="text-slate-900">{activeReport.lot_no}</strong>
+              </div>
+              <div className="flex items-baseline justify-between border-b sm:border-b-0 border-slate-200 pb-1 sm:pb-0">
+                <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">FEED TANK:</span>
+                <strong className="text-slate-900">{activeReport.feed_tank_code || '—'}</strong>
+              </div>
+              <div className="flex items-baseline justify-between border-b sm:border-b-0 border-slate-200 pb-1 sm:pb-0">
+                <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">DISCHARGE TANK:</span>
+                <strong className="text-slate-900">{activeReport.discharge_tank_code || '—'}</strong>
+              </div>
+              <div className="flex items-baseline justify-between border-b sm:border-b-0 border-slate-200 pb-1 sm:pb-0">
+                <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">CRYSTALLIZER/BATCH:</span>
+                <strong className="text-slate-900">{activeReport.batch_no || '—'}</strong>
+              </div>
+              <div className="sm:col-span-2 flex items-baseline justify-between border-b sm:border-b-0 border-slate-200 pb-1 sm:pb-0">
+                <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">PRODUCT:</span>
+                <strong className="text-slate-900 font-bold">{activeReport.product_name}</strong>
+              </div>
+              <div className="flex items-baseline justify-between">
+                <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">SAMPLING POINT:</span>
+                <strong className="text-slate-900">{activeReport.sampling_point_name || 'Outlet'}</strong>
+              </div>
+            </div>
           </div>
 
           {/* Parameters Table - 4 Columns: No, Tested Parameter, Analytical Result, Compliance */}
@@ -1060,33 +1107,33 @@ export default function OfficialFormsExportView() {
           </table>
 
           {/* Section: Operating Conditions & Remarks (RF-FR-001 Official Section) */}
-          <div className="border border-slate-900 p-3.5 rounded font-mono text-xs mb-4 bg-slate-50/80">
-            <div className="flex items-center justify-between border-b border-slate-300 pb-2 mb-2.5">
+          <div className="border border-slate-900 p-3.5 rounded-lg font-mono text-xs mb-4 bg-slate-50/80">
+            <div className="flex items-center justify-between border-b border-slate-300 pb-2 mb-3">
               <div className="font-bold text-slate-900 uppercase tracking-wide flex items-center gap-2">
-                <span>OPERATING CONDITIONS & QC REMARKS</span>
+                <span>OPERATING CONDITIONS &amp; QC REMARKS</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] text-slate-500 uppercase">
+                <span className="text-[10px] text-slate-500 uppercase font-semibold">
                   Refinery QC Checklist
                 </span>
                 <button
                   type="button"
                   onClick={openEditRemarks}
-                  className="no-print text-[10px] text-blue-700 hover:text-blue-900 hover:underline flex items-center gap-1 font-sans cursor-pointer"
+                  className="no-print text-[11px] text-sky-700 hover:text-sky-900 hover:underline flex items-center gap-1 font-sans cursor-pointer font-medium"
                 >
-                  <Edit3 className="h-2.5 w-2.5" /> Edit Remarks
+                  <Edit3 className="h-3 w-3" /> Edit Remarks
                 </button>
               </div>
             </div>
 
             {/* Operating Condition Checkboxes */}
-            <div className="grid grid-cols-3 gap-3 mb-3">
-              <div className={`flex items-center gap-2 p-2 rounded border ${
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+              <div className={`flex items-center gap-2.5 p-2.5 rounded-lg border transition-all ${
                 activeReport.remark_flushing 
                   ? 'border-emerald-700 bg-emerald-50 text-emerald-950 font-bold' 
-                  : 'border-slate-300 bg-white text-slate-500'
+                  : 'border-slate-300 bg-white text-slate-600'
               }`}>
-                <div className={`w-4 h-4 rounded flex items-center justify-center border text-[11px] leading-none ${
+                <div className={`w-4 h-4 rounded flex items-center justify-center border text-[11px] leading-none shrink-0 ${
                   activeReport.remark_flushing 
                     ? 'border-emerald-700 bg-emerald-600 text-white font-black' 
                     : 'border-slate-400 bg-white text-transparent'
@@ -1094,17 +1141,17 @@ export default function OfficialFormsExportView() {
                   ✓
                 </div>
                 <div>
-                  <div className="text-[11px] leading-none">FLUSHING</div>
-                  <div className="text-[9px] text-slate-500 font-normal mt-0.5">Sampling line flushed</div>
+                  <div className="text-xs font-bold leading-none">FLUSHING</div>
+                  <div className="text-[10px] text-slate-500 font-normal mt-0.5">Sampling line flushed</div>
                 </div>
               </div>
 
-              <div className={`flex items-center gap-2 p-2 rounded border ${
+              <div className={`flex items-center gap-2.5 p-2.5 rounded-lg border transition-all ${
                 activeReport.remark_cooling 
                   ? 'border-blue-700 bg-blue-50 text-blue-950 font-bold' 
-                  : 'border-slate-300 bg-white text-slate-500'
+                  : 'border-slate-300 bg-white text-slate-600'
               }`}>
-                <div className={`w-4 h-4 rounded flex items-center justify-center border text-[11px] leading-none ${
+                <div className={`w-4 h-4 rounded flex items-center justify-center border text-[11px] leading-none shrink-0 ${
                   activeReport.remark_cooling 
                     ? 'border-blue-700 bg-blue-600 text-white font-black' 
                     : 'border-slate-400 bg-white text-transparent'
@@ -1112,17 +1159,17 @@ export default function OfficialFormsExportView() {
                   ✓
                 </div>
                 <div>
-                  <div className="text-[11px] leading-none">COOLING</div>
-                  <div className="text-[9px] text-slate-500 font-normal mt-0.5">Crystallizer active cooling</div>
+                  <div className="text-xs font-bold leading-none">COOLING</div>
+                  <div className="text-[10px] text-slate-500 font-normal mt-0.5">Crystallizer active cooling</div>
                 </div>
               </div>
 
-              <div className={`flex items-center gap-2 p-2 rounded border ${
+              <div className={`flex items-center gap-2.5 p-2.5 rounded-lg border transition-all ${
                 activeReport.remark_pushover 
                   ? 'border-purple-700 bg-purple-50 text-purple-950 font-bold' 
-                  : 'border-slate-300 bg-white text-slate-500'
+                  : 'border-slate-300 bg-white text-slate-600'
               }`}>
-                <div className={`w-4 h-4 rounded flex items-center justify-center border text-[11px] leading-none ${
+                <div className={`w-4 h-4 rounded flex items-center justify-center border text-[11px] leading-none shrink-0 ${
                   activeReport.remark_pushover 
                     ? 'border-purple-700 bg-purple-600 text-white font-black' 
                     : 'border-slate-400 bg-white text-transparent'
@@ -1130,18 +1177,18 @@ export default function OfficialFormsExportView() {
                   ✓
                 </div>
                 <div>
-                  <div className="text-[11px] leading-none">PUSH OVER</div>
-                  <div className="text-[9px] text-slate-500 font-normal mt-0.5">Pushover transfer operation</div>
+                  <div className="text-xs font-bold leading-none">PUSH OVER</div>
+                  <div className="text-[10px] text-slate-500 font-normal mt-0.5">Pushover transfer operation</div>
                 </div>
               </div>
             </div>
 
             {/* QC Remarks & Analytical Observations Box */}
-            <div className="border border-slate-300 rounded bg-white p-2.5">
-              <div className="text-[10px] font-bold text-slate-500 uppercase mb-1">
-                QC Remarks & Analytical Observations:
+            <div className="border border-slate-300 rounded-lg bg-white p-3 shadow-2xs">
+              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                QC Remarks &amp; Analytical Observations:
               </div>
-              <div className="text-xs text-slate-800 font-mono whitespace-pre-wrap min-h-[38px]">
+              <div className="text-xs text-slate-800 font-mono whitespace-pre-wrap min-h-[38px] leading-relaxed">
                 {activeReport.remarks?.trim() ? (
                   activeReport.remarks
                 ) : (
@@ -1152,29 +1199,67 @@ export default function OfficialFormsExportView() {
           </div>
 
           {/* QC Formal Decision Stamp */}
-          <div className="border-2 border-slate-900 p-4 rounded bg-slate-50 text-xs font-mono">
-            <div className="flex items-center justify-between border-b border-slate-300 pb-2 mb-2 font-bold">
-              <span>QC FORMAL DISPOSITION BLOCK</span>
-              <span className="uppercase text-sm">
-                STATUS: {activeReport.decision?.decision || 'AWAITING DECISION'}
-              </span>
+          <div className="border-2 border-slate-900 p-4 rounded-lg bg-slate-50 text-xs font-mono shadow-xs">
+            <div className="flex items-center justify-between border-b border-slate-300 pb-2.5 mb-3 font-bold flex-wrap gap-2">
+              <span className="text-xs uppercase tracking-wider text-slate-900">QC FORMAL DISPOSITION BLOCK</span>
+              <div>
+                {activeReport.decision?.decision === 'reject' ? (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold font-mono bg-rose-100 text-rose-800 border border-rose-300">
+                    <span className="w-2 h-2 rounded-full bg-rose-600 animate-pulse" />
+                    STATUS: REJECT
+                  </span>
+                ) : activeReport.decision?.decision === 'accept' ? (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold font-mono bg-emerald-100 text-emerald-800 border border-emerald-300">
+                    <span className="w-2 h-2 rounded-full bg-emerald-600" />
+                    STATUS: ACCEPT
+                  </span>
+                ) : activeReport.decision?.decision === 'accept_concession' ? (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold font-mono bg-amber-100 text-amber-800 border border-amber-300">
+                    <span className="w-2 h-2 rounded-full bg-amber-600" />
+                    STATUS: CONCESSION
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium font-mono bg-slate-200 text-slate-700 border border-slate-300">
+                    STATUS: AWAITING DECISION
+                  </span>
+                )}
+              </div>
             </div>
 
             {activeReport.decision ? (
-              <div className="space-y-1">
-                <div><span className="text-slate-500">REASON CODE:</span> <strong>{activeReport.decision.reason_label || 'None (Accepted)'}</strong></div>
-                {activeReport.decision.disposition && (
-                  <div><span className="text-slate-500">MANDATORY DISPOSITION:</span> <strong className="uppercase text-rose-700">{activeReport.decision.disposition}</strong></div>
-                )}
+              <div className="space-y-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="p-2 rounded bg-white border border-slate-200">
+                    <span className="text-[10px] text-slate-500 uppercase font-bold block mb-0.5">REASON CODE:</span>
+                    <strong className="text-slate-900 text-xs">{activeReport.decision.reason_label || 'None (Accepted)'}</strong>
+                  </div>
+                  {activeReport.decision.disposition && (
+                    <div className="p-2 rounded bg-white border border-rose-200">
+                      <span className="text-[10px] text-slate-500 uppercase font-bold block mb-0.5">MANDATORY DISPOSITION:</span>
+                      <strong className="uppercase text-rose-700 text-xs font-bold">{activeReport.decision.disposition}</strong>
+                    </div>
+                  )}
+                </div>
                 {activeReport.decision.reason_detail && (
-                  <div><span className="text-slate-500">NARRATIVE:</span> {activeReport.decision.reason_detail}</div>
+                  <div className="p-2.5 rounded bg-white border border-slate-200">
+                    <span className="text-[10px] text-slate-500 uppercase font-bold block mb-0.5">NARRATIVE / CORRECTIVE ACTION:</span>
+                    <p className="text-slate-900 m-0 leading-relaxed">{activeReport.decision.reason_detail}</p>
+                  </div>
                 )}
-                <div className="pt-2 border-t border-slate-200 text-[11px] text-slate-500">
-                  Electronic Signature: {activeReport.decision.decided_by_name} · Timestamp: {activeReport.decision.decided_at}
+                <div className="pt-2.5 border-t border-slate-200 text-[11px] text-slate-500 flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-semibold text-slate-700">Electronic Signature:</span>
+                    <span className="font-mono text-slate-900 font-bold">{activeReport.decision.decided_by_name}</span>
+                    <span className="text-slate-400">·</span>
+                    <span className="text-slate-600">Timestamp: {activeReport.decision.decided_at}</span>
+                  </div>
+                  <span className="text-[10px] font-mono text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded font-bold">
+                    ✓ Verified Digital QA Sign-Off
+                  </span>
                 </div>
               </div>
             ) : (
-              <div className="text-slate-400 italic py-1 text-center">
+              <div className="text-slate-400 italic py-2 text-center">
                 Pending QC Chemist / Manager final review and electronic sign-off disposition.
               </div>
             )}
