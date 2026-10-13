@@ -34,7 +34,8 @@ import {
   AlertCircle,
   Edit,
   ArrowLeft,
-  Check
+  Check,
+  Info
 } from 'lucide-react';
 import { UserRole, Profile } from '@/types/refinery';
 import GliderTabs from './GliderTabs';
@@ -705,76 +706,9 @@ export default function AdminUserManagementView() {
 
   return (
     <div className="space-y-4">
-      {/* 1. Header Command Bar Banner */}
-      <section className="panel !mb-0 p-4 sm:p-5 bg-[var(--surface)] border border-[var(--line)] shadow-sm">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-sky-500/20 to-blue-500/10 border border-sky-500/30 flex items-center justify-center shrink-0">
-              <Users className="h-5 w-5 text-sky-400" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-base font-bold text-[var(--text)] tracking-tight">
-                  Personnel Directory &amp; Access Control
-                </h2>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[var(--muted)]">
-                  RBAC DIRECTORY
-                </span>
-              </div>
-              <p className="text-xs text-[var(--muted)] mt-0.5">
-                Nisshin Deodorizer Plant · Role permissions, sequential credentials &amp; 21 CFR Part 11 audit trails
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2.5 flex-wrap">
-            {/* Quick Metrics Chips */}
-            <div className="hidden xl:flex items-center gap-1.5 text-xs font-mono">
-              <span className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/5 text-[var(--muted)] flex items-center gap-1.5">
-                Total: <strong className="text-[var(--text)]">{totalCount}</strong>
-              </span>
-              <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center gap-1.5">
-                Ops: <strong className="text-emerald-300">{operatorCount}</strong>
-              </span>
-              <span className="px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center gap-1.5">
-                Sup: <strong className="text-amber-300">{supervisorCount}</strong>
-              </span>
-              <span className="px-2.5 py-1 rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center gap-1.5">
-                QC: <strong className="text-sky-300">{qcCount}</strong>
-              </span>
-              <span className="px-2.5 py-1 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center gap-1.5">
-                Admin: <strong className="text-purple-300">{adminCount}</strong>
-              </span>
-            </div>
-
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/5 text-xs text-[var(--muted)]">
-              <UserCheck className="w-3.5 h-3.5 text-sky-400 shrink-0" />
-              <span>Current User:</span>
-              <strong className="text-[var(--text)] font-mono">{currentProfile.full_name} ({currentProfile.employee_no})</strong>
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30 uppercase">
-                {currentRole}
-              </span>
-            </div>
-
-            <button
-              type="button"
-              onClick={handleManualSync}
-              disabled={isSyncing}
-              className={`ghost h-8 px-3 text-xs flex items-center gap-1.5 rounded-lg border transition-all ${
-                isSyncing ? 'opacity-70' : 'text-[var(--muted)] hover:text-[var(--text)] border-white/10 hover:border-white/20'
-              }`}
-              title={`Last synced: ${lastSyncedAt}`}
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-sky-400' : ''}`} />
-              <span>{isSyncing ? 'Syncing...' : 'Sync Supabase'}</span>
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* 2. Admin Section Navigation Sub-Tabs */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div style={{ maxWidth: '560px' }}>
+      {/* 1. Sleek Command Bar: GliderTabs + Current User + Live Sync */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        <div className="max-w-xl w-full lg:w-auto">
           <GliderTabs
             items={[
               { id: 'personnel', label: 'Personnel Directory', badge: filteredProfiles.length },
@@ -790,10 +724,92 @@ export default function AdminUserManagementView() {
             }}
           />
         </div>
+
+        <div className="flex items-center gap-2.5 self-start lg:self-auto flex-wrap sm:flex-nowrap">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/5 text-xs text-[var(--muted)]">
+            <UserCheck className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+            <span className="hidden sm:inline">Logged in:</span>
+            <strong className="text-[var(--text)] font-mono">{currentProfile.full_name} ({currentProfile.employee_no})</strong>
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30 uppercase">
+              {currentRole}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleManualSync}
+            disabled={isSyncing}
+            className={`ghost h-8 px-3 text-xs flex items-center gap-1.5 rounded-xl border transition-all ${
+              isSyncing ? 'opacity-70' : 'text-[var(--muted)] hover:text-[var(--text)] border-white/10 hover:border-white/20'
+            }`}
+            title={`Last synced: ${lastSyncedAt}`}
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-sky-400' : ''}`} />
+            <span>{isSyncing ? 'Syncing...' : 'Live Sync'}</span>
+          </button>
+        </div>
       </div>
 
       {activeAdminSubTab === 'personnel' ? (
         <>
+          {/* 2. Overview KPI Stat Ribbon */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            <div className="p-3.5 rounded-xl bg-[var(--surface)] border border-[var(--line)] shadow-xs flex items-center justify-between">
+              <div>
+                <div className="text-[11px] font-medium text-[var(--muted)] uppercase tracking-wider">Total Staff</div>
+                <div className="text-xl font-bold font-mono text-[var(--text)] mt-0.5">{totalCount}</div>
+                <div className="text-[10px] text-[var(--muted)] mt-0.5 font-mono">Active Roster</div>
+              </div>
+              <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-[var(--muted)]">
+                <Users className="w-4 h-4" />
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-[var(--surface)] border border-[var(--line)] shadow-xs flex items-center justify-between">
+              <div>
+                <div className="text-[11px] font-medium text-emerald-400 uppercase tracking-wider">Operators</div>
+                <div className="text-xl font-bold font-mono text-emerald-300 mt-0.5">{operatorCount}</div>
+                <div className="text-[10px] text-emerald-400/70 mt-0.5 font-mono">Refinery Floor</div>
+              </div>
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                <Cpu className="w-4 h-4" />
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-[var(--surface)] border border-[var(--line)] shadow-xs flex items-center justify-between">
+              <div>
+                <div className="text-[11px] font-medium text-amber-400 uppercase tracking-wider">Supervisors</div>
+                <div className="text-xl font-bold font-mono text-amber-300 mt-0.5">{supervisorCount}</div>
+                <div className="text-[10px] text-amber-400/70 mt-0.5 font-mono">Shift Oversight</div>
+              </div>
+              <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+                <SlidersHorizontal className="w-4 h-4" />
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-[var(--surface)] border border-[var(--line)] shadow-xs flex items-center justify-between">
+              <div>
+                <div className="text-[11px] font-medium text-sky-400 uppercase tracking-wider">QC Analysts</div>
+                <div className="text-xl font-bold font-mono text-sky-300 mt-0.5">{qcCount}</div>
+                <div className="text-[10px] text-sky-400/70 mt-0.5 font-mono">Lab Control</div>
+              </div>
+              <div className="w-9 h-9 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
+                <FlaskConical className="w-4 h-4" />
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-[var(--surface)] border border-[var(--line)] shadow-xs flex items-center justify-between">
+              <div>
+                <div className="text-[11px] font-medium text-blue-400 uppercase tracking-wider">Admins</div>
+                <div className="text-xl font-bold font-mono text-blue-300 mt-0.5">{adminCount}</div>
+                <div className="text-[10px] text-blue-400/70 mt-0.5 font-mono">Full Control</div>
+              </div>
+              <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                <ShieldCheck className="w-4 h-4" />
+              </div>
+            </div>
+          </div>
+
           {/* RBAC Warning Banner if not Admin */}
           {!isAdmin && (
             <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -838,72 +854,28 @@ export default function AdminUserManagementView() {
             </div>
           )}
 
-          {/* Full-Width Clean Personnel Directory Panel */}
-          <section className="panel !m-0 bg-[var(--surface)] border border-[var(--line)] shadow-sm flex flex-col">
-            {/* Toolbar Header */}
-            <div className="p-4 border-b border-[var(--line)] bg-[var(--raised)]/30 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          {/* 3. Streamlined Personnel Directory Card */}
+          <section className="panel !m-0 bg-[var(--surface)] border border-[var(--line)] shadow-sm rounded-xl overflow-hidden flex flex-col">
+            {/* Unified Toolbar: strictly aligned h-9 controls */}
+            <div className="p-3.5 border-b border-[var(--line)] bg-[var(--raised)]/40 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+              {/* Left: Status Filter Segment */}
               <div className="flex items-center gap-2.5">
-                <Users className="w-4 h-4 text-sky-400 shrink-0" />
-                <span className="font-semibold text-xs text-[var(--text)] uppercase tracking-wider">
-                  Plant Personnel Directory
-                </span>
-                <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-[var(--muted)]">
-                  {filteredProfiles.length} Members
-                </span>
-              </div>
-
-              {/* Action and Filter Controls */}
-              <div className="flex items-center gap-2.5 flex-wrap">
-                {/* Search */}
-                <div className="relative">
-                  <Search className="w-3.5 h-3.5 text-[var(--muted)] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  <input
-                    className="inp !pl-8 !h-8 text-xs w-[170px] sm:w-[210px]"
-                    type="search"
-                    placeholder="Search ID or name..."
-                    aria-label="Search staff"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-
-                {/* Role Filter */}
-                <div className="w-[140px]">
-                  <SearchableSelect
-                    aria-label="Filter by role"
-                    value={roleFilter}
-                    onChange={(val) => setRoleFilter(val)}
-                    placeholder="Filter role"
-                    searchPlaceholder="Search role..."
-                    options={[
-                      { value: 'all', label: 'All roles' },
-                      { value: 'operator', label: 'Operator' },
-                      { value: 'supervisor', label: 'Supervisor' },
-                      { value: 'qc_analyst', label: 'QC Analyst' },
-                      { value: 'qc_manager', label: 'QC Manager' },
-                      { value: 'admin', label: 'Admin' },
-                      { value: 'viewer', label: 'Viewer' }
-                    ]}
-                  />
-                </div>
-
-                {/* Status Filter */}
-                <div className="inline-flex rounded-lg p-0.5 bg-black/20 border border-white/5 text-xs">
+                <div className="inline-flex h-9 p-0.5 rounded-lg bg-[var(--bg)] border border-[var(--line)] text-xs">
                   <button
                     type="button"
                     onClick={() => setStatusFilter('all')}
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
+                    className={`px-3 h-full rounded-md text-xs font-medium transition-all ${
                       statusFilter === 'all'
                         ? 'bg-white/10 text-[var(--text)] font-semibold shadow-xs'
                         : 'text-[var(--muted)] hover:text-[var(--text)]'
                     }`}
                   >
-                    All
+                    All ({activeProfiles.length})
                   </button>
                   <button
                     type="button"
                     onClick={() => setStatusFilter('active')}
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
+                    className={`px-3 h-full rounded-md text-xs font-medium transition-all ${
                       statusFilter === 'active'
                         ? 'bg-emerald-500/20 text-emerald-300 font-semibold shadow-xs'
                         : 'text-[var(--muted)] hover:text-[var(--text)]'
@@ -914,7 +886,7 @@ export default function AdminUserManagementView() {
                   <button
                     type="button"
                     onClick={() => setStatusFilter('inactive')}
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
+                    className={`px-3 h-full rounded-md text-xs font-medium transition-all ${
                       statusFilter === 'inactive'
                         ? 'bg-rose-500/20 text-rose-300 font-semibold shadow-xs'
                         : 'text-[var(--muted)] hover:text-[var(--text)]'
@@ -923,13 +895,59 @@ export default function AdminUserManagementView() {
                     Inactive
                   </button>
                 </div>
+              </div>
+
+              {/* Right: Search + Role Filter + Register Staff Button */}
+              <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
+                {/* Search */}
+                <div className="relative flex-1 sm:flex-none">
+                  <Search className="w-3.5 h-3.5 text-[var(--muted)] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    className="inp !pl-8 !h-9 text-xs w-full sm:w-[220px]"
+                    type="search"
+                    placeholder="Search ID or name..."
+                    aria-label="Search staff"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--muted)] hover:text-[var(--text)] text-xs"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+
+                {/* Role Filter */}
+                <div className="w-[150px] shrink-0">
+                  <SearchableSelect
+                    aria-label="Filter by role"
+                    value={roleFilter}
+                    onChange={(val) => setRoleFilter(val)}
+                    placeholder="All Roles"
+                    searchPlaceholder="Search role..."
+                    icon="none"
+                    options={[
+                      { value: 'all', label: 'All Roles' },
+                      { value: 'operator', label: 'Operator' },
+                      { value: 'supervisor', label: 'Supervisor' },
+                      { value: 'qc_analyst', label: 'QC Analyst' },
+                      { value: 'qc_manager', label: 'QC Manager' },
+                      { value: 'admin', label: 'Admin' },
+                      { value: 'viewer', label: 'Viewer' }
+                    ]}
+                  />
+                </div>
 
                 {/* Quick Add Staff Button */}
                 {isAdmin && (
                   <button
                     type="button"
                     onClick={() => setActiveAdminSubTab('register')}
-                    className="primary h-8 px-3 text-xs font-semibold flex items-center gap-1.5 bg-sky-500 hover:bg-sky-400 text-black shadow-xs shrink-0"
+                    className="primary !h-9 px-3.5 text-xs font-semibold flex items-center gap-1.5 bg-sky-500 hover:bg-sky-400 text-black shadow-xs shrink-0 rounded-lg"
                   >
                     <UserPlus className="w-3.5 h-3.5" />
                     <span>+ Register Staff</span>
@@ -943,19 +961,17 @@ export default function AdminUserManagementView() {
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-[var(--line)] text-[var(--muted)] bg-white/[0.01]">
-                    <th className="py-3 px-4 text-left font-mono font-semibold">Employee ID</th>
-                    <th className="py-3 px-4 text-left font-semibold">Staff Member</th>
-                    <th className="py-3 px-4 text-left font-semibold">Assigned Role</th>
-                    <th className="py-3 px-4 text-left font-semibold">Status</th>
-                    <th className="py-3 px-4 text-left font-semibold">Credentials</th>
-                    <th className="py-3 px-4 text-left font-semibold">Created Date</th>
-                    <th className="py-3 px-4 text-right font-semibold">Actions</th>
+                    <th className="py-3 px-4 text-left font-mono font-semibold w-[130px]">EMPLOYEE ID</th>
+                    <th className="py-3 px-4 text-left font-semibold">STAFF MEMBER</th>
+                    <th className="py-3 px-4 text-left font-semibold w-[190px]">ASSIGNED ROLE</th>
+                    <th className="py-3 px-4 text-left font-semibold w-[130px]">STATUS</th>
+                    <th className="py-3 px-4 text-right font-semibold w-[190px]">ACTIONS</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--line)]">
                   {filteredProfiles.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="text-center py-16 text-[var(--muted)] space-y-2">
+                      <td colSpan={5} className="text-center py-16 text-[var(--muted)] space-y-2">
                         <Users className="w-8 h-8 mx-auto text-[var(--muted)] opacity-40" />
                         <p className="font-medium text-[var(--text)]">No staff members found matching criteria.</p>
                         <p className="text-[11px] text-[var(--muted)]">Try adjusting your search query or filter options.</p>
@@ -969,71 +985,69 @@ export default function AdminUserManagementView() {
 
                       return (
                         <tr key={p.employee_no || p.id} className="hover:bg-white/[0.02] transition-colors">
-                          <td className="py-3 px-4 font-mono font-bold text-[var(--text)]">
-                            <span className="px-2 py-1 rounded bg-white/5 border border-white/10 font-mono text-xs">
+                          <td className="py-3.5 px-4 font-mono font-bold text-[var(--text)]">
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-white/5 border border-white/10 font-mono text-xs">
                               {p.employee_no}
                             </span>
                           </td>
-                          <td className="py-3 px-4">
-                            <div className="flex items-center gap-2.5">
+                          <td className="py-3.5 px-4">
+                            <div className="flex items-center gap-3">
                               {p.avatar_url ? (
                                 <img
                                   src={p.avatar_url}
                                   alt={p.full_name}
-                                  className="w-7 h-7 rounded-full object-cover shrink-0 border border-white/10 shadow-xs"
+                                  className="w-8 h-8 rounded-full object-cover shrink-0 border border-white/10 shadow-xs"
                                 />
                               ) : (
-                                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex items-center justify-center text-[11px] font-bold text-[var(--text)] shrink-0 shadow-xs">
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-sky-500/20 to-blue-500/10 border border-sky-500/30 flex items-center justify-center text-xs font-bold text-sky-300 shrink-0 shadow-xs">
                                   {(p.full_name || 'U').charAt(0).toUpperCase()}
                                 </div>
                               )}
                               <div>
-                                <div className="flex items-center gap-1.5">
-                                  <span className="font-semibold text-[var(--text)]">{p.full_name}</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-semibold text-xs text-[var(--text)]">{p.full_name}</span>
                                   {isCurrent && (
-                                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30">
+                                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30">
                                       YOU
                                     </span>
                                   )}
                                 </div>
+                                <div className="flex items-center gap-2 text-[10px] text-[var(--muted)] mt-0.5 font-mono">
+                                  <span>Added {p.created_at ? new Date(p.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '26 Sep 2026'}</span>
+                                  <span>·</span>
+                                  <span className={p.password ? 'text-amber-400/90' : 'text-slate-400'}>
+                                    {p.password ? 'Custom PW' : 'Default PW'}
+                                  </span>
+                                </div>
                               </div>
                             </div>
                           </td>
-                          <td className="py-3 px-4">
-                            <span className={`inline-flex items-center text-[10px] font-semibold px-2.5 py-0.5 rounded-full border uppercase tracking-wider ${roleStyle.bg} ${roleStyle.text} ${roleStyle.border}`}>
-                              {p.role.replace('_', ' ')}
+                          <td className="py-3.5 px-4">
+                            <span className={`inline-flex items-center gap-1.5 text-[10px] font-semibold px-2.5 py-1 rounded-md border uppercase tracking-wider ${roleStyle.bg} ${roleStyle.text} ${roleStyle.border}`}>
+                              {p.role === 'operator' && <Cpu className="w-3 h-3 shrink-0" />}
+                              {p.role === 'supervisor' && <SlidersHorizontal className="w-3 h-3 shrink-0" />}
+                              {(p.role === 'qc_analyst' || p.role === 'qc_manager') && <FlaskConical className="w-3 h-3 shrink-0" />}
+                              {p.role === 'admin' && <ShieldCheck className="w-3 h-3 shrink-0" />}
+                              {p.role === 'viewer' && <Activity className="w-3 h-3 shrink-0" />}
+                              <span>{p.role.replace('_', ' ')}</span>
                             </span>
                           </td>
-                          <td className="py-3 px-4">
-                            <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${
+                          <td className="py-3.5 px-4">
+                            <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full border ${
                               isActive 
                                 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
                                 : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
                             }`}>
-                              <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+                              <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-emerald-400 animate-pulse' : 'bg-rose-400'}`} />
                               {isActive ? 'Active' : 'Inactive'}
                             </span>
                           </td>
-                          <td className="py-3 px-4">
-                            <span className={`text-[10px] font-mono px-2 py-0.5 rounded border ${
-                              p.password ? 'bg-amber-500/10 text-amber-300 border-amber-500/20' : 'bg-white/5 text-[var(--muted)] border-white/10'
-                            }`}>
-                              {p.password ? 'Custom PW' : 'Default PW'}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4 text-[var(--muted)] font-mono text-[11px]">
-                            {p.created_at ? new Date(p.created_at).toLocaleDateString('en-GB', {
-                              day: '2-digit',
-                              month: 'short',
-                              year: 'numeric'
-                            }) : '26 Sep 2026'}
-                          </td>
-                          <td className="py-3 px-4 text-right">
+                          <td className="py-3.5 px-4 text-right">
                             {isAdmin ? (
                               <div className="flex items-center justify-end gap-1.5">
                                 <button
                                   type="button"
-                                  className="ghost h-7 px-2.5 text-xs flex items-center gap-1 border border-white/5 hover:border-white/20"
+                                  className="ghost h-7 px-2.5 text-xs flex items-center gap-1 border border-white/10 hover:border-white/20 rounded-md transition-colors"
                                   onClick={() => handleOpenEdit(p)}
                                   title="Edit staff profile"
                                 >
@@ -1042,7 +1056,11 @@ export default function AdminUserManagementView() {
                                 </button>
                                 <button
                                   type="button"
-                                  className="ghost h-7 px-2.5 text-xs border border-white/5 hover:border-white/20"
+                                  className={`ghost h-7 px-2.5 text-xs border rounded-md transition-colors ${
+                                    isActive 
+                                      ? 'border-white/10 hover:border-amber-500/40 hover:text-amber-300' 
+                                      : 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10'
+                                  }`}
                                   disabled={isCurrent}
                                   onClick={() => handleToggleStatus(p.employee_no, isActive, p.full_name)}
                                 >
@@ -1050,12 +1068,12 @@ export default function AdminUserManagementView() {
                                 </button>
                                 <button
                                   type="button"
-                                  className="ghost dng h-7 px-2 text-xs border border-rose-500/20 hover:border-rose-500/40"
+                                  className="ghost dng h-7 w-7 p-0 flex items-center justify-center border border-rose-500/20 hover:border-rose-500/40 rounded-md text-rose-400 transition-colors"
                                   disabled={isCurrent}
                                   onClick={() => handleDeleteUser(p.employee_no, p.full_name)}
                                   title="Delete staff profile"
                                 >
-                                  <Trash2 className="w-3 h-3 text-rose-400" />
+                                  <Trash2 className="w-3.5 h-3.5" />
                                 </button>
                               </div>
                             ) : (
@@ -1072,8 +1090,11 @@ export default function AdminUserManagementView() {
 
             {/* Table Footer */}
             <div className="p-3.5 border-t border-[var(--line)] bg-[var(--raised)]/10 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-[var(--muted)]">
-              <span>21 CFR Part 11 audit compliance: All personnel registrations, modifications, and status changes are permanently logged.</span>
-              <span className="font-mono">Total {filteredProfiles.length} of {profiles.length} staff records</span>
+              <div className="flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-sky-400" />
+                <span>21 CFR Part 11 audit compliance: All personnel registrations, modifications, and status changes are permanently logged.</span>
+              </div>
+              <span className="font-mono font-medium">Showing {filteredProfiles.length} of {activeProfiles.length} staff records</span>
             </div>
           </section>
         </>
@@ -1155,6 +1176,7 @@ export default function AdminUserManagementView() {
                     onChange={(val) => handleRoleSelectChange(val as UserRole)}
                     placeholder="Select Assigned Role"
                     searchPlaceholder="Search role..."
+                    icon="none"
                     options={[
                       { value: 'operator', label: 'Plant Operator' },
                       { value: 'supervisor', label: 'Shift Supervisor' },
@@ -1490,8 +1512,8 @@ export default function AdminUserManagementView() {
                     onClick={() => setRetentionPreset('custom')}
                     className={`p-2.5 rounded-lg border text-left transition-all cursor-pointer ${
                       retentionPreset === 'custom'
-                        ? 'bg-gradient-to-r from-sky-600 to-sky-500 border-sky-500/60 text-white shadow-md shadow-sky-950/40 font-semibold'
-                        : 'bg-slate-50 border-slate-200 text-slate-500 hover:text-sky-300 hover:bg-slate-100'
+                        ? 'bg-[#009FE3] border-[#009FE3] text-white font-semibold'
+                        : 'bg-[#0A1018] border-[#1F2E43] text-slate-300 hover:text-white hover:bg-[#172235]'
                     }`}
                   >
                     <div className="font-bold text-xs">Custom Date</div>
@@ -1870,7 +1892,7 @@ export default function AdminUserManagementView() {
                       ? 'bg-rose-950/50 border-rose-800 text-rose-300'
                       : confirmModal.type === 'warning'
                       ? 'bg-amber-950/50 border-amber-800 text-amber-200'
-                      : 'bg-slate-50 border border-slate-200 text-slate-500'
+                      : 'bg-[#0A1018] border border-[#1F2E43] text-slate-300'
                   }`}
                 >
                   <p className="whitespace-pre-line font-sans">
@@ -2015,6 +2037,7 @@ export default function AdminUserManagementView() {
                   onChange={(val) => setEditRole(val as UserRole)}
                   placeholder="Select Assigned Role"
                   searchPlaceholder="Search role..."
+                  icon="none"
                   options={[
                     { value: 'operator', label: 'Plant Operator' },
                     { value: 'supervisor', label: 'Shift Supervisor' },
