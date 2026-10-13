@@ -503,40 +503,47 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
       {/* ========================================================================= */}
       {/* 3. DESKTOP TOP HEADER BAR (Spans content area, offset by sidebar width)   */}
       {/* ========================================================================= */}
-      <header className="hidden lg:flex fixed top-0 right-0 left-[248px] h-16 bg-[var(--bg)] border-b border-[var(--line)] z-30 items-center justify-between px-10 gap-6">
-        {/* Global Search Bar */}
-        <input
-          type="search"
-          placeholder="Search process, batch, equipment"
-          aria-label="Search"
-          className="search-redesign"
-          readOnly
-        />
-
-        <div className="flex-1" />
-
-        {/* Clock, User Profile & Sign Out */}
-        <div className="flex items-center gap-5">
-          {/* Formatted Date & Time */}
-          <span id="clock" className="font-mono text-xs text-[var(--muted)] tabular-nums">
-            {formattedDateTime || '08/12/2024 14:25:00'}
+      <header className="hidden lg:flex fixed top-0 right-0 left-[248px] h-16 bg-[var(--bg)] border-b border-[var(--line)] z-30 items-center justify-between px-8 gap-4 select-none">
+        {/* Left Side: Plant Status Telemetry Chip (Replaces search bar) */}
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-mono text-xs font-semibold tracking-wide">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+            </span>
+            <span>PLANT ONLINE</span>
+          </div>
+          <span className="text-xs text-[var(--muted)] font-mono hidden xl:inline">
+            Nisshin Deodorizer · Unit #4
           </span>
+        </div>
+
+        {/* Right Side: Telemetry Clock, Quick Actions, User Profile & Sign Out */}
+        <div className="flex items-center gap-3.5 shrink-0">
+          {/* Formatted Date & Time (Clean single-line pill) */}
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[var(--surface)] border border-[var(--line)] font-mono text-xs text-slate-300 tabular-nums whitespace-nowrap shadow-xs">
+            <Clock className="h-3.5 w-3.5 text-[#009FE3] shrink-0" />
+            <span>{formattedDateTime || '08/12/2024 14:25:00'}</span>
+          </div>
 
           {/* Interactive Tutorial Button */}
           <button
             type="button"
             onClick={() => setIsTutorialOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#009FE3]/15 hover:bg-[#009FE3]/25 border border-[#009FE3]/35 text-[#009FE3] hover:text-[#00B4FF] text-xs font-mono font-bold transition-all cursor-pointer shadow-xs active:scale-95"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#009FE3]/10 hover:bg-[#009FE3]/20 border border-[#009FE3]/30 text-[#009FE3] hover:text-[#00B4FF] text-xs font-mono font-bold transition-all cursor-pointer whitespace-nowrap shadow-xs active:scale-95"
             title="Buka Tutorial Interaktif Cara Penggunaan Loji"
           >
-            <Sparkles className="h-3.5 w-3.5 animate-pulse text-[#009FE3]" />
+            <Sparkles className="h-3.5 w-3.5 animate-pulse text-[#009FE3] shrink-0" />
             <span>Tutorial</span>
           </button>
 
           {/* Quick Theme Toggle Button (Dark / Light Day-Night Switch) */}
           <ThemeSwitch currentTheme={currentTheme} onToggle={toggleTheme} />
 
-          {/* User Profile Chip */}
+          {/* Subtle Vertical Divider */}
+          <div className="h-6 w-px bg-[var(--line)] mx-0.5" />
+
+          {/* User Profile Chip (Tidy single-line layout with truncate) */}
           <div 
             role="button"
             tabIndex={0}
@@ -547,29 +554,31 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
                 setIsSettingsOpen(true);
               }
             }}
-            className="user-redesign cursor-pointer select-none"
+            className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl hover:bg-[var(--surface)] border border-transparent hover:border-[var(--line)] transition-all cursor-pointer select-none group"
             title="Click to view & edit Profile / Settings"
           >
-            <div className="av-redesign">
+            <div className="h-8 w-8 rounded-full bg-[var(--raised)] border border-[var(--line)] flex items-center justify-center text-xs font-bold text-[var(--text)] overflow-hidden shrink-0 shadow-xs group-hover:border-[#009FE3]/50 transition-colors">
               {profile.avatar_url ? (
                 <img
                   src={profile.avatar_url}
                   alt={profile.full_name}
-                  className="h-full w-full object-cover rounded-full"
+                  className="h-full w-full object-cover"
                 />
               ) : (
                 userInitials
               )}
             </div>
-            <div>
-              <b>{profile.full_name}</b>
-              <span>
+            <div className="flex flex-col text-left leading-tight min-w-0">
+              <span className="font-semibold text-xs text-[var(--text)] whitespace-nowrap truncate max-w-[150px]">
+                {profile.full_name}
+              </span>
+              <span className="text-[11px] text-[var(--muted)] font-mono whitespace-nowrap truncate max-w-[150px]">
                 {role === 'operator' ? 'Plant Operator' : role === 'supervisor' ? 'Operations Supervisor' : role === 'qc_analyst' ? 'QC Chemist' : role === 'qc_manager' ? 'Quality Manager' : role === 'admin' ? 'System Administrator' : 'Viewer'}
               </span>
             </div>
           </div>
 
-          {/* QC Sample Status Notification Bell (Sebelah Kiri Sign Out) */}
+          {/* QC Sample Status Notification Bell */}
           <div className="relative">
             <button
               type="button"
@@ -601,12 +610,12 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
             )}
           </div>
 
-          {/* Sign Out Button with Animated Alert Dialog */}
+          {/* Sign Out Button */}
           {onLogout && (
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <button
-                  className="ghost out transition-all duration-150 active:scale-[0.97] cursor-pointer flex items-center gap-1.5"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/25 text-red-400 hover:text-red-300 text-xs font-medium transition-all duration-150 active:scale-[0.97] cursor-pointer whitespace-nowrap shadow-xs"
                   type="button"
                   title="Sign Out"
                 >
