@@ -32,8 +32,9 @@ import {
   Zap,
   X,
   AlertCircle,
-  Info,
-  Edit
+  Edit,
+  ArrowLeft,
+  Check
 } from 'lucide-react';
 import { UserRole, Profile } from '@/types/refinery';
 import GliderTabs from './GliderTabs';
@@ -97,7 +98,8 @@ export default function AdminUserManagementView() {
   const [isEditingSubmitting, setIsEditingSubmitting] = useState(false);
 
   // Navigation Sub-tab
-  const [activeAdminSubTab, setActiveAdminSubTab] = useState<'personnel' | 'retention'>('personnel');
+  const [activeAdminSubTab, setActiveAdminSubTab] = useState<'personnel' | 'register' | 'retention'>('personnel');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
 
   // Retention & Auto-Archive / Prune State
   const [storageMetrics, setStorageMetrics] = useState<StorageMetrics | null>(null);
@@ -486,8 +488,10 @@ export default function AdminUserManagementView() {
         type: 'success', 
         text: successMsg 
       });
-      showToast('success', 'Staff Member Registered', successMsg);
       setAutoId(generateNextEmployeeId(selectedRole));
+      setTimeout(() => {
+        setActiveAdminSubTab('personnel');
+      }, 1200);
     } catch (err: any) {
       const errMsg = err?.message || 'Failed to register staff member. Please try again.';
       setStatusMessage({ type: 'error', text: errMsg });
@@ -660,7 +664,9 @@ export default function AdminUserManagementView() {
         (p.employee_no || '').toLowerCase().includes(q) ||
         (p.full_name || '').toLowerCase().includes(q);
       const matchesRole = roleFilter === 'all' || p.role === roleFilter;
-      return matchesSearch && matchesRole;
+      const isActive = p.status === 'active' || (p.status !== 'unactive' && p.active !== false);
+      const matchesStatus = statusFilter === 'all' || (statusFilter === 'active' ? isActive : !isActive);
+      return matchesSearch && matchesRole && matchesStatus;
     })
     .sort((a, b) => {
       const isNumA = /^\d+$/.test(a.employee_no);
@@ -709,19 +715,38 @@ export default function AdminUserManagementView() {
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-base font-bold text-[var(--text)] tracking-tight">
-                  Plant Administration &amp; User Directory
+                  Personnel Directory &amp; Access Control
                 </h2>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[var(--muted)]">
                   RBAC DIRECTORY
                 </span>
               </div>
               <p className="text-xs text-[var(--muted)] mt-0.5">
-                Nisshin Deodorizer Plant · Role-based access control, sequential credentials &amp; 21 CFR Part 11 audit trails
+                Nisshin Deodorizer Plant · Role permissions, sequential credentials &amp; 21 CFR Part 11 audit trails
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            {/* Quick Metrics Chips */}
+            <div className="hidden xl:flex items-center gap-1.5 text-xs font-mono">
+              <span className="px-2.5 py-1 rounded-lg bg-white/5 border border-white/5 text-[var(--muted)] flex items-center gap-1.5">
+                Total: <strong className="text-[var(--text)]">{totalCount}</strong>
+              </span>
+              <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center gap-1.5">
+                Ops: <strong className="text-emerald-300">{operatorCount}</strong>
+              </span>
+              <span className="px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center gap-1.5">
+                Sup: <strong className="text-amber-300">{supervisorCount}</strong>
+              </span>
+              <span className="px-2.5 py-1 rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center gap-1.5">
+                QC: <strong className="text-sky-300">{qcCount}</strong>
+              </span>
+              <span className="px-2.5 py-1 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-400 flex items-center gap-1.5">
+                Admin: <strong className="text-purple-300">{adminCount}</strong>
+              </span>
+            </div>
+
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/5 text-xs text-[var(--muted)]">
               <UserCheck className="w-3.5 h-3.5 text-sky-400 shrink-0" />
               <span>Current User:</span>
@@ -748,20 +773,23 @@ export default function AdminUserManagementView() {
       </section>
 
       {/* 2. Admin Section Navigation Sub-Tabs */}
-      <div style={{ maxWidth: '520px' }}>
-        <GliderTabs
-          items={[
-            { id: 'personnel', label: 'Personnel and access control' },
-            { id: 'retention', label: 'Data retention and prune policy' },
-          ]}
-          activeId={activeAdminSubTab}
-          onChange={(id) => {
-            setActiveAdminSubTab(id as 'personnel' | 'retention');
-            if (id === 'retention') {
-              refreshStorage();
-            }
-          }}
-        />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div style={{ maxWidth: '560px' }}>
+          <GliderTabs
+            items={[
+              { id: 'personnel', label: 'Personnel Directory', badge: filteredProfiles.length },
+              { id: 'register', label: '+ Register Staff' },
+              { id: 'retention', label: 'Data Retention & Prune' },
+            ]}
+            activeId={activeAdminSubTab}
+            onChange={(id) => {
+              setActiveAdminSubTab(id as 'personnel' | 'register' | 'retention');
+              if (id === 'retention') {
+                refreshStorage();
+              }
+            }}
+          />
+        </div>
       </div>
 
       {activeAdminSubTab === 'personnel' ? (
@@ -810,358 +838,427 @@ export default function AdminUserManagementView() {
             </div>
           )}
 
-          {/* KPI Stats Strip */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
-            <div className="p-3.5 rounded-xl bg-[var(--surface)] border border-[var(--line)] shadow-sm flex flex-col justify-between gap-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-semibold text-[var(--muted)] uppercase tracking-wider">Total Staff</span>
-                <div className="h-6 w-6 rounded-md bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
-                  <Users className="w-3.5 h-3.5" />
-                </div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold font-mono text-[var(--text)]">{totalCount}</div>
-                <div className="text-[11px] text-[var(--muted)] mt-0.5">Active directory</div>
-              </div>
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-[var(--surface)] border border-[var(--line)] shadow-sm flex flex-col justify-between gap-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-semibold text-[var(--muted)] uppercase tracking-wider">Operators</span>
-                <div className="h-6 w-6 rounded-md bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-                  <Cpu className="w-3.5 h-3.5" />
-                </div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold font-mono text-[var(--text)]">{operatorCount}</div>
-                <div className="text-[11px] text-[var(--muted)] mt-0.5">Floor operations</div>
-              </div>
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-[var(--surface)] border border-[var(--line)] shadow-sm flex flex-col justify-between gap-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-semibold text-[var(--muted)] uppercase tracking-wider">Supervisors</span>
-                <div className="h-6 w-6 rounded-md bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                </div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold font-mono text-[var(--text)]">{supervisorCount}</div>
-                <div className="text-[11px] text-[var(--muted)] mt-0.5">Shift management</div>
-              </div>
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-[var(--surface)] border border-[var(--line)] shadow-sm flex flex-col justify-between gap-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-semibold text-[var(--muted)] uppercase tracking-wider">QC Lab</span>
-                <div className="h-6 w-6 rounded-md bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
-                  <FlaskConical className="w-3.5 h-3.5" />
-                </div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold font-mono text-[var(--text)]">{qcCount}</div>
-                <div className="text-[11px] text-[var(--muted)] mt-0.5">Analyst &amp; Manager</div>
-              </div>
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-[var(--surface)] border border-[var(--line)] shadow-sm flex flex-col justify-between gap-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-semibold text-[var(--muted)] uppercase tracking-wider">Admin &amp; Audit</span>
-                <div className="h-6 w-6 rounded-md bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
-                  <Lock className="w-3.5 h-3.5" />
-                </div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold font-mono text-[var(--text)]">{adminCount}</div>
-                <div className="text-[11px] text-[var(--muted)] mt-0.5">Governance</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Main Grid: Add User & Personnel Directory */}
-          <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
-            {/* Left Column (4 cols): Register Staff */}
-            <section className="xl:col-span-4 panel !m-0 bg-[var(--surface)] border border-[var(--line)] shadow-sm flex flex-col">
-              <div className="p-4 border-b border-[var(--line)] bg-[var(--raised)]/30 flex items-center gap-2">
-                <UserPlus className="w-4 h-4 text-sky-400 shrink-0" />
+          {/* Full-Width Clean Personnel Directory Panel */}
+          <section className="panel !m-0 bg-[var(--surface)] border border-[var(--line)] shadow-sm flex flex-col">
+            {/* Toolbar Header */}
+            <div className="p-4 border-b border-[var(--line)] bg-[var(--raised)]/30 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <Users className="w-4 h-4 text-sky-400 shrink-0" />
                 <span className="font-semibold text-xs text-[var(--text)] uppercase tracking-wider">
-                  Register New Staff Member
+                  Plant Personnel Directory
+                </span>
+                <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-[var(--muted)]">
+                  {filteredProfiles.length} Members
                 </span>
               </div>
 
-              <div className="p-4">
-                <form onSubmit={handleAddUserSubmit} className="space-y-3.5">
-                  <div className="fld !m-0">
-                    <label htmlFor="ro" className="text-xs font-semibold text-[var(--text)] mb-1 block">Assigned Role</label>
-                    <SearchableSelect
-                      id="ro"
-                      disabled={!isAdmin}
-                      value={selectedRole}
-                      onChange={(val) => handleRoleSelectChange(val as UserRole)}
-                      placeholder="Select Assigned Role"
-                      searchPlaceholder="Search role..."
-                      options={[
-                        { value: 'operator', label: 'Plant Operator' },
-                        { value: 'supervisor', label: 'Shift Supervisor' },
-                        { value: 'qc_analyst', label: 'QC Laboratory Analyst' },
-                        { value: 'qc_manager', label: 'Quality Control Manager' },
-                        { value: 'admin', label: 'Plant Administrator' },
-                        { value: 'viewer', label: 'Quality Auditor (Viewer)' }
-                      ]}
-                    />
-                  </div>
+              {/* Action and Filter Controls */}
+              <div className="flex items-center gap-2.5 flex-wrap">
+                {/* Search */}
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 text-[var(--muted)] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    className="inp !pl-8 !h-8 text-xs w-[170px] sm:w-[210px]"
+                    type="search"
+                    placeholder="Search ID or name..."
+                    aria-label="Search staff"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
 
-                  <div className="fld !m-0">
-                    <label htmlFor="ri" className="text-xs font-semibold text-[var(--text)] mb-1 block">Employee ID (Flexible Number)</label>
-                    <input 
-                      id="ri" 
-                      disabled={!isAdmin}
-                      value={autoId} 
-                      onChange={(e) => setAutoId(e.target.value.replace(/\D/g, ''))}
-                      placeholder="e.g. 1042" 
-                      className="inp w-full"
-                      style={{
-                        borderColor: isIdDuplicate ? '#f43f5e' : undefined,
-                        backgroundColor: isIdDuplicate ? 'rgba(244, 63, 94, 0.08)' : undefined
-                      }}
-                    />
-                    {isIdDuplicate && duplicateUser ? (
-                      <div className="mt-1.5 p-2 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 text-[11px] flex items-center gap-2">
-                        <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-400" />
-                        <span>ID <strong>&quot;{cleanAutoId}&quot;</strong> is in use by <strong>{duplicateUser.full_name}</strong>. ID must be unique!</span>
-                      </div>
-                    ) : cleanAutoId ? (
-                      <div className="mt-1 text-[11px] text-emerald-400 flex items-center gap-1.5">
-                        <CheckCircle2 className="w-3 h-3 shrink-0" />
-                        <span>Employee ID &quot;{cleanAutoId}&quot; is available.</span>
-                      </div>
-                    ) : (
-                      <span className="text-[11px] text-[var(--muted)] mt-1 block">
-                        Enter any unique staff ID number.
-                      </span>
-                    )}
-                  </div>
+                {/* Role Filter */}
+                <div className="w-[140px]">
+                  <SearchableSelect
+                    aria-label="Filter by role"
+                    value={roleFilter}
+                    onChange={(val) => setRoleFilter(val)}
+                    placeholder="Filter role"
+                    searchPlaceholder="Search role..."
+                    options={[
+                      { value: 'all', label: 'All roles' },
+                      { value: 'operator', label: 'Operator' },
+                      { value: 'supervisor', label: 'Supervisor' },
+                      { value: 'qc_analyst', label: 'QC Analyst' },
+                      { value: 'qc_manager', label: 'QC Manager' },
+                      { value: 'admin', label: 'Admin' },
+                      { value: 'viewer', label: 'Viewer' }
+                    ]}
+                  />
+                </div>
 
-                  <div className="fld !m-0">
-                    <label htmlFor="rn" className="text-xs font-semibold text-[var(--text)] mb-1 block">Full Name</label>
-                    <input
-                      id="rn"
-                      disabled={!isAdmin}
-                      required
-                      placeholder="e.g. Muhammad Faizal bin Roslan"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      className="inp w-full"
-                    />
-                  </div>
-
-                  <div className="fld !m-0">
-                    <label htmlFor="rp" className="text-xs font-semibold text-[var(--text)] mb-1 block">Initial Password</label>
-                    <input
-                      id="rp"
-                      disabled={!isAdmin}
-                      type="password"
-                      value={customPassword}
-                      onChange={(e) => setCustomPassword(e.target.value)}
-                      autoComplete="new-password"
-                      className="inp w-full"
-                    />
-                  </div>
-
+                {/* Status Filter */}
+                <div className="inline-flex rounded-lg p-0.5 bg-black/20 border border-white/5 text-xs">
                   <button
-                    className="primary wide h-9 text-xs font-semibold flex items-center justify-center gap-1.5 mt-2"
-                    type="submit"
-                    disabled={!isAdmin || isSubmitting || isIdDuplicate || !cleanAutoId || !fullName.trim()}
-                    style={{
-                      opacity: (isIdDuplicate || !cleanAutoId || !fullName.trim()) ? 0.6 : 1,
-                      cursor: (isIdDuplicate || !cleanAutoId || !fullName.trim()) ? 'not-allowed' : 'pointer'
-                    }}
+                    type="button"
+                    onClick={() => setStatusFilter('all')}
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
+                      statusFilter === 'all'
+                        ? 'bg-white/10 text-[var(--text)] font-semibold shadow-xs'
+                        : 'text-[var(--muted)] hover:text-[var(--text)]'
+                    }`}
+                  >
+                    All
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStatusFilter('active')}
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
+                      statusFilter === 'active'
+                        ? 'bg-emerald-500/20 text-emerald-300 font-semibold shadow-xs'
+                        : 'text-[var(--muted)] hover:text-[var(--text)]'
+                    }`}
+                  >
+                    Active
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStatusFilter('inactive')}
+                    className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
+                      statusFilter === 'inactive'
+                        ? 'bg-rose-500/20 text-rose-300 font-semibold shadow-xs'
+                        : 'text-[var(--muted)] hover:text-[var(--text)]'
+                    }`}
+                  >
+                    Inactive
+                  </button>
+                </div>
+
+                {/* Quick Add Staff Button */}
+                {isAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => setActiveAdminSubTab('register')}
+                    className="primary h-8 px-3 text-xs font-semibold flex items-center gap-1.5 bg-sky-500 hover:bg-sky-400 text-black shadow-xs shrink-0"
                   >
                     <UserPlus className="w-3.5 h-3.5" />
-                    <span>{isSubmitting ? 'Registering...' : isIdDuplicate ? 'Duplicate ID (Must Be Unique)' : 'Register Staff Member'}</span>
+                    <span>+ Register Staff</span>
                   </button>
-
-                  <p className="text-[11px] text-[var(--muted)] text-center pt-1">
-                    Staff can change the initial password after signing in.
-                  </p>
-                </form>
+                )}
               </div>
-            </section>
+            </div>
 
-            {/* Right Column (8 cols): Personnel Directory Table */}
-            <section className="xl:col-span-8 panel !m-0 bg-[var(--surface)] border border-[var(--line)] shadow-sm flex flex-col">
-              <div className="p-4 border-b border-[var(--line)] bg-[var(--raised)]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-sky-400 shrink-0" />
-                  <span className="font-semibold text-xs text-[var(--text)] uppercase tracking-wider">
-                    Plant Personnel Directory
-                  </span>
-                  <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-[var(--muted)]">
-                    {filteredProfiles.length}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2 flex-wrap">
-                  <div className="relative">
-                    <Search className="w-3.5 h-3.5 text-[var(--muted)] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    <input
-                      className="inp !pl-8 !h-8 text-xs w-[160px] sm:w-[190px]"
-                      type="search"
-                      placeholder="Search ID or name..."
-                      aria-label="Search staff"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                  </div>
-                  <div className="w-[140px]">
-                    <SearchableSelect
-                      aria-label="Filter by role"
-                      value={roleFilter}
-                      onChange={(val) => setRoleFilter(val)}
-                      placeholder="Filter role"
-                      searchPlaceholder="Search role..."
-                      options={[
-                        { value: 'all', label: 'All roles' },
-                        { value: 'operator', label: 'Operator' },
-                        { value: 'supervisor', label: 'Supervisor' },
-                        { value: 'qc_analyst', label: 'QC Analyst' },
-                        { value: 'qc_manager', label: 'QC Manager' },
-                        { value: 'admin', label: 'Admin' },
-                        { value: 'viewer', label: 'Viewer' }
-                      ]}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="overflow-x-auto custom-scrollbar">
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className="border-b border-[var(--line)] text-[var(--muted)] bg-white/[0.01]">
-                      <th className="py-2.5 px-3 text-left font-mono font-semibold">ID</th>
-                      <th className="py-2.5 px-3 text-left font-semibold">Name</th>
-                      <th className="py-2.5 px-3 text-left font-semibold">Role</th>
-                      <th className="py-2.5 px-3 text-left font-semibold">Status</th>
-                      <th className="py-2.5 px-3 text-left font-semibold">Password</th>
-                      <th className="py-2.5 px-3 text-left font-semibold">Created</th>
-                      <th className="py-2.5 px-3 text-right font-semibold">Actions</th>
+            {/* Table */}
+            <div className="overflow-x-auto custom-scrollbar">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="border-b border-[var(--line)] text-[var(--muted)] bg-white/[0.01]">
+                    <th className="py-3 px-4 text-left font-mono font-semibold">Employee ID</th>
+                    <th className="py-3 px-4 text-left font-semibold">Staff Member</th>
+                    <th className="py-3 px-4 text-left font-semibold">Assigned Role</th>
+                    <th className="py-3 px-4 text-left font-semibold">Status</th>
+                    <th className="py-3 px-4 text-left font-semibold">Credentials</th>
+                    <th className="py-3 px-4 text-left font-semibold">Created Date</th>
+                    <th className="py-3 px-4 text-right font-semibold">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[var(--line)]">
+                  {filteredProfiles.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="text-center py-16 text-[var(--muted)] space-y-2">
+                        <Users className="w-8 h-8 mx-auto text-[var(--muted)] opacity-40" />
+                        <p className="font-medium text-[var(--text)]">No staff members found matching criteria.</p>
+                        <p className="text-[11px] text-[var(--muted)]">Try adjusting your search query or filter options.</p>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[var(--line)]">
-                    {filteredProfiles.length === 0 ? (
-                      <tr>
-                        <td colSpan={7} className="text-center py-12 text-[var(--muted)]">
-                          No personnel found matching search criteria.
-                        </td>
-                      </tr>
-                    ) : (
-                      filteredProfiles.map((p) => {
-                        const isCurrent = p.employee_no === currentProfile.employee_no || p.id === currentProfile.id;
-                        const isActive = p.status === 'active' || (p.status !== 'unactive' && p.active !== false);
-                        const roleStyle = roleBadgeStyles[p.role] || { bg: 'bg-white/5', text: 'text-[var(--text)]', border: 'border-white/10' };
+                  ) : (
+                    filteredProfiles.map((p) => {
+                      const isCurrent = p.employee_no === currentProfile.employee_no || p.id === currentProfile.id;
+                      const isActive = p.status === 'active' || (p.status !== 'unactive' && p.active !== false);
+                      const roleStyle = roleBadgeStyles[p.role] || { bg: 'bg-white/5', text: 'text-[var(--text)]', border: 'border-white/10' };
 
-                        return (
-                          <tr key={p.employee_no || p.id} className="hover:bg-white/[0.02] transition-colors">
-                            <td className="py-2.5 px-3 font-mono font-bold text-[var(--text)]">
+                      return (
+                        <tr key={p.employee_no || p.id} className="hover:bg-white/[0.02] transition-colors">
+                          <td className="py-3 px-4 font-mono font-bold text-[var(--text)]">
+                            <span className="px-2 py-1 rounded bg-white/5 border border-white/10 font-mono text-xs">
                               {p.employee_no}
-                            </td>
-                            <td className="py-2.5 px-3">
-                              <div className="flex items-center gap-2">
-                                {p.avatar_url ? (
-                                  <img
-                                    src={p.avatar_url}
-                                    alt={p.full_name}
-                                    className="w-6 h-6 rounded-full object-cover shrink-0 border border-white/10"
-                                  />
-                                ) : (
-                                  <div className="w-6 h-6 rounded-full bg-[var(--raised)] border border-white/5 flex items-center justify-center text-[10px] font-bold text-[var(--muted)] shrink-0">
-                                    {(p.full_name || 'U').charAt(0).toUpperCase()}
-                                  </div>
-                                )}
-                                <span className="font-medium text-[var(--text)]">{p.full_name}</span>
-                                {isCurrent && (
-                                  <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30">
-                                    You
-                                  </span>
-                                )}
-                              </div>
-                            </td>
-                            <td className="py-2.5 px-3">
-                              <span className={`inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border uppercase tracking-wider ${roleStyle.bg} ${roleStyle.text} ${roleStyle.border}`}>
-                                {p.role}
-                              </span>
-                            </td>
-                            <td className="py-2.5 px-3">
-                              <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2 py-0.5 rounded-full border ${
-                                isActive 
-                                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
-                                  : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
-                              }`}>
-                                <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-emerald-400' : 'bg-rose-400'}`} />
-                                {isActive ? 'Active' : 'Inactive'}
-                              </span>
-                            </td>
-                            <td className="py-2.5 px-3">
-                              <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${
-                                p.password ? 'bg-amber-500/10 text-amber-300 border-amber-500/20' : 'bg-white/5 text-[var(--muted)] border-white/10'
-                              }`}>
-                                {p.password ? 'Custom' : 'Default'}
-                              </span>
-                            </td>
-                            <td className="py-2.5 px-3 text-[var(--muted)] font-mono text-[11px]">
-                              {p.created_at ? new Date(p.created_at).toLocaleDateString('en-GB', {
-                                day: '2-digit',
-                                month: 'short',
-                                year: 'numeric'
-                              }) : '26 Sep 2026'}
-                            </td>
-                            <td className="py-2.5 px-3 text-right">
-                              {isAdmin ? (
-                                <div className="flex items-center justify-end gap-1.5">
-                                  <button
-                                    type="button"
-                                    className="ghost h-7 px-2 text-xs flex items-center gap-1"
-                                    onClick={() => handleOpenEdit(p)}
-                                    title="Edit staff profile"
-                                  >
-                                    <Edit className="w-3 h-3" />
-                                    <span>Edit</span>
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="ghost h-7 px-2 text-xs"
-                                    disabled={isCurrent}
-                                    onClick={() => handleToggleStatus(p.employee_no, isActive, p.full_name)}
-                                  >
-                                    {isActive ? 'Deactivate' : 'Reactivate'}
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="ghost dng h-7 px-2 text-xs"
-                                    disabled={isCurrent}
-                                    onClick={() => handleDeleteUser(p.employee_no, p.full_name)}
-                                    title="Delete staff profile"
-                                  >
-                                    Delete
-                                  </button>
-                                </div>
+                            </span>
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-2.5">
+                              {p.avatar_url ? (
+                                <img
+                                  src={p.avatar_url}
+                                  alt={p.full_name}
+                                  className="w-7 h-7 rounded-full object-cover shrink-0 border border-white/10 shadow-xs"
+                                />
                               ) : (
-                                <span className="text-[11px] text-[var(--muted)]">Admin Only</span>
+                                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex items-center justify-center text-[11px] font-bold text-[var(--text)] shrink-0 shadow-xs">
+                                  {(p.full_name || 'U').charAt(0).toUpperCase()}
+                                </div>
                               )}
-                            </td>
-                          </tr>
-                        );
-                      })
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              <div className="p-3 border-t border-[var(--line)] bg-[var(--raised)]/10 text-[11px] text-[var(--muted)]">
-                21 CFR Part 11 audit trail: all personnel additions and status changes are permanently logged.
-              </div>
-            </section>
-          </div>
+                              <div>
+                                <div className="flex items-center gap-1.5">
+                                  <span className="font-semibold text-[var(--text)]">{p.full_name}</span>
+                                  {isCurrent && (
+                                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30">
+                                      YOU
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className={`inline-flex items-center text-[10px] font-semibold px-2.5 py-0.5 rounded-full border uppercase tracking-wider ${roleStyle.bg} ${roleStyle.text} ${roleStyle.border}`}>
+                              {p.role.replace('_', ' ')}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${
+                              isActive 
+                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                                : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                            }`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+                              {isActive ? 'Active' : 'Inactive'}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className={`text-[10px] font-mono px-2 py-0.5 rounded border ${
+                              p.password ? 'bg-amber-500/10 text-amber-300 border-amber-500/20' : 'bg-white/5 text-[var(--muted)] border-white/10'
+                            }`}>
+                              {p.password ? 'Custom PW' : 'Default PW'}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-[var(--muted)] font-mono text-[11px]">
+                            {p.created_at ? new Date(p.created_at).toLocaleDateString('en-GB', {
+                              day: '2-digit',
+                              month: 'short',
+                              year: 'numeric'
+                            }) : '26 Sep 2026'}
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            {isAdmin ? (
+                              <div className="flex items-center justify-end gap-1.5">
+                                <button
+                                  type="button"
+                                  className="ghost h-7 px-2.5 text-xs flex items-center gap-1 border border-white/5 hover:border-white/20"
+                                  onClick={() => handleOpenEdit(p)}
+                                  title="Edit staff profile"
+                                >
+                                  <Edit className="w-3 h-3 text-sky-400" />
+                                  <span>Edit</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  className="ghost h-7 px-2.5 text-xs border border-white/5 hover:border-white/20"
+                                  disabled={isCurrent}
+                                  onClick={() => handleToggleStatus(p.employee_no, isActive, p.full_name)}
+                                >
+                                  {isActive ? 'Deactivate' : 'Reactivate'}
+                                </button>
+                                <button
+                                  type="button"
+                                  className="ghost dng h-7 px-2 text-xs border border-rose-500/20 hover:border-rose-500/40"
+                                  disabled={isCurrent}
+                                  onClick={() => handleDeleteUser(p.employee_no, p.full_name)}
+                                  title="Delete staff profile"
+                                >
+                                  <Trash2 className="w-3 h-3 text-rose-400" />
+                                </button>
+                              </div>
+                            ) : (
+                              <span className="text-[11px] text-[var(--muted)]">Admin Only</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Table Footer */}
+            <div className="p-3.5 border-t border-[var(--line)] bg-[var(--raised)]/10 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-[var(--muted)]">
+              <span>21 CFR Part 11 audit compliance: All personnel registrations, modifications, and status changes are permanently logged.</span>
+              <span className="font-mono">Total {filteredProfiles.length} of {profiles.length} staff records</span>
+            </div>
+          </section>
         </>
+      ) : activeAdminSubTab === 'register' ? (
+        /* Dedicated, Focused Registration Card */
+        <div className="max-w-2xl mx-auto space-y-4">
+          <button
+            type="button"
+            onClick={() => setActiveAdminSubTab('personnel')}
+            className="ghost h-8 px-3 text-xs flex items-center gap-1.5 text-[var(--muted)] hover:text-[var(--text)] border border-white/5 hover:border-white/20 rounded-lg"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>← Back to Personnel Directory</span>
+          </button>
+
+          {!isAdmin && (
+            <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0" />
+                <span>Registration requires Administrator privileges.</span>
+              </div>
+              <button
+                type="button"
+                onClick={handleSwitchToAdmin}
+                className="ghost h-7 px-3 text-xs border-amber-500/30 text-amber-300"
+              >
+                Switch to Admin Profile
+              </button>
+            </div>
+          )}
+
+          {statusMessage && (
+            <div className={`p-3.5 rounded-xl border text-xs flex items-center justify-between gap-2 ${
+              statusMessage.type === 'error'
+                ? 'bg-rose-500/10 border-rose-500/30 text-rose-300'
+                : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+            }`}>
+              <div className="flex items-center gap-2">
+                {statusMessage.type === 'error' ? (
+                  <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                ) : (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                )}
+                <span>{statusMessage.text}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setStatusMessage(null)}
+                className="ghost h-6 w-6 p-0 text-xs"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
+          <section className="panel !m-0 bg-[var(--surface)] border border-[var(--line)] shadow-sm">
+            <div className="p-5 border-b border-[var(--line)] bg-[var(--raised)]/30 flex items-center gap-3">
+              <div className="h-9 w-9 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
+                <UserPlus className="w-4.5 h-4.5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-[var(--text)]">Register New Plant Staff Member</h3>
+                <p className="text-xs text-[var(--muted)] mt-0.5">
+                  Sequential ID generation, credential assignment, and role permissions.
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleAddUserSubmit} className="p-6 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="fld !m-0">
+                  <label htmlFor="ro" className="text-xs font-semibold text-[var(--text)] mb-1.5 block">
+                    Assigned Role *
+                  </label>
+                  <SearchableSelect
+                    id="ro"
+                    disabled={!isAdmin}
+                    value={selectedRole}
+                    onChange={(val) => handleRoleSelectChange(val as UserRole)}
+                    placeholder="Select Assigned Role"
+                    searchPlaceholder="Search role..."
+                    options={[
+                      { value: 'operator', label: 'Plant Operator' },
+                      { value: 'supervisor', label: 'Shift Supervisor' },
+                      { value: 'qc_analyst', label: 'QC Laboratory Analyst' },
+                      { value: 'qc_manager', label: 'Quality Control Manager' },
+                      { value: 'admin', label: 'Plant Administrator' },
+                      { value: 'viewer', label: 'Quality Auditor (Viewer)' }
+                    ]}
+                  />
+                </div>
+
+                <div className="fld !m-0">
+                  <label htmlFor="ri" className="text-xs font-semibold text-[var(--text)] mb-1.5 block">
+                    Employee ID (Flexible Number) *
+                  </label>
+                  <input 
+                    id="ri" 
+                    disabled={!isAdmin}
+                    value={autoId} 
+                    onChange={(e) => setAutoId(e.target.value.replace(/\D/g, ''))}
+                    placeholder="e.g. 1042" 
+                    className="inp w-full h-[38px] font-mono font-bold"
+                    style={{
+                      borderColor: isIdDuplicate ? '#f43f5e' : undefined,
+                      backgroundColor: isIdDuplicate ? 'rgba(244, 63, 94, 0.08)' : undefined
+                    }}
+                  />
+                  {isIdDuplicate && duplicateUser ? (
+                    <div className="mt-1.5 p-2 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 text-[11px] flex items-center gap-2">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-400" />
+                      <span>ID <strong>&quot;{cleanAutoId}&quot;</strong> is in use by <strong>{duplicateUser.full_name}</strong>.</span>
+                    </div>
+                  ) : cleanAutoId ? (
+                    <div className="mt-1 text-[11px] text-emerald-400 flex items-center gap-1.5">
+                      <CheckCircle2 className="w-3 h-3 shrink-0" />
+                      <span>Employee ID &quot;{cleanAutoId}&quot; is available.</span>
+                    </div>
+                  ) : null}
+                </div>
+
+                <div className="fld !m-0">
+                  <label htmlFor="rn" className="text-xs font-semibold text-[var(--text)] mb-1.5 block">
+                    Full Name *
+                  </label>
+                  <input
+                    id="rn"
+                    disabled={!isAdmin}
+                    required
+                    placeholder="e.g. Muhammad Faizal bin Roslan"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    className="inp w-full h-[38px]"
+                  />
+                </div>
+
+                <div className="fld !m-0">
+                  <label htmlFor="rp" className="text-xs font-semibold text-[var(--text)] mb-1.5 block">
+                    Initial Password *
+                  </label>
+                  <input
+                    id="rp"
+                    disabled={!isAdmin}
+                    type="password"
+                    value={customPassword}
+                    onChange={(e) => setCustomPassword(e.target.value)}
+                    autoComplete="new-password"
+                    className="inp w-full h-[38px]"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-[var(--line)] flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setActiveAdminSubTab('personnel')}
+                  className="ghost h-9 px-4 text-xs"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  className="primary h-9 px-5 text-xs font-semibold flex items-center gap-2 bg-sky-500 hover:bg-sky-400 text-black shadow-xs"
+                  type="submit"
+                  disabled={!isAdmin || isSubmitting || isIdDuplicate || !cleanAutoId || !fullName.trim()}
+                  style={{
+                    opacity: (isIdDuplicate || !cleanAutoId || !fullName.trim()) ? 0.6 : 1,
+                    cursor: (isIdDuplicate || !cleanAutoId || !fullName.trim()) ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  {isSubmitting ? (
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <UserPlus className="w-3.5 h-3.5" />
+                  )}
+                  <span>{isSubmitting ? 'Registering...' : 'Register Staff Member'}</span>
+                </button>
+              </div>
+
+              <p className="text-[11px] text-[var(--muted)] text-center pt-1">
+                Staff can change their password and avatar after signing in. 21 CFR Part 11 compliant.
+              </p>
+            </form>
+          </section>
+        </div>
       ) : (
         /* Retention & Supabase Prune Sub-Tab View */
         <div className="space-y-6">
