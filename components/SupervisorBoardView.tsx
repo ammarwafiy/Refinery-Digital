@@ -209,7 +209,7 @@ export default function SupervisorBoardView() {
                 <h2 className="text-base font-bold text-[var(--text)] tracking-tight">
                   Abnormality Log &amp; Live Operations Board
                 </h2>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[var(--muted)]">
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20">
                   SUPERVISOR OVERSIGHT
                 </span>
               </div>
@@ -219,18 +219,18 @@ export default function SupervisorBoardView() {
             </div>
           </div>
 
-          {/* Right Action & Info Strip */}
-          <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/5 text-xs text-[var(--muted)]">
+          {/* Right Action & Info Strip - Clean single line toolbar */}
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 flex-wrap sm:flex-nowrap">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.03] border border-white/5 text-xs text-[var(--muted)]">
               <div className="flex items-center gap-1.5">
                 <Calendar className="w-3.5 h-3.5 text-sky-400 shrink-0" />
-                <span>Shift:</span>
+                <span className="hidden sm:inline">Shift:</span>
                 <strong className="text-[var(--text)] font-mono">{sheet.shift_date}</strong>
               </div>
               <span className="text-white/20">·</span>
               <div className="flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                <span>Latest:</span>
+                <span className="hidden sm:inline">Latest:</span>
                 <strong className="text-[var(--text)] font-mono">
                   {latestEntry ? `${latestEntry.slot_label} hrs` : 'No logs yet'}
                 </strong>
@@ -241,12 +241,12 @@ export default function SupervisorBoardView() {
               type="button"
               onClick={handleManualSync}
               disabled={isSyncing}
-              className={`ghost h-8 px-3 text-xs flex items-center gap-1.5 rounded-lg border transition-all ${
+              className={`h-8 px-3 text-xs flex items-center gap-1.5 rounded-xl border transition-all cursor-pointer ${
                 syncFeedback === 'success'
-                  ? '!text-emerald-400 !border-emerald-500/30 !bg-emerald-500/10'
+                  ? 'text-emerald-300 border-emerald-500/30 bg-emerald-500/10'
                   : syncFeedback === 'error'
-                  ? '!text-rose-400 !border-rose-500/30 !bg-rose-500/10'
-                  : 'text-[var(--muted)] hover:text-[var(--text)] border-white/10 hover:border-white/20'
+                  ? 'text-rose-300 border-rose-500/30 bg-rose-500/10'
+                  : 'text-[var(--muted)] hover:text-[var(--text)] border-white/10 hover:border-white/20 bg-white/[0.02] hover:bg-white/[0.06]'
               }`}
               title={lastSyncedTime ? `Last synced at ${lastSyncedTime}` : 'Trigger manual cloud sync with Supabase'}
             >
@@ -273,115 +273,155 @@ export default function SupervisorBoardView() {
       {/* 2. Quick KPI Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         {/* Card 1: Vacuum */}
-        <div className="p-4 rounded-xl bg-[var(--surface)] border border-[var(--line)] shadow-sm flex flex-col justify-between gap-3">
+        <div className="p-4 sm:p-5 rounded-xl bg-[var(--surface)] border border-[var(--line)] shadow-xs flex flex-col justify-between gap-3.5 transition-colors hover:border-white/15">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-[var(--muted)] uppercase tracking-wider">
+            <span className="text-[11px] font-semibold text-[var(--muted)] uppercase tracking-wider">
               Deodorizer Vacuum
             </span>
-            <div className="h-7 w-7 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center">
+            <div className="h-8 w-8 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center">
               <Gauge className="w-4 h-4 text-sky-400" />
             </div>
           </div>
           <div>
-            <div className="text-2xl font-bold font-mono text-[var(--text)]">
-              {latestEntry?.vacuum_torr != null ? Number(latestEntry.vacuum_torr).toFixed(1) : '–'}
-              <span className="text-xs font-normal text-[var(--muted)] ml-1.5">Torr</span>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-2xl font-bold font-mono text-[var(--text)]">
+                {latestEntry?.vacuum_torr != null ? Number(latestEntry.vacuum_torr).toFixed(1) : '—'}
+              </span>
+              <span className="text-xs font-mono text-[var(--muted)]">Torr</span>
             </div>
-            <div className="flex items-center justify-between text-xs mt-1">
-              <span className="text-[var(--muted)]">Spec: 1.0 – 4.5 Torr</span>
+            <div className="flex items-center justify-between text-xs mt-2 pt-2 border-t border-white/5">
+              <span className="text-[11px] text-[var(--muted)] font-mono">Spec: 1.0 – 4.5 Torr</span>
               {latestEntry?.vacuum_torr != null ? (
                 Number(latestEntry.vacuum_torr) >= 1.0 && Number(latestEntry.vacuum_torr) <= 4.5 ? (
-                  <span className="text-emerald-400 font-medium">In Spec</span>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                    In Spec
+                  </span>
                 ) : (
-                  <span className="text-rose-400 font-medium">Deviation</span>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-500/10 border border-rose-500/20 text-rose-400">
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse" />
+                    Deviation
+                  </span>
                 )
               ) : (
-                <span className="text-[var(--muted)] font-normal">Awaiting Log</span>
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-white/5 border border-white/10 text-[var(--muted)]">
+                  Awaiting Log
+                </span>
               )}
             </div>
           </div>
         </div>
 
         {/* Card 2: Tray 4 Temp */}
-        <div className="p-4 rounded-xl bg-[var(--surface)] border border-[var(--line)] shadow-sm flex flex-col justify-between gap-3">
+        <div className="p-4 sm:p-5 rounded-xl bg-[var(--surface)] border border-[var(--line)] shadow-xs flex flex-col justify-between gap-3.5 transition-colors hover:border-white/15">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-[var(--muted)] uppercase tracking-wider">
+            <span className="text-[11px] font-semibold text-[var(--muted)] uppercase tracking-wider">
               Tray 4 Temperature
             </span>
-            <div className="h-7 w-7 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
+            <div className="h-8 w-8 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
               <Thermometer className="w-4 h-4 text-indigo-400" />
             </div>
           </div>
           <div>
-            <div className="text-2xl font-bold font-mono text-[var(--text)]">
-              {latestEntry?.tray_4_temp_c != null ? Number(latestEntry.tray_4_temp_c).toFixed(1) : '–'}
-              <span className="text-xs font-normal text-[var(--muted)] ml-1.5">°C</span>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-2xl font-bold font-mono text-[var(--text)]">
+                {latestEntry?.tray_4_temp_c != null ? Number(latestEntry.tray_4_temp_c).toFixed(1) : '—'}
+              </span>
+              <span className="text-xs font-mono text-[var(--muted)]">°C</span>
             </div>
-            <div className="flex items-center justify-between text-xs mt-1">
-              <span className="text-[var(--muted)]">Spec: 250 – 268 °C</span>
+            <div className="flex items-center justify-between text-xs mt-2 pt-2 border-t border-white/5">
+              <span className="text-[11px] text-[var(--muted)] font-mono">Spec: 250 – 268 °C</span>
               {latestEntry?.tray_4_temp_c != null ? (
                 Number(latestEntry.tray_4_temp_c) >= 250 && Number(latestEntry.tray_4_temp_c) <= 268 ? (
-                  <span className="text-emerald-400 font-medium">Optimal</span>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                    Optimal
+                  </span>
                 ) : (
-                  <span className="text-rose-400 font-medium">Deviation</span>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-500/10 border border-rose-500/20 text-rose-400">
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse" />
+                    Deviation
+                  </span>
                 )
               ) : (
-                <span className="text-[var(--muted)] font-normal">Awaiting Log</span>
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-white/5 border border-white/10 text-[var(--muted)]">
+                  Awaiting Log
+                </span>
               )}
             </div>
           </div>
         </div>
 
         {/* Card 3: Missing Slots */}
-        <div className="p-4 rounded-xl bg-[var(--surface)] border border-[var(--line)] shadow-sm flex flex-col justify-between gap-3">
+        <div className="p-4 sm:p-5 rounded-xl bg-[var(--surface)] border border-[var(--line)] shadow-xs flex flex-col justify-between gap-3.5 transition-colors hover:border-white/15">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-[var(--muted)] uppercase tracking-wider">
+            <span className="text-[11px] font-semibold text-[var(--muted)] uppercase tracking-wider">
               Shift Log Rounds
             </span>
-            <div className={`h-7 w-7 rounded-lg flex items-center justify-center ${
-              missingSlots.length > 0 ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-emerald-500/10 border border-emerald-500/20'
+            <div className={`h-8 w-8 rounded-xl flex items-center justify-center ${
+              missingSlots.length > 0 ? 'bg-amber-500/10 border border-amber-500/20 text-amber-400' : 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400'
             }`}>
-              <Clock className={`w-4 h-4 ${missingSlots.length > 0 ? 'text-amber-400' : 'text-emerald-400'}`} />
+              <Clock className="w-4 h-4" />
             </div>
           </div>
           <div>
-            <div className={`text-2xl font-bold font-mono ${missingSlots.length > 0 ? 'text-amber-400' : 'text-[var(--text)]'}`}>
-              {missingSlots.length}
-              <span className="text-xs font-normal text-[var(--muted)] ml-1.5">
-                {missingSlots.length === 1 ? 'Slot pending' : 'Slots pending'}
+            <div className="flex items-baseline gap-1.5">
+              <span className={`text-2xl font-bold font-mono ${missingSlots.length > 0 ? 'text-amber-300' : 'text-[var(--text)]'}`}>
+                {missingSlots.length}
+              </span>
+              <span className="text-xs font-mono text-[var(--muted)]">
+                {missingSlots.length === 1 ? 'Slot Pending' : 'Slots Pending'}
               </span>
             </div>
-            <div className="flex items-center justify-between text-xs mt-1">
-              <span className="text-[var(--muted)]">Shift round timing</span>
-              <span className={missingSlots.length > 0 ? 'text-amber-400 font-medium' : 'text-emerald-400 font-medium'}>
-                {missingSlots.length > 0 ? 'Action Pending' : 'All Logged'}
-              </span>
+            <div className="flex items-center justify-between text-xs mt-2 pt-2 border-t border-white/5">
+              <span className="text-[11px] text-[var(--muted)] font-mono">Shift round timing</span>
+              {missingSlots.length > 0 ? (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/10 border border-amber-500/20 text-amber-300">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                  Action Pending
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  All Logged
+                </span>
+              )}
             </div>
           </div>
         </div>
 
         {/* Card 4: Open Deviations */}
-        <div className="p-4 rounded-xl bg-[var(--surface)] border border-[var(--line)] shadow-sm flex flex-col justify-between gap-3">
+        <div className="p-4 sm:p-5 rounded-xl bg-[var(--surface)] border border-[var(--line)] shadow-xs flex flex-col justify-between gap-3.5 transition-colors hover:border-white/15">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-[var(--muted)] uppercase tracking-wider">
+            <span className="text-[11px] font-semibold text-[var(--muted)] uppercase tracking-wider">
               Active Deviations
             </span>
-            <div className={`h-7 w-7 rounded-lg flex items-center justify-center ${
-              openDeviations.length > 0 ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-emerald-500/10 border border-emerald-500/20'
+            <div className={`h-8 w-8 rounded-xl flex items-center justify-center ${
+              openDeviations.length > 0 ? 'bg-rose-500/10 border border-rose-500/20 text-rose-400' : 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400'
             }`}>
-              <AlertTriangle className={`w-4 h-4 ${openDeviations.length > 0 ? 'text-amber-400' : 'text-emerald-400'}`} />
+              <AlertTriangle className="w-4 h-4" />
             </div>
           </div>
           <div>
-            <div className={`text-2xl font-bold font-mono ${openDeviations.length > 0 ? 'text-amber-400' : 'text-[var(--text)]'}`}>
-              {openDeviations.length}
-              <span className="text-xs font-normal text-[var(--muted)] ml-1.5">Active</span>
-            </div>
-            <div className="flex items-center justify-between text-xs mt-1">
-              <span className="text-[var(--muted)]">Root cause actions</span>
-              <span className={openDeviations.length > 0 ? 'text-amber-400 font-medium' : 'text-emerald-400 font-medium'}>
-                {openDeviations.length > 0 ? 'Action Required' : 'Zero Active'}
+            <div className="flex items-baseline gap-1.5">
+              <span className={`text-2xl font-bold font-mono ${openDeviations.length > 0 ? 'text-rose-300' : 'text-[var(--text)]'}`}>
+                {openDeviations.length}
               </span>
+              <span className="text-xs font-mono text-[var(--muted)]">Active</span>
+            </div>
+            <div className="flex items-center justify-between text-xs mt-2 pt-2 border-t border-white/5">
+              <span className="text-[11px] text-[var(--muted)] font-mono">Root cause actions</span>
+              {openDeviations.length > 0 ? (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-500/10 border border-rose-500/20 text-rose-400">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse" />
+                  Action Required
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  Zero Active
+                </span>
+              )}
             </div>
           </div>
         </div>
