@@ -2156,6 +2156,10 @@ export default function SettingsModal({
                           </span>
                         </div>
                       ))
+                    ) : (
+                      <div className="p-4 text-center text-slate-500 text-xs">
+                        No recent login records found in audit log.
+                      </div>
                     )}
                   </div>
                 </div>
