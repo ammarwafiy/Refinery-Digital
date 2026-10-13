@@ -219,7 +219,7 @@ const DICT_EN = {
   pingSupabase: 'Ping Supabase Latency',
 
   // About
-  aboutHeading: '6. System Governance & Architecture',
+  aboutHeading: '5. System Governance & Architecture',
   aboutSub: 'Official build telemetry, regulatory standards, and copyright attribution.',
   appVersion: 'APPLICATION VERSION',
   buildNumber: 'BUILD NUMBER',
@@ -243,7 +243,7 @@ interface SettingsModalProps {
   onProfileUpdate?: (profile: Profile) => void;
 }
 
-type SettingsTab = 'profile' | 'preferences' | 'notifications' | 'security' | 'data' | 'about';
+type SettingsTab = 'profile' | 'preferences' | 'notifications' | 'security' | 'about';
 
 export default function SettingsModal({
   isOpen,
@@ -1055,7 +1055,6 @@ export default function SettingsModal({
     { id: 'preferences', label: t.tabPreferences, icon: Sliders },
     { id: 'notifications', label: t.tabNotifications, icon: Bell },
     { id: 'security', label: t.tabSecurity, icon: Shield },
-    { id: 'data', label: t.tabData, icon: Database },
     { id: 'about', label: t.tabAbout, icon: Info, badge: 'v1.0' },
   ];
 
@@ -2157,172 +2156,13 @@ export default function SettingsModal({
                           </span>
                         </div>
                       ))
-                    ) : (
-                      <div className="p-4 text-center text-slate-500 text-xs">
-                        No recent login records found in audit log.
-                      </div>
                     )}
                   </div>
                 </div>
               </div>
             )}
 
-            {/* TAB 5: DATA & EXPORT */}
-            {activeTab === 'data' && (
-              <div className="space-y-6 animate-fadeIn">
-                <div>
-                  <h3 className="text-sm font-bold text-white tracking-wide uppercase font-mono">
-                    {t.dataHeading}
-                  </h3>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    {t.dataSub}
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Default Report Format */}
-                  <div className="p-4 rounded-xl bg-[#101927] border border-[#1F2E43] space-y-2">
-                    <label className="block text-xs font-bold text-white">
-                      {t.defaultReportFormat}
-                    </label>
-                    <p className="text-[11px] text-slate-400">
-                      {t.defaultReportDesc}
-                    </p>
-                    <div className="flex gap-2 pt-1">
-                      {[
-                        { id: 'pdf', label: 'PDF Doc', icon: FileText },
-                        { id: 'csv', label: 'CSV Data', icon: FileSpreadsheet },
-                        { id: 'excel', label: 'Excel (.xlsx)', icon: FileSpreadsheet },
-                      ].map((fmt) => (
-                        <button
-                          key={fmt.id}
-                          type="button"
-                          onClick={() => handleSaveSettings({ ...settings, defaultReportFormat: fmt.id as any })}
-                          className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-xs font-mono transition-all cursor-pointer ${
-                            settings.defaultReportFormat === fmt.id
-                              ? 'bg-[#009FE3] text-white font-bold'
-                              : 'bg-[#070B12] text-slate-400 hover:text-white border border-[#1F2E43]'
-                          }`}
-                        >
-                          <fmt.icon className="h-3.5 w-3.5" />
-                          <span>{fmt.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Backup Health & Master Sync */}
-                  <div className="p-4 rounded-xl bg-[#101927] border border-[#1F2E43] space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Database className="h-4 w-4 text-[#009FE3]" />
-                        <span className="text-xs font-bold text-white">{t.cloudBackup}</span>
-                      </div>
-                      <span className="text-[9px] px-2 py-0.5 rounded font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                        OFFICIAL MASTER READY
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-slate-400">
-                      {t.cloudBackupDesc}
-                    </p>
-                    <div className="text-[11px] text-slate-300 font-mono pt-1">
-                      {backupStatusText}
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2 border-t border-[#1F2E43]/60">
-                      {/* 1. Download Backup */}
-                      <button
-                        type="button"
-                        onClick={handleTriggerManualBackup}
-                        disabled={isBackingUp}
-                        className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-[#1F2E43] hover:bg-[#2A3E59] text-white text-xs font-medium transition-all cursor-pointer"
-                      >
-                        <Download className="h-3.5 w-3.5 text-[#009FE3]" />
-                        <span>{isBackingUp ? 'Archiving...' : 'Export Snapshot'}</span>
-                      </button>
-
-                      {/* 2. Import Snapshot JSON */}
-                      <input
-                        type="file"
-                        ref={snapshotInputRef}
-                        onChange={handleImportSnapshotFile}
-                        accept=".json"
-                        className="hidden"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => snapshotInputRef.current?.click()}
-                        className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-[#1F2E43] hover:bg-[#2A3E59] text-white text-xs font-medium transition-all cursor-pointer"
-                      >
-                        <Upload className="h-3.5 w-3.5 text-amber-400" />
-                        <span>Import Snapshot</span>
-                      </button>
-
-                      {/* 3. Sync 10-Shift Master Data */}
-                      <button
-                        type="button"
-                        onClick={handleRestoreMasterBaseline}
-                        disabled={isRestoringBaseline}
-                        className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-[#009FE3] hover:bg-[#0089C4] text-white text-xs font-medium shadow-md transition-all cursor-pointer"
-                      >
-                        <RefreshCw className={`h-3.5 w-3.5 ${isRestoringBaseline ? 'animate-spin' : ''}`} />
-                        <span>{isRestoringBaseline ? 'Syncing...' : 'Sync Master (10 Shifts)'}</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-
-
-                {/* Audit Log Download */}
-                <div className="p-4 rounded-xl bg-[#101927] border border-[#1F2E43] flex items-center justify-between">
-                  <div>
-                    <h4 className="text-xs font-bold text-white">
-                      {t.exportAuditCsv}
-                    </h4>
-                    <p className="text-[11px] text-slate-400 mt-0.5">
-                      {t.exportAuditDesc}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleDownloadAuditLog}
-                    className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#009FE3] hover:bg-[#0089C4] text-white text-xs font-medium shadow-md transition-all cursor-pointer"
-                  >
-                    <Download className="h-3.5 w-3.5" />
-                    <span>{t.downloadCsv}</span>
-                  </button>
-                </div>
-
-                {/* Database Sync Status */}
-                <div className="p-4 rounded-xl bg-[#070B12] border border-[#1F2E43] space-y-3 font-mono text-xs">
-                  <div className="flex items-center justify-between text-slate-300">
-                    <span>Replication Mode:</span>
-                    <span className="text-slate-100 font-semibold">Dual-Mode (Offline-First + Supabase Cloud)</span>
-                  </div>
-                  <div className="flex items-center justify-between text-slate-300">
-                    <span>Database Region:</span>
-                    <span className="text-slate-100">ap-southeast-1 (Singapore)</span>
-                  </div>
-                  <div className="flex items-center justify-between text-slate-300">
-                    <span>Live Ping Latency:</span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-emerald-400 font-bold">{pingLatency} ms (Optimal)</span>
-                      <button
-                        type="button"
-                        onClick={handlePingSupabase}
-                        disabled={isPinging}
-                        className="px-2 py-0.5 rounded bg-[#101927] hover:bg-[#1F2E43] text-[#009FE3] text-[10px] border border-[#1F2E43] transition-colors cursor-pointer"
-                      >
-                        {isPinging ? 'Pinging...' : t.pingSupabase}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* TAB 6: ABOUT SYSTEM */}
+            {/* TAB 5: ABOUT SYSTEM */}
             {activeTab === 'about' && (
               <div className="space-y-6 animate-fadeIn">
                 <div>
