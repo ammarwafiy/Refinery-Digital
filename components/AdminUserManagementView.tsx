@@ -965,7 +965,7 @@ export default function AdminUserManagementView() {
                     <th className="py-3 px-4 text-left font-semibold">STAFF MEMBER</th>
                     <th className="py-3 px-4 text-left font-semibold w-[190px]">ASSIGNED ROLE</th>
                     <th className="py-3 px-4 text-left font-semibold w-[130px]">STATUS</th>
-                    <th className="py-3 px-4 text-right font-semibold w-[190px]">ACTIONS</th>
+                    <th className="py-3 px-4 text-right font-semibold w-[260px] min-w-[260px]">ACTIONS</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[var(--line)]">
@@ -1042,38 +1042,51 @@ export default function AdminUserManagementView() {
                               {isActive ? 'Active' : 'Inactive'}
                             </span>
                           </td>
-                          <td className="py-3.5 px-4 text-right">
+                          <td className="py-3.5 px-4 text-right whitespace-nowrap">
                             {isAdmin ? (
                               <div className="flex items-center justify-end gap-1.5">
                                 <button
                                   type="button"
-                                  className="ghost h-7 px-2.5 text-xs flex items-center gap-1 border border-white/10 hover:border-white/20 rounded-md transition-colors"
+                                  className="h-7 px-2.5 text-xs flex items-center gap-1.5 rounded-lg border border-white/10 hover:border-white/20 bg-white/[0.03] hover:bg-white/[0.08] text-[var(--text)] transition-all cursor-pointer shadow-xs active:scale-[0.98]"
                                   onClick={() => handleOpenEdit(p)}
                                   title="Edit staff profile"
                                 >
-                                  <Edit className="w-3 h-3 text-sky-400" />
-                                  <span>Edit</span>
+                                  <Edit className="w-3 h-3 text-sky-400 shrink-0" />
+                                  <span className="font-medium">Edit</span>
                                 </button>
                                 <button
                                   type="button"
-                                  className={`ghost h-7 px-2.5 text-xs border rounded-md transition-colors ${
-                                    isActive 
-                                      ? 'border-white/10 hover:border-amber-500/40 hover:text-amber-300' 
-                                      : 'border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10'
+                                  className={`h-7 px-2.5 text-xs flex items-center gap-1.5 rounded-lg border transition-all ${
+                                    isCurrent
+                                      ? 'border-white/5 text-[var(--muted)]/40 cursor-not-allowed bg-transparent'
+                                      : isActive 
+                                      ? 'border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 hover:text-amber-200 cursor-pointer shadow-xs active:scale-[0.98]' 
+                                      : 'border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 cursor-pointer shadow-xs active:scale-[0.98]'
                                   }`}
                                   disabled={isCurrent}
                                   onClick={() => handleToggleStatus(p.employee_no, isActive, p.full_name)}
+                                  title={isCurrent ? "You cannot deactivate your own active session" : (isActive ? "Deactivate staff profile" : "Reactivate staff profile")}
                                 >
-                                  {isActive ? 'Deactivate' : 'Reactivate'}
+                                  {isActive ? (
+                                    <XCircle className="w-3 h-3 text-amber-400 shrink-0" />
+                                  ) : (
+                                    <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+                                  )}
+                                  <span className="font-medium">{isActive ? 'Deactivate' : 'Reactivate'}</span>
                                 </button>
                                 <button
                                   type="button"
-                                  className="ghost dng h-7 w-7 p-0 flex items-center justify-center border border-rose-500/20 hover:border-rose-500/40 rounded-md text-rose-400 transition-colors"
+                                  className={`h-7 px-2.5 text-xs flex items-center gap-1.5 rounded-lg border transition-all ${
+                                    isCurrent
+                                      ? 'border-white/5 text-[var(--muted)]/40 cursor-not-allowed bg-transparent'
+                                      : 'border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 hover:text-rose-200 cursor-pointer shadow-xs active:scale-[0.98]'
+                                  }`}
                                   disabled={isCurrent}
                                   onClick={() => handleDeleteUser(p.employee_no, p.full_name)}
-                                  title="Delete staff profile"
+                                  title={isCurrent ? "You cannot delete your own active administrator profile" : "Delete staff profile from database"}
                                 >
-                                  <Trash2 className="w-3.5 h-3.5" />
+                                  <Trash2 className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                                  <span className="font-medium">Delete</span>
                                 </button>
                               </div>
                             ) : (
