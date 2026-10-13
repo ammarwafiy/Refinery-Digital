@@ -1353,101 +1353,111 @@ export default function SampleLabView({ currentRole, currentUser, onNavigateToCe
             {selectedReport ? (
               <section className="panel !m-0 bg-[var(--surface)] border border-[var(--line)] shadow-sm flex flex-col">
                 {/* Sample Header Ribbon */}
-                <div className="p-4 border-b border-[var(--line)] bg-[var(--surface)] sticky top-0 z-20 backdrop-blur-md">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-3.5">
-                    {/* Identification */}
-                    <div className="flex flex-col gap-1 min-w-0">
-                      <div className="flex items-center gap-2.5 flex-wrap">
-                        <h2 className="text-lg font-bold font-mono tracking-tight text-[var(--text)]">
+                <div className="p-4 sm:p-5 border-b border-[var(--line)] bg-[var(--surface)] sticky top-0 z-20 backdrop-blur-md">
+                  <div className="flex flex-col gap-3">
+                    {/* Top Row: Lot Title, Badges & Action Buttons */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      {/* Left: Lot Title & Identity Badges */}
+                      <div className="flex items-center gap-2.5 flex-wrap min-w-0">
+                        <h2 className="text-base sm:text-lg font-bold font-mono tracking-tight text-[var(--text)] whitespace-nowrap">
                           {qcLotNo || selectedReport.lot_no}
                         </h2>
-                        <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[var(--muted)]">
+                        <span className="text-[11px] font-mono px-2.5 py-0.5 rounded-md bg-white/5 border border-white/10 text-[var(--muted)] whitespace-nowrap">
                           {selectedReport.report_no}
                         </span>
                         {selectedReport.decision?.decision ? (
-                          <span className={`inline-flex items-center text-xs font-semibold px-2.5 py-0.5 rounded-full border ${
+                          <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-0.5 rounded-full border whitespace-nowrap ${
                             selectedReport.decision.decision === 'reject' 
                               ? 'bg-rose-500/15 text-rose-400 border-rose-500/30' 
                               : selectedReport.decision.decision === 'accept'
                               ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
                               : 'bg-amber-500/15 text-amber-400 border-amber-500/30'
                           }`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${
+                              selectedReport.decision.decision === 'reject' ? 'bg-rose-400' : selectedReport.decision.decision === 'accept' ? 'bg-emerald-400' : 'bg-amber-400'
+                            }`} />
                             QC: {String(selectedReport.decision.decision).toUpperCase()}
                           </span>
                         ) : (
-                          <span className="inline-flex items-center text-xs font-semibold px-2.5 py-0.5 rounded-full bg-sky-500/15 text-sky-400 border border-sky-500/30">
+                          <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-sky-500/15 text-sky-400 border border-sky-500/30 whitespace-nowrap">
+                            <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
                             Awaiting QC Decision
                           </span>
                         )}
                       </div>
 
-                      {/* Clean Metadata Pills */}
-                      <div className="flex items-center gap-2 text-xs text-[var(--muted)] flex-wrap pt-0.5">
-                        <span className="inline-flex items-center gap-1.5 bg-white/5 px-2.5 py-1 rounded-md border border-white/5">
-                          <FlaskConical className="w-3.5 h-3.5 text-sky-400" />
-                          <span className="text-[var(--text)] font-medium">{qcProductName || selectedReport.product_name}</span>
-                        </span>
-                        <span className="inline-flex items-center gap-1.5 bg-white/5 px-2.5 py-1 rounded-md border border-white/5">
-                          <Box className="w-3.5 h-3.5 text-indigo-400" />
-                          <span>Batch: <strong className="text-[var(--text)]">{selectedReport.crystallizer_no || selectedReport.batch_no || 'CR-04'}</strong></span>
-                        </span>
-                        <span className="inline-flex items-center gap-1.5 bg-white/5 px-2.5 py-1 rounded-md border border-white/5">
-                          <User className="w-3.5 h-3.5 text-amber-400" />
-                          <span>Submitted: <strong className="text-[var(--text)]">{selectedReport.submitted_by_name}</strong></span>
-                        </span>
+                      {/* Right: Action Buttons */}
+                      <div className="flex items-center gap-2 flex-wrap shrink-0 self-start sm:self-auto">
+                        {selectedReport.decision?.decision ? (
+                          (role === 'qc_analyst' || role === 'qc_manager' || role === 'admin') && (
+                            <ModernButton
+                              type="button"
+                              onClick={() => handleOpenDecisionModal(selectedReport.decision?.decision || 'accept')}
+                              variant="primary"
+                              size="sm"
+                              className="h-9"
+                            >
+                              Update Decision
+                            </ModernButton>
+                          )
+                        ) : (
+                          (role === 'qc_analyst' || role === 'qc_manager' || role === 'admin') && (
+                            <ModernButton
+                              type="button"
+                              onClick={() => handleOpenDecisionModal('accept')}
+                              variant="primary"
+                              size="md"
+                              title="Open QC Decision Form (Accept / Concession / Reject)"
+                              className="h-9"
+                            >
+                              Record Decision
+                            </ModernButton>
+                          )
+                        )}
+
+                        {onNavigateToCertificate && (
+                          <button
+                            type="button"
+                            onClick={() => onNavigateToCertificate(selectedReport.id)}
+                            className="ghost h-9 text-xs px-3.5 flex items-center gap-1.5 rounded-lg border border-[var(--line)] hover:bg-[var(--raised)] text-[var(--text)] transition-colors whitespace-nowrap"
+                          >
+                            <FileText className="w-3.5 h-3.5 opacity-80" />
+                            <span>Certificate</span>
+                          </button>
+                        )}
+
+                        {canEdit && (
+                          <button
+                            type="button"
+                            onClick={() => setReportToDelete(selectedReport)}
+                            className="ghost dng h-9 text-xs px-3.5 flex items-center gap-1.5 rounded-lg border border-rose-500/30 bg-rose-500/5 hover:bg-rose-500/15 text-rose-400 hover:text-rose-300 transition-colors whitespace-nowrap"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Delete</span>
+                          </button>
+                        )}
                       </div>
                     </div>
 
-                    {/* Action Controls */}
-                    <div className="flex items-center gap-2 flex-wrap shrink-0">
-                      {selectedReport.decision?.decision ? (
-                        (role === 'qc_analyst' || role === 'qc_manager' || role === 'admin') && (
-                          <ModernButton
-                            type="button"
-                            onClick={() => handleOpenDecisionModal(selectedReport.decision?.decision || 'accept')}
-                            variant="primary"
-                            size="sm"
-                          >
-                            Update Decision
-                          </ModernButton>
-                        )
-                      ) : (
-                        (role === 'qc_analyst' || role === 'qc_manager' || role === 'admin') && (
-                          <ModernButton
-                            type="button"
-                            onClick={() => handleOpenDecisionModal('accept')}
-                            variant="primary"
-                            size="md"
-                            title="Open QC Decision Form (Accept / Concession / Reject)"
-                          >
-                            Record Decision
-                          </ModernButton>
-                        )
-                      )}
+                    {/* Bottom Row: Metadata Ribbon (Product, Batch, Submitter) */}
+                    <div className="flex items-center gap-2.5 text-xs text-[var(--muted)] flex-wrap pt-2.5 border-t border-[var(--line)]/50">
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/5 whitespace-nowrap">
+                        <FlaskConical className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                        <span className="text-[var(--muted)]">Product:</span>
+                        <span className="font-semibold text-[var(--text)]">{qcProductName || selectedReport.product_name}</span>
+                      </div>
 
-                      {onNavigateToCertificate && (
-                        <button
-                          type="button"
-                          onClick={() => onNavigateToCertificate(selectedReport.id)}
-                          className="ghost h-9 text-xs px-3 flex items-center gap-1.5"
-                          style={{ whiteSpace: 'nowrap' }}
-                        >
-                          <FileText className="w-3.5 h-3.5" />
-                          <span>Certificate</span>
-                        </button>
-                      )}
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/5 whitespace-nowrap">
+                        <Box className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                        <span className="text-[var(--muted)]">Batch:</span>
+                        <span className="font-semibold text-[var(--text)]">{selectedReport.crystallizer_no || selectedReport.batch_no || 'CR-04'}</span>
+                      </div>
 
-                      {canEdit && (
-                        <button
-                          type="button"
-                          onClick={() => setReportToDelete(selectedReport)}
-                          className="ghost dng h-9 text-xs px-3 flex items-center gap-1.5 text-rose-400 hover:text-rose-300 hover:border-rose-500/40"
-                          style={{ whiteSpace: 'nowrap' }}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                          <span>Delete</span>
-                        </button>
-                      )}
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/5 whitespace-nowrap">
+                        <User className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                        <span className="text-[var(--muted)]">Submitted:</span>
+                        <span className="font-medium text-[var(--text)]">{selectedReport.submitted_by_name}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
