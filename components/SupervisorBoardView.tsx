@@ -198,9 +198,9 @@ export default function SupervisorBoardView() {
   return (
     <div className="space-y-4">
       {/* 1. Supervisor Dashboard Header Banner */}
-      <section className="panel !mb-0 p-5 bg-[var(--surface)] border border-[var(--line)] shadow-sm">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5">
+      <section className="panel !mb-0 p-4 sm:p-5 bg-[var(--surface)] border border-[var(--line)] shadow-sm">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/10 border border-amber-500/30 flex items-center justify-center shrink-0">
               <Activity className="h-5 w-5 text-amber-400" />
             </div>
@@ -219,31 +219,34 @@ export default function SupervisorBoardView() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5 flex-wrap">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/5 text-xs text-[var(--muted)]">
-              <Calendar className="w-3.5 h-3.5 text-sky-400 shrink-0" />
-              <span>Shift:</span>
-              <strong className="text-[var(--text)] font-mono">{sheet.shift_date}</strong>
-            </div>
-
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/5 text-xs text-[var(--muted)]">
-              <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-              <span>Latest Entry:</span>
-              <strong className="text-[var(--text)] font-mono">
-                {latestEntry ? `${latestEntry.slot_label} hrs` : 'No logs yet'}
-              </strong>
+          {/* Right Action & Info Strip */}
+          <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/5 text-xs text-[var(--muted)]">
+              <div className="flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                <span>Shift:</span>
+                <strong className="text-[var(--text)] font-mono">{sheet.shift_date}</strong>
+              </div>
+              <span className="text-white/20">·</span>
+              <div className="flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <span>Latest:</span>
+                <strong className="text-[var(--text)] font-mono">
+                  {latestEntry ? `${latestEntry.slot_label} hrs` : 'No logs yet'}
+                </strong>
+              </div>
             </div>
 
             <button
               type="button"
               onClick={handleManualSync}
               disabled={isSyncing}
-              className={`ghost h-8 px-2.5 text-xs flex items-center gap-1.5 transition-all ${
+              className={`ghost h-8 px-3 text-xs flex items-center gap-1.5 rounded-lg border transition-all ${
                 syncFeedback === 'success'
                   ? '!text-emerald-400 !border-emerald-500/30 !bg-emerald-500/10'
                   : syncFeedback === 'error'
                   ? '!text-rose-400 !border-rose-500/30 !bg-rose-500/10'
-                  : 'text-[var(--muted)] hover:text-[var(--text)]'
+                  : 'text-[var(--muted)] hover:text-[var(--text)] border-white/10 hover:border-white/20'
               }`}
               title={lastSyncedTime ? `Last synced at ${lastSyncedTime}` : 'Trigger manual cloud sync with Supabase'}
             >
@@ -255,14 +258,14 @@ export default function SupervisorBoardView() {
                 <RefreshCw className="w-3.5 h-3.5" />
               )}
               <span>
-                {isSyncing ? 'Syncing...' : syncFeedback === 'success' ? 'Synced!' : syncFeedback === 'error' ? 'Failed' : 'Sync'}
+                {isSyncing ? 'Syncing...' : syncFeedback === 'success' ? 'Synced!' : 'Sync'}
               </span>
+              {lastSyncedTime && !isSyncing && syncFeedback === 'idle' && (
+                <span className="text-[10px] font-mono text-[var(--muted)] pl-1 border-l border-white/10">
+                  {lastSyncedTime}
+                </span>
+              )}
             </button>
-            {lastSyncedTime && (
-              <span className="hidden sm:inline-block text-[10px] font-mono text-[var(--muted)]">
-                {lastSyncedTime}
-              </span>
-            )}
           </div>
         </div>
       </section>
@@ -286,7 +289,15 @@ export default function SupervisorBoardView() {
             </div>
             <div className="flex items-center justify-between text-xs mt-1">
               <span className="text-[var(--muted)]">Spec: 1.0 – 4.5 Torr</span>
-              <span className="text-emerald-400 font-medium">In Spec</span>
+              {latestEntry?.vacuum_torr != null ? (
+                Number(latestEntry.vacuum_torr) >= 1.0 && Number(latestEntry.vacuum_torr) <= 4.5 ? (
+                  <span className="text-emerald-400 font-medium">In Spec</span>
+                ) : (
+                  <span className="text-rose-400 font-medium">Deviation</span>
+                )
+              ) : (
+                <span className="text-[var(--muted)] font-normal">Awaiting Log</span>
+              )}
             </div>
           </div>
         </div>
@@ -308,27 +319,33 @@ export default function SupervisorBoardView() {
             </div>
             <div className="flex items-center justify-between text-xs mt-1">
               <span className="text-[var(--muted)]">Spec: 250 – 268 °C</span>
-              <span className="text-emerald-400 font-medium">Deodorization Optimal</span>
+              {latestEntry?.tray_4_temp_c != null ? (
+                Number(latestEntry.tray_4_temp_c) >= 250 && Number(latestEntry.tray_4_temp_c) <= 268 ? (
+                  <span className="text-emerald-400 font-medium">Optimal</span>
+                ) : (
+                  <span className="text-rose-400 font-medium">Deviation</span>
+                )
+              ) : (
+                <span className="text-[var(--muted)] font-normal">Awaiting Log</span>
+              )}
             </div>
           </div>
         </div>
 
         {/* Card 3: Missing Slots */}
-        <div className={`p-4 rounded-xl bg-[var(--surface)] border shadow-sm flex flex-col justify-between gap-3 transition-colors ${
-          missingSlots.length > 0 ? 'border-rose-500/40 bg-rose-500/5' : 'border-[var(--line)]'
-        }`}>
+        <div className="p-4 rounded-xl bg-[var(--surface)] border border-[var(--line)] shadow-sm flex flex-col justify-between gap-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-[var(--muted)] uppercase tracking-wider">
               Shift Log Rounds
             </span>
             <div className={`h-7 w-7 rounded-lg flex items-center justify-center ${
-              missingSlots.length > 0 ? 'bg-rose-500/15 border border-rose-500/30' : 'bg-emerald-500/10 border border-emerald-500/20'
+              missingSlots.length > 0 ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-emerald-500/10 border border-emerald-500/20'
             }`}>
-              <Clock className={`w-4 h-4 ${missingSlots.length > 0 ? 'text-rose-400' : 'text-emerald-400'}`} />
+              <Clock className={`w-4 h-4 ${missingSlots.length > 0 ? 'text-amber-400' : 'text-emerald-400'}`} />
             </div>
           </div>
           <div>
-            <div className={`text-2xl font-bold font-mono ${missingSlots.length > 0 ? 'text-rose-400' : 'text-[var(--text)]'}`}>
+            <div className={`text-2xl font-bold font-mono ${missingSlots.length > 0 ? 'text-amber-400' : 'text-[var(--text)]'}`}>
               {missingSlots.length}
               <span className="text-xs font-normal text-[var(--muted)] ml-1.5">
                 {missingSlots.length === 1 ? 'Slot pending' : 'Slots pending'}
@@ -336,23 +353,21 @@ export default function SupervisorBoardView() {
             </div>
             <div className="flex items-center justify-between text-xs mt-1">
               <span className="text-[var(--muted)]">Shift round timing</span>
-              <span className={missingSlots.length > 0 ? 'text-rose-400 font-medium' : 'text-emerald-400 font-medium'}>
-                {missingSlots.length > 0 ? 'Overdue' : 'All Logged'}
+              <span className={missingSlots.length > 0 ? 'text-amber-400 font-medium' : 'text-emerald-400 font-medium'}>
+                {missingSlots.length > 0 ? 'Action Pending' : 'All Logged'}
               </span>
             </div>
           </div>
         </div>
 
         {/* Card 4: Open Deviations */}
-        <div className={`p-4 rounded-xl bg-[var(--surface)] border shadow-sm flex flex-col justify-between gap-3 transition-colors ${
-          openDeviations.length > 0 ? 'border-amber-500/40 bg-amber-500/5' : 'border-[var(--line)]'
-        }`}>
+        <div className="p-4 rounded-xl bg-[var(--surface)] border border-[var(--line)] shadow-sm flex flex-col justify-between gap-3">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-[var(--muted)] uppercase tracking-wider">
               Active Deviations
             </span>
             <div className={`h-7 w-7 rounded-lg flex items-center justify-center ${
-              openDeviations.length > 0 ? 'bg-amber-500/15 border border-amber-500/30' : 'bg-emerald-500/10 border border-emerald-500/20'
+              openDeviations.length > 0 ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-emerald-500/10 border border-emerald-500/20'
             }`}>
               <AlertTriangle className={`w-4 h-4 ${openDeviations.length > 0 ? 'text-amber-400' : 'text-emerald-400'}`} />
             </div>

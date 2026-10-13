@@ -697,28 +697,52 @@ export default function AdminUserManagementView() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* 1. Header Banner */}
-      <section className="panel head">
-        <div>
-          <h2>Plant administration and user management</h2>
-          <p className="meta">
-            Role-based access control, sequential ID generation and the deodorizer personnel directory
-          </p>
-        </div>
-        <div className="stats">
-          <button
-            type="button"
-            onClick={handleManualSync}
-            disabled={isSyncing}
-            className="ghost"
-          >
-            {isSyncing ? 'Syncing...' : 'Sync Supabase'}
-          </button>
-          <span className="hint">
-            Current user <b style={{ color: 'var(--text)', fontWeight: 500 }}>{currentProfile.full_name} ({currentProfile.employee_no})</b>
-          </span>
-          <span className="bd r">{currentRole}</span>
+    <div className="space-y-4">
+      {/* 1. Header Command Bar Banner */}
+      <section className="panel !mb-0 p-4 sm:p-5 bg-[var(--surface)] border border-[var(--line)] shadow-sm">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-sky-500/20 to-blue-500/10 border border-sky-500/30 flex items-center justify-center shrink-0">
+              <Users className="h-5 w-5 text-sky-400" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-base font-bold text-[var(--text)] tracking-tight">
+                  Plant Administration &amp; User Directory
+                </h2>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[var(--muted)]">
+                  RBAC DIRECTORY
+                </span>
+              </div>
+              <p className="text-xs text-[var(--muted)] mt-0.5">
+                Nisshin Deodorizer Plant · Role-based access control, sequential credentials &amp; 21 CFR Part 11 audit trails
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/5 text-xs text-[var(--muted)]">
+              <UserCheck className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+              <span>Current User:</span>
+              <strong className="text-[var(--text)] font-mono">{currentProfile.full_name} ({currentProfile.employee_no})</strong>
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30 uppercase">
+                {currentRole}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleManualSync}
+              disabled={isSyncing}
+              className={`ghost h-8 px-3 text-xs flex items-center gap-1.5 rounded-lg border transition-all ${
+                isSyncing ? 'opacity-70' : 'text-[var(--muted)] hover:text-[var(--text)] border-white/10 hover:border-white/20'
+              }`}
+              title={`Last synced: ${lastSyncedAt}`}
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin text-sky-400' : ''}`} />
+              <span>{isSyncing ? 'Syncing...' : 'Sync Supabase'}</span>
+            </button>
+          </div>
         </div>
       </section>
 
@@ -743,15 +767,17 @@ export default function AdminUserManagementView() {
         <>
           {/* RBAC Warning Banner if not Admin */}
           {!isAdmin && (
-            <div className="panel" style={{ borderColor: 'var(--amber)', background: 'rgba(224,160,48,.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', gap: '12px' }}>
-              <span style={{ color: 'var(--amber)', fontSize: '12px' }}>
-                <b>RESTRICTED VIEW MODE:</b> Logged in as <span className="bd a">[{currentRole}]</span>. Staff registration and status modification require Administrator privileges.
-              </span>
+            <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0" />
+                <span>
+                  <b>RESTRICTED VIEW MODE:</b> Logged in as <span className="font-mono font-bold text-amber-300">[{currentRole}]</span>. Staff registration and status modification require Administrator privileges.
+                </span>
+              </div>
               <button
                 type="button"
                 onClick={handleSwitchToAdmin}
-                className="ghost"
-                style={{ borderColor: 'var(--amber)', color: 'var(--amber)' }}
+                className="ghost h-7 px-3 text-xs border-amber-500/30 text-amber-300 hover:bg-amber-500/20 shrink-0"
               >
                 Switch to Admin Profile
               </button>
@@ -760,15 +786,23 @@ export default function AdminUserManagementView() {
 
           {/* Notification Banner */}
           {statusMessage && (
-            <div className={`panel ${statusMessage.type === 'error' ? 'al' : ''}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px' }}>
-              <span style={{ fontSize: '12px', color: statusMessage.type === 'error' ? 'var(--redt)' : 'var(--green)' }}>
-                {statusMessage.text}
-              </span>
+            <div className={`p-3 rounded-xl border text-xs flex items-center justify-between gap-2 ${
+              statusMessage.type === 'error'
+                ? 'bg-rose-500/10 border-rose-500/30 text-rose-300'
+                : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+            }`}>
+              <div className="flex items-center gap-2">
+                {statusMessage.type === 'error' ? (
+                  <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                ) : (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                )}
+                <span>{statusMessage.text}</span>
+              </div>
               <button
                 type="button"
                 onClick={() => setStatusMessage(null)}
-                className="ghost"
-                style={{ padding: '2px 8px' }}
+                className="ghost h-6 w-6 p-0 text-xs"
               >
                 ✕
               </button>
@@ -776,43 +810,88 @@ export default function AdminUserManagementView() {
           )}
 
           {/* KPI Stats Strip */}
-          <div className="cards c5">
-            <div className="panel">
-              <label>Total staff</label>
-              <b>{totalCount}</b>
-              <p>Registered in plant</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
+            <div className="p-3.5 rounded-xl bg-[var(--surface)] border border-[var(--line)] shadow-sm flex flex-col justify-between gap-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-[var(--muted)] uppercase tracking-wider">Total Staff</span>
+                <div className="h-6 w-6 rounded-md bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
+                  <Users className="w-3.5 h-3.5" />
+                </div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold font-mono text-[var(--text)]">{totalCount}</div>
+                <div className="text-[11px] text-[var(--muted)] mt-0.5">Active directory</div>
+              </div>
             </div>
-            <div className="panel">
-              <label>Operators</label>
-              <b>{operatorCount}</b>
-              <p>Operational floor</p>
+
+            <div className="p-3.5 rounded-xl bg-[var(--surface)] border border-[var(--line)] shadow-sm flex flex-col justify-between gap-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-[var(--muted)] uppercase tracking-wider">Operators</span>
+                <div className="h-6 w-6 rounded-md bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+                  <Cpu className="w-3.5 h-3.5" />
+                </div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold font-mono text-[var(--text)]">{operatorCount}</div>
+                <div className="text-[11px] text-[var(--muted)] mt-0.5">Floor operations</div>
+              </div>
             </div>
-            <div className="panel">
-              <label>Supervisors</label>
-              <b>{supervisorCount}</b>
-              <p>Shift management</p>
+
+            <div className="p-3.5 rounded-xl bg-[var(--surface)] border border-[var(--line)] shadow-sm flex flex-col justify-between gap-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-[var(--muted)] uppercase tracking-wider">Supervisors</span>
+                <div className="h-6 w-6 rounded-md bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                </div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold font-mono text-[var(--text)]">{supervisorCount}</div>
+                <div className="text-[11px] text-[var(--muted)] mt-0.5">Shift management</div>
+              </div>
             </div>
-            <div className="panel">
-              <label>QC laboratory</label>
-              <b>{qcCount}</b>
-              <p>QC laboratory</p>
+
+            <div className="p-3.5 rounded-xl bg-[var(--surface)] border border-[var(--line)] shadow-sm flex flex-col justify-between gap-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-[var(--muted)] uppercase tracking-wider">QC Lab</span>
+                <div className="h-6 w-6 rounded-md bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+                  <FlaskConical className="w-3.5 h-3.5" />
+                </div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold font-mono text-[var(--text)]">{qcCount}</div>
+                <div className="text-[11px] text-[var(--muted)] mt-0.5">Analyst &amp; Manager</div>
+              </div>
             </div>
-            <div className="panel">
-              <label>Admin & audit</label>
-              <b>{adminCount}</b>
-              <p>Administration & audit</p>
+
+            <div className="p-3.5 rounded-xl bg-[var(--surface)] border border-[var(--line)] shadow-sm flex flex-col justify-between gap-2.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-[var(--muted)] uppercase tracking-wider">Admin &amp; Audit</span>
+                <div className="h-6 w-6 rounded-md bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+                  <Lock className="w-3.5 h-3.5" />
+                </div>
+              </div>
+              <div>
+                <div className="text-2xl font-bold font-mono text-[var(--text)]">{adminCount}</div>
+                <div className="text-[11px] text-[var(--muted)] mt-0.5">Governance</div>
+              </div>
             </div>
           </div>
 
           {/* Main Grid: Add User & Personnel Directory */}
-          <div className="two" style={{ gridTemplateColumns: '360px minmax(0, 1fr)' }}>
-            {/* Left Column: Register Staff */}
-            <section className="panel">
-              <div className="ph">Register new staff member</div>
-              <div style={{ padding: '20px' }}>
-                <form onSubmit={handleAddUserSubmit}>
-                  <div className="fld">
-                    <label htmlFor="ro">Assigned role</label>
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
+            {/* Left Column (4 cols): Register Staff */}
+            <section className="xl:col-span-4 panel !m-0 bg-[var(--surface)] border border-[var(--line)] shadow-sm flex flex-col">
+              <div className="p-4 border-b border-[var(--line)] bg-[var(--raised)]/30 flex items-center gap-2">
+                <UserPlus className="w-4 h-4 text-sky-400 shrink-0" />
+                <span className="font-semibold text-xs text-[var(--text)] uppercase tracking-wider">
+                  Register New Staff Member
+                </span>
+              </div>
+
+              <div className="p-4">
+                <form onSubmit={handleAddUserSubmit} className="space-y-3.5">
+                  <div className="fld !m-0">
+                    <label htmlFor="ro" className="text-xs font-semibold text-[var(--text)] mb-1 block">Assigned Role</label>
                     <SearchableSelect
                       id="ro"
                       disabled={!isAdmin}
@@ -831,38 +910,39 @@ export default function AdminUserManagementView() {
                     />
                   </div>
 
-                  <div className="fld">
-                    <label htmlFor="ri">Employee ID (Flexible Number)</label>
+                  <div className="fld !m-0">
+                    <label htmlFor="ri" className="text-xs font-semibold text-[var(--text)] mb-1 block">Employee ID (Flexible Number)</label>
                     <input 
                       id="ri" 
                       disabled={!isAdmin}
                       value={autoId} 
                       onChange={(e) => setAutoId(e.target.value.replace(/\D/g, ''))}
                       placeholder="e.g. 1042" 
+                      className="inp w-full"
                       style={{
                         borderColor: isIdDuplicate ? '#f43f5e' : undefined,
                         backgroundColor: isIdDuplicate ? 'rgba(244, 63, 94, 0.08)' : undefined
                       }}
                     />
                     {isIdDuplicate && duplicateUser ? (
-                      <div style={{ marginTop: '6px', padding: '8px 10px', borderRadius: '6px', background: 'rgba(244, 63, 94, 0.12)', border: '1px solid rgba(244, 63, 94, 0.3)', color: '#fda4af', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <AlertCircle style={{ width: '14px', height: '14px', flexShrink: 0, color: '#f43f5e' }} />
-                        <span>ID <strong>&quot;{cleanAutoId}&quot;</strong> is already in use by <strong>{duplicateUser.full_name}</strong> ({duplicateUser.role}). Employee ID must be unique!</span>
+                      <div className="mt-1.5 p-2 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 text-[11px] flex items-center gap-2">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-400" />
+                        <span>ID <strong>&quot;{cleanAutoId}&quot;</strong> is in use by <strong>{duplicateUser.full_name}</strong>. ID must be unique!</span>
                       </div>
                     ) : cleanAutoId ? (
-                      <div style={{ marginTop: '4px', fontSize: '11px', color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <CheckCircle2 style={{ width: '12px', height: '12px', flexShrink: 0 }} />
-                        <span>Employee ID &quot;{cleanAutoId}&quot; is unique and available.</span>
+                      <div className="mt-1 text-[11px] text-emerald-400 flex items-center gap-1.5">
+                        <CheckCircle2 className="w-3 h-3 shrink-0" />
+                        <span>Employee ID &quot;{cleanAutoId}&quot; is available.</span>
                       </div>
                     ) : (
-                      <span className="hint" style={{ fontSize: '11px', marginTop: '4px' }}>
-                        Enter any unique staff ID number (flexible numeric sequence).
+                      <span className="text-[11px] text-[var(--muted)] mt-1 block">
+                        Enter any unique staff ID number.
                       </span>
                     )}
                   </div>
 
-                  <div className="fld">
-                    <label htmlFor="rn">Full name</label>
+                  <div className="fld !m-0">
+                    <label htmlFor="rn" className="text-xs font-semibold text-[var(--text)] mb-1 block">Full Name</label>
                     <input
                       id="rn"
                       disabled={!isAdmin}
@@ -870,11 +950,12 @@ export default function AdminUserManagementView() {
                       placeholder="e.g. Muhammad Faizal bin Roslan"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
+                      className="inp w-full"
                     />
                   </div>
 
-                  <div className="fld">
-                    <label htmlFor="rp">Initial password</label>
+                  <div className="fld !m-0">
+                    <label htmlFor="rp" className="text-xs font-semibold text-[var(--text)] mb-1 block">Initial Password</label>
                     <input
                       id="rp"
                       disabled={!isAdmin}
@@ -882,11 +963,12 @@ export default function AdminUserManagementView() {
                       value={customPassword}
                       onChange={(e) => setCustomPassword(e.target.value)}
                       autoComplete="new-password"
+                      className="inp w-full"
                     />
                   </div>
 
                   <button
-                    className="primary wide"
+                    className="primary wide h-9 text-xs font-semibold flex items-center justify-center gap-1.5 mt-2"
                     type="submit"
                     disabled={!isAdmin || isSubmitting || isIdDuplicate || !cleanAutoId || !fullName.trim()}
                     style={{
@@ -894,38 +976,48 @@ export default function AdminUserManagementView() {
                       cursor: (isIdDuplicate || !cleanAutoId || !fullName.trim()) ? 'not-allowed' : 'pointer'
                     }}
                   >
-                    {isSubmitting ? 'Registering...' : isIdDuplicate ? 'Duplicate Employee ID (Must Be Unique)' : 'Register staff and generate credentials'}
+                    <UserPlus className="w-3.5 h-3.5" />
+                    <span>{isSubmitting ? 'Registering...' : isIdDuplicate ? 'Duplicate ID (Must Be Unique)' : 'Register Staff Member'}</span>
                   </button>
 
-                  <p className="hint" style={{ marginTop: '12px', fontSize: '12px' }}>
+                  <p className="text-[11px] text-[var(--muted)] text-center pt-1">
                     Staff can change the initial password after signing in.
                   </p>
                 </form>
               </div>
             </section>
 
-            {/* Right Column: Personnel Directory Table */}
-            <section className="panel">
-              <div className="ph">
-                <span>
-                  Active plant personnel <span className="bd">{filteredProfiles.length}</span>
-                </span>
-                <div className="dr">
-                  <input
-                    className="inp"
-                    type="search"
-                    style={{ width: '190px' }}
-                    placeholder="Search ID or name"
-                    aria-label="Search staff"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                  <div style={{ width: '160px' }}>
+            {/* Right Column (8 cols): Personnel Directory Table */}
+            <section className="xl:col-span-8 panel !m-0 bg-[var(--surface)] border border-[var(--line)] shadow-sm flex flex-col">
+              <div className="p-4 border-b border-[var(--line)] bg-[var(--raised)]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4 text-sky-400 shrink-0" />
+                  <span className="font-semibold text-xs text-[var(--text)] uppercase tracking-wider">
+                    Plant Personnel Directory
+                  </span>
+                  <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-[var(--muted)]">
+                    {filteredProfiles.length}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 text-[var(--muted)] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      className="inp !pl-8 !h-8 text-xs w-[160px] sm:w-[190px]"
+                      type="search"
+                      placeholder="Search ID or name..."
+                      aria-label="Search staff"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+                  <div className="w-[140px]">
                     <SearchableSelect
                       aria-label="Filter by role"
                       value={roleFilter}
                       onChange={(val) => setRoleFilter(val)}
-                      placeholder="Filter by role"
+                      placeholder="Filter role"
                       searchPlaceholder="Search role..."
                       options={[
                         { value: 'all', label: 'All roles' },
@@ -941,23 +1033,23 @@ export default function AdminUserManagementView() {
                 </div>
               </div>
 
-              <div className="tw">
-                <table>
+              <div className="overflow-x-auto custom-scrollbar">
+                <table className="w-full text-xs">
                   <thead>
-                    <tr>
-                      <th>Employee ID</th>
-                      <th>Name</th>
-                      <th>Role</th>
-                      <th>Status</th>
-                      <th>Password</th>
-                      <th>Created</th>
-                      <th style={{ textAlign: 'right' }}>Actions</th>
+                    <tr className="border-b border-[var(--line)] text-[var(--muted)] bg-white/[0.01]">
+                      <th className="py-2.5 px-3 text-left font-mono font-semibold">ID</th>
+                      <th className="py-2.5 px-3 text-left font-semibold">Name</th>
+                      <th className="py-2.5 px-3 text-left font-semibold">Role</th>
+                      <th className="py-2.5 px-3 text-left font-semibold">Status</th>
+                      <th className="py-2.5 px-3 text-left font-semibold">Password</th>
+                      <th className="py-2.5 px-3 text-left font-semibold">Created</th>
+                      <th className="py-2.5 px-3 text-right font-semibold">Actions</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="divide-y divide-[var(--line)]">
                     {filteredProfiles.length === 0 ? (
                       <tr>
-                        <td colSpan={7} style={{ textAlign: 'center', padding: '32px', color: 'var(--muted)' }}>
+                        <td colSpan={7} className="text-center py-12 text-[var(--muted)]">
                           No personnel found matching search criteria.
                         </td>
                       </tr>
@@ -965,73 +1057,95 @@ export default function AdminUserManagementView() {
                       filteredProfiles.map((p) => {
                         const isCurrent = p.employee_no === currentProfile.employee_no || p.id === currentProfile.id;
                         const isActive = p.status === 'active' || (p.status !== 'unactive' && p.active !== false);
+                        const roleStyle = roleBadgeStyles[p.role] || { bg: 'bg-white/5', text: 'text-[var(--text)]', border: 'border-white/10' };
 
                         return (
-                          <tr key={p.employee_no || p.id}>
-                            <td><b>{p.employee_no}</b></td>
-                            <td>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <tr key={p.employee_no || p.id} className="hover:bg-white/[0.02] transition-colors">
+                            <td className="py-2.5 px-3 font-mono font-bold text-[var(--text)]">
+                              {p.employee_no}
+                            </td>
+                            <td className="py-2.5 px-3">
+                              <div className="flex items-center gap-2">
                                 {p.avatar_url ? (
                                   <img
                                     src={p.avatar_url}
                                     alt={p.full_name}
-                                    style={{ width: '26px', height: '26px', borderRadius: '50%', objectFit: 'cover' }}
+                                    className="w-6 h-6 rounded-full object-cover shrink-0 border border-white/10"
                                   />
                                 ) : (
-                                  <div style={{ width: '26px', height: '26px', borderRadius: '50%', background: 'var(--raised)', display: 'grid', placeItems: 'center', fontSize: '10px', fontWeight: 'bold' }}>
+                                  <div className="w-6 h-6 rounded-full bg-[var(--raised)] border border-white/5 flex items-center justify-center text-[10px] font-bold text-[var(--muted)] shrink-0">
                                     {(p.full_name || 'U').charAt(0).toUpperCase()}
                                   </div>
                                 )}
-                                <span>{p.full_name}</span>
-                                {isCurrent && <span className="bd" style={{ marginLeft: '4px' }}>You</span>}
+                                <span className="font-medium text-[var(--text)]">{p.full_name}</span>
+                                {isCurrent && (
+                                  <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30">
+                                    You
+                                  </span>
+                                )}
                               </div>
                             </td>
-                            <td><span className="bd">{p.role}</span></td>
-                            <td>
-                              <span className={`bd ${isActive ? 'g' : 'r'}`}>
+                            <td className="py-2.5 px-3">
+                              <span className={`inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full border uppercase tracking-wider ${roleStyle.bg} ${roleStyle.text} ${roleStyle.border}`}>
+                                {p.role}
+                              </span>
+                            </td>
+                            <td className="py-2.5 px-3">
+                              <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2 py-0.5 rounded-full border ${
+                                isActive 
+                                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                                  : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                              }`}>
+                                <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-emerald-400' : 'bg-rose-400'}`} />
                                 {isActive ? 'Active' : 'Inactive'}
                               </span>
                             </td>
-                            <td><span className="bd a">{p.password ? 'Custom' : 'Default'}</span></td>
-                            <td style={{ color: 'var(--muted)' }}>
+                            <td className="py-2.5 px-3">
+                              <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${
+                                p.password ? 'bg-amber-500/10 text-amber-300 border-amber-500/20' : 'bg-white/5 text-[var(--muted)] border-white/10'
+                              }`}>
+                                {p.password ? 'Custom' : 'Default'}
+                              </span>
+                            </td>
+                            <td className="py-2.5 px-3 text-[var(--muted)] font-mono text-[11px]">
                               {p.created_at ? new Date(p.created_at).toLocaleDateString('en-GB', {
                                 day: '2-digit',
                                 month: 'short',
                                 year: 'numeric'
                               }) : '26 Sep 2026'}
                             </td>
-                            <td style={{ textAlign: 'right' }}>
+                            <td className="py-2.5 px-3 text-right">
                               {isAdmin ? (
-                                <div className="dr" style={{ justifyContent: 'flex-end', gap: '6px' }}>
+                                <div className="flex items-center justify-end gap-1.5">
                                   <button
                                     type="button"
-                                    className="ghost transition-all duration-150 active:scale-[0.96] cursor-pointer"
+                                    className="ghost h-7 px-2 text-xs flex items-center gap-1"
                                     onClick={() => handleOpenEdit(p)}
                                     title="Edit staff profile"
-                                    style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}
                                   >
-                                    <Edit style={{ width: '13px', height: '13px' }} />
+                                    <Edit className="w-3 h-3" />
                                     <span>Edit</span>
                                   </button>
                                   <button
                                     type="button"
-                                    className="ghost transition-all duration-150 active:scale-[0.96] cursor-pointer"
+                                    className="ghost h-7 px-2 text-xs"
                                     disabled={isCurrent}
                                     onClick={() => handleToggleStatus(p.employee_no, isActive, p.full_name)}
                                   >
-                                    {isActive ? 'Set inactive' : 'Reactivate'}
+                                    {isActive ? 'Deactivate' : 'Reactivate'}
                                   </button>
                                   <button
                                     type="button"
-                                    className="ghost dng transition-all duration-150 active:scale-[0.96] cursor-pointer"
+                                    className="ghost dng h-7 px-2 text-xs"
                                     disabled={isCurrent}
                                     onClick={() => handleDeleteUser(p.employee_no, p.full_name)}
+                                    title="Delete staff profile"
                                   >
                                     Delete
                                   </button>
                                 </div>
                               ) : (
-                                <span className="hint">Admin Only</span>
+                                <span className="text-[11px] text-[var(--muted)]">Admin Only</span>
                               )}
                             </td>
                           </tr>
@@ -1041,9 +1155,9 @@ export default function AdminUserManagementView() {
                   </tbody>
                 </table>
               </div>
-              <p className="foot">
+              <div className="p-3 border-t border-[var(--line)] bg-[var(--raised)]/10 text-[11px] text-[var(--muted)]">
                 21 CFR Part 11 audit trail: all personnel additions and status changes are permanently logged.
-              </p>
+              </div>
             </section>
           </div>
         </>
