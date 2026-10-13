@@ -196,7 +196,7 @@ export default function SupervisorBoardView() {
   const pendingSamples = reports.filter(r => r.status === 'awaiting_results');
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6 sm:space-y-7">
       {/* 1. Supervisor Dashboard Header Banner */}
       <section className="panel !mb-0 p-4 sm:p-5 bg-[var(--surface)] border border-[var(--line)] shadow-sm">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -269,6 +269,26 @@ export default function SupervisorBoardView() {
           </div>
         </div>
       </section>
+
+      {/* Visual Section Divider 1: Live Operations Telemetry */}
+      <div className="flex items-center justify-between gap-3 pt-1">
+        <div className="flex items-center gap-2.5">
+          <div className="h-4 w-1 rounded-full bg-gradient-to-b from-amber-400 to-orange-500" />
+          <h3 className="text-xs font-semibold tracking-wider uppercase text-[var(--text)] flex items-center gap-2">
+            <span>Live Operations Telemetry</span>
+            <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-[var(--muted)]">
+              4 KEY METRICS
+            </span>
+          </h3>
+        </div>
+        <div className="hidden sm:flex items-center gap-3 flex-1 max-w-md ml-4">
+          <div className="h-px flex-1 bg-gradient-to-r from-[var(--line)] to-transparent" />
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-mono text-emerald-400/90 shrink-0">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            Live Telemetry Stream
+          </span>
+        </div>
+      </div>
 
       {/* 2. Quick KPI Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
@@ -424,6 +444,25 @@ export default function SupervisorBoardView() {
               )}
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Visual Section Divider 2: Plant Deviations & Shift Compliance */}
+      <div className="flex items-center justify-between gap-3 pt-2">
+        <div className="flex items-center gap-2.5">
+          <div className="h-4 w-1 rounded-full bg-gradient-to-b from-sky-400 to-blue-500" />
+          <h3 className="text-xs font-semibold tracking-wider uppercase text-[var(--text)] flex items-center gap-2">
+            <span>Deviations Register &amp; Shift Compliance</span>
+            <span className="text-[10px] font-mono font-medium px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-[var(--muted)]">
+              SUPERVISOR ACTION QUEUES
+            </span>
+          </h3>
+        </div>
+        <div className="hidden sm:flex items-center gap-3 flex-1 max-w-md ml-4">
+          <div className="h-px flex-1 bg-gradient-to-r from-[var(--line)] to-transparent" />
+          <span className="text-[11px] font-mono text-[var(--muted)] shrink-0">
+            GMP / 21 CFR Part 11 Audit Trail
+          </span>
         </div>
       </div>
 
