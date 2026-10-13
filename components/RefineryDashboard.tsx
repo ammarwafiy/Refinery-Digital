@@ -279,10 +279,15 @@ export default function RefineryDashboard() {
         </main>
 
         {/* Industrial Plant Footer */}
-        <footer className="w-full border-t border-[var(--line)] bg-[var(--bg)] py-4 px-10 text-xs text-[var(--muted)] font-sans no-print mt-auto">
-          <div className="max-w-[1400px] mx-auto flex flex-wrap items-center justify-between gap-2">
+        <footer className="w-full border-t border-[var(--line)] bg-[var(--bg)] py-4 px-6 lg:px-10 text-xs text-[var(--muted)] font-sans no-print mt-auto">
+          <div className="max-w-[1400px] mx-auto flex flex-col md:flex-row items-center justify-between gap-2.5 text-center md:text-left">
             <span>Lam Soon Edible Oils Sdn. Bhd. · Nisshin Deodorizer Plant Refinery Management System (PRD-REF-001)</span>
-            <span>ISO 22000 &amp; HACCP Certified · 21 CFR Part 11</span>
+            <div className="flex flex-wrap items-center justify-center md:justify-end gap-x-3 gap-y-1">
+              <span className="text-[var(--text)] font-medium">Developed by Ahmad Ammar Wafiy</span>
+              <span>© 2026</span>
+              <span className="hidden sm:inline text-[var(--line)]">·</span>
+              <span className="text-[11px] text-[var(--muted)]">ISO 22000 &amp; HACCP Certified · 21 CFR Part 11</span>
+            </div>
           </div>
         </footer>
       </div>

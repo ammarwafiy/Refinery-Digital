@@ -226,6 +226,8 @@ const DICT_EN = {
   dbEngine: 'DATABASE ENGINE',
   compliance: 'COMPLIANCE ACCREDITATION',
   checkUpdates: 'Check for System Updates',
+  developerCredit: 'SYSTEM ARCHITECT & DEVELOPER',
+  developerName: 'Ahmad Ammar Wafiy',
   copyright: '© 2026 Lam Soon Edible Oils Sdn. Bhd. All rights reserved.'
 };
 
@@ -2367,6 +2369,15 @@ export default function SettingsModal({
                       <span className="text-slate-400 block text-[10px]">{t.compliance}</span>
                       <span className="text-amber-400 font-bold">21 CFR Part 11 & ISO 22000</span>
                     </div>
+                    <div className="p-3.5 rounded-lg bg-[#070B12] border border-[#1F2E43]/60 sm:col-span-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div>
+                        <span className="text-[#009FE3] block text-[10px] font-bold tracking-wider uppercase">{t.developerCredit}</span>
+                        <span className="text-white font-bold text-sm tracking-wide">{t.developerName}</span>
+                      </div>
+                      <div className="text-xs text-slate-400 font-mono">
+                        © 2026
+                      </div>
+                    </div>
                   </div>
 
                   <div className="p-3 rounded-lg bg-[#070B12] border border-[#1F2E43]/60 text-[11px] text-slate-400 leading-relaxed font-sans">
@@ -2417,8 +2428,9 @@ export default function SettingsModal({
                   </div>
                 </div>
 
-                <div className="text-center text-[11px] text-slate-500 font-mono">
-                  {t.copyright}
+                <div className="text-center text-[11px] text-slate-500 font-mono space-y-1">
+                  <div className="text-slate-300 font-medium">Developed by Ahmad Ammar Wafiy · © 2026</div>
+                  <div>{t.copyright}</div>
                 </div>
               </div>
             )}

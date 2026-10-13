@@ -493,6 +493,10 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
           <p className="ver-redesign">
             Lam Soon Edible Oils Sdn Bhd, version 1.0.0
           </p>
+          <div className="px-2 pt-1.5 text-[11px] text-[var(--muted)] font-mono flex flex-col gap-0.5">
+            <span className="text-[var(--text)] font-medium">Developed by Ahmad Ammar Wafiy</span>
+            <span className="text-[10px] opacity-80">© 2026</span>
+          </div>
         </div>
       </aside>
 
@@ -826,6 +830,11 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
               </AlertDialog>
             </div>
           )}
+
+          {/* Mobile Drawer Developer Attribution */}
+          <div className="pt-2 text-center text-[10px] text-slate-400 font-mono">
+            Developed by Ahmad Ammar Wafiy · © 2026
+          </div>
         </div>
       )}
 

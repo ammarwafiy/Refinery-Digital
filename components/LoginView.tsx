@@ -111,6 +111,12 @@ export default function LoginView({ onLogin }: LoginViewProps) {
         </div>
         <h1>Every reading, logged and verified.</h1>
         <p>Hourly process logs, QC results and shift reports for the deodorizer line.</p>
+
+        {/* Developer Attribution (Hero Column) */}
+        <div className="mt-8 pt-6 border-t border-[var(--line)]/60 text-xs text-[var(--muted)] font-mono hidden md:flex flex-col gap-0.5">
+          <span className="text-[var(--text)] font-medium">Developed by Ahmad Ammar Wafiy</span>
+          <span className="text-[11px] opacity-75">© 2026</span>
+        </div>
       </div>
 
       {/* Right Column: Clean Dark Surface Login Card */}
@@ -207,6 +213,12 @@ export default function LoginView({ onLogin }: LoginViewProps) {
         >
           Help and support
         </button>
+
+        {/* Developer Attribution (Login Card Footer) */}
+        <div className="mt-5 pt-3.5 border-t border-[var(--line)] text-center text-[11px] text-[var(--muted)] font-mono flex flex-col items-center gap-0.5">
+          <span className="text-[var(--text)] font-medium">Developed by Ahmad Ammar Wafiy</span>
+          <span className="text-[10px] opacity-75">© 2026</span>
+        </div>
       </form>
 
       {/* Help & Support Modal */}
