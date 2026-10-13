@@ -61,6 +61,11 @@ export default function SupervisorBoardView() {
   // Deviation list filter: 'all' | 'open' | 'resolved'
   const [deviationFilter, setDeviationFilter] = useState<'all' | 'open' | 'resolved'>('all');
 
+  // Manual Supabase cloud sync state & feedback
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncFeedback, setSyncFeedback] = useState<'idle' | 'success' | 'error'>('idle');
+  const [lastSyncedTime, setLastSyncedTime] = useState<string | null>(null);
+
   // Acknowledge deviation modal
   const [selectedDev, setSelectedDev] = useState<Deviation | null>(null);
   const [actionNarrative, setActionNarrative] = useState('');
@@ -87,6 +92,33 @@ export default function SupervisorBoardView() {
     setSheet(getActiveProcessSheet());
     setDeviations(getDeviations());
     setReports(getSampleReports());
+  };
+
+  const handleManualSync = async () => {
+    if (isSyncing) return;
+    setIsSyncing(true);
+    setSyncFeedback('idle');
+    try {
+      await Promise.allSettled([
+        syncProcessSheetsFromSupabase(),
+        syncSampleReportsFromSupabase()
+      ]);
+      refreshData();
+      const now = new Date();
+      setLastSyncedTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+      setSyncFeedback('success');
+      setTimeout(() => {
+        setSyncFeedback('idle');
+      }, 2500);
+    } catch (err) {
+      console.error('Manual sync failed:', err);
+      setSyncFeedback('error');
+      setTimeout(() => {
+        setSyncFeedback('idle');
+      }, 3000);
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   useEffect(() => {
@@ -204,13 +236,33 @@ export default function SupervisorBoardView() {
 
             <button
               type="button"
-              onClick={refreshData}
-              className="ghost h-8 px-2.5 text-xs flex items-center gap-1 text-[var(--muted)] hover:text-[var(--text)]"
-              title="Refresh live plant data"
+              onClick={handleManualSync}
+              disabled={isSyncing}
+              className={`ghost h-8 px-2.5 text-xs flex items-center gap-1.5 transition-all ${
+                syncFeedback === 'success'
+                  ? '!text-emerald-400 !border-emerald-500/30 !bg-emerald-500/10'
+                  : syncFeedback === 'error'
+                  ? '!text-rose-400 !border-rose-500/30 !bg-rose-500/10'
+                  : 'text-[var(--muted)] hover:text-[var(--text)]'
+              }`}
+              title={lastSyncedTime ? `Last synced at ${lastSyncedTime}` : 'Trigger manual cloud sync with Supabase'}
             >
-              <RefreshCw className="w-3.5 h-3.5" />
-              <span>Sync</span>
+              {isSyncing ? (
+                <RefreshCw className="w-3.5 h-3.5 animate-spin text-amber-400" />
+              ) : syncFeedback === 'success' ? (
+                <Check className="w-3.5 h-3.5 text-emerald-400" />
+              ) : (
+                <RefreshCw className="w-3.5 h-3.5" />
+              )}
+              <span>
+                {isSyncing ? 'Syncing...' : syncFeedback === 'success' ? 'Synced!' : syncFeedback === 'error' ? 'Failed' : 'Sync'}
+              </span>
             </button>
+            {lastSyncedTime && (
+              <span className="hidden sm:inline-block text-[10px] font-mono text-[var(--muted)]">
+                {lastSyncedTime}
+              </span>
+            )}
           </div>
         </div>
       </section>
