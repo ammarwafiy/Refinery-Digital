@@ -504,7 +504,8 @@ export default function Navbar({ activeTab, setActiveTab, currentUser, onRoleCha
       {/* 3. DESKTOP TOP HEADER BAR (Spans content area, offset by sidebar width)   */}
       {/* ========================================================================= */}
       <header className="hidden lg:flex fixed top-0 right-0 left-[248px] h-16 bg-[var(--bg)] border-b border-[var(--line)] z-30 items-center justify-end px-8 gap-3.5 select-none">
-        {/* Formatted Date & Time (Clean single-line pill) */}
+        <div className="flex items-center gap-3.5 shrink-0">
+          {/* Formatted Date & Time (Clean single-line pill) */}
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[var(--surface)] border border-[var(--line)] font-mono text-xs text-slate-300 tabular-nums whitespace-nowrap shadow-xs">
             <Clock className="h-3.5 w-3.5 text-[#009FE3] shrink-0" />
             <span>{formattedDateTime || '08/12/2024 14:25:00'}</span>
